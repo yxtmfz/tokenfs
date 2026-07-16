@@ -60,7 +60,15 @@ tokenfs/
 │   ├── v2_integration_test.sh
 │   ├── reset_dev_state.sh
 │   ├── connect_nvme.sh
-│   └── disconnect_nvme.sh
+│   ├── disconnect_nvme.sh
+│   ├── perf_test.sh
+│   └── perf_report.py
+├── reports/
+│   └── perf/
+│       └── latest/
+│           ├── report.md
+│           ├── report.html
+│           └── summary.csv
 └── src/
     └── main.cpp
 ```
@@ -296,3 +304,45 @@ sqlite3 /var/lib/tokenfs/metadata/tokenfs.db \
 ```
 
 如果测试通过，并且能看到 `remote`、`fnv1a64`、`COMMITTED`，说明第二版核心逻辑是正常的。
+
+## 第三版：性能测试和可视化报告
+
+第三版加入了性能测试脚本和自动报告生成能力。
+
+运行：
+
+```bash
+cd ~/projects/tokenfs
+./scripts/perf_test.sh
+```
+
+脚本会自动完成：
+
+- 清理开发环境。
+- 编译 TokenFS。
+- 启动 FUSE 挂载。
+- 测试直接写本地后端目录。
+- 测试直接写远端模拟目录。
+- 测试通过 TokenFS 写本地层文件。
+- 测试通过 TokenFS 写超过配额的大文件，触发远端溢写。
+- 测试通过 TokenFS 读取本地层文件。
+- 测试通过 TokenFS 读取远端层文件。
+- 生成 CSV、Markdown 和 HTML 报告。
+
+报告路径：
+
+```text
+reports/perf/latest/report.md
+reports/perf/latest/report.html
+reports/perf/latest/summary.csv
+```
+
+其中：
+
+```text
+report.md    适合在 GitHub 上直接查看
+report.html  带条形图，更适合截图放进汇报
+summary.csv  适合后续导入 Excel 或画图
+```
+
+注意：当前远端仍然是目录模拟，因此第三版性能数据主要用于观察 FUSE 开销、本地优先策略和远端溢写路径；接入真实 NVMe-oF 后，需要重新运行同一脚本生成真实远端 SSD 数据。
