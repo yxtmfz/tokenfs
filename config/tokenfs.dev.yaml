@@ -9,19 +9,19 @@ policy:
   local_high_watermark: 0.90
   local_low_watermark: 0.75
   immutable_token_files: false
-  checksum: none
+  checksum: fnv1a64
 
 gpus:
   - gpu_id: 0
     logical_root: /gpu0
     local_root: /var/lib/tokenfs/local/gpu0
-    local_quota_gib: 1
+    local_quota_mib: 64
     remote_backend: remote0
 
   - gpu_id: 1
     logical_root: /gpu1
     local_root: /var/lib/tokenfs/local/gpu1
-    local_quota_gib: 1
+    local_quota_mib: 64
     remote_backend: remote0
 
 backends:

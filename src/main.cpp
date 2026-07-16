@@ -8,6 +8,7 @@
 #include <chrono>
 #include <cstring>
 #include <filesystem>
+#include <iomanip>
 #include <iostream>
 #include <mutex>
 #include <optional>
@@ -43,6 +44,7 @@ struct Config {
   fs::path mount_point;
   fs::path metadata_db;
   std::string temp_suffix = ".tokenfs_tmp";
+  std::string checksum = "none";
   std::unordered_map<std::string, BackendConfig> backends;
   std::vector<GpuConfig> gpus;
 };
@@ -54,6 +56,7 @@ struct FileMeta {
   std::string backend_id;
   fs::path physical_path;
   uint64_t size_bytes = 0;
+  std::string checksum;
   std::string state = "COMMITTED";
 };
 
@@ -65,6 +68,8 @@ struct Handle {
   std::string backend_id;
   fs::path physical_path;
   int flags = 0;
+  bool writable = false;
+  std::string state = "COMMITTED";
 };
 
 class MetadataStore {
@@ -91,17 +96,20 @@ class MetadataStore {
          "backend_id TEXT NOT NULL,"
          "physical_path TEXT NOT NULL,"
          "size_bytes INTEGER NOT NULL DEFAULT 0,"
+         "checksum TEXT,"
          "state TEXT NOT NULL,"
          "created_at INTEGER NOT NULL,"
          "updated_at INTEGER NOT NULL,"
          "last_access_at INTEGER"
          ");");
+    EnsureColumn("files", "checksum", "TEXT");
   }
 
   std::optional<FileMeta> Get(const std::string& logical_path) {
     std::lock_guard<std::mutex> lock(mu_);
     const char* sql =
-        "SELECT logical_path,gpu_id,tier,backend_id,physical_path,size_bytes,state "
+        "SELECT logical_path,gpu_id,tier,backend_id,physical_path,size_bytes,"
+        "COALESCE(checksum,''),state "
         "FROM files WHERE logical_path=?;";
     sqlite3_stmt* stmt = nullptr;
     Prepare(sql, &stmt);
@@ -123,7 +131,8 @@ class MetadataStore {
     meta.backend_id = ColumnText(stmt, 3);
     meta.physical_path = ColumnText(stmt, 4);
     meta.size_bytes = static_cast<uint64_t>(sqlite3_column_int64(stmt, 5));
-    meta.state = ColumnText(stmt, 6);
+    meta.checksum = ColumnText(stmt, 6);
+    meta.state = ColumnText(stmt, 7);
     sqlite3_finalize(stmt);
     return meta;
   }
@@ -133,14 +142,15 @@ class MetadataStore {
     const auto now = UnixNow();
     const char* sql =
         "INSERT INTO files(logical_path,gpu_id,tier,backend_id,physical_path,"
-        "size_bytes,state,created_at,updated_at,last_access_at) "
-        "VALUES(?,?,?,?,?,?,?,?,?,?) "
+        "size_bytes,checksum,state,created_at,updated_at,last_access_at) "
+        "VALUES(?,?,?,?,?,?,?,?,?,?,?) "
         "ON CONFLICT(logical_path) DO UPDATE SET "
         "gpu_id=excluded.gpu_id,"
         "tier=excluded.tier,"
         "backend_id=excluded.backend_id,"
         "physical_path=excluded.physical_path,"
         "size_bytes=excluded.size_bytes,"
+        "checksum=excluded.checksum,"
         "state=excluded.state,"
         "updated_at=excluded.updated_at;";
     sqlite3_stmt* stmt = nullptr;
@@ -152,10 +162,11 @@ class MetadataStore {
     const auto physical = meta.physical_path.string();
     sqlite3_bind_text(stmt, 5, physical.c_str(), -1, SQLITE_TRANSIENT);
     sqlite3_bind_int64(stmt, 6, static_cast<sqlite3_int64>(meta.size_bytes));
-    sqlite3_bind_text(stmt, 7, meta.state.c_str(), -1, SQLITE_TRANSIENT);
-    sqlite3_bind_int64(stmt, 8, now);
+    sqlite3_bind_text(stmt, 7, meta.checksum.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 8, meta.state.c_str(), -1, SQLITE_TRANSIENT);
     sqlite3_bind_int64(stmt, 9, now);
     sqlite3_bind_int64(stmt, 10, now);
+    sqlite3_bind_int64(stmt, 11, now);
     StepDone(stmt);
   }
 
@@ -174,7 +185,8 @@ class MetadataStore {
       prefix += "/";
     }
     sqlite3_stmt* stmt = nullptr;
-    Prepare("SELECT logical_path,gpu_id,tier,backend_id,physical_path,size_bytes,state "
+    Prepare("SELECT logical_path,gpu_id,tier,backend_id,physical_path,size_bytes,"
+            "COALESCE(checksum,''),state "
             "FROM files WHERE logical_path LIKE ?;",
             &stmt);
     const std::string like = prefix + "%";
@@ -197,7 +209,41 @@ class MetadataStore {
       meta.backend_id = ColumnText(stmt, 3);
       meta.physical_path = ColumnText(stmt, 4);
       meta.size_bytes = static_cast<uint64_t>(sqlite3_column_int64(stmt, 5));
-      meta.state = ColumnText(stmt, 6);
+      meta.checksum = ColumnText(stmt, 6);
+      meta.state = ColumnText(stmt, 7);
+      out.push_back(std::move(meta));
+    }
+    sqlite3_finalize(stmt);
+    return out;
+  }
+
+  std::vector<FileMeta> IncompleteFiles() {
+    std::lock_guard<std::mutex> lock(mu_);
+    sqlite3_stmt* stmt = nullptr;
+    Prepare("SELECT logical_path,gpu_id,tier,backend_id,physical_path,size_bytes,"
+            "COALESCE(checksum,''),state "
+            "FROM files WHERE state != 'COMMITTED';",
+            &stmt);
+    std::vector<FileMeta> out;
+    while (true) {
+      int rc = sqlite3_step(stmt);
+      if (rc == SQLITE_DONE) {
+        break;
+      }
+      if (rc != SQLITE_ROW) {
+        std::string err = sqlite3_errmsg(db_);
+        sqlite3_finalize(stmt);
+        throw std::runtime_error(err);
+      }
+      FileMeta meta;
+      meta.logical_path = ColumnText(stmt, 0);
+      meta.gpu_id = sqlite3_column_int(stmt, 1);
+      meta.tier = ColumnText(stmt, 2);
+      meta.backend_id = ColumnText(stmt, 3);
+      meta.physical_path = ColumnText(stmt, 4);
+      meta.size_bytes = static_cast<uint64_t>(sqlite3_column_int64(stmt, 5));
+      meta.checksum = ColumnText(stmt, 6);
+      meta.state = ColumnText(stmt, 7);
       out.push_back(std::move(meta));
     }
     sqlite3_finalize(stmt);
@@ -232,6 +278,26 @@ class MetadataStore {
     }
   }
 
+  void EnsureColumn(const std::string& table, const std::string& column,
+                    const std::string& definition) {
+    sqlite3_stmt* stmt = nullptr;
+    const std::string pragma = "PRAGMA table_info(" + table + ");";
+    Prepare(pragma.c_str(), &stmt);
+    bool found = false;
+    while (sqlite3_step(stmt) == SQLITE_ROW) {
+      if (ColumnText(stmt, 1) == column) {
+        found = true;
+        break;
+      }
+    }
+    sqlite3_finalize(stmt);
+    if (!found) {
+      const std::string sql =
+          "ALTER TABLE " + table + " ADD COLUMN " + column + " " + definition + ";";
+      Exec(sql.c_str());
+    }
+  }
+
   void StepDone(sqlite3_stmt* stmt) {
     int rc = sqlite3_step(stmt);
     if (rc != SQLITE_DONE) {
@@ -260,6 +326,7 @@ class TokenFS {
     }
     fs::create_directories(config_.mount_point);
     metadata_.Open();
+    RecoverIncompleteFiles();
   }
 
   int GetAttr(const char* cpath, struct stat* stbuf, fuse_file_info*) {
@@ -378,7 +445,7 @@ class TokenFS {
     }
     metadata_.Upsert(meta);
     fi->fh = StoreHandle({fd, path, gpu->gpu_id, meta.tier, meta.backend_id,
-                          meta.physical_path, fi->flags});
+                          meta.physical_path, fi->flags, true, "CREATING"});
     return 0;
   }
 
@@ -396,14 +463,14 @@ class TokenFS {
       auto local = gpu->local_root / rel;
       if (fs::exists(local)) {
         meta = {path, gpu->gpu_id, "local", "local", local,
-                FileSizeNoThrow(local), "COMMITTED"};
+                FileSizeNoThrow(local), "", "COMMITTED"};
       } else {
         auto remote = RemotePath(*gpu, rel);
         if (!fs::exists(remote)) {
           return -ENOENT;
         }
         meta = {path, gpu->gpu_id, "remote", gpu->remote_backend, remote,
-                FileSizeNoThrow(remote), "COMMITTED"};
+                FileSizeNoThrow(remote), "", "COMMITTED"};
       }
       metadata_.Upsert(meta);
     }
@@ -411,8 +478,13 @@ class TokenFS {
     if (fd < 0) {
       return -errno;
     }
+    const bool writable = IsWritable(fi->flags);
+    if (writable) {
+      meta.state = "CREATING";
+      metadata_.Upsert(meta);
+    }
     fi->fh = StoreHandle({fd, path, gpu->gpu_id, meta.tier, meta.backend_id,
-                          meta.physical_path, fi->flags});
+                          meta.physical_path, fi->flags, writable, meta.state});
     return 0;
   }
 
@@ -443,7 +515,8 @@ class TokenFS {
     if (n < 0) {
       return -errno;
     }
-    UpdateHandleMeta(*handle);
+    handle->state = "CREATING";
+    UpdateHandleMeta(*handle, "CREATING");
     return static_cast<int>(n);
   }
 
@@ -454,6 +527,14 @@ class TokenFS {
       return 0;
     }
     if (it->second.fd >= 0) {
+      if (it->second.writable) {
+        int rc = CommitHandle(it->second);
+        if (rc != 0) {
+          close(it->second.fd);
+          handles_.erase(it);
+          return rc;
+        }
+      }
       close(it->second.fd);
     }
     handles_.erase(it);
@@ -465,11 +546,13 @@ class TokenFS {
     if (handle == nullptr) {
       return -EBADF;
     }
+    if (handle->writable) {
+      return CommitHandle(*handle);
+    }
     int rc = datasync ? fdatasync(handle->fd) : fsync(handle->fd);
     if (rc != 0) {
       return -errno;
     }
-    UpdateHandleMeta(*handle);
     return 0;
   }
 
@@ -486,8 +569,9 @@ class TokenFS {
       if (ftruncate(handle->fd, size) != 0) {
         return -errno;
       }
-      UpdateHandleMeta(*handle);
-      return 0;
+      handle->state = "CREATING";
+      UpdateHandleMeta(*handle, "CREATING");
+      return CommitHandle(*handle);
     }
     auto parsed = ParseGpuPath(path);
     if (!parsed) {
@@ -615,6 +699,11 @@ class TokenFS {
     return ec ? 0 : static_cast<uint64_t>(size);
   }
 
+  static bool IsWritable(int flags) {
+    const int mode = flags & O_ACCMODE;
+    return mode == O_WRONLY || mode == O_RDWR || (flags & O_TRUNC) != 0;
+  }
+
   static uint64_t DirectoryBytes(const fs::path& root) {
     uint64_t total = 0;
     std::error_code ec;
@@ -635,10 +724,10 @@ class TokenFS {
     const uint64_t used = DirectoryBytes(gpu.local_root);
     if (used < gpu.local_quota_bytes) {
       return {logical_path, gpu.gpu_id, "local", "local", gpu.local_root / rel,
-              0, "COMMITTED"};
+              0, "", "CREATING"};
     }
     return {logical_path, gpu.gpu_id, "remote", gpu.remote_backend,
-            RemotePath(gpu, rel), 0, "COMMITTED"};
+            RemotePath(gpu, rel), 0, "", "CREATING"};
   }
 
   int SpillIfNeeded(Handle& handle, uint64_t new_size) {
@@ -692,11 +781,12 @@ class TokenFS {
     if (handle.fd < 0) {
       return -errno;
     }
-    UpdateHandleMeta(handle);
+    UpdateHandleMeta(handle, handle.state);
     return 0;
   }
 
-  void UpdateHandleMeta(const Handle& handle) {
+  void UpdateHandleMeta(const Handle& handle, const std::string& state,
+                        const std::string& checksum = "") {
     FileMeta meta;
     meta.logical_path = handle.logical_path;
     meta.gpu_id = handle.gpu_id;
@@ -704,8 +794,90 @@ class TokenFS {
     meta.backend_id = handle.backend_id;
     meta.physical_path = handle.physical_path;
     meta.size_bytes = FileSizeNoThrow(handle.physical_path);
-    meta.state = "COMMITTED";
+    meta.checksum = checksum;
+    meta.state = state;
     metadata_.Upsert(meta);
+  }
+
+  int CommitHandle(Handle& handle) {
+    if (handle.fd < 0) {
+      return -EBADF;
+    }
+    if (fsync(handle.fd) != 0) {
+      return -errno;
+    }
+    std::string checksum;
+    if (config_.checksum != "none") {
+      auto calculated = ChecksumFile(handle.physical_path);
+      if (!calculated) {
+        return -EIO;
+      }
+      checksum = *calculated;
+    }
+    handle.state = "COMMITTED";
+    UpdateHandleMeta(handle, "COMMITTED", checksum);
+    return 0;
+  }
+
+  std::optional<std::string> ChecksumFile(const fs::path& path) const {
+    if (config_.checksum != "fnv1a64") {
+      return "";
+    }
+    int fd = open(path.c_str(), O_RDONLY);
+    if (fd < 0) {
+      return std::nullopt;
+    }
+    constexpr uint64_t kOffset = 14695981039346656037ULL;
+    constexpr uint64_t kPrime = 1099511628211ULL;
+    uint64_t hash = kOffset;
+    std::vector<unsigned char> buffer(1024 * 1024);
+    while (true) {
+      ssize_t n = read(fd, buffer.data(), buffer.size());
+      if (n < 0) {
+        if (errno == EINTR) {
+          continue;
+        }
+        close(fd);
+        return std::nullopt;
+      }
+      if (n == 0) {
+        break;
+      }
+      for (ssize_t i = 0; i < n; ++i) {
+        hash ^= buffer[static_cast<size_t>(i)];
+        hash *= kPrime;
+      }
+    }
+    close(fd);
+    std::ostringstream out;
+    out << "fnv1a64:" << std::hex << std::setw(16) << std::setfill('0') << hash;
+    return out.str();
+  }
+
+  void RecoverIncompleteFiles() {
+    for (const auto& meta : metadata_.IncompleteFiles()) {
+      std::error_code ec;
+      fs::remove(meta.physical_path, ec);
+      metadata_.Remove(meta.logical_path);
+    }
+    for (const auto& gpu : config_.gpus) {
+      RemoveTempFiles(gpu.local_root);
+      RemoveTempFiles(RemotePath(gpu, ""));
+    }
+  }
+
+  void RemoveTempFiles(const fs::path& root) const {
+    std::error_code ec;
+    if (!fs::exists(root, ec)) {
+      return;
+    }
+    for (fs::recursive_directory_iterator it(root, fs::directory_options::skip_permission_denied, ec), end;
+         it != end && !ec; it.increment(ec)) {
+      const auto filename = it->path().filename().string();
+      if (filename.find(config_.temp_suffix) != std::string::npos) {
+        fs::remove(it->path(), ec);
+      }
+    }
   }
 
   uint64_t StoreHandle(Handle handle) {
@@ -788,6 +960,7 @@ int OpRename(const char* from, const char* to, unsigned int flags) {
 }
 
 uint64_t GiBToBytes(uint64_t gib) { return gib * 1024ULL * 1024ULL * 1024ULL; }
+uint64_t MiBToBytes(uint64_t mib) { return mib * 1024ULL * 1024ULL; }
 
 Config LoadConfig(const fs::path& path) {
   YAML::Node root = YAML::LoadFile(path.string());
@@ -798,6 +971,9 @@ Config LoadConfig(const fs::path& path) {
       "/var/lib/tokenfs/metadata/tokenfs.db");
   config.temp_suffix =
       root["filesystem"]["temp_suffix"].as<std::string>(".tokenfs_tmp");
+  if (root["policy"] && root["policy"]["checksum"]) {
+    config.checksum = root["policy"]["checksum"].as<std::string>("none");
+  }
 
   for (const auto& item : root["backends"]) {
     BackendConfig backend;
@@ -812,7 +988,11 @@ Config LoadConfig(const fs::path& path) {
     gpu.gpu_id = item["gpu_id"].as<int>();
     gpu.logical_root = item["logical_root"].as<std::string>();
     gpu.local_root = item["local_root"].as<std::string>();
-    gpu.local_quota_bytes = GiBToBytes(item["local_quota_gib"].as<uint64_t>());
+    if (item["local_quota_mib"]) {
+      gpu.local_quota_bytes = MiBToBytes(item["local_quota_mib"].as<uint64_t>());
+    } else {
+      gpu.local_quota_bytes = GiBToBytes(item["local_quota_gib"].as<uint64_t>());
+    }
     gpu.remote_backend = item["remote_backend"].as<std::string>();
     config.gpus.push_back(std::move(gpu));
   }
