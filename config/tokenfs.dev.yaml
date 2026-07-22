@@ -26,5 +26,13 @@ gpus:
 
 backends:
   - id: remote0
+    # 本地开发时使用 directory；拿到真实 NVMe-oF 环境后可改为 nvmeof。
     type: directory
     root: /var/lib/tokenfs/remote-sim
+    nvme_transport: tcp
+    nvme_target_ip: "__SSD_TARGET_IP__"
+    nvme_port: "4420"
+    nvme_subnqn: "__SUBSYSTEM_NQN__"
+    nvme_device: "/dev/nvmeXnY"
+    nvme_mount: /srv/tokenfs/remote0
+    nvme_filesystem: ext4

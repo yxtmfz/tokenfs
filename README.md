@@ -54,8 +54,10 @@ tokenfs/
 ├── scripts/
 │   ├── start_tokenfs.sh
 │   ├── stop_tokenfs.sh
+│   ├── check_environment.sh
 │   ├── tokenfsctl.py
 │   ├── integration_test.sh
+│   ├── token_workload_test.sh
 │   ├── smoke_test.sh
 │   ├── v2_integration_test.sh
 │   ├── reset_dev_state.sh
@@ -64,11 +66,19 @@ tokenfs/
 │   ├── perf_test.sh
 │   └── perf_report.py
 ├── reports/
-│   └── perf/
+│   ├── perf/
+│   │   └── latest/
+│   │       ├── report.md
+│   │       ├── report.html
+│   │       └── summary.csv
+│   └── token-workload/
 │       └── latest/
 │           ├── report.md
-│           ├── report.html
-│           └── summary.csv
+│           ├── summary.csv
+│           ├── metrics.txt
+│           └── files.csv
+├── docs/
+│   └── research-plan.md
 └── src/
     └── main.cpp
 ```
@@ -181,6 +191,12 @@ cd ~/projects/tokenfs
 ./scripts/tokenfsctl.py files
 ```
 
+查看读写、命中率、溢写和预分配指标：
+
+```bash
+./scripts/tokenfsctl.py metrics
+```
+
 如果你想直接查看 SQLite，也可以执行：
 
 ```bash
@@ -225,6 +241,51 @@ cd ~/projects/tokenfs
 
 ```text
 TokenFS integration test passed.
+```
+
+## 环境检查
+
+真实服务器到位后，先运行：
+
+```bash
+cd ~/projects/tokenfs
+./scripts/check_environment.sh
+```
+
+它会检查：
+
+- C++ 编译工具、CMake、Ninja。
+- FUSE3 和 `/dev/fuse`。
+- SQLite、fio、nvme-cli。
+- 配置文件、挂载点、元数据库目录。
+- 远端后端目录。
+- NVMe-oF dry-run 路径。
+
+## Token Workload 测试
+
+TokenFS 提供一个更接近机器学习 Token 数据的 workload：
+
+```bash
+cd ~/projects/tokenfs
+./scripts/token_workload_test.sh
+```
+
+它会模拟：
+
+- token shard 文件。
+- `fallocate` 预分配。
+- 顺序写入。
+- 顺序读取。
+- 本地层和远端溢写。
+- `/gpu0` 和 `/gpu1` 两个命名空间。
+
+报告位置：
+
+```text
+reports/token-workload/latest/report.md
+reports/token-workload/latest/summary.csv
+reports/token-workload/latest/metrics.txt
+reports/token-workload/latest/files.csv
 ```
 
 ## 性能测试和报告
@@ -336,10 +397,22 @@ export TOKENFS_NVME_MOUNT=/srv/tokenfs/remote0
 ./scripts/connect_nvme.sh
 ```
 
+也可以直接读取配置文件并预演命令：
+
+```bash
+./scripts/connect_nvme.sh --config config/tokenfs.dev.yaml --backend remote0 --dry-run
+```
+
 断开：
 
 ```bash
 ./scripts/disconnect_nvme.sh
+```
+
+同样支持 dry-run：
+
+```bash
+./scripts/disconnect_nvme.sh --config config/tokenfs.dev.yaml --backend remote0 --dry-run
 ```
 
 注意：脚本不会自动执行 `mkfs`，也就是不会自动格式化设备。真实 SSD 是否需要格式化，必须单独确认后手动操作，避免误删数据。
@@ -368,3 +441,11 @@ TokenFS 当前是课程/研究原型，不是生产级分布式文件系统。
 - 完整 POSIX 文件锁语义。
 
 当前重点是把 FUSE 接口、本地优先策略、远端溢写、SQLite 元数据、可靠写入、启动恢复、性能测试和 NVMe-oF 接入流程打通。真实 SSD Target 信息到位后，主要改配置和运行连接脚本，不需要重写 TokenFS 主体逻辑。
+
+## 研究计划
+
+论文方向和优化路线见：
+
+```text
+docs/research-plan.md
+```

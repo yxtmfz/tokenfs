@@ -4,6 +4,7 @@
 #include <sqlite3.h>
 #include <yaml-cpp/yaml.h>
 
+#include <algorithm>
 #include <cerrno>
 #include <chrono>
 #include <cstring>
@@ -103,6 +104,10 @@ class MetadataStore {
          "last_access_at INTEGER"
          ");");
     EnsureColumn("files", "checksum", "TEXT");
+    Exec("CREATE TABLE IF NOT EXISTS metrics ("
+         "name TEXT PRIMARY KEY,"
+         "value INTEGER NOT NULL DEFAULT 0"
+         ");");
   }
 
   std::optional<FileMeta> Get(const std::string& logical_path) {
@@ -175,6 +180,17 @@ class MetadataStore {
     sqlite3_stmt* stmt = nullptr;
     Prepare("DELETE FROM files WHERE logical_path=?;", &stmt);
     sqlite3_bind_text(stmt, 1, logical_path.c_str(), -1, SQLITE_TRANSIENT);
+    StepDone(stmt);
+  }
+
+  void AddMetric(const std::string& name, uint64_t delta) {
+    std::lock_guard<std::mutex> lock(mu_);
+    sqlite3_stmt* stmt = nullptr;
+    Prepare("INSERT INTO metrics(name,value) VALUES(?,?) "
+            "ON CONFLICT(name) DO UPDATE SET value=value+excluded.value;",
+            &stmt);
+    sqlite3_bind_text(stmt, 1, name.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_int64(stmt, 2, static_cast<sqlite3_int64>(delta));
     StepDone(stmt);
   }
 
@@ -485,11 +501,13 @@ class TokenFS {
     }
     fi->fh = StoreHandle({fd, path, gpu->gpu_id, meta.tier, meta.backend_id,
                           meta.physical_path, fi->flags, writable, meta.state});
+    metadata_.AddMetric(meta.tier == "local" ? "open_local" : "open_remote", 1);
     return 0;
   }
 
   int Read(const char*, char* buf, size_t size, off_t offset,
            fuse_file_info* fi) {
+    const auto start = Clock::now();
     auto* handle = FindHandle(fi);
     if (handle == nullptr) {
       return -EBADF;
@@ -498,11 +516,20 @@ class TokenFS {
     if (n < 0) {
       return -errno;
     }
+    metadata_.AddMetric("read_ops", 1);
+    metadata_.AddMetric("read_bytes", static_cast<uint64_t>(n));
+    metadata_.AddMetric(handle->tier == "local" ? "read_local_ops" : "read_remote_ops",
+                        1);
+    metadata_.AddMetric(handle->tier == "local" ? "read_local_bytes"
+                                                : "read_remote_bytes",
+                        static_cast<uint64_t>(n));
+    metadata_.AddMetric("read_latency_us_total", ElapsedMicros(start));
     return static_cast<int>(n);
   }
 
   int Write(const char*, const char* buf, size_t size, off_t offset,
             fuse_file_info* fi) {
+    const auto start = Clock::now();
     auto* handle = FindHandle(fi);
     if (handle == nullptr) {
       return -EBADF;
@@ -517,6 +544,15 @@ class TokenFS {
     }
     handle->state = "CREATING";
     UpdateHandleMeta(*handle, "CREATING");
+    metadata_.AddMetric("write_ops", 1);
+    metadata_.AddMetric("write_bytes", static_cast<uint64_t>(n));
+    metadata_.AddMetric(handle->tier == "local" ? "write_local_ops"
+                                                : "write_remote_ops",
+                        1);
+    metadata_.AddMetric(handle->tier == "local" ? "write_local_bytes"
+                                                : "write_remote_bytes",
+                        static_cast<uint64_t>(n));
+    metadata_.AddMetric("write_latency_us_total", ElapsedMicros(start));
     return static_cast<int>(n);
   }
 
@@ -547,12 +583,40 @@ class TokenFS {
       return -EBADF;
     }
     if (handle->writable) {
+      metadata_.AddMetric("fsync_ops", 1);
       return CommitHandle(*handle);
     }
     int rc = datasync ? fdatasync(handle->fd) : fsync(handle->fd);
     if (rc != 0) {
       return -errno;
     }
+    metadata_.AddMetric("fsync_ops", 1);
+    return 0;
+  }
+
+  int Fallocate(const char*, int mode, off_t offset, off_t length,
+                fuse_file_info* fi) {
+    if ((mode & ~(FALLOC_FL_KEEP_SIZE)) != 0) {
+      return -EOPNOTSUPP;
+    }
+    auto* handle = FindHandle(fi);
+    if (handle == nullptr) {
+      return -EBADF;
+    }
+    const uint64_t end = static_cast<uint64_t>(offset + length);
+    if ((mode & FALLOC_FL_KEEP_SIZE) == 0) {
+      if (int rc = SpillIfNeeded(*handle, end); rc != 0) {
+        return rc;
+      }
+    }
+    int rc = posix_fallocate(handle->fd, offset, length);
+    if (rc != 0) {
+      return -rc;
+    }
+    handle->state = "CREATING";
+    UpdateHandleMeta(*handle, "CREATING");
+    metadata_.AddMetric("fallocate_ops", 1);
+    metadata_.AddMetric("fallocate_bytes", static_cast<uint64_t>(length));
     return 0;
   }
 
@@ -758,6 +822,7 @@ class TokenFS {
       return -EINVAL;
     }
     fs::path remote = RemotePath(*gpu, parsed->second);
+    const uint64_t moved_bytes = FileSizeNoThrow(handle.physical_path);
     fs::create_directories(remote.parent_path());
     if (handle.fd >= 0) {
       fsync(handle.fd);
@@ -782,6 +847,8 @@ class TokenFS {
       return -errno;
     }
     UpdateHandleMeta(handle, handle.state);
+    metadata_.AddMetric("spill_count", 1);
+    metadata_.AddMetric("spill_bytes", std::max(moved_bytes, new_size));
     return 0;
   }
 
@@ -913,6 +980,14 @@ class TokenFS {
     return 0;
   }
 
+  using Clock = std::chrono::steady_clock;
+
+  static uint64_t ElapsedMicros(Clock::time_point start) {
+    return static_cast<uint64_t>(
+        std::chrono::duration_cast<std::chrono::microseconds>(Clock::now() - start)
+            .count());
+  }
+
   Config config_;
   MetadataStore metadata_;
   std::mutex handles_mu_;
@@ -950,6 +1025,10 @@ int OpRelease(const char* path, fuse_file_info* fi) {
 }
 int OpFsync(const char* path, int datasync, fuse_file_info* fi) {
   return g_fs->Fsync(path, datasync, fi);
+}
+int OpFallocate(const char* path, int mode, off_t offset, off_t length,
+                fuse_file_info* fi) {
+  return g_fs->Fallocate(path, mode, offset, length, fi);
 }
 int OpTruncate(const char* path, off_t size, fuse_file_info* fi) {
   return g_fs->Truncate(path, size, fi);
@@ -1046,6 +1125,7 @@ int main(int argc, char* argv[]) {
     ops.write = OpWrite;
     ops.release = OpRelease;
     ops.fsync = OpFsync;
+    ops.fallocate = OpFallocate;
     ops.truncate = OpTruncate;
     ops.unlink = OpUnlink;
     ops.rename = OpRename;

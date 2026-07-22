@@ -24,6 +24,13 @@ class BackendConfig:
     backend_id: str
     backend_type: str
     root: Path
+    nvme_transport: str = "tcp"
+    nvme_target_ip: str = ""
+    nvme_port: str = "4420"
+    nvme_subnqn: str = ""
+    nvme_device: str = ""
+    nvme_mount: str = ""
+    nvme_filesystem: str = "ext4"
 
 
 @dataclass
@@ -102,6 +109,13 @@ def parse_config(path: Path) -> TokenfsConfig:
                 backend_id=current["id"],
                 backend_type=current.get("type", "directory"),
                 root=Path(current["root"]),
+                nvme_transport=current.get("nvme_transport", "tcp"),
+                nvme_target_ip=current.get("nvme_target_ip", ""),
+                nvme_port=current.get("nvme_port", "4420"),
+                nvme_subnqn=current.get("nvme_subnqn", ""),
+                nvme_device=current.get("nvme_device", ""),
+                nvme_mount=current.get("nvme_mount", current.get("root", "")),
+                nvme_filesystem=current.get("nvme_filesystem", "ext4"),
             )
             backends[backend.backend_id] = backend
         current = None
@@ -208,6 +222,11 @@ def print_status(config: TokenfsConfig, config_path: Path) -> None:
         print(f"- {backend.backend_id}: {backend.backend_type}")
         print(f"  根目录: {backend.root} ({'存在' if backend.root.exists() else '不存在'})")
         print(f"  已用:   {bytes_to_mib(used)}")
+        if backend.backend_type == "nvmeof":
+            print(f"  NVMe-oF: {backend.nvme_transport} {backend.nvme_target_ip}:{backend.nvme_port}")
+            print(f"  NQN:     {backend.nvme_subnqn or '-'}")
+            print(f"  设备:    {backend.nvme_device or '-'}")
+            print(f"  挂载点:  {backend.nvme_mount or backend.root}")
 
 
 def print_files(config: TokenfsConfig) -> None:
@@ -228,6 +247,51 @@ def print_files(config: TokenfsConfig) -> None:
         print(f"  -> {row['physical_path']}")
 
 
+def metric_value(metrics: dict[str, int], name: str) -> int:
+    return metrics.get(name, 0)
+
+
+def print_metrics(config: TokenfsConfig) -> None:
+    rows = db_rows(config.metadata_db, "select name,value from metrics order by name")
+    if not rows:
+        print("没有 metrics 记录。先启动 TokenFS 并执行读写测试。")
+        return
+    metrics = {row["name"]: int(row["value"]) for row in rows}
+    read_ops = metric_value(metrics, "read_ops")
+    write_ops = metric_value(metrics, "write_ops")
+    read_local = metric_value(metrics, "read_local_ops")
+    read_remote = metric_value(metrics, "read_remote_ops")
+    write_local = metric_value(metrics, "write_local_ops")
+    write_remote = metric_value(metrics, "write_remote_ops")
+    read_total = read_local + read_remote
+    write_total = write_local + write_remote
+    read_local_rate = (read_local / read_total * 100) if read_total else 0
+    write_local_rate = (write_local / write_total * 100) if write_total else 0
+    avg_read_us = metric_value(metrics, "read_latency_us_total") / read_ops if read_ops else 0
+    avg_write_us = metric_value(metrics, "write_latency_us_total") / write_ops if write_ops else 0
+
+    print("TokenFS Metrics")
+    print("=" * 60)
+    print(f"读请求:   {read_ops} 次，{bytes_to_mib(metric_value(metrics, 'read_bytes'))}")
+    print(f"写请求:   {write_ops} 次，{bytes_to_mib(metric_value(metrics, 'write_bytes'))}")
+    print(f"本地读:   {read_local} 次，{bytes_to_mib(metric_value(metrics, 'read_local_bytes'))}")
+    print(f"远端读:   {read_remote} 次，{bytes_to_mib(metric_value(metrics, 'read_remote_bytes'))}")
+    print(f"本地写:   {write_local} 次，{bytes_to_mib(metric_value(metrics, 'write_local_bytes'))}")
+    print(f"远端写:   {write_remote} 次，{bytes_to_mib(metric_value(metrics, 'write_remote_bytes'))}")
+    print(f"本地读命中率: {read_local_rate:.1f}%")
+    print(f"本地写命中率: {write_local_rate:.1f}%")
+    print(f"平均读耗时:   {avg_read_us:.1f} us")
+    print(f"平均写耗时:   {avg_write_us:.1f} us")
+    print(f"溢写次数:     {metric_value(metrics, 'spill_count')}")
+    print(f"溢写数据量:   {bytes_to_mib(metric_value(metrics, 'spill_bytes'))}")
+    print(f"预分配次数:   {metric_value(metrics, 'fallocate_ops')}")
+    print(f"预分配数据量: {bytes_to_mib(metric_value(metrics, 'fallocate_bytes'))}")
+    print()
+    print("原始计数")
+    for name in sorted(metrics):
+        print(f"- {name}: {metrics[name]}")
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description="TokenFS 管理工具")
     parser.add_argument(
@@ -238,6 +302,7 @@ def main() -> int:
     subparsers = parser.add_subparsers(dest="command")
     subparsers.add_parser("status", help="查看挂载、配额、后端和元数据状态")
     subparsers.add_parser("files", help="列出 SQLite 中记录的 TokenFS 文件")
+    subparsers.add_parser("metrics", help="查看读写、命中率、溢写和预分配指标")
     args = parser.parse_args()
 
     command = args.command or "status"
@@ -250,6 +315,8 @@ def main() -> int:
         print_status(config, config_path)
     elif command == "files":
         print_files(config)
+    elif command == "metrics":
+        print_metrics(config)
     else:
         parser.print_help()
         return 1
