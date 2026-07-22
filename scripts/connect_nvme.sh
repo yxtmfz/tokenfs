@@ -5,10 +5,12 @@ project_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 config="$project_root/config/tokenfs.dev.yaml"
 backend_id="${TOKENFS_BACKEND_ID:-remote0}"
 dry_run=0
+allow_format=0
+chown_current=0
 
 usage() {
   cat <<EOF
-Usage: $0 [--config path] [--backend id] [--dry-run]
+Usage: $0 [--config path] [--backend id] [--dry-run] [--allow-format] [--chown-current]
 
 Environment variables still work and override config values:
   TOKENFS_NVME_TRANSPORT
@@ -17,6 +19,10 @@ Environment variables still work and override config values:
   TOKENFS_NVME_SUBNQN
   TOKENFS_NVME_DEVICE
   TOKENFS_NVME_MOUNT
+
+Safety:
+  --allow-format    format the connected namespace only when it has no filesystem
+  --chown-current   chown the mounted backend to the current user after mount
 EOF
 }
 
@@ -32,6 +38,14 @@ while [[ $# -gt 0 ]]; do
       ;;
     --dry-run)
       dry_run=1
+      shift
+      ;;
+    --allow-format)
+      allow_format=1
+      shift
+      ;;
+    --chown-current)
+      chown_current=1
       shift
       ;;
     -h|--help)
@@ -94,11 +108,13 @@ target_port="${TOKENFS_NVME_TARGET_PORT:-$(read_backend_value nvme_port)}"
 subnqn="${TOKENFS_NVME_SUBNQN:-$(read_backend_value nvme_subnqn)}"
 device="${TOKENFS_NVME_DEVICE:-$(read_backend_value nvme_device)}"
 mount_point="${TOKENFS_NVME_MOUNT:-$(read_backend_value nvme_mount)}"
+filesystem="${TOKENFS_NVME_FILESYSTEM:-$(read_backend_value nvme_filesystem)}"
 root="$(read_backend_value root)"
 
 transport="${transport:-tcp}"
 target_port="${target_port:-4420}"
 mount_point="${mount_point:-${root:-/srv/tokenfs/remote0}}"
+filesystem="${filesystem:-ext4}"
 
 placeholder_re='^(__.*__|/dev/nvmeXnY)$'
 if [[ -z "$target_ip" || -z "$subnqn" || "$target_ip" =~ $placeholder_re || "$subnqn" =~ $placeholder_re ]]; then
@@ -149,14 +165,41 @@ echo "Connecting subsystem $subnqn"
 run sudo nvme connect -t "$transport" -a "$target_ip" -s "$target_port" -n "$subnqn"
 
 if [[ -z "$device" || "$device" =~ $placeholder_re ]]; then
-  echo "Set TOKENFS_NVME_DEVICE to the connected namespace, for example /dev/nvme1n1."
-  echo "Current NVMe devices:"
   if [[ "$dry_run" -eq 1 ]]; then
-    echo "dry-run: nvme list"
+    echo "dry-run: auto-detect connected namespace for subnqn=$subnqn"
   else
-    nvme list || true
+    echo "Detecting connected namespace for $subnqn"
+    for _ in $(seq 1 30); do
+      device="$(nvme list -o json 2>/dev/null | python3 - "$subnqn" <<'PY' || true
+import json
+import sys
+
+subnqn = sys.argv[1]
+try:
+    data = json.load(sys.stdin)
+except Exception:
+    print("")
+    raise SystemExit
+
+for dev in data.get("Devices", []):
+    if dev.get("SubsystemNQN") == subnqn:
+        print(dev.get("DevicePath", ""))
+        break
+PY
+)"
+      if [[ -n "$device" && -b "$device" ]]; then
+        break
+      fi
+      sleep 0.5
+    done
   fi
-  exit 0
+fi
+
+if [[ "$dry_run" -eq 0 && ( -z "$device" || ! -b "$device" ) ]]; then
+  echo "Could not find connected namespace for $subnqn." >&2
+  echo "Set TOKENFS_NVME_DEVICE manually, for example /dev/nvme1n1." >&2
+  nvme list || true
+  exit 1
 fi
 
 if [[ "$dry_run" -eq 0 ]] && findmnt -rn "$mount_point" >/dev/null; then
@@ -164,6 +207,21 @@ if [[ "$dry_run" -eq 0 ]] && findmnt -rn "$mount_point" >/dev/null; then
   exit 0
 fi
 
+if [[ "$allow_format" -eq 1 ]]; then
+  echo "Formatting is explicitly allowed for empty namespaces."
+  if [[ "$dry_run" -eq 1 ]]; then
+    echo "dry-run: blkid $device || mkfs.$filesystem -F $device"
+  elif ! sudo blkid "$device" >/dev/null 2>&1; then
+    echo "No filesystem found on $device; creating $filesystem"
+    run sudo "mkfs.$filesystem" -F "$device"
+  fi
+else
+  echo "Formatting is disabled. Use --allow-format only for fresh simulated namespaces."
+fi
+
 echo "Mounting $device at $mount_point"
 run sudo mount "$device" "$mount_point"
+if [[ "$chown_current" -eq 1 ]]; then
+  run sudo chown -R "$(id -u):$(id -g)" "$mount_point"
+fi
 echo "NVMe-oF backend mounted at $mount_point"

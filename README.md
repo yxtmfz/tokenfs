@@ -1,6 +1,15 @@
 # TokenFS
 
-TokenFS 是一个面向大规模机器学习 Token 数据的本地-远端分层文件系统原型。它通过 FUSE 提供统一的 POSIX 文件访问接口，为不同 GPU 分配相互隔离的本地存储配额；写入时优先使用本地 SSD，本地配额不足时自动溢写到远端后端。当前远端后端使用普通目录模拟，后续可以替换为通过 NVMe-oF 挂载的远端 SSD。
+TokenFS 是一个面向大规模机器学习 Token 数据的本地-远端分层文件系统原型。它通过 FUSE 提供统一的 POSIX 文件访问接口，为不同 GPU 分配相互隔离的本地存储配额；写入时优先使用本地 SSD，本地配额不足时自动溢写到远端后端。
+
+当前项目同时支持两种远端形态：
+
+```text
+开发模拟：普通目录 /var/lib/tokenfs/remote-sim
+协议模拟：双 Ubuntu VM，通过真实 NVMe/TCP 连接到 /srv/tokenfs/remote0
+```
+
+等实验室真实 SSD Target 到位后，只需要把 Target IP、端口、Subsystem NQN 和挂载点写入配置或环境变量，即可把远端后端切换到真实 NVMe-oF SSD。
 
 上层训练或推理程序只需要访问统一路径：
 
@@ -25,8 +34,13 @@ TokenFS FUSE 挂载点：/mnt/tokenfs
   +-- local 层：/var/lib/tokenfs/local/gpu0
   |           /var/lib/tokenfs/local/gpu1
   |
-  +-- remote 层：/var/lib/tokenfs/remote-sim
-              后续可替换为 /srv/tokenfs/remote0，即 NVMe-oF 挂载目录
+  +-- remote 层：
+      开发模拟目录：/var/lib/tokenfs/remote-sim
+      NVMe-oF 挂载：/srv/tokenfs/remote0
+          |
+          | nvme-tcp
+          v
+      远端 SSD Target / tokenfs-target VM
 ```
 
 ## 已实现能力
@@ -41,7 +55,9 @@ TokenFS FUSE 挂载点：/mnt/tokenfs
 - 管理工具 `tokenfsctl.py`，可以查看挂载状态、GPU 配额使用、local/remote 文件数量、后端目录和文件清单。
 - 集成测试脚本，覆盖本地写入、远端溢写、GPU1 命名空间、校验值、删除清理和启动恢复。
 - 性能测试脚本，自动生成 CSV、Markdown 和 HTML 报告。
-- NVMe-oF 连接和断开脚本框架，后续拿到 SSD Target 信息后可以接入真实远端 SSD。
+- NVMe-oF Host 连接脚本，支持 dry-run、自动发现连接后的 `/dev/nvmeXnY`、显式格式化保护和挂载。
+- NVMe-oF Target 模拟脚本，可以在第二台 Ubuntu VM 上用 Linux `nvmet` 导出 loop 文件作为远端 Namespace。
+- 双 VM NVMe/TCP 测试脚本，验证 TokenFS 的远端溢写确实可以落到 NVMe-oF 挂载后端。
 
 ## 目录结构
 
@@ -63,6 +79,10 @@ tokenfs/
 │   ├── reset_dev_state.sh
 │   ├── connect_nvme.sh
 │   ├── disconnect_nvme.sh
+│   ├── setup_nvme_target.sh
+│   ├── cleanup_nvme_target.sh
+│   ├── nvmeof_loopback_test.sh
+│   ├── nvmeof_two_vm_test.sh
 │   ├── perf_test.sh
 │   └── perf_report.py
 ├── reports/
@@ -78,7 +98,8 @@ tokenfs/
 │           ├── metrics.txt
 │           └── files.csv
 ├── docs/
-│   └── research-plan.md
+│   ├── research-plan.md
+│   └── nvmeof-two-vm.md
 └── src/
     └── main.cpp
 ```
@@ -366,7 +387,7 @@ backends:
 
 ## 接入真实 NVMe-oF
 
-当前远端层是：
+开发时远端层可以先使用：
 
 ```text
 /var/lib/tokenfs/remote-sim
@@ -386,16 +407,17 @@ backends:
 - 连接后出现的设备名，例如 `/dev/nvme1n1`。
 - 挂载点，例如 `/srv/tokenfs/remote0`。
 
-连接示例：
+连接脚本支持从配置文件读取，也支持用环境变量覆盖。真实设备连接示例：
 
 ```bash
 export TOKENFS_NVME_TARGET_IP=<SSD_TARGET_IP>
 export TOKENFS_NVME_SUBNQN=<SUBSYSTEM_NQN>
-export TOKENFS_NVME_DEVICE=/dev/nvmeXnY
 export TOKENFS_NVME_MOUNT=/srv/tokenfs/remote0
 
 ./scripts/connect_nvme.sh
 ```
+
+脚本会自动执行 `nvme discover`、`nvme connect`，并尝试根据 Subsystem NQN 自动识别连接后的 `/dev/nvmeXnY`。
 
 也可以直接读取配置文件并预演命令：
 
@@ -415,7 +437,54 @@ export TOKENFS_NVME_MOUNT=/srv/tokenfs/remote0
 ./scripts/disconnect_nvme.sh --config config/tokenfs.dev.yaml --backend remote0 --dry-run
 ```
 
-注意：脚本不会自动执行 `mkfs`，也就是不会自动格式化设备。真实 SSD 是否需要格式化，必须单独确认后手动操作，避免误删数据。
+注意：脚本默认不会自动执行 `mkfs`，也就是不会自动格式化设备。只有确认这是全新的、可清空的测试 namespace 时，才允许显式加：
+
+```bash
+--allow-format
+```
+
+## 双 VM NVMe-oF 测试
+
+如果没有真实实验室 SSD，可以用两台 Ubuntu VM 先跑通真正的 NVMe/TCP 协议：
+
+```text
+tokenfs-dev     运行 TokenFS + NVMe/TCP Host
+tokenfs-target  运行 Linux NVMe/TCP Target
+```
+
+在 Target VM 上启动模拟远端 SSD：
+
+```bash
+cd ~/projects/tokenfs
+sudo ./scripts/setup_nvme_target.sh \
+  --target-ip 0.0.0.0 \
+  --port 4420 \
+  --subnqn nqn.2026-07.local.tokenfs:remote0 \
+  --image /var/lib/tokenfs/nvmeof-target/remote0.img \
+  --size 20G
+```
+
+在 Client VM 上运行双 VM 测试。假设 Target IP 是 `192.168.64.3`：
+
+```bash
+cd ~/projects/tokenfs
+TOKENFS_NVME_TARGET_IP=192.168.64.3 ./scripts/nvmeof_two_vm_test.sh
+```
+
+测试通过后会生成：
+
+```text
+reports/nvmeof/latest/report.md
+reports/nvmeof/latest/files.csv
+reports/nvmeof/latest/status.txt
+reports/nvmeof/latest/metrics.txt
+```
+
+更详细说明见：
+
+```text
+docs/nvmeof-two-vm.md
+```
 
 接入真实 NVMe-oF 后，把配置文件中的远端后端根目录改为真实挂载点：
 
