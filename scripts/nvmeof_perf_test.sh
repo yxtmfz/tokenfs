@@ -7,7 +7,7 @@ target_port="${TOKENFS_NVME_TARGET_PORT:-4420}"
 subnqn="${TOKENFS_NVME_SUBNQN:-nqn.2026-07.local.tokenfs:remote0}"
 remote_mount="${TOKENFS_NVME_MOUNT:-/srv/tokenfs/remote0}"
 tokenfs_mount="${TOKENFS_MOUNT:-/mnt/tokenfs}"
-result_root="${TOKENFS_RESULT_ROOT:-$project_root/reports/nvmeof-perf/latest}"
+result_root="${TOKENFS_RESULT_ROOT:-$project_root/reports/latest}"
 json_dir="$result_root/fio-json"
 temp_config="/tmp/tokenfs.nvmeof.perf.yaml"
 

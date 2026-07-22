@@ -3,7 +3,7 @@ set -euo pipefail
 
 project_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 mount_point="${TOKENFS_MOUNT:-/mnt/tokenfs}"
-result_root="${1:-$project_root/reports/perf/latest}"
+result_root="${1:-$project_root/reports/latest}"
 json_dir="$result_root/fio-json"
 
 run_fio() {

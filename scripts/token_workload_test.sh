@@ -4,7 +4,7 @@ set -euo pipefail
 project_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 mount_point="${TOKENFS_MOUNT:-/mnt/tokenfs}"
 metadata_db="${TOKENFS_DB:-/var/lib/tokenfs/metadata/tokenfs.db}"
-result_root="${1:-$project_root/reports/token-workload/latest}"
+result_root="${1:-$project_root/reports/latest}"
 
 shard_mib="${TOKENFS_SHARD_MIB:-16}"
 large_shard_mib="${TOKENFS_LARGE_SHARD_MIB:-96}"

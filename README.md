@@ -93,20 +93,14 @@ tokenfs/
 │   ├── perf_test.sh
 │   └── perf_report.py
 ├── reports/
-│   ├── perf/
-│   │   └── latest/
-│   │       ├── report.md
-│   │       ├── report.html
-│   │       └── summary.csv
-│   └── token-workload/
-│       └── latest/
-│           ├── report.md
-│           ├── summary.csv
-│           ├── metrics.txt
-│           └── files.csv
+│   └── latest/
+│       ├── report.md
+│       ├── report.html
+│       ├── summary.csv
+│       ├── metrics.txt
+│       └── files.csv
 ├── docs/
-│   ├── research-plan.md
-│   ├── optimization-roadmap.md
+│   ├── project-plan.md
 │   └── nvmeof-two-vm.md
 └── src/
     └── main.cpp
@@ -229,11 +223,10 @@ cd ~/projects/tokenfs
 性能测试会自动生成可视化报告：
 
 ```text
-reports/perf/latest/report.html
-reports/nvmeof-perf/latest/report.html
+reports/latest/report.html
 ```
 
-报告会同时展示带宽、耗时、IOPS、平均延迟和 P99 延迟。不要只看带宽；远端 NVMe-oF 路径即使带宽高，也可能因为网络和 Target 处理带来更高延迟。
+最新报告统一维护在 `reports/latest/`。报告会同时展示带宽、耗时、IOPS、平均延迟和 P99 延迟。不要只看带宽；远端 NVMe-oF 路径即使带宽高，也可能因为网络和 Target 处理带来更高延迟。
 
 如果你想直接查看 SQLite，也可以执行：
 
@@ -348,10 +341,10 @@ cd ~/projects/tokenfs
 报告位置：
 
 ```text
-reports/token-workload/latest/report.md
-reports/token-workload/latest/summary.csv
-reports/token-workload/latest/metrics.txt
-reports/token-workload/latest/files.csv
+reports/latest/report.md
+reports/latest/summary.csv
+reports/latest/metrics.txt
+reports/latest/files.csv
 ```
 
 ## 性能测试和报告
@@ -375,9 +368,9 @@ cd ~/projects/tokenfs
 报告生成位置：
 
 ```text
-reports/perf/latest/report.md
-reports/perf/latest/report.html
-reports/perf/latest/summary.csv
+reports/latest/report.md
+reports/latest/report.html
+reports/latest/summary.csv
 ```
 
 说明：
@@ -411,11 +404,11 @@ TOKENFS_NVME_TARGET_IP=192.168.64.3 ./scripts/nvmeof_perf_test.sh
 报告生成位置：
 
 ```text
-reports/nvmeof-perf/latest/report.md
-reports/nvmeof-perf/latest/report.html
-reports/nvmeof-perf/latest/summary.csv
-reports/nvmeof-perf/latest/metrics.txt
-reports/nvmeof-perf/latest/files.csv
+reports/latest/report.md
+reports/latest/report.html
+reports/latest/summary.csv
+reports/latest/metrics.txt
+reports/latest/files.csv
 ```
 
 这组结果可以证明 TokenFS 已经接入真实 NVMe/TCP 协议路径，并能观察 FUSE 层和策略层带来的相对开销。由于当前 Target 后端仍是虚拟机 loop 文件和虚拟网络，因此它适合作为工程验证和论文预实验，最终性能数据仍需要在真实 SSD 与实验室网络上重新采集。
@@ -549,10 +542,10 @@ export TOKENFS_NVME_MOUNT=/srv/tokenfs/remote0
 
 ## 后续优化路线
 
-详细路线见：
+论文方向、优化路线和实验设计统一维护在：
 
 ```text
-docs/optimization-roadmap.md
+docs/project-plan.md
 ```
 
 当前最值得继续推进的方向：
@@ -595,10 +588,10 @@ TOKENFS_NVME_TARGET_IP=192.168.64.3 ./scripts/nvmeof_two_vm_test.sh
 测试通过后会生成：
 
 ```text
-reports/nvmeof/latest/report.md
-reports/nvmeof/latest/files.csv
-reports/nvmeof/latest/status.txt
-reports/nvmeof/latest/metrics.txt
+reports/latest/report.md
+reports/latest/files.csv
+reports/latest/status.txt
+reports/latest/metrics.txt
 ```
 
 更详细说明见：
@@ -631,11 +624,3 @@ TokenFS 当前是课程/研究原型，不是生产级分布式文件系统。
 - 完整 POSIX 文件锁语义。
 
 当前重点是把 FUSE 接口、本地优先策略、远端溢写、SQLite 元数据、可靠写入、启动恢复、性能测试和 NVMe-oF 接入流程打通。真实 SSD Target 信息到位后，主要改配置和运行连接脚本，不需要重写 TokenFS 主体逻辑。
-
-## 研究计划
-
-论文方向和优化路线见：
-
-```text
-docs/research-plan.md
-```

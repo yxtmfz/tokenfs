@@ -8,7 +8,7 @@ subnqn="${TOKENFS_NVME_SUBNQN:-nqn.2026-07.local.tokenfs:remote0}"
 mount_point="${TOKENFS_NVME_MOUNT:-/srv/tokenfs/remote0}"
 tokenfs_mount="${TOKENFS_MOUNT:-/mnt/tokenfs}"
 metadata_db="${TOKENFS_DB:-/var/lib/tokenfs/metadata/tokenfs.db}"
-result_root="${TOKENFS_RESULT_ROOT:-$project_root/reports/nvmeof/latest}"
+result_root="${TOKENFS_RESULT_ROOT:-$project_root/reports/latest}"
 temp_config="/tmp/tokenfs.nvmeof.yaml"
 
 if [[ -z "$target_ip" ]]; then

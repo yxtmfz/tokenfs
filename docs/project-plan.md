@@ -1,4 +1,6 @@
-# TokenFS 研究计划
+# TokenFS 项目计划
+
+本文档是 TokenFS 唯一持续维护的项目计划文件。后续论文定位、优化路线、实验设计和下一步计划都直接在这里更新，避免多个文档之间内容重复。
 
 ## 研究定位
 
@@ -221,6 +223,18 @@ FUSE 进程崩溃、机器重启或远端断开时，可能出现元数据和物
 
 ## 实验设计
 
+### 测试矩阵
+
+后续实验不要只测一种大块顺序读写，应逐步形成下面的矩阵：
+
+| 测试类型 | 块大小 | 目的 |
+|---|---:|---|
+| 顺序读写 | 1 MiB | 测大文件 token shard 吞吐 |
+| 随机读写 | 4 KiB | 测小块 IOPS 和延迟 |
+| 随机读写 | 16 KiB | 模拟小 token block |
+| 混合读写 | 64 KiB | 模拟训练过程中的交错访问 |
+| 重复读取热点集 | 1 MiB | 测热点提升和预取效果 |
+
 ### Baseline
 
 1. 直接读写本地目录。
@@ -247,10 +261,10 @@ tokenfs-remote-spill
 输出：
 
 ```text
-reports/nvmeof-perf/latest/report.md
-reports/nvmeof-perf/latest/report.html
-reports/nvmeof-perf/latest/summary.csv
-reports/nvmeof-perf/latest/metrics.txt
+reports/latest/report.md
+reports/latest/report.html
+reports/latest/summary.csv
+reports/latest/metrics.txt
 ```
 
 双 VM 结果可用于证明协议接入和相对开销趋势，但由于后端是 loop 文件和虚拟网络，最终论文定量结论仍应基于真实 NVMe SSD、高速网络和实验室 GPU 服务器重新采集。
@@ -333,6 +347,29 @@ TokenFS: GPU-Aware Tiered File System for Large-Scale LLM Token Data over NVMe-o
 ```text
 面向大模型 Token 数据的 GPU 感知 NVMe-oF 分层文件系统
 ```
+
+## 论文核心对比
+
+建议最终形成以下对照组：
+
+```text
+Baseline 1：直接本地 SSD
+Baseline 2：直接 NVMe-oF 远端 SSD
+Baseline 3：TokenFS 本地优先 + 远端溢写
+Ours 1：TokenFS + 热点提升
+Ours 2：TokenFS + 顺序预取
+Ours 3：TokenFS + 淘汰 + 预取联合策略
+```
+
+关键指标：
+
+- token workload 端到端耗时。
+- GPU 等待数据时间。
+- 本地读命中率。
+- 远端读取字节数。
+- P99 读取延迟。
+- 预取命中率。
+- 本地空间利用率。
 
 ## 下一阶段里程碑
 

@@ -109,10 +109,10 @@ TOKENFS_NVME_TARGET_IP=192.168.64.3 \
 报告位置：
 
 ```text
-reports/nvmeof/latest/report.md
-reports/nvmeof/latest/files.csv
-reports/nvmeof/latest/status.txt
-reports/nvmeof/latest/metrics.txt
+reports/latest/report.md
+reports/latest/files.csv
+reports/latest/status.txt
+reports/latest/metrics.txt
 ```
 
 ## 判断是否成功
@@ -126,7 +126,7 @@ TokenFS NVMe-oF two-VM test passed.
 同时可以查看元数据：
 
 ```bash
-cat reports/nvmeof/latest/files.csv
+cat reports/latest/files.csv
 ```
 
 你应该能看到类似：
@@ -159,10 +159,10 @@ tokenfs-remote-spill-write/read
 报告位置：
 
 ```text
-reports/nvmeof-perf/latest/report.md
-reports/nvmeof-perf/latest/report.html
-reports/nvmeof-perf/latest/summary.csv
-reports/nvmeof-perf/latest/metrics.txt
+reports/latest/report.md
+reports/latest/report.html
+reports/latest/summary.csv
+reports/latest/metrics.txt
 ```
 
 其中 `direct-remote-*` 代表直接访问 NVMe-oF 挂载目录，`tokenfs-remote-*` 代表通过 TokenFS 触发远端溢写后访问 NVMe-oF 后端。两者的差值可以粗略反映 FUSE 和 TokenFS 策略层的额外开销。
