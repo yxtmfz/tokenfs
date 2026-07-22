@@ -59,8 +59,9 @@ TokenFS 的差异点应围绕以下问题展开：
 2. Token 感知：以 token shard、prompt prefix、model id、tokenizer version 等元数据组织文件。
 3. 本地优先：优先使用 GPU 所在节点本地 SSD，空间不足时自动溢写到远端 NVMe-oF。
 4. 连续布局：通过 `fallocate` 和顺序 shard 写入减少碎片，提高大文件顺序读写性能。
-5. 可观测性：记录本地/远端读写次数、字节量、平均耗时、溢写次数和预分配次数。
-6. 真实部署可迁移：开发阶段使用目录模拟远端，真实环境到位后改配置即可接入 NVMe-oF。
+5. 热点提升：远端 token shard 被反复读取后自动回迁本地层，提高后续读取命中率。
+6. 可观测性：记录本地/远端读写次数、字节量、平均耗时、溢写次数、预分配次数和热点提升次数。
+7. 真实部署可迁移：开发阶段使用目录模拟远端，真实环境到位后改配置即可接入 NVMe-oF。
 
 ## 可优化点
 
@@ -121,7 +122,20 @@ Token 数据通常适合被组织成较大的 shard 文件。可以在写入前�
 
 远端文件被频繁读取后，可以自动提升到本地层。该策略适合多轮训练或推理反复访问同一批 prompt/token 数据的场景。
 
-可设计策略：
+当前已经实现的基础策略：
+
+```text
+远端文件 read-open 次数达到 promote_read_threshold
+    +
+对应 GPU 本地配额仍有空间
+    ↓
+复制到 GPU 本地目录
+fsync 本地副本
+更新 SQLite 元数据 tier=local
+删除旧远端副本
+```
+
+后续可继续优化：
 
 - read count 阈值
 - last access 时间窗口
@@ -133,6 +147,9 @@ Token 数据通常适合被组织成较大的 shard 文件。可以在写入前�
 - 提升前后平均读取延迟
 - 本地空间占用
 - 热点文件命中率
+- `promote_count`
+- `promote_bytes`
+- `promote_skip_no_space`
 
 ### 5. 多远端后端选择
 
@@ -223,7 +240,8 @@ reports/nvmeof-perf/latest/metrics.txt
 2. 大 token shard：96 MiB 或更大。
 3. 多 GPU namespace：`/gpu0`、`/gpu1`。
 4. 顺序写入、顺序读取。
-5. 后续加入随机读取和重复访问热点集。
+5. 重复访问热点集，观察远端文件被提升前后的读取变化。
+6. 后续加入随机读取和多 GPU 并发访问。
 
 ### 当前已有指标
 
@@ -240,6 +258,11 @@ TokenFS 已经记录：
 - `spill_count`
 - `spill_bytes`
 - `remote_place_count`
+- `remote_read_open_count`
+- `promote_count`
+- `promote_bytes`
+- `promote_skip_no_space`
+- `promote_error_count`
 - `fallocate_ops`
 - `fallocate_bytes`
 - `read_latency_us_total`
@@ -252,6 +275,14 @@ TokenFS 已经记录：
 ```
 
 查看。
+
+热点提升可以通过：
+
+```bash
+./scripts/promote_test.sh
+```
+
+单独验证。该测试会创建一个远端 token shard，第一次读取保持远端，第二次读取触发提升，并检查物理文件位置、SQLite 元数据和 metrics。
 
 ## 论文可能标题
 
@@ -271,7 +302,8 @@ TokenFS: GPU-Aware Tiered File System for Large-Scale LLM Token Data over NVMe-o
 
 1. 接入真实 NVMe-oF Target，完成 `connect_nvme.sh --dry-run` 到真实连接的切换。
 2. 增加真实远端读写性能报告。
-3. 增加热点提升和预取策略。
-4. 增加 `tokenfsctl check` 一致性检查。
-5. 采集端到端 token workload 指标。
-6. 将实验结果整理为论文图表。
+3. 在真实 NVMe-oF 环境中量化热点提升前后的端到端收益。
+4. 增加远端预取策略，与热点提升做对比。
+5. 增加 `tokenfsctl check` 一致性检查。
+6. 采集端到端 token workload 指标。
+7. 将实验结果整理为论文图表。

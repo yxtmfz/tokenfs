@@ -18,7 +18,7 @@ TokenFS 是一个面向大规模机器学习 Token 数据的本地-远端分层�
 /mnt/tokenfs/gpu1/train-0002.tokens
 ```
 
-程序不需要关心文件最终落在本地目录还是远端目录。TokenFS 会在内部记录文件的逻辑路径、所属 GPU、存储层级、物理路径、文件大小、校验值和提交状态。
+程序不需要关心文件最终落在本地目录还是远端目录。TokenFS 会在内部记录文件的逻辑路径、所属 GPU、存储层级、物理路径、文件大小、校验值、提交状态和读取次数。对于远端热点文件，TokenFS 还可以按策略自动提升回 GPU 本地层，减少后续重复读取的远端开销。
 
 ## 系统架构
 
@@ -48,12 +48,14 @@ TokenFS FUSE 挂载点：/mnt/tokenfs
 - FUSE 挂载，支持常用文件操作：`getattr`、`readdir`、`mkdir`、`create`、`open`、`read`、`write`、`truncate`、`rename`、`unlink`、`fsync`、`release`。
 - `/gpu0` 和 `/gpu1` 两个逻辑命名空间，不同 GPU 使用独立本地目录和独立配额。
 - 本地优先写入；当写入或 `truncate` 后的文件大小会超过对应 GPU 本地配额时，自动迁移到远端层。
-- SQLite 元数据表，记录 `logical_path`、`gpu_id`、`tier`、`backend_id`、`physical_path`、`size_bytes`、`checksum`、`state`。
+- 远端热点提升：远端文件被多次读取后，可自动迁回对应 GPU 的本地目录，并把元数据从 `remote` 更新为 `local`。
+- SQLite 元数据表，记录 `logical_path`、`gpu_id`、`tier`、`backend_id`、`physical_path`、`size_bytes`、`checksum`、`state`、`read_count`。
 - 可靠写入状态模型：写入中为 `CREATING`，完成 `fsync` 和元数据更新后为 `COMMITTED`。
 - 启动恢复：自动清理未完成写入记录和残留临时文件，避免半成品 Token 文件被当成有效数据。
 - `fnv1a64` 文件校验值记录，用于确认已提交文件的内容状态。
 - 管理工具 `tokenfsctl.py`，可以查看挂载状态、GPU 配额使用、local/remote 文件数量、后端目录和文件清单。
 - 集成测试脚本，覆盖本地写入、远端溢写、GPU1 命名空间、校验值、删除清理和启动恢复。
+- 热点提升测试脚本，验证远端 token shard 在重复读取后自动回迁本地。
 - 性能测试脚本，自动生成 CSV、Markdown 和 HTML 报告。
 - NVMe-oF Host 连接脚本，支持 dry-run、自动发现连接后的 `/dev/nvmeXnY`、显式格式化保护和挂载。
 - NVMe-oF Target 模拟脚本，可以在第二台 Ubuntu VM 上用 Linux `nvmet` 导出 loop 文件作为远端 Namespace。
@@ -84,6 +86,7 @@ tokenfs/
 │   ├── nvmeof_loopback_test.sh
 │   ├── nvmeof_two_vm_test.sh
 │   ├── nvmeof_perf_test.sh
+│   ├── promote_test.sh
 │   ├── perf_test.sh
 │   └── perf_report.py
 ├── reports/
@@ -223,7 +226,7 @@ cd ~/projects/tokenfs
 
 ```bash
 sqlite3 /var/lib/tokenfs/metadata/tokenfs.db \
-"select logical_path,gpu_id,tier,physical_path,size_bytes,checksum,state from files;"
+"select logical_path,gpu_id,tier,physical_path,size_bytes,checksum,state,read_count from files;"
 ```
 
 字段含义：
@@ -236,6 +239,7 @@ physical_path  文件真实落盘位置
 size_bytes     文件大小
 checksum       文件校验值
 state          COMMITTED 表示已经可靠提交
+read_count     文件被打开读取的次数，用于热点提升策略
 ```
 
 ## 一键验证
@@ -245,6 +249,12 @@ state          COMMITTED 表示已经可靠提交
 ```bash
 cd ~/projects/tokenfs
 ./scripts/integration_test.sh
+```
+
+运行热点提升测试：
+
+```bash
+./scripts/promote_test.sh
 ```
 
 测试会自动完成：
@@ -258,6 +268,14 @@ cd ~/projects/tokenfs
 - 检查 SQLite 中的校验值和状态。
 - 删除文件，验证物理文件和元数据都会清理。
 - 人工制造一个 `CREATING` 状态的未完成文件，重启后验证自动恢复。
+
+热点提升测试会额外验证：
+
+- 先创建一个只存在于远端层的 token shard。
+- 第一次读取时仍保留在远端。
+- 第二次读取达到阈值后，文件自动复制到 `/var/lib/tokenfs/local/gpu0`。
+- SQLite 中该文件的 `tier` 从 `remote` 变为 `local`，`read_count` 变为 `2`。
+- 原远端文件被移除，避免同一逻辑文件出现两个权威副本。
 
 看到下面输出表示通过：
 
@@ -394,6 +412,8 @@ filesystem:
 policy:
   mode: local_first
   checksum: fnv1a64
+  promote_on_read: false
+  promote_read_threshold: 2
 
 gpus:
   - gpu_id: 0
@@ -415,6 +435,16 @@ backends:
 ```
 
 要新增 GPU，可以在 `gpus` 中增加新的条目，例如 `/gpu2`，并给它独立的 `local_root` 和 `local_quota_mib`。
+
+热点提升默认关闭，方便做对照实验。需要测试远端热点文件自动回迁时，把配置改成：
+
+```yaml
+policy:
+  promote_on_read: true
+  promote_read_threshold: 2
+```
+
+含义是：远端文件被打开读取达到 2 次后，如果对应 GPU 本地配额还有空间，就把它提升回本地层。
 
 ## 接入真实 NVMe-oF
 

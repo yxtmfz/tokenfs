@@ -165,6 +165,16 @@ def db_rows(db_path: Path, sql: str, params: tuple = ()) -> list[sqlite3.Row]:
         conn.close()
 
 
+def db_has_column(db_path: Path, table: str, column: str) -> bool:
+    if not db_path.exists():
+        return False
+    conn = sqlite3.connect(db_path)
+    try:
+        return any(row[1] == column for row in conn.execute(f"pragma table_info({table})"))
+    finally:
+        conn.close()
+
+
 def print_status(config: TokenfsConfig, config_path: Path) -> None:
     print("TokenFS 状态")
     print("=" * 60)
@@ -230,9 +240,13 @@ def print_status(config: TokenfsConfig, config_path: Path) -> None:
 
 
 def print_files(config: TokenfsConfig) -> None:
+    read_count_expr = "coalesce(read_count,0)" if db_has_column(
+        config.metadata_db, "files", "read_count"
+    ) else "0"
     rows = db_rows(
         config.metadata_db,
-        "select logical_path,gpu_id,tier,physical_path,size_bytes,checksum,state "
+        "select logical_path,gpu_id,tier,physical_path,size_bytes,checksum,state,"
+        f"{read_count_expr} as read_count "
         "from files order by logical_path",
     )
     if not rows:
@@ -242,7 +256,7 @@ def print_files(config: TokenfsConfig) -> None:
         print(
             f"{row['logical_path']} | gpu{row['gpu_id']} | {row['tier']} | "
             f"{bytes_to_mib(row['size_bytes'])} | {row['state']} | "
-            f"{row['checksum'] or '-'}"
+            f"reads={row['read_count']} | {row['checksum'] or '-'}"
         )
         print(f"  -> {row['physical_path']}")
 
@@ -285,6 +299,11 @@ def print_metrics(config: TokenfsConfig) -> None:
     print(f"溢写次数:     {metric_value(metrics, 'spill_count')}")
     print(f"溢写数据量:   {bytes_to_mib(metric_value(metrics, 'spill_bytes'))}")
     print(f"远端初始放置: {metric_value(metrics, 'remote_place_count')} 次")
+    print(f"远端打开读取: {metric_value(metrics, 'remote_read_open_count')} 次")
+    print(f"热点提升次数: {metric_value(metrics, 'promote_count')}")
+    print(f"热点提升数据: {bytes_to_mib(metric_value(metrics, 'promote_bytes'))}")
+    print(f"提升空间不足: {metric_value(metrics, 'promote_skip_no_space')} 次")
+    print(f"提升失败次数: {metric_value(metrics, 'promote_error_count')} 次")
     print(f"预分配次数:   {metric_value(metrics, 'fallocate_ops')}")
     print(f"预分配数据量: {bytes_to_mib(metric_value(metrics, 'fallocate_bytes'))}")
     print()

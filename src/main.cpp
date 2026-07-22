@@ -46,6 +46,8 @@ struct Config {
   fs::path metadata_db;
   std::string temp_suffix = ".tokenfs_tmp";
   std::string checksum = "none";
+  bool promote_on_read = false;
+  uint64_t promote_read_threshold = 2;
   std::unordered_map<std::string, BackendConfig> backends;
   std::vector<GpuConfig> gpus;
 };
@@ -59,6 +61,7 @@ struct FileMeta {
   uint64_t size_bytes = 0;
   std::string checksum;
   std::string state = "COMMITTED";
+  uint64_t read_count = 0;
 };
 
 struct Handle {
@@ -102,9 +105,11 @@ class MetadataStore {
          "state TEXT NOT NULL,"
          "created_at INTEGER NOT NULL,"
          "updated_at INTEGER NOT NULL,"
-         "last_access_at INTEGER"
+         "last_access_at INTEGER,"
+         "read_count INTEGER NOT NULL DEFAULT 0"
          ");");
     EnsureColumn("files", "checksum", "TEXT");
+    EnsureColumn("files", "read_count", "INTEGER NOT NULL DEFAULT 0");
     Exec("CREATE TABLE IF NOT EXISTS metrics ("
          "name TEXT PRIMARY KEY,"
          "value INTEGER NOT NULL DEFAULT 0"
@@ -115,7 +120,7 @@ class MetadataStore {
     std::lock_guard<std::mutex> lock(mu_);
     const char* sql =
         "SELECT logical_path,gpu_id,tier,backend_id,physical_path,size_bytes,"
-        "COALESCE(checksum,''),state "
+        "COALESCE(checksum,''),state,COALESCE(read_count,0) "
         "FROM files WHERE logical_path=?;";
     sqlite3_stmt* stmt = nullptr;
     Prepare(sql, &stmt);
@@ -139,6 +144,7 @@ class MetadataStore {
     meta.size_bytes = static_cast<uint64_t>(sqlite3_column_int64(stmt, 5));
     meta.checksum = ColumnText(stmt, 6);
     meta.state = ColumnText(stmt, 7);
+    meta.read_count = static_cast<uint64_t>(sqlite3_column_int64(stmt, 8));
     sqlite3_finalize(stmt);
     return meta;
   }
@@ -148,8 +154,8 @@ class MetadataStore {
     const auto now = UnixNow();
     const char* sql =
         "INSERT INTO files(logical_path,gpu_id,tier,backend_id,physical_path,"
-        "size_bytes,checksum,state,created_at,updated_at,last_access_at) "
-        "VALUES(?,?,?,?,?,?,?,?,?,?,?) "
+        "size_bytes,checksum,state,created_at,updated_at,last_access_at,read_count) "
+        "VALUES(?,?,?,?,?,?,?,?,?,?,?,?) "
         "ON CONFLICT(logical_path) DO UPDATE SET "
         "gpu_id=excluded.gpu_id,"
         "tier=excluded.tier,"
@@ -173,7 +179,32 @@ class MetadataStore {
     sqlite3_bind_int64(stmt, 9, now);
     sqlite3_bind_int64(stmt, 10, now);
     sqlite3_bind_int64(stmt, 11, now);
+    sqlite3_bind_int64(stmt, 12, static_cast<sqlite3_int64>(meta.read_count));
     StepDone(stmt);
+  }
+
+  uint64_t IncrementReadCount(const std::string& logical_path) {
+    std::lock_guard<std::mutex> lock(mu_);
+    const auto now = UnixNow();
+    sqlite3_stmt* stmt = nullptr;
+    Prepare("UPDATE files SET read_count=COALESCE(read_count,0)+1,"
+            "last_access_at=? WHERE logical_path=?;",
+            &stmt);
+    sqlite3_bind_int64(stmt, 1, now);
+    sqlite3_bind_text(stmt, 2, logical_path.c_str(), -1, SQLITE_TRANSIENT);
+    StepDone(stmt);
+
+    Prepare("SELECT COALESCE(read_count,0) FROM files WHERE logical_path=?;", &stmt);
+    sqlite3_bind_text(stmt, 1, logical_path.c_str(), -1, SQLITE_TRANSIENT);
+    int rc = sqlite3_step(stmt);
+    if (rc != SQLITE_ROW) {
+      std::string err = rc == SQLITE_DONE ? "missing file metadata" : sqlite3_errmsg(db_);
+      sqlite3_finalize(stmt);
+      throw std::runtime_error(err);
+    }
+    uint64_t count = static_cast<uint64_t>(sqlite3_column_int64(stmt, 0));
+    sqlite3_finalize(stmt);
+    return count;
   }
 
   void Remove(const std::string& logical_path) {
@@ -492,11 +523,21 @@ class TokenFS {
       }
       metadata_.Upsert(meta);
     }
+    const bool writable = IsWritable(fi->flags);
+    if (!writable && meta.tier == "remote") {
+      uint64_t read_count = metadata_.IncrementReadCount(path);
+      meta.read_count = read_count;
+      metadata_.AddMetric("remote_read_open_count", 1);
+      if (ShouldPromoteOnRead(meta, read_count)) {
+        if (int rc = PromoteToLocal(*gpu, rel, meta); rc != 0) {
+          metadata_.AddMetric("promote_error_count", 1);
+        }
+      }
+    }
     int fd = open(meta.physical_path.c_str(), fi->flags);
     if (fd < 0) {
       return -errno;
     }
-    const bool writable = IsWritable(fi->flags);
     if (writable) {
       meta.state = "CREATING";
       metadata_.Upsert(meta);
@@ -786,6 +827,18 @@ class TokenFS {
     return total;
   }
 
+  bool HasLocalCapacity(const GpuConfig& gpu, uint64_t new_file_size,
+                        const fs::path* existing_file = nullptr) const {
+    uint64_t used = DirectoryBytes(gpu.local_root);
+    if (existing_file != nullptr) {
+      uint64_t existing_size = FileSizeNoThrow(*existing_file);
+      if (used >= existing_size) {
+        used -= existing_size;
+      }
+    }
+    return used + new_file_size <= gpu.local_quota_bytes;
+  }
+
   FileMeta SelectNewFile(const GpuConfig& gpu, const fs::path& rel,
                          const std::string& logical_path) const {
     const uint64_t used = DirectoryBytes(gpu.local_root);
@@ -795,6 +848,63 @@ class TokenFS {
     }
     return {logical_path, gpu.gpu_id, "remote", gpu.remote_backend,
             RemotePath(gpu, rel), 0, "", "CREATING"};
+  }
+
+  bool ShouldPromoteOnRead(const FileMeta& meta, uint64_t read_count) const {
+    return config_.promote_on_read && meta.state == "COMMITTED" &&
+           meta.tier == "remote" && read_count >= config_.promote_read_threshold;
+  }
+
+  int PromoteToLocal(const GpuConfig& gpu, const fs::path& rel, FileMeta& meta) {
+    const uint64_t size = FileSizeNoThrow(meta.physical_path);
+    fs::path local = gpu.local_root / rel;
+    if (!HasLocalCapacity(gpu, size, fs::exists(local) ? &local : nullptr)) {
+      metadata_.AddMetric("promote_skip_no_space", 1);
+      return 0;
+    }
+
+    fs::create_directories(local.parent_path());
+    fs::path tmp = local;
+    tmp += config_.temp_suffix + ".promote";
+
+    std::error_code ec;
+    fs::remove(tmp, ec);
+    ec.clear();
+    fs::copy_file(meta.physical_path, tmp, fs::copy_options::overwrite_existing, ec);
+    if (ec) {
+      fs::remove(tmp, ec);
+      return -ec.value();
+    }
+
+    int fd = open(tmp.c_str(), O_RDONLY);
+    if (fd < 0) {
+      fs::remove(tmp, ec);
+      return -errno;
+    }
+    if (fsync(fd) != 0) {
+      int err = errno;
+      close(fd);
+      fs::remove(tmp, ec);
+      return -err;
+    }
+    close(fd);
+
+    fs::rename(tmp, local, ec);
+    if (ec) {
+      fs::remove(tmp, ec);
+      return -ec.value();
+    }
+
+    fs::remove(meta.physical_path, ec);
+    meta.tier = "local";
+    meta.backend_id = "local";
+    meta.physical_path = local;
+    meta.size_bytes = size;
+    meta.state = "COMMITTED";
+    metadata_.Upsert(meta);
+    metadata_.AddMetric("promote_count", 1);
+    metadata_.AddMetric("promote_bytes", size);
+    return 0;
   }
 
   int SpillIfNeeded(Handle& handle, uint64_t new_size) {
@@ -1060,6 +1170,13 @@ Config LoadConfig(const fs::path& path) {
       root["filesystem"]["temp_suffix"].as<std::string>(".tokenfs_tmp");
   if (root["policy"] && root["policy"]["checksum"]) {
     config.checksum = root["policy"]["checksum"].as<std::string>("none");
+  }
+  if (root["policy"] && root["policy"]["promote_on_read"]) {
+    config.promote_on_read = root["policy"]["promote_on_read"].as<bool>(false);
+  }
+  if (root["policy"] && root["policy"]["promote_read_threshold"]) {
+    config.promote_read_threshold =
+        root["policy"]["promote_read_threshold"].as<uint64_t>(2);
   }
 
   for (const auto& item : root["backends"]) {
