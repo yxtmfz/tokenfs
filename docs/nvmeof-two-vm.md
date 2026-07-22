@@ -138,6 +138,35 @@ cat reports/nvmeof/latest/files.csv
 
 其中 `remote-spill.tokens` 的 `tier=remote`，并且物理路径位于 `/srv/tokenfs/remote0`，说明它不是落在本地模拟目录，而是落在 NVMe-oF 挂载后端。
 
+## 性能基线测试
+
+协议链路验证通过后，可以运行双 VM NVMe-oF 性能基线：
+
+```bash
+cd ~/projects/tokenfs
+TOKENFS_NVME_TARGET_IP=192.168.64.3 ./scripts/nvmeof_perf_test.sh
+```
+
+该测试会比较：
+
+```text
+direct-local-write/read
+direct-remote-write/read
+tokenfs-local-write/read
+tokenfs-remote-spill-write/read
+```
+
+报告位置：
+
+```text
+reports/nvmeof-perf/latest/report.md
+reports/nvmeof-perf/latest/report.html
+reports/nvmeof-perf/latest/summary.csv
+reports/nvmeof-perf/latest/metrics.txt
+```
+
+其中 `direct-remote-*` 代表直接访问 NVMe-oF 挂载目录，`tokenfs-remote-*` 代表通过 TokenFS 触发远端溢写后访问 NVMe-oF 后端。两者的差值可以粗略反映 FUSE 和 TokenFS 策略层的额外开销。
+
 ## 接入真实实验室 SSD
 
 真实环境到位后，Target 端一般由实验室存储服务器提供，不再需要 `setup_nvme_target.sh`。

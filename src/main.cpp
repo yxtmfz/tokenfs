@@ -70,6 +70,7 @@ struct Handle {
   fs::path physical_path;
   int flags = 0;
   bool writable = false;
+  bool created_remote = false;
   std::string state = "COMMITTED";
 };
 
@@ -461,7 +462,8 @@ class TokenFS {
     }
     metadata_.Upsert(meta);
     fi->fh = StoreHandle({fd, path, gpu->gpu_id, meta.tier, meta.backend_id,
-                          meta.physical_path, fi->flags, true, "CREATING"});
+                          meta.physical_path, fi->flags, true,
+                          meta.tier == "remote", "CREATING"});
     return 0;
   }
 
@@ -500,7 +502,8 @@ class TokenFS {
       metadata_.Upsert(meta);
     }
     fi->fh = StoreHandle({fd, path, gpu->gpu_id, meta.tier, meta.backend_id,
-                          meta.physical_path, fi->flags, writable, meta.state});
+                          meta.physical_path, fi->flags, writable, false,
+                          meta.state});
     metadata_.AddMetric(meta.tier == "local" ? "open_local" : "open_remote", 1);
     return 0;
   }
@@ -842,6 +845,7 @@ class TokenFS {
     handle.physical_path = remote;
     handle.tier = "remote";
     handle.backend_id = gpu->remote_backend;
+    handle.created_remote = false;
     handle.fd = open(handle.physical_path.c_str(), handle.flags);
     if (handle.fd < 0) {
       return -errno;
@@ -883,6 +887,10 @@ class TokenFS {
     }
     handle.state = "COMMITTED";
     UpdateHandleMeta(handle, "COMMITTED", checksum);
+    if (handle.created_remote) {
+      metadata_.AddMetric("remote_place_count", 1);
+      handle.created_remote = false;
+    }
     return 0;
   }
 

@@ -157,6 +157,11 @@ if [[ "$transport" != "tcp" ]]; then
   exit 2
 fi
 
+if [[ "$dry_run" -eq 0 ]] && findmnt -rn "$mount_point" >/dev/null; then
+  echo "$mount_point is already mounted."
+  exit 0
+fi
+
 run sudo modprobe nvme-tcp
 run sudo mkdir -p "$mount_point"
 
@@ -212,11 +217,6 @@ if [[ "$dry_run" -eq 0 && ( -z "$device" || ! -b "$device" ) ]]; then
   echo "Set TOKENFS_NVME_DEVICE manually, for example /dev/nvme1n1." >&2
   nvme list || true
   exit 1
-fi
-
-if [[ "$dry_run" -eq 0 ]] && findmnt -rn "$mount_point" >/dev/null; then
-  echo "$mount_point is already mounted."
-  exit 0
 fi
 
 if [[ "$allow_format" -eq 1 ]]; then

@@ -1,0 +1,31 @@
+TokenFS 状态
+============================================================
+配置文件: /tmp/tokenfs.nvmeof.perf.yaml
+挂载点:   /mnt/tokenfs (已挂载)
+元数据库: /var/lib/tokenfs/metadata/tokenfs.db (存在)
+
+元数据概览
+- 文件记录: 2
+- 已提交:   2
+- 未完成:   0
+
+GPU 存储配额
+- GPU 0 (/gpu0)
+  本地目录: /var/lib/tokenfs/local/gpu0
+  本地配额: 64.00 MiB
+  本地已用: 64.00 MiB (100.0%)
+  元数据: local 1 个/32.00 MiB, remote 1 个/96.00 MiB
+- GPU 1 (/gpu1)
+  本地目录: /var/lib/tokenfs/local/gpu1
+  本地配额: 64.00 MiB
+  本地已用: 0.00 MiB (0.0%)
+  元数据: local 0 个/0.00 MiB, remote 0 个/0.00 MiB
+
+远端后端
+- remote0: nvmeof
+  根目录: /srv/tokenfs/remote0 (存在)
+  已用:   224.00 MiB
+  NVMe-oF: tcp 192.168.64.3:4420
+  NQN:     nqn.2026-07.local.tokenfs:remote0
+  设备:    /dev/nvmeXnY
+  挂载点:  /srv/tokenfs/remote0

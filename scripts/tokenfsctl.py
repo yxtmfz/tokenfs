@@ -284,6 +284,7 @@ def print_metrics(config: TokenfsConfig) -> None:
     print(f"平均写耗时:   {avg_write_us:.1f} us")
     print(f"溢写次数:     {metric_value(metrics, 'spill_count')}")
     print(f"溢写数据量:   {bytes_to_mib(metric_value(metrics, 'spill_bytes'))}")
+    print(f"远端初始放置: {metric_value(metrics, 'remote_place_count')} 次")
     print(f"预分配次数:   {metric_value(metrics, 'fallocate_ops')}")
     print(f"预分配数据量: {bytes_to_mib(metric_value(metrics, 'fallocate_bytes'))}")
     print()

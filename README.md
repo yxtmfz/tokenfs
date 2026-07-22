@@ -83,6 +83,7 @@ tokenfs/
 │   ├── cleanup_nvme_target.sh
 │   ├── nvmeof_loopback_test.sh
 │   ├── nvmeof_two_vm_test.sh
+│   ├── nvmeof_perf_test.sh
 │   ├── perf_test.sh
 │   └── perf_report.py
 ├── reports/
@@ -344,6 +345,36 @@ summary.csv  适合后续导入 Excel 或继续画图
 ```
 
 当前远端仍是目录模拟，因此性能结果主要用于观察 FUSE 开销、本地优先策略和远端溢写路径。接入真实 NVMe-oF 后，需要重新运行同一脚本生成真实远端 SSD 数据。
+
+## 双 VM NVMe-oF 性能基线
+
+双 VM NVMe-oF 链路跑通后，可以运行更接近论文实验的基线测试。假设 Target VM IP 是 `192.168.64.3`：
+
+```bash
+cd ~/projects/tokenfs
+TOKENFS_NVME_TARGET_IP=192.168.64.3 ./scripts/nvmeof_perf_test.sh
+```
+
+该脚本会比较：
+
+```text
+直接读写本地目录
+直接读写 NVMe-oF 挂载目录
+通过 TokenFS 写入/读取本地层文件
+通过 TokenFS 触发远端溢写并从 NVMe-oF 后端读取
+```
+
+报告生成位置：
+
+```text
+reports/nvmeof-perf/latest/report.md
+reports/nvmeof-perf/latest/report.html
+reports/nvmeof-perf/latest/summary.csv
+reports/nvmeof-perf/latest/metrics.txt
+reports/nvmeof-perf/latest/files.csv
+```
+
+这组结果可以证明 TokenFS 已经接入真实 NVMe/TCP 协议路径，并能观察 FUSE 层和策略层带来的相对开销。由于当前 Target 后端仍是虚拟机 loop 文件和虚拟网络，因此它适合作为工程验证和论文预实验，最终性能数据仍需要在真实 SSD 与实验室网络上重新采集。
 
 ## 配置文件
 

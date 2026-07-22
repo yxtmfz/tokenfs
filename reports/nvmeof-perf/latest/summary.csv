@@ -1,0 +1,9 @@
+case,op,io_mib,runtime_s,bw_mib_s,iops,lat_mean_us,lat_p95_us,lat_p99_us
+direct-local-read,read,32.0,0.017,1882.35,1882.35,420.46,626.69,1253.38
+direct-local-write,write,32.0,0.009,3555.56,3555.56,254.61,296.96,305.15
+direct-remote-read,read,32.0,0.099,323.23,323.23,2979.78,4112.38,5537.79
+direct-remote-write,write,32.0,0.008,4000.0,4000.0,245.8,296.96,362.5
+tokenfs-local-read,read,32.0,0.488,65.57,65.57,15178.47,17432.58,19529.73
+tokenfs-local-write,write,32.0,0.17,188.24,188.24,5166.45,6389.76,6586.37
+tokenfs-remote-read,read,96.0,0.662,145.02,145.02,4042.85,4358.14,5275.65
+tokenfs-remote-spill-write,write,96.0,0.219,438.36,438.36,2240.35,4685.82,5013.5

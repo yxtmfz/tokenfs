@@ -186,10 +186,36 @@ FUSE 进程崩溃、机器重启或远端断开时，可能出现元数据和物
 ### Baseline
 
 1. 直接读写本地目录。
-2. 直接读写远端挂载目录。
+2. 直接读写远端挂载目录，包括目录模拟和 NVMe-oF 挂载两种形态。
 3. TokenFS 本地层读写。
 4. TokenFS 远端溢写读写。
 5. TokenFS 预分配顺序 shard 写入。
+
+当前已经加入双 VM NVMe-oF 基线脚本：
+
+```text
+scripts/nvmeof_perf_test.sh
+```
+
+它在真实 Linux NVMe/TCP Host/Target 协议路径上对比：
+
+```text
+direct-local
+direct-nvmeof
+tokenfs-local
+tokenfs-remote-spill
+```
+
+输出：
+
+```text
+reports/nvmeof-perf/latest/report.md
+reports/nvmeof-perf/latest/report.html
+reports/nvmeof-perf/latest/summary.csv
+reports/nvmeof-perf/latest/metrics.txt
+```
+
+双 VM 结果可用于证明协议接入和相对开销趋势，但由于后端是 loop 文件和虚拟网络，最终论文定量结论仍应基于真实 NVMe SSD、高速网络和实验室 GPU 服务器重新采集。
 
 ### Workload
 
@@ -213,6 +239,7 @@ TokenFS 已经记录：
 - `write_remote_ops`
 - `spill_count`
 - `spill_bytes`
+- `remote_place_count`
 - `fallocate_ops`
 - `fallocate_bytes`
 - `read_latency_us_total`
