@@ -50,15 +50,17 @@ TokenFS FUSE 挂载点：/mnt/tokenfs
 - 本地优先写入；当写入或 `truncate` 后的文件大小会超过对应 GPU 本地配额时，自动迁移到远端层。
 - 远端热点提升：远端文件被多次读取后，可自动迁回对应 GPU 的本地目录，并把元数据从 `remote` 更新为 `local`。
 - 顺序 shard 预取：读取远端 `shard-000001.tokens` 时，可按文件名连续编号提前把 `shard-000002.tokens` 回迁到本地。
+- Cost-aware 本地淘汰：本地配额不足时，优先把访问少、较旧、较大的本地冷文件迁移到远端，为新写入或热点回迁腾空间。
 - SQLite 元数据表，记录 `logical_path`、`gpu_id`、`tier`、`backend_id`、`physical_path`、`size_bytes`、`checksum`、`state`、`read_count`。
 - 可靠写入状态模型：写入中为 `CREATING`，完成 `fsync` 和元数据更新后为 `COMMITTED`。
 - 启动恢复：自动清理未完成写入记录和残留临时文件，避免半成品 Token 文件被当成有效数据。
 - `fnv1a64` 文件校验值记录，用于确认已提交文件的内容状态。
-- 管理工具 `tokenfsctl.py`，可以查看挂载状态、GPU 配额使用、local/remote 文件数量、后端目录和文件清单。
+- 管理工具 `tokenfsctl.py`，可以查看挂载状态、GPU 配额使用、local/remote 文件数量、后端目录、文件清单和一致性检查结果。
 - 集成测试脚本，覆盖本地写入、远端溢写、GPU1 命名空间、校验值、删除清理和启动恢复。
+- 一致性检查和故障注入脚本，覆盖孤儿物理文件、物理文件丢失、未完成写入恢复等场景。
 - 热点提升测试脚本，验证远端 token shard 在重复读取后自动回迁本地。
 - 顺序预取测试脚本，验证读取当前远端 shard 后，下一片连续 shard 被提前回迁本地。
-- 性能测试脚本，自动生成 CSV、Markdown 和 HTML 报告。
+- 顺序和随机 I/O 性能测试脚本，自动生成 CSV、Markdown 和 HTML 报告。
 - NVMe-oF Host 连接脚本，支持 dry-run、自动发现连接后的 `/dev/nvmeXnY`、显式格式化保护和挂载。
 - NVMe-oF Target 模拟脚本，可以在第二台 Ubuntu VM 上用 Linux `nvmet` 导出 loop 文件作为远端 Namespace。
 - 双 VM NVMe/TCP 测试脚本，验证 TokenFS 的远端溢写确实可以落到 NVMe-oF 挂载后端。
@@ -77,6 +79,9 @@ tokenfs/
 │   ├── check_environment.sh
 │   ├── tokenfsctl.py
 │   ├── integration_test.sh
+│   ├── consistency_test.sh
+│   ├── fault_injection_test.sh
+│   ├── eviction_test.sh
 │   ├── token_workload_test.sh
 │   ├── smoke_test.sh
 │   ├── v2_integration_test.sh
@@ -91,6 +96,7 @@ tokenfs/
 │   ├── promote_test.sh
 │   ├── prefetch_test.sh
 │   ├── perf_test.sh
+│   ├── random_io_test.sh
 │   └── perf_report.py
 ├── reports/
 │   └── latest/
@@ -220,6 +226,14 @@ cd ~/projects/tokenfs
 ./scripts/tokenfsctl.py metrics
 ```
 
+检查元数据和物理文件是否一致：
+
+```bash
+./scripts/tokenfsctl.py check
+```
+
+正常时会显示“检查通过”。如果数据库记录指向的物理文件不存在、物理文件没有数据库记录、文件大小不一致、checksum 不一致或存在未完成状态，它会列出具体问题并返回失败状态。
+
 性能测试会自动生成可视化报告：
 
 ```text
@@ -269,6 +283,19 @@ cd ~/projects/tokenfs
 ./scripts/prefetch_test.sh
 ```
 
+运行一致性和故障注入测试：
+
+```bash
+./scripts/consistency_test.sh
+./scripts/fault_injection_test.sh
+```
+
+运行 Cost-aware 本地淘汰测试：
+
+```bash
+./scripts/eviction_test.sh
+```
+
 测试会自动完成：
 
 - 清理开发环境。
@@ -280,6 +307,7 @@ cd ~/projects/tokenfs
 - 检查 SQLite 中的校验值和状态。
 - 删除文件，验证物理文件和元数据都会清理。
 - 人工制造一个 `CREATING` 状态的未完成文件，重启后验证自动恢复。
+- 使用 `tokenfsctl.py check` 检查数据库和物理文件是否一致。
 
 热点提升测试会额外验证：
 
@@ -295,6 +323,13 @@ cd ~/projects/tokenfs
 - 读取 `shard-000001.tokens` 时，TokenFS 根据连续编号推断出下一片 shard。
 - 后台把 `shard-000002.tokens` 回迁到 `/var/lib/tokenfs/local/gpu0`。
 - SQLite 中 `shard-000002.tokens` 的 `tier` 变为 `local`，但 `read_count` 仍为 `0`，表示它是被预取而不是被应用主动读取后提升。
+
+Cost-aware 淘汰测试会额外验证：
+
+- 先写入多个本地文件，并人为设置不同访问热度。
+- 当新文件写入导致本地配额不足时，TokenFS 优先淘汰冷的大文件到远端。
+- 新文件和热点文件仍保留在本地层。
+- `evict_count` 和 `evict_bytes` 指标被记录。
 
 看到下面输出表示通过：
 
@@ -383,6 +418,14 @@ summary.csv  适合后续导入 Excel 或继续画图
 
 当前远端仍是目录模拟，因此性能结果主要用于观察 FUSE 开销、本地优先策略和远端溢写路径。接入真实 NVMe-oF 后，需要重新运行同一脚本生成真实远端 SSD 数据。
 
+小块随机 I/O 测试：
+
+```bash
+./scripts/random_io_test.sh
+```
+
+该测试会生成 4 KiB 和 16 KiB 随机读写报告，用于观察 IOPS、平均延迟和 P99 延迟。它和 1 MiB 顺序 shard 测试互为补充。
+
 ## 双 VM NVMe-oF 性能基线
 
 双 VM NVMe-oF 链路跑通后，可以运行更接近论文实验的基线测试。假设 Target VM IP 是 `192.168.64.3`：
@@ -431,6 +474,7 @@ filesystem:
 policy:
   mode: local_first
   checksum: fnv1a64
+  local_eviction_policy: cost_aware
   promote_on_read: false
   promote_read_threshold: 2
   prefetch_on_read: false

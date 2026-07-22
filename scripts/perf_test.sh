@@ -38,10 +38,10 @@ rm -rf "$result_root"
 mkdir -p "$json_dir"
 
 echo "perf: direct local backend write"
-run_fio direct-local-write /var/lib/tokenfs/local/gpu0/perf/direct-local.bin write 32m
+run_fio direct-local-write /var/lib/tokenfs/direct-local/perf/direct-local.bin write 32m
 
 echo "perf: direct remote-sim backend write"
-run_fio direct-remote-write /var/lib/tokenfs/remote-sim/gpu0/perf/direct-remote.bin write 32m
+run_fio direct-remote-write /var/lib/tokenfs/remote-sim/direct-perf/direct-remote.bin write 32m
 
 echo "perf: TokenFS local write"
 run_fio tokenfs-local-write "$mount_point/gpu0/perf/tokenfs-local.tokens" write 32m

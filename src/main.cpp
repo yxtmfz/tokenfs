@@ -48,6 +48,7 @@ struct Config {
   fs::path metadata_db;
   std::string temp_suffix = ".tokenfs_tmp";
   std::string checksum = "none";
+  std::string local_eviction_policy = "cost_aware";
   bool promote_on_read = false;
   uint64_t promote_read_threshold = 2;
   bool prefetch_on_read = false;
@@ -65,6 +66,11 @@ struct FileMeta {
   std::string checksum;
   std::string state = "COMMITTED";
   uint64_t read_count = 0;
+};
+
+struct EvictionCandidate {
+  FileMeta meta;
+  uint64_t last_access_at = 0;
 };
 
 struct Handle {
@@ -296,6 +302,53 @@ class MetadataStore {
       meta.checksum = ColumnText(stmt, 6);
       meta.state = ColumnText(stmt, 7);
       out.push_back(std::move(meta));
+    }
+    sqlite3_finalize(stmt);
+    return out;
+  }
+
+  std::vector<EvictionCandidate> LocalEvictionCandidates(
+      int gpu_id, const std::string& protected_logical_path) {
+    std::lock_guard<std::mutex> lock(mu_);
+    sqlite3_stmt* stmt = nullptr;
+    Prepare("SELECT logical_path,gpu_id,tier,backend_id,physical_path,size_bytes,"
+            "COALESCE(checksum,''),state,COALESCE(read_count,0),"
+            "COALESCE(last_access_at,0) "
+            "FROM files WHERE gpu_id=? AND tier='local' AND state='COMMITTED' "
+            "AND logical_path != ? "
+            "ORDER BY COALESCE(read_count,0) ASC,"
+            "COALESCE(last_access_at,0) ASC,"
+            "size_bytes DESC;",
+            &stmt);
+    sqlite3_bind_int(stmt, 1, gpu_id);
+    sqlite3_bind_text(stmt, 2, protected_logical_path.c_str(), -1,
+                      SQLITE_TRANSIENT);
+    std::vector<EvictionCandidate> out;
+    while (true) {
+      int rc = sqlite3_step(stmt);
+      if (rc == SQLITE_DONE) {
+        break;
+      }
+      if (rc != SQLITE_ROW) {
+        std::string err = sqlite3_errmsg(db_);
+        sqlite3_finalize(stmt);
+        throw std::runtime_error(err);
+      }
+      EvictionCandidate candidate;
+      candidate.meta.logical_path = ColumnText(stmt, 0);
+      candidate.meta.gpu_id = sqlite3_column_int(stmt, 1);
+      candidate.meta.tier = ColumnText(stmt, 2);
+      candidate.meta.backend_id = ColumnText(stmt, 3);
+      candidate.meta.physical_path = ColumnText(stmt, 4);
+      candidate.meta.size_bytes =
+          static_cast<uint64_t>(sqlite3_column_int64(stmt, 5));
+      candidate.meta.checksum = ColumnText(stmt, 6);
+      candidate.meta.state = ColumnText(stmt, 7);
+      candidate.meta.read_count =
+          static_cast<uint64_t>(sqlite3_column_int64(stmt, 8));
+      candidate.last_access_at =
+          static_cast<uint64_t>(sqlite3_column_int64(stmt, 9));
+      out.push_back(std::move(candidate));
     }
     sqlite3_finalize(stmt);
     return out;
@@ -874,6 +927,49 @@ class TokenFS {
     return used + new_file_size <= gpu.local_quota_bytes;
   }
 
+  bool EnsureLocalCapacity(const GpuConfig& gpu, uint64_t required_size,
+                           const std::string& protected_logical_path,
+                           const fs::path* existing_file = nullptr) {
+    if (required_size > gpu.local_quota_bytes) {
+      return false;
+    }
+    uint64_t used = DirectoryBytes(gpu.local_root);
+    if (existing_file != nullptr) {
+      uint64_t existing_size = FileSizeNoThrow(*existing_file);
+      if (used >= existing_size) {
+        used -= existing_size;
+      }
+    }
+    if (used + required_size <= gpu.local_quota_bytes) {
+      return true;
+    }
+    if (config_.local_eviction_policy != "cost_aware") {
+      return false;
+    }
+
+    for (auto candidate :
+         metadata_.LocalEvictionCandidates(gpu.gpu_id, protected_logical_path)) {
+      if (IsOpenLogicalPath(candidate.meta.logical_path)) {
+        metadata_.AddMetric("evict_skip_open", 1);
+        continue;
+      }
+      const uint64_t candidate_size =
+          std::max(candidate.meta.size_bytes, FileSizeNoThrow(candidate.meta.physical_path));
+      if (candidate_size == 0 || !fs::exists(candidate.meta.physical_path)) {
+        continue;
+      }
+      if (int rc = EvictLocalFile(gpu, candidate.meta); rc != 0) {
+        metadata_.AddMetric("evict_error_count", 1);
+        continue;
+      }
+      used = used > candidate_size ? used - candidate_size : 0;
+      if (used + required_size <= gpu.local_quota_bytes) {
+        return true;
+      }
+    }
+    return used + required_size <= gpu.local_quota_bytes;
+  }
+
   FileMeta SelectNewFile(const GpuConfig& gpu, const fs::path& rel,
                          const std::string& logical_path) const {
     const uint64_t used = DirectoryBytes(gpu.local_root);
@@ -894,7 +990,8 @@ class TokenFS {
                      const std::string& metric_prefix) {
     const uint64_t size = FileSizeNoThrow(meta.physical_path);
     fs::path local = gpu.local_root / rel;
-    if (!HasLocalCapacity(gpu, size, fs::exists(local) ? &local : nullptr)) {
+    if (!EnsureLocalCapacity(gpu, size, meta.logical_path,
+                             fs::exists(local) ? &local : nullptr)) {
       metadata_.AddMetric(metric_prefix + "_skip_no_space", 1);
       return 0;
     }
@@ -1033,6 +1130,10 @@ class TokenFS {
     if (used_without_file + new_size <= gpu->local_quota_bytes) {
       return 0;
     }
+    if (EnsureLocalCapacity(*gpu, new_size, handle.logical_path,
+                            &handle.physical_path)) {
+      return 0;
+    }
 
     auto parsed = ParseGpuPath(handle.logical_path);
     if (!parsed) {
@@ -1067,6 +1168,38 @@ class TokenFS {
     UpdateHandleMeta(handle, handle.state);
     metadata_.AddMetric("spill_count", 1);
     metadata_.AddMetric("spill_bytes", std::max(moved_bytes, new_size));
+    return 0;
+  }
+
+  int EvictLocalFile(const GpuConfig& gpu, FileMeta& meta) {
+    auto parsed = ParseGpuPath(meta.logical_path);
+    if (!parsed) {
+      return -EINVAL;
+    }
+    fs::path remote = RemotePath(gpu, parsed->second);
+    fs::create_directories(remote.parent_path());
+    const uint64_t size = FileSizeNoThrow(meta.physical_path);
+
+    std::error_code ec;
+    fs::rename(meta.physical_path, remote, ec);
+    if (ec) {
+      ec.clear();
+      fs::copy_file(meta.physical_path, remote,
+                    fs::copy_options::overwrite_existing, ec);
+      if (ec) {
+        return -ec.value();
+      }
+      fs::remove(meta.physical_path, ec);
+    }
+
+    meta.tier = "remote";
+    meta.backend_id = gpu.remote_backend;
+    meta.physical_path = remote;
+    meta.size_bytes = size;
+    meta.state = "COMMITTED";
+    metadata_.Upsert(meta);
+    metadata_.AddMetric("evict_count", 1);
+    metadata_.AddMetric("evict_bytes", size);
     return 0;
   }
 
@@ -1185,6 +1318,16 @@ class TokenFS {
     return &it->second;
   }
 
+  bool IsOpenLogicalPath(const std::string& logical_path) {
+    std::lock_guard<std::mutex> lock(handles_mu_);
+    for (const auto& [_, handle] : handles_) {
+      if (handle.logical_path == logical_path) {
+        return true;
+      }
+    }
+    return false;
+  }
+
   static void AddDirectoryNames(const fs::path& dir, std::set<std::string>& names) {
     std::error_code ec;
     if (!fs::is_directory(dir, ec)) {
@@ -1276,6 +1419,10 @@ Config LoadConfig(const fs::path& path) {
       root["filesystem"]["temp_suffix"].as<std::string>(".tokenfs_tmp");
   if (root["policy"] && root["policy"]["checksum"]) {
     config.checksum = root["policy"]["checksum"].as<std::string>("none");
+  }
+  if (root["policy"] && root["policy"]["local_eviction_policy"]) {
+    config.local_eviction_policy =
+        root["policy"]["local_eviction_policy"].as<std::string>("cost_aware");
   }
   if (root["policy"] && root["policy"]["promote_on_read"]) {
     config.promote_on_read = root["policy"]["promote_on_read"].as<bool>(false);

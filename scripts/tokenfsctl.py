@@ -37,6 +37,8 @@ class BackendConfig:
 class TokenfsConfig:
     mount_point: Path
     metadata_db: Path
+    temp_suffix: str
+    checksum: str
     gpus: list[GpuConfig]
     backends: dict[str, BackendConfig]
 
@@ -78,6 +80,8 @@ def is_mounted(path: Path) -> bool:
 def parse_config(path: Path) -> TokenfsConfig:
     mount_point = Path("/mnt/tokenfs")
     metadata_db = Path("/var/lib/tokenfs/metadata/tokenfs.db")
+    temp_suffix = ".tokenfs_tmp"
+    checksum = "none"
     gpus: list[GpuConfig] = []
     backends: dict[str, BackendConfig] = {}
 
@@ -150,8 +154,13 @@ def parse_config(path: Path) -> TokenfsConfig:
                     mount_point = Path(value)
                 elif key == "metadata_db":
                     metadata_db = Path(value)
+                elif key == "temp_suffix":
+                    temp_suffix = value
+            elif section == "policy":
+                if key == "checksum":
+                    checksum = value
     flush_current()
-    return TokenfsConfig(mount_point, metadata_db, gpus, backends)
+    return TokenfsConfig(mount_point, metadata_db, temp_suffix, checksum, gpus, backends)
 
 
 def db_rows(db_path: Path, sql: str, params: tuple = ()) -> list[sqlite3.Row]:
@@ -311,12 +320,173 @@ def print_metrics(config: TokenfsConfig) -> None:
     print(f"预取目标缺失: {metric_value(metrics, 'prefetch_skip_missing')} 次")
     print(f"预取空间不足: {metric_value(metrics, 'prefetch_skip_no_space')} 次")
     print(f"预取失败次数: {metric_value(metrics, 'prefetch_error_count')} 次")
+    print(f"本地淘汰次数: {metric_value(metrics, 'evict_count')} 次")
+    print(f"本地淘汰数据: {bytes_to_mib(metric_value(metrics, 'evict_bytes'))}")
+    print(f"跳过打开文件: {metric_value(metrics, 'evict_skip_open')} 次")
+    print(f"淘汰失败次数: {metric_value(metrics, 'evict_error_count')} 次")
     print(f"预分配次数:   {metric_value(metrics, 'fallocate_ops')}")
     print(f"预分配数据量: {bytes_to_mib(metric_value(metrics, 'fallocate_bytes'))}")
     print()
     print("原始计数")
     for name in sorted(metrics):
         print(f"- {name}: {metrics[name]}")
+
+
+def fnv1a64(path: Path) -> str | None:
+    offset = 14695981039346656037
+    prime = 1099511628211
+    mask = (1 << 64) - 1
+    value = offset
+    try:
+        with path.open("rb") as f:
+            while True:
+                data = f.read(1024 * 1024)
+                if not data:
+                    break
+                for byte in data:
+                    value ^= byte
+                    value = (value * prime) & mask
+    except OSError:
+        return None
+    return f"fnv1a64:{value:016x}"
+
+
+def logical_for_physical(config: TokenfsConfig, physical: Path) -> tuple[int, str] | None:
+    try:
+        resolved = physical.resolve()
+    except OSError:
+        resolved = physical
+    for gpu in config.gpus:
+        roots = [(gpu.local_root, gpu.logical_root)]
+        backend = config.backends.get(gpu.remote_backend)
+        if backend is not None:
+            roots.append((backend.root / f"gpu{gpu.gpu_id}", gpu.logical_root))
+        for root, logical_root in roots:
+            try:
+                rel = resolved.relative_to(root.resolve())
+            except (OSError, ValueError):
+                continue
+            return gpu.gpu_id, f"{logical_root}/{rel.as_posix()}"
+    return None
+
+
+def iter_physical_files(config: TokenfsConfig) -> list[Path]:
+    roots: list[Path] = []
+    for gpu in config.gpus:
+        roots.append(gpu.local_root)
+        backend = config.backends.get(gpu.remote_backend)
+        if backend is not None:
+            roots.append(backend.root / f"gpu{gpu.gpu_id}")
+
+    files: list[Path] = []
+    seen: set[Path] = set()
+    for root in roots:
+        if not root.exists():
+            continue
+        for dirpath, _, filenames in os.walk(root):
+            for name in filenames:
+                if config.temp_suffix and config.temp_suffix in name:
+                    continue
+                path = Path(dirpath) / name
+                try:
+                    resolved = path.resolve()
+                except OSError:
+                    resolved = path
+                if resolved not in seen:
+                    seen.add(resolved)
+                    files.append(path)
+    return files
+
+
+def print_check(config: TokenfsConfig) -> int:
+    problems: list[str] = []
+    warnings: list[str] = []
+    if not config.metadata_db.exists():
+        problems.append(f"元数据库不存在: {config.metadata_db}")
+    rows = db_rows(
+        config.metadata_db,
+        "select logical_path,gpu_id,tier,backend_id,physical_path,size_bytes,"
+        "coalesce(checksum,'') as checksum,state "
+        "from files order by logical_path",
+    )
+
+    gpu_ids = {gpu.gpu_id for gpu in config.gpus}
+    physical_in_db: set[Path] = set()
+    logical_paths: set[str] = set()
+    for row in rows:
+        logical = row["logical_path"]
+        logical_paths.add(logical)
+        path = Path(row["physical_path"])
+        try:
+            physical_in_db.add(path.resolve())
+        except OSError:
+            physical_in_db.add(path)
+
+        if row["gpu_id"] not in gpu_ids:
+            problems.append(f"{logical}: 未知 GPU ID {row['gpu_id']}")
+        if row["tier"] not in {"local", "remote"}:
+            problems.append(f"{logical}: 非法 tier={row['tier']}")
+        if row["tier"] == "local" and row["backend_id"] != "local":
+            problems.append(f"{logical}: local 文件的 backend_id 应为 local，实际为 {row['backend_id']}")
+        if row["tier"] == "remote" and row["backend_id"] not in config.backends:
+            problems.append(f"{logical}: remote 文件引用未知后端 {row['backend_id']}")
+        if row["state"] != "COMMITTED":
+            problems.append(f"{logical}: 文件状态不是 COMMITTED，而是 {row['state']}")
+        if not path.exists():
+            problems.append(f"{logical}: 数据库记录的物理文件不存在: {path}")
+            continue
+        actual_size = path.stat().st_size
+        if actual_size != row["size_bytes"]:
+            problems.append(
+                f"{logical}: 文件大小不一致，DB={row['size_bytes']}，实际={actual_size}"
+            )
+        checksum = row["checksum"]
+        if checksum and checksum.startswith("fnv1a64:") and config.checksum == "fnv1a64":
+            actual_checksum = fnv1a64(path)
+            if actual_checksum != checksum:
+                problems.append(
+                    f"{logical}: checksum 不一致，DB={checksum}，实际={actual_checksum or '无法读取'}"
+                )
+        expected = logical_for_physical(config, path)
+        if expected is None:
+            warnings.append(f"{logical}: 物理路径不在任何配置的本地/远端根目录下: {path}")
+        elif expected[0] != row["gpu_id"] or expected[1] != logical:
+            problems.append(
+                f"{logical}: 物理路径反推出 {expected[1]} / gpu{expected[0]}，与数据库不一致"
+            )
+
+    for path in iter_physical_files(config):
+        try:
+            resolved = path.resolve()
+        except OSError:
+            resolved = path
+        if resolved in physical_in_db:
+            continue
+        logical = logical_for_physical(config, path)
+        label = logical[1] if logical else str(path)
+        problems.append(f"{label}: 物理文件存在但数据库没有记录: {path}")
+
+    print("TokenFS 一致性检查")
+    print("=" * 60)
+    print(f"检查数据库: {config.metadata_db}")
+    print(f"数据库记录: {len(rows)}")
+    print(f"物理文件:   {len(iter_physical_files(config))}")
+    print(f"问题数量:   {len(problems)}")
+    print(f"警告数量:   {len(warnings)}")
+    if problems:
+        print()
+        print("问题")
+        for item in problems:
+            print(f"- {item}")
+    if warnings:
+        print()
+        print("警告")
+        for item in warnings:
+            print(f"- {item}")
+    if not problems:
+        print()
+        print("检查通过：元数据和物理文件当前一致。")
+    return 1 if problems else 0
 
 
 def main() -> int:
@@ -330,6 +500,7 @@ def main() -> int:
     subparsers.add_parser("status", help="查看挂载、配额、后端和元数据状态")
     subparsers.add_parser("files", help="列出 SQLite 中记录的 TokenFS 文件")
     subparsers.add_parser("metrics", help="查看读写、命中率、溢写和预分配指标")
+    subparsers.add_parser("check", help="检查 SQLite 元数据和物理文件是否一致")
     args = parser.parse_args()
 
     command = args.command or "status"
@@ -344,6 +515,8 @@ def main() -> int:
         print_files(config)
     elif command == "metrics":
         print_metrics(config)
+    elif command == "check":
+        return print_check(config)
     else:
         parser.print_help()
         return 1

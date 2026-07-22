@@ -10,6 +10,8 @@ policy:
   local_low_watermark: 0.75
   immutable_token_files: false
   checksum: fnv1a64
+  # 本地空间不足时优先淘汰低热度、较旧、较大的本地文件到远端。
+  local_eviction_policy: cost_aware
   # 热点提升默认关闭，便于和纯 local-first/remote-spill 策略做对照实验。
   promote_on_read: false
   promote_read_threshold: 2

@@ -81,8 +81,8 @@ target.write_text(text, encoding="utf-8")
 PY
 
 "$project_root/scripts/reset_dev_state.sh" "$tokenfs_mount" >/dev/null
-rm -rf "$remote_mount/gpu0/perf" "$remote_mount/gpu1/perf"
-mkdir -p "$remote_mount/gpu0/perf" "$remote_mount/gpu1/perf"
+rm -rf "$remote_mount/gpu0/perf" "$remote_mount/gpu1/perf" "$remote_mount/direct-perf"
+mkdir -p "$remote_mount/gpu0/perf" "$remote_mount/gpu1/perf" "$remote_mount/direct-perf"
 cmake -S "$project_root" -B "$project_root/build" -G Ninja >/dev/null
 cmake --build "$project_root/build" >/dev/null
 "$project_root/scripts/start_tokenfs.sh" "$temp_config" "$tokenfs_mount" >/dev/null
@@ -91,14 +91,14 @@ rm -rf "$result_root"
 mkdir -p "$json_dir"
 
 echo "perf: direct local backend write/read"
-run_fio direct-local-write /var/lib/tokenfs/local/gpu0/perf/direct-local.bin write "$small_size"
+run_fio direct-local-write /var/lib/tokenfs/direct-local/perf/direct-local.bin write "$small_size"
 sync
-run_fio direct-local-read /var/lib/tokenfs/local/gpu0/perf/direct-local.bin read "$small_size"
+run_fio direct-local-read /var/lib/tokenfs/direct-local/perf/direct-local.bin read "$small_size"
 
 echo "perf: direct NVMe-oF backend write/read"
-run_fio direct-remote-write "$remote_mount/gpu0/perf/direct-remote.bin" write "$small_size"
+run_fio direct-remote-write "$remote_mount/direct-perf/direct-remote.bin" write "$small_size"
 sync
-run_fio direct-remote-read "$remote_mount/gpu0/perf/direct-remote.bin" read "$small_size"
+run_fio direct-remote-read "$remote_mount/direct-perf/direct-remote.bin" read "$small_size"
 
 echo "perf: TokenFS local write/read"
 run_fio tokenfs-local-write "$tokenfs_mount/gpu0/perf/tokenfs-local.tokens" write "$small_size"

@@ -8,12 +8,14 @@ project_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 
 rm -rf \
   /var/lib/tokenfs/local \
+  /var/lib/tokenfs/direct-local \
   /var/lib/tokenfs/remote-sim \
   /var/lib/tokenfs/metadata
 
 mkdir -p \
   /var/lib/tokenfs/local/gpu0 \
   /var/lib/tokenfs/local/gpu1 \
+  /var/lib/tokenfs/direct-local \
   /var/lib/tokenfs/remote-sim/gpu0 \
   /var/lib/tokenfs/remote-sim/gpu1 \
   /var/lib/tokenfs/metadata \
