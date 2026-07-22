@@ -106,6 +106,7 @@ tokenfs/
 │           └── files.csv
 ├── docs/
 │   ├── research-plan.md
+│   ├── optimization-roadmap.md
 │   └── nvmeof-two-vm.md
 └── src/
     └── main.cpp
@@ -224,6 +225,15 @@ cd ~/projects/tokenfs
 ```bash
 ./scripts/tokenfsctl.py metrics
 ```
+
+性能测试会自动生成可视化报告：
+
+```text
+reports/perf/latest/report.html
+reports/nvmeof-perf/latest/report.html
+```
+
+报告会同时展示带宽、耗时、IOPS、平均延迟和 P99 延迟。不要只看带宽；远端 NVMe-oF 路径即使带宽高，也可能因为网络和 Target 处理带来更高延迟。
 
 如果你想直接查看 SQLite，也可以执行：
 
@@ -536,6 +546,23 @@ export TOKENFS_NVME_MOUNT=/srv/tokenfs/remote0
 ```bash
 --allow-format
 ```
+
+## 后续优化路线
+
+详细路线见：
+
+```text
+docs/optimization-roadmap.md
+```
+
+当前最值得继续推进的方向：
+
+- 随机 4 KiB / 16 KiB IOPS 和尾延迟测试。
+- 本地淘汰策略：LRU、LFU、Cost-aware。
+- 预取窗口和预取限速。
+- 多 NVMe-oF Target 选择策略。
+- `tokenfsctl check` 元数据一致性检查。
+- 故障注入和恢复实验。
 
 ## 双 VM NVMe-oF 测试
 
