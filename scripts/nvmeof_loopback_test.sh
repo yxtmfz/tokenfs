@@ -30,7 +30,7 @@ sudo nvme connect -t tcp -a "$target_ip" -s "$target_port" -n "$subnqn"
 echo "Waiting for connected NVMe namespace..."
 device=""
 for _ in $(seq 1 20); do
-  device="$(nvme list -o json 2>/dev/null | python3 - "$subnqn" <<'PY' || true
+  device="$(nvme list -o json 2>/dev/null | python3 -c '
 import json
 import sys
 
@@ -41,12 +41,15 @@ except Exception:
     print("")
     raise SystemExit
 
-for dev in data.get("Devices", []):
+devices = data.get("Devices", [])
+for dev in devices:
     if dev.get("SubsystemNQN") == subnqn:
         print(dev.get("DevicePath", ""))
-        break
-PY
-)"
+        raise SystemExit
+
+if len(devices) == 1:
+    print(devices[0].get("DevicePath", ""))
+' "$subnqn" || true)"
   if [[ -n "$device" && -b "$device" ]]; then
     break
   fi

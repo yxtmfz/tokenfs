@@ -19,6 +19,7 @@ Environment variables still work and override config values:
   TOKENFS_NVME_SUBNQN
   TOKENFS_NVME_DEVICE
   TOKENFS_NVME_MOUNT
+  TOKENFS_NVME_SERIAL
 
 Safety:
   --allow-format    format the connected namespace only when it has no filesystem
@@ -109,6 +110,7 @@ subnqn="${TOKENFS_NVME_SUBNQN:-$(read_backend_value nvme_subnqn)}"
 device="${TOKENFS_NVME_DEVICE:-$(read_backend_value nvme_device)}"
 mount_point="${TOKENFS_NVME_MOUNT:-$(read_backend_value nvme_mount)}"
 filesystem="${TOKENFS_NVME_FILESYSTEM:-$(read_backend_value nvme_filesystem)}"
+serial="${TOKENFS_NVME_SERIAL:-$(read_backend_value nvme_serial)}"
 root="$(read_backend_value root)"
 
 transport="${transport:-tcp}"
@@ -170,23 +172,33 @@ if [[ -z "$device" || "$device" =~ $placeholder_re ]]; then
   else
     echo "Detecting connected namespace for $subnqn"
     for _ in $(seq 1 30); do
-      device="$(nvme list -o json 2>/dev/null | python3 - "$subnqn" <<'PY' || true
+      device="$(nvme list -o json 2>/dev/null | python3 -c '
 import json
 import sys
 
 subnqn = sys.argv[1]
+serial = sys.argv[2]
 try:
     data = json.load(sys.stdin)
 except Exception:
     print("")
     raise SystemExit
 
+devices = data.get("Devices", [])
 for dev in data.get("Devices", []):
     if dev.get("SubsystemNQN") == subnqn:
         print(dev.get("DevicePath", ""))
-        break
-PY
-)"
+        raise SystemExit
+
+if serial:
+    for dev in devices:
+        if dev.get("SerialNumber") == serial:
+            print(dev.get("DevicePath", ""))
+            raise SystemExit
+
+if len(devices) == 1:
+    print(devices[0].get("DevicePath", ""))
+' "$subnqn" "$serial" || true)"
       if [[ -n "$device" && -b "$device" ]]; then
         break
       fi
