@@ -7,6 +7,7 @@
 #include <algorithm>
 #include <cerrno>
 #include <chrono>
+#include <cctype>
 #include <cstring>
 #include <filesystem>
 #include <iomanip>
@@ -16,6 +17,7 @@
 #include <set>
 #include <sstream>
 #include <string>
+#include <thread>
 #include <unordered_map>
 #include <vector>
 
@@ -48,6 +50,7 @@ struct Config {
   std::string checksum = "none";
   bool promote_on_read = false;
   uint64_t promote_read_threshold = 2;
+  bool prefetch_on_read = false;
   std::unordered_map<std::string, BackendConfig> backends;
   std::vector<GpuConfig> gpus;
 };
@@ -529,10 +532,11 @@ class TokenFS {
       meta.read_count = read_count;
       metadata_.AddMetric("remote_read_open_count", 1);
       if (ShouldPromoteOnRead(meta, read_count)) {
-        if (int rc = PromoteToLocal(*gpu, rel, meta); rc != 0) {
+        if (int rc = PromoteToLocal(*gpu, rel, meta, "promote"); rc != 0) {
           metadata_.AddMetric("promote_error_count", 1);
         }
       }
+      MaybeSchedulePrefetch(*gpu, rel);
     }
     int fd = open(meta.physical_path.c_str(), fi->flags);
     if (fd < 0) {
@@ -827,6 +831,37 @@ class TokenFS {
     return total;
   }
 
+  static std::optional<fs::path> NextSequentialRelPath(const fs::path& rel) {
+    const std::string filename = rel.filename().string();
+    const size_t dot = filename.rfind('.');
+    const size_t number_end = dot == std::string::npos ? filename.size() : dot;
+    size_t number_begin = number_end;
+    while (number_begin > 0 &&
+           std::isdigit(static_cast<unsigned char>(filename[number_begin - 1]))) {
+      --number_begin;
+    }
+    if (number_begin == number_end) {
+      return std::nullopt;
+    }
+
+    const std::string digits = filename.substr(number_begin, number_end - number_begin);
+    uint64_t value = 0;
+    try {
+      value = std::stoull(digits);
+    } catch (...) {
+      return std::nullopt;
+    }
+    std::ostringstream next_digits;
+    next_digits << std::setw(static_cast<int>(digits.size())) << std::setfill('0')
+                << (value + 1);
+    fs::path next =
+        filename.substr(0, number_begin) + next_digits.str() + filename.substr(number_end);
+    if (!rel.parent_path().empty()) {
+      next = rel.parent_path() / next;
+    }
+    return next;
+  }
+
   bool HasLocalCapacity(const GpuConfig& gpu, uint64_t new_file_size,
                         const fs::path* existing_file = nullptr) const {
     uint64_t used = DirectoryBytes(gpu.local_root);
@@ -855,11 +890,12 @@ class TokenFS {
            meta.tier == "remote" && read_count >= config_.promote_read_threshold;
   }
 
-  int PromoteToLocal(const GpuConfig& gpu, const fs::path& rel, FileMeta& meta) {
+  int PromoteToLocal(const GpuConfig& gpu, const fs::path& rel, FileMeta& meta,
+                     const std::string& metric_prefix) {
     const uint64_t size = FileSizeNoThrow(meta.physical_path);
     fs::path local = gpu.local_root / rel;
     if (!HasLocalCapacity(gpu, size, fs::exists(local) ? &local : nullptr)) {
-      metadata_.AddMetric("promote_skip_no_space", 1);
+      metadata_.AddMetric(metric_prefix + "_skip_no_space", 1);
       return 0;
     }
 
@@ -902,9 +938,77 @@ class TokenFS {
     meta.size_bytes = size;
     meta.state = "COMMITTED";
     metadata_.Upsert(meta);
-    metadata_.AddMetric("promote_count", 1);
-    metadata_.AddMetric("promote_bytes", size);
+    metadata_.AddMetric(metric_prefix + "_count", 1);
+    metadata_.AddMetric(metric_prefix + "_bytes", size);
     return 0;
+  }
+
+  void MaybeSchedulePrefetch(const GpuConfig& gpu, const fs::path& rel) {
+    if (!config_.prefetch_on_read) {
+      return;
+    }
+    auto next_rel = NextSequentialRelPath(rel);
+    if (!next_rel) {
+      return;
+    }
+    const std::string next_logical =
+        gpu.logical_root + "/" + next_rel->generic_string();
+    const fs::path local = gpu.local_root / *next_rel;
+    if (fs::exists(local)) {
+      metadata_.AddMetric("prefetch_skip_local", 1);
+      return;
+    }
+    const fs::path remote = RemotePath(gpu, *next_rel);
+    if (!fs::exists(remote)) {
+      if (auto meta = metadata_.Get(next_logical); !meta || meta->tier != "remote") {
+        metadata_.AddMetric("prefetch_skip_missing", 1);
+        return;
+      }
+    }
+
+    {
+      std::lock_guard<std::mutex> lock(prefetch_mu_);
+      if (prefetch_inflight_.count(next_logical) != 0) {
+        return;
+      }
+      prefetch_inflight_.insert(next_logical);
+    }
+
+    metadata_.AddMetric("prefetch_request_count", 1);
+    std::thread([this, gpu, next_rel = *next_rel, next_logical]() {
+      PrefetchToLocal(gpu, next_rel, next_logical);
+      std::lock_guard<std::mutex> lock(prefetch_mu_);
+      prefetch_inflight_.erase(next_logical);
+    }).detach();
+  }
+
+  void PrefetchToLocal(const GpuConfig& gpu, const fs::path& rel,
+                       const std::string& logical_path) {
+    FileMeta meta;
+    if (auto existing = metadata_.Get(logical_path)) {
+      meta = *existing;
+      if (meta.tier == "local") {
+        metadata_.AddMetric("prefetch_skip_local", 1);
+        return;
+      }
+    } else {
+      fs::path remote = RemotePath(gpu, rel);
+      if (!fs::exists(remote)) {
+        metadata_.AddMetric("prefetch_skip_missing", 1);
+        return;
+      }
+      meta = {logical_path, gpu.gpu_id, "remote", gpu.remote_backend, remote,
+              FileSizeNoThrow(remote), "", "COMMITTED"};
+      metadata_.Upsert(meta);
+    }
+
+    if (meta.state != "COMMITTED" || !fs::exists(meta.physical_path)) {
+      metadata_.AddMetric("prefetch_skip_missing", 1);
+      return;
+    }
+    if (int rc = PromoteToLocal(gpu, rel, meta, "prefetch"); rc != 0) {
+      metadata_.AddMetric("prefetch_error_count", 1);
+    }
   }
 
   int SpillIfNeeded(Handle& handle, uint64_t new_size) {
@@ -1111,6 +1215,8 @@ class TokenFS {
   std::mutex handles_mu_;
   std::unordered_map<uint64_t, Handle> handles_;
   uint64_t next_handle_ = 1;
+  std::mutex prefetch_mu_;
+  std::set<std::string> prefetch_inflight_;
 };
 
 TokenFS* g_fs = nullptr;
@@ -1177,6 +1283,9 @@ Config LoadConfig(const fs::path& path) {
   if (root["policy"] && root["policy"]["promote_read_threshold"]) {
     config.promote_read_threshold =
         root["policy"]["promote_read_threshold"].as<uint64_t>(2);
+  }
+  if (root["policy"] && root["policy"]["prefetch_on_read"]) {
+    config.prefetch_on_read = root["policy"]["prefetch_on_read"].as<bool>(false);
   }
 
   for (const auto& item : root["backends"]) {

@@ -18,7 +18,7 @@ TokenFS 是一个面向大规模机器学习 Token 数据的本地-远端分层�
 /mnt/tokenfs/gpu1/train-0002.tokens
 ```
 
-程序不需要关心文件最终落在本地目录还是远端目录。TokenFS 会在内部记录文件的逻辑路径、所属 GPU、存储层级、物理路径、文件大小、校验值、提交状态和读取次数。对于远端热点文件，TokenFS 还可以按策略自动提升回 GPU 本地层，减少后续重复读取的远端开销。
+程序不需要关心文件最终落在本地目录还是远端目录。TokenFS 会在内部记录文件的逻辑路径、所属 GPU、存储层级、物理路径、文件大小、校验值、提交状态和读取次数。对于远端热点文件，TokenFS 可以按策略自动提升回 GPU 本地层；对于连续编号的 token shard，也可以在读取当前 shard 时提前预取下一片 shard，减少后续读取的远端等待。
 
 ## 系统架构
 
@@ -49,6 +49,7 @@ TokenFS FUSE 挂载点：/mnt/tokenfs
 - `/gpu0` 和 `/gpu1` 两个逻辑命名空间，不同 GPU 使用独立本地目录和独立配额。
 - 本地优先写入；当写入或 `truncate` 后的文件大小会超过对应 GPU 本地配额时，自动迁移到远端层。
 - 远端热点提升：远端文件被多次读取后，可自动迁回对应 GPU 的本地目录，并把元数据从 `remote` 更新为 `local`。
+- 顺序 shard 预取：读取远端 `shard-000001.tokens` 时，可按文件名连续编号提前把 `shard-000002.tokens` 回迁到本地。
 - SQLite 元数据表，记录 `logical_path`、`gpu_id`、`tier`、`backend_id`、`physical_path`、`size_bytes`、`checksum`、`state`、`read_count`。
 - 可靠写入状态模型：写入中为 `CREATING`，完成 `fsync` 和元数据更新后为 `COMMITTED`。
 - 启动恢复：自动清理未完成写入记录和残留临时文件，避免半成品 Token 文件被当成有效数据。
@@ -56,6 +57,7 @@ TokenFS FUSE 挂载点：/mnt/tokenfs
 - 管理工具 `tokenfsctl.py`，可以查看挂载状态、GPU 配额使用、local/remote 文件数量、后端目录和文件清单。
 - 集成测试脚本，覆盖本地写入、远端溢写、GPU1 命名空间、校验值、删除清理和启动恢复。
 - 热点提升测试脚本，验证远端 token shard 在重复读取后自动回迁本地。
+- 顺序预取测试脚本，验证读取当前远端 shard 后，下一片连续 shard 被提前回迁本地。
 - 性能测试脚本，自动生成 CSV、Markdown 和 HTML 报告。
 - NVMe-oF Host 连接脚本，支持 dry-run、自动发现连接后的 `/dev/nvmeXnY`、显式格式化保护和挂载。
 - NVMe-oF Target 模拟脚本，可以在第二台 Ubuntu VM 上用 Linux `nvmet` 导出 loop 文件作为远端 Namespace。
@@ -87,6 +89,7 @@ tokenfs/
 │   ├── nvmeof_two_vm_test.sh
 │   ├── nvmeof_perf_test.sh
 │   ├── promote_test.sh
+│   ├── prefetch_test.sh
 │   ├── perf_test.sh
 │   └── perf_report.py
 ├── reports/
@@ -257,6 +260,12 @@ cd ~/projects/tokenfs
 ./scripts/promote_test.sh
 ```
 
+运行顺序预取测试：
+
+```bash
+./scripts/prefetch_test.sh
+```
+
 测试会自动完成：
 
 - 清理开发环境。
@@ -276,6 +285,13 @@ cd ~/projects/tokenfs
 - 第二次读取达到阈值后，文件自动复制到 `/var/lib/tokenfs/local/gpu0`。
 - SQLite 中该文件的 `tier` 从 `remote` 变为 `local`，`read_count` 变为 `2`。
 - 原远端文件被移除，避免同一逻辑文件出现两个权威副本。
+
+顺序预取测试会额外验证：
+
+- 先创建 `shard-000001.tokens` 和 `shard-000002.tokens` 两个只存在于远端层的文件。
+- 读取 `shard-000001.tokens` 时，TokenFS 根据连续编号推断出下一片 shard。
+- 后台把 `shard-000002.tokens` 回迁到 `/var/lib/tokenfs/local/gpu0`。
+- SQLite 中 `shard-000002.tokens` 的 `tier` 变为 `local`，但 `read_count` 仍为 `0`，表示它是被预取而不是被应用主动读取后提升。
 
 看到下面输出表示通过：
 
@@ -414,6 +430,7 @@ policy:
   checksum: fnv1a64
   promote_on_read: false
   promote_read_threshold: 2
+  prefetch_on_read: false
 
 gpus:
   - gpu_id: 0
@@ -445,6 +462,22 @@ policy:
 ```
 
 含义是：远端文件被打开读取达到 2 次后，如果对应 GPU 本地配额还有空间，就把它提升回本地层。
+
+顺序预取默认也关闭。需要测试连续 token shard 预取时，把配置改成：
+
+```yaml
+policy:
+  prefetch_on_read: true
+```
+
+当前预取规则会识别文件名中扩展名前的连续数字，例如：
+
+```text
+shard-000001.tokens -> shard-000002.tokens
+part-009.bin        -> part-010.bin
+```
+
+如果下一片 shard 仍在远端层且本地配额足够，TokenFS 会提前把它迁回本地。
 
 ## 接入真实 NVMe-oF
 
