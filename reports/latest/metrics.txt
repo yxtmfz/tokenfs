@@ -1,36 +1,61 @@
 TokenFS Metrics
 ============================================================
-读请求:   512 次，128.00 MiB
-写请求:   128 次，128.00 MiB
-本地读:   128 次，32.00 MiB
-远端读:   384 次，96.00 MiB
-本地写:   32 次，32.00 MiB
-远端写:   96 次，96.00 MiB
-本地读命中率: 25.0%
-本地写命中率: 25.0%
-平均读耗时:   2909.1 us
-平均写耗时:   2273.7 us
+读请求:   1408 次，176.00 MiB
+写请求:   208 次，208.00 MiB
+本地读:   256 次，32.00 MiB
+远端读:   1152 次，144.00 MiB
+本地写:   80 次，80.00 MiB
+远端写:   128 次，128.00 MiB
+本地读命中率: 18.2%
+本地写命中率: 38.5%
+平均读耗时:   1756.2 us
+平均写耗时:   3663.9 us
+文件打开读取: 6 次
+本地打开读取: 2 次
 溢写次数:     0
 溢写数据量:   0.00 MiB
-远端初始放置: 1 次
-预分配次数:   0
-预分配数据量: 0.00 MiB
+远端初始放置: 3 次
+远端打开读取: 4 次
+热点提升次数: 0
+热点提升数据: 0.00 MiB
+提升空间不足: 0 次
+提升失败次数: 0 次
+预取请求次数: 0
+预取成功次数: 0
+预取数据量:   0.00 MiB
+预取本地已有: 0 次
+预取目标缺失: 0 次
+预取空间不足: 0 次
+预取失败次数: 0 次
+本地淘汰次数: 0 次
+本地淘汰数据: 0.00 MiB
+跳过打开文件: 0 次
+跳过热点文件: 0 次
+淘汰失败次数: 0 次
+预分配次数:   8
+预分配数据量: 208.00 MiB
 
 原始计数
+- fallocate_bytes: 218103808
+- fallocate_ops: 8
+- fsync_ops: 8
+- local_read_open_count: 2
 - open_local: 2
-- open_remote: 2
-- read_bytes: 134217728
-- read_latency_us_total: 1489445
+- open_remote: 4
+- read_bytes: 184549376
+- read_latency_us_total: 2472705
 - read_local_bytes: 33554432
-- read_local_ops: 128
-- read_ops: 512
-- read_remote_bytes: 100663296
-- read_remote_ops: 384
-- remote_place_count: 1
-- write_bytes: 134217728
-- write_latency_us_total: 291035
-- write_local_bytes: 33554432
-- write_local_ops: 32
-- write_ops: 128
-- write_remote_bytes: 100663296
-- write_remote_ops: 96
+- read_local_ops: 256
+- read_open_count: 6
+- read_ops: 1408
+- read_remote_bytes: 150994944
+- read_remote_ops: 1152
+- remote_place_count: 3
+- remote_read_open_count: 4
+- write_bytes: 218103808
+- write_latency_us_total: 762092
+- write_local_bytes: 83886080
+- write_local_ops: 80
+- write_ops: 208
+- write_remote_bytes: 134217728
+- write_remote_ops: 128

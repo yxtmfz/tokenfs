@@ -83,6 +83,7 @@ tokenfs/
 │   ├── fault_injection_test.sh
 │   ├── eviction_test.sh
 │   ├── token_workload_test.sh
+│   ├── strategy_matrix_test.sh
 │   ├── smoke_test.sh
 │   ├── v2_integration_test.sh
 │   ├── reset_dev_state.sh
@@ -104,6 +105,8 @@ tokenfs/
 │       ├── report.html
 │       ├── summary.csv
 │       ├── metrics.txt
+│       ├── metrics.json
+│       ├── metrics.csv
 │       └── files.csv
 ├── docs/
 │   ├── project-plan.md
@@ -369,8 +372,9 @@ cd ~/projects/tokenfs
 - token shard 文件。
 - `fallocate` 预分配。
 - 顺序写入。
-- 顺序读取。
-- 本地层和远端溢写。
+- 本地配额填满后的远端溢写。
+- 连续编号远端 shard 的重复读取和下一片读取。
+- 为热点提升、顺序预取和淘汰策略提供统一 workload。
 - `/gpu0` 和 `/gpu1` 两个命名空间。
 
 报告位置：
@@ -379,8 +383,38 @@ cd ~/projects/tokenfs
 reports/latest/report.md
 reports/latest/summary.csv
 reports/latest/metrics.txt
+reports/latest/metrics.json
+reports/latest/metrics.csv
 reports/latest/files.csv
 ```
+
+## 策略矩阵测试
+
+运行：
+
+```bash
+cd ~/projects/tokenfs
+./scripts/strategy_matrix_test.sh
+```
+
+它会用同一组 token shard workload 自动比较四种策略：
+
+```text
+baseline  只做本地优先和远端溢写
+promote   远端热点文件重复读取后提升回本地
+prefetch  读取连续 shard 时提前预取下一片
+full      热点提升 + 顺序预取 + Cost-aware 淘汰
+```
+
+报告位置：
+
+```text
+reports/latest/strategy-matrix/strategy_report.md
+reports/latest/strategy-matrix/strategy_report.html
+reports/latest/strategy-matrix/strategy_summary.csv
+```
+
+这组测试不是为了证明真实 NVMe-oF 绝对性能，而是为了验证不同优化策略是否真的改变了本地命中率、远端读取次数、提升次数、预取次数和淘汰次数。真实 IP 和 SSD 到位后，同一套脚本可以继续复用。
 
 ## 性能测试和报告
 

@@ -295,6 +295,9 @@ TokenFS 已经记录：
 - `read_bytes`
 - `read_local_ops`
 - `read_remote_ops`
+- `read_open_count`
+- `local_read_open_count`
+- `remote_read_open_count`
 - `write_ops`
 - `write_bytes`
 - `write_local_ops`
@@ -302,7 +305,6 @@ TokenFS 已经记录：
 - `spill_count`
 - `spill_bytes`
 - `remote_place_count`
-- `remote_read_open_count`
 - `promote_count`
 - `promote_bytes`
 - `promote_skip_no_space`
@@ -317,6 +319,7 @@ TokenFS 已经记录：
 - `evict_count`
 - `evict_bytes`
 - `evict_skip_open`
+- `evict_skip_hot`
 - `evict_error_count`
 - `fallocate_ops`
 - `fallocate_bytes`
@@ -363,6 +366,31 @@ Cost-aware 本地淘汰可以通过：
 ```
 
 单独验证。测试会构造热文件、温文件和冷的大文件，本地配额不足时应优先把冷的大文件迁移到远端。
+
+策略矩阵可以通过：
+
+```bash
+./scripts/strategy_matrix_test.sh
+```
+
+统一验证。该测试使用同一个 token shard workload 自动比较：
+
+```text
+baseline：本地优先 + 远端溢写
+promote：热点提升
+prefetch：顺序预取
+full：热点提升 + 顺序预取 + Cost-aware 淘汰
+```
+
+输出文件：
+
+```text
+reports/latest/strategy-matrix/strategy_report.md
+reports/latest/strategy-matrix/strategy_report.html
+reports/latest/strategy-matrix/strategy_summary.csv
+```
+
+它适合作为论文消融实验的工程入口。当前开发环境主要观察策略是否生效，真实环境到位后再替换为真实 NVMe-oF 后端重新采集绝对性能数据。
 
 小块随机 I/O 可以通过：
 

@@ -580,11 +580,14 @@ class TokenFS {
       metadata_.Upsert(meta);
     }
     const bool writable = IsWritable(fi->flags);
-    if (!writable && meta.tier == "remote") {
+    if (!writable) {
       uint64_t read_count = metadata_.IncrementReadCount(path);
       meta.read_count = read_count;
-      metadata_.AddMetric("remote_read_open_count", 1);
-      if (ShouldPromoteOnRead(meta, read_count)) {
+      metadata_.AddMetric("read_open_count", 1);
+      metadata_.AddMetric(meta.tier == "local" ? "local_read_open_count"
+                                                : "remote_read_open_count",
+                          1);
+      if (meta.tier == "remote" && ShouldPromoteOnRead(meta, read_count)) {
         if (int rc = PromoteToLocal(*gpu, rel, meta, "promote"); rc != 0) {
           metadata_.AddMetric("promote_error_count", 1);
         }
@@ -864,6 +867,26 @@ class TokenFS {
     return ec ? 0 : static_cast<uint64_t>(size);
   }
 
+  static uint64_t UnixNowSeconds() {
+    return static_cast<uint64_t>(
+        std::chrono::duration_cast<std::chrono::seconds>(
+            std::chrono::system_clock::now().time_since_epoch())
+            .count());
+  }
+
+  static int64_t CostAwareEvictionScore(const EvictionCandidate& candidate,
+                                        uint64_t now) {
+    const uint64_t size_mib =
+        std::max<uint64_t>(1, candidate.meta.size_bytes / 1024 / 1024);
+    const uint64_t age_minutes =
+        candidate.last_access_at == 0 || now <= candidate.last_access_at
+            ? 0
+            : (now - candidate.last_access_at) / 60;
+    const uint64_t heat = candidate.meta.read_count;
+    return static_cast<int64_t>(size_mib * 1000 + age_minutes) -
+           static_cast<int64_t>(heat * 100000);
+  }
+
   static bool IsWritable(int flags) {
     const int mode = flags & O_ACCMODE;
     return mode == O_WRONLY || mode == O_RDWR || (flags & O_TRUNC) != 0;
@@ -947,10 +970,27 @@ class TokenFS {
       return false;
     }
 
-    for (auto candidate :
-         metadata_.LocalEvictionCandidates(gpu.gpu_id, protected_logical_path)) {
+    auto candidates =
+        metadata_.LocalEvictionCandidates(gpu.gpu_id, protected_logical_path);
+    const uint64_t now = UnixNowSeconds();
+    std::sort(candidates.begin(), candidates.end(),
+              [now](const EvictionCandidate& lhs,
+                    const EvictionCandidate& rhs) {
+                const auto lhs_score = CostAwareEvictionScore(lhs, now);
+                const auto rhs_score = CostAwareEvictionScore(rhs, now);
+                if (lhs_score != rhs_score) {
+                  return lhs_score > rhs_score;
+                }
+                return lhs.meta.size_bytes > rhs.meta.size_bytes;
+              });
+
+    for (auto candidate : candidates) {
       if (IsOpenLogicalPath(candidate.meta.logical_path)) {
         metadata_.AddMetric("evict_skip_open", 1);
+        continue;
+      }
+      if (CostAwareEvictionScore(candidate, now) < 0) {
+        metadata_.AddMetric("evict_skip_hot", 1);
         continue;
       }
       const uint64_t candidate_size =

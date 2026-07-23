@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import os
+import json
 import sqlite3
 import sys
 from dataclasses import dataclass
@@ -305,6 +306,8 @@ def print_metrics(config: TokenfsConfig) -> None:
     print(f"本地写命中率: {write_local_rate:.1f}%")
     print(f"平均读耗时:   {avg_read_us:.1f} us")
     print(f"平均写耗时:   {avg_write_us:.1f} us")
+    print(f"文件打开读取: {metric_value(metrics, 'read_open_count')} 次")
+    print(f"本地打开读取: {metric_value(metrics, 'local_read_open_count')} 次")
     print(f"溢写次数:     {metric_value(metrics, 'spill_count')}")
     print(f"溢写数据量:   {bytes_to_mib(metric_value(metrics, 'spill_bytes'))}")
     print(f"远端初始放置: {metric_value(metrics, 'remote_place_count')} 次")
@@ -323,6 +326,7 @@ def print_metrics(config: TokenfsConfig) -> None:
     print(f"本地淘汰次数: {metric_value(metrics, 'evict_count')} 次")
     print(f"本地淘汰数据: {bytes_to_mib(metric_value(metrics, 'evict_bytes'))}")
     print(f"跳过打开文件: {metric_value(metrics, 'evict_skip_open')} 次")
+    print(f"跳过热点文件: {metric_value(metrics, 'evict_skip_hot')} 次")
     print(f"淘汰失败次数: {metric_value(metrics, 'evict_error_count')} 次")
     print(f"预分配次数:   {metric_value(metrics, 'fallocate_ops')}")
     print(f"预分配数据量: {bytes_to_mib(metric_value(metrics, 'fallocate_bytes'))}")
@@ -330,6 +334,24 @@ def print_metrics(config: TokenfsConfig) -> None:
     print("原始计数")
     for name in sorted(metrics):
         print(f"- {name}: {metrics[name]}")
+
+
+def print_metrics_json(config: TokenfsConfig) -> None:
+    rows = db_rows(config.metadata_db, "select name,value from metrics order by name")
+    metrics = {row["name"]: int(row["value"]) for row in rows}
+    read_local = metric_value(metrics, "read_local_ops")
+    read_remote = metric_value(metrics, "read_remote_ops")
+    write_local = metric_value(metrics, "write_local_ops")
+    write_remote = metric_value(metrics, "write_remote_ops")
+    read_total = read_local + read_remote
+    write_total = write_local + write_remote
+    metrics["read_local_rate_x100"] = round(
+        (read_local / read_total * 10000) if read_total else 0
+    )
+    metrics["write_local_rate_x100"] = round(
+        (write_local / write_total * 10000) if write_total else 0
+    )
+    print(json.dumps(metrics, ensure_ascii=False, indent=2, sort_keys=True))
 
 
 def fnv1a64(path: Path) -> str | None:
@@ -500,6 +522,7 @@ def main() -> int:
     subparsers.add_parser("status", help="查看挂载、配额、后端和元数据状态")
     subparsers.add_parser("files", help="列出 SQLite 中记录的 TokenFS 文件")
     subparsers.add_parser("metrics", help="查看读写、命中率、溢写和预分配指标")
+    subparsers.add_parser("metrics-json", help="以 JSON 输出原始指标和派生命中率")
     subparsers.add_parser("check", help="检查 SQLite 元数据和物理文件是否一致")
     args = parser.parse_args()
 
@@ -515,6 +538,8 @@ def main() -> int:
         print_files(config)
     elif command == "metrics":
         print_metrics(config)
+    elif command == "metrics-json":
+        print_metrics_json(config)
     elif command == "check":
         return print_check(config)
     else:
