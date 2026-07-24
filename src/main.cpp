@@ -48,7 +48,10 @@ struct Config {
   fs::path metadata_db;
   std::string temp_suffix = ".tokenfs_tmp";
   std::string checksum = "none";
-  std::string local_eviction_policy = "cost_aware";
+  std::string local_eviction_policy = "value_aware";
+  std::string placement_policy = "value_aware";
+  uint64_t default_recompute_cost = 10;
+  uint64_t default_remote_access_cost = 10;
   bool promote_on_read = false;
   uint64_t promote_read_threshold = 2;
   bool prefetch_on_read = false;
@@ -66,6 +69,11 @@ struct FileMeta {
   std::string checksum;
   std::string state = "COMMITTED";
   uint64_t read_count = 0;
+  std::string content_key;
+  uint64_t recompute_cost = 10;
+  uint64_t remote_access_cost = 10;
+  uint64_t producer_gpu = 0;
+  uint64_t share_count = 1;
 };
 
 struct EvictionCandidate {
@@ -115,13 +123,44 @@ class MetadataStore {
          "created_at INTEGER NOT NULL,"
          "updated_at INTEGER NOT NULL,"
          "last_access_at INTEGER,"
-         "read_count INTEGER NOT NULL DEFAULT 0"
+         "read_count INTEGER NOT NULL DEFAULT 0,"
+         "content_key TEXT,"
+         "recompute_cost INTEGER NOT NULL DEFAULT 10,"
+         "remote_access_cost INTEGER NOT NULL DEFAULT 10,"
+         "producer_gpu INTEGER NOT NULL DEFAULT 0,"
+         "share_count INTEGER NOT NULL DEFAULT 1"
          ");");
     EnsureColumn("files", "checksum", "TEXT");
     EnsureColumn("files", "read_count", "INTEGER NOT NULL DEFAULT 0");
+    EnsureColumn("files", "content_key", "TEXT");
+    EnsureColumn("files", "recompute_cost", "INTEGER NOT NULL DEFAULT 10");
+    EnsureColumn("files", "remote_access_cost", "INTEGER NOT NULL DEFAULT 10");
+    EnsureColumn("files", "producer_gpu", "INTEGER NOT NULL DEFAULT 0");
+    EnsureColumn("files", "share_count", "INTEGER NOT NULL DEFAULT 1");
     Exec("CREATE TABLE IF NOT EXISTS metrics ("
          "name TEXT PRIMARY KEY,"
          "value INTEGER NOT NULL DEFAULT 0"
+         ");");
+    Exec("CREATE TABLE IF NOT EXISTS gpu_access ("
+         "logical_path TEXT NOT NULL,"
+         "gpu_id INTEGER NOT NULL,"
+         "read_count INTEGER NOT NULL DEFAULT 0,"
+         "last_access_at INTEGER,"
+         "PRIMARY KEY(logical_path,gpu_id)"
+         ");");
+    Exec("CREATE TABLE IF NOT EXISTS content_refs ("
+         "content_key TEXT PRIMARY KEY,"
+         "primary_logical_path TEXT NOT NULL,"
+         "physical_path TEXT NOT NULL,"
+         "size_bytes INTEGER NOT NULL DEFAULT 0,"
+         "ref_count INTEGER NOT NULL DEFAULT 0,"
+         "first_seen_at INTEGER NOT NULL,"
+         "last_seen_at INTEGER NOT NULL"
+         ");");
+    Exec("CREATE TABLE IF NOT EXISTS content_members ("
+         "content_key TEXT NOT NULL,"
+         "logical_path TEXT NOT NULL,"
+         "PRIMARY KEY(content_key,logical_path)"
          ");");
   }
 
@@ -129,7 +168,10 @@ class MetadataStore {
     std::lock_guard<std::mutex> lock(mu_);
     const char* sql =
         "SELECT logical_path,gpu_id,tier,backend_id,physical_path,size_bytes,"
-        "COALESCE(checksum,''),state,COALESCE(read_count,0) "
+        "COALESCE(checksum,''),state,COALESCE(read_count,0),"
+        "COALESCE(content_key,''),COALESCE(recompute_cost,10),"
+        "COALESCE(remote_access_cost,10),COALESCE(producer_gpu,0),"
+        "COALESCE(share_count,1) "
         "FROM files WHERE logical_path=?;";
     sqlite3_stmt* stmt = nullptr;
     Prepare(sql, &stmt);
@@ -154,6 +196,12 @@ class MetadataStore {
     meta.checksum = ColumnText(stmt, 6);
     meta.state = ColumnText(stmt, 7);
     meta.read_count = static_cast<uint64_t>(sqlite3_column_int64(stmt, 8));
+    meta.content_key = ColumnText(stmt, 9);
+    meta.recompute_cost = static_cast<uint64_t>(sqlite3_column_int64(stmt, 10));
+    meta.remote_access_cost =
+        static_cast<uint64_t>(sqlite3_column_int64(stmt, 11));
+    meta.producer_gpu = static_cast<uint64_t>(sqlite3_column_int64(stmt, 12));
+    meta.share_count = static_cast<uint64_t>(sqlite3_column_int64(stmt, 13));
     sqlite3_finalize(stmt);
     return meta;
   }
@@ -163,8 +211,9 @@ class MetadataStore {
     const auto now = UnixNow();
     const char* sql =
         "INSERT INTO files(logical_path,gpu_id,tier,backend_id,physical_path,"
-        "size_bytes,checksum,state,created_at,updated_at,last_access_at,read_count) "
-        "VALUES(?,?,?,?,?,?,?,?,?,?,?,?) "
+        "size_bytes,checksum,state,created_at,updated_at,last_access_at,read_count,"
+        "content_key,recompute_cost,remote_access_cost,producer_gpu,share_count) "
+        "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) "
         "ON CONFLICT(logical_path) DO UPDATE SET "
         "gpu_id=excluded.gpu_id,"
         "tier=excluded.tier,"
@@ -173,6 +222,11 @@ class MetadataStore {
         "size_bytes=excluded.size_bytes,"
         "checksum=excluded.checksum,"
         "state=excluded.state,"
+        "content_key=excluded.content_key,"
+        "recompute_cost=excluded.recompute_cost,"
+        "remote_access_cost=excluded.remote_access_cost,"
+        "producer_gpu=excluded.producer_gpu,"
+        "share_count=excluded.share_count,"
         "updated_at=excluded.updated_at;";
     sqlite3_stmt* stmt = nullptr;
     Prepare(sql, &stmt);
@@ -189,10 +243,16 @@ class MetadataStore {
     sqlite3_bind_int64(stmt, 10, now);
     sqlite3_bind_int64(stmt, 11, now);
     sqlite3_bind_int64(stmt, 12, static_cast<sqlite3_int64>(meta.read_count));
+    sqlite3_bind_text(stmt, 13, meta.content_key.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_int64(stmt, 14, static_cast<sqlite3_int64>(meta.recompute_cost));
+    sqlite3_bind_int64(stmt, 15,
+                       static_cast<sqlite3_int64>(meta.remote_access_cost));
+    sqlite3_bind_int64(stmt, 16, static_cast<sqlite3_int64>(meta.producer_gpu));
+    sqlite3_bind_int64(stmt, 17, static_cast<sqlite3_int64>(meta.share_count));
     StepDone(stmt);
   }
 
-  uint64_t IncrementReadCount(const std::string& logical_path) {
+  uint64_t IncrementReadCount(const std::string& logical_path, int gpu_id) {
     std::lock_guard<std::mutex> lock(mu_);
     const auto now = UnixNow();
     sqlite3_stmt* stmt = nullptr;
@@ -201,6 +261,16 @@ class MetadataStore {
             &stmt);
     sqlite3_bind_int64(stmt, 1, now);
     sqlite3_bind_text(stmt, 2, logical_path.c_str(), -1, SQLITE_TRANSIENT);
+    StepDone(stmt);
+
+    Prepare("INSERT INTO gpu_access(logical_path,gpu_id,read_count,last_access_at) "
+            "VALUES(?,?,1,?) "
+            "ON CONFLICT(logical_path,gpu_id) DO UPDATE SET "
+            "read_count=read_count+1,last_access_at=excluded.last_access_at;",
+            &stmt);
+    sqlite3_bind_text(stmt, 1, logical_path.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_int(stmt, 2, gpu_id);
+    sqlite3_bind_int64(stmt, 3, now);
     StepDone(stmt);
 
     Prepare("SELECT COALESCE(read_count,0) FROM files WHERE logical_path=?;", &stmt);
@@ -233,6 +303,74 @@ class MetadataStore {
     sqlite3_bind_text(stmt, 1, name.c_str(), -1, SQLITE_TRANSIENT);
     sqlite3_bind_int64(stmt, 2, static_cast<sqlite3_int64>(delta));
     StepDone(stmt);
+  }
+
+  void SetMetricMax(const std::string& name, uint64_t value) {
+    std::lock_guard<std::mutex> lock(mu_);
+    sqlite3_stmt* stmt = nullptr;
+    Prepare("INSERT INTO metrics(name,value) VALUES(?,?) "
+            "ON CONFLICT(name) DO UPDATE SET "
+            "value=CASE WHEN excluded.value > value THEN excluded.value ELSE value END;",
+            &stmt);
+    sqlite3_bind_text(stmt, 1, name.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_int64(stmt, 2, static_cast<sqlite3_int64>(value));
+    StepDone(stmt);
+  }
+
+  bool RegisterContentRef(const std::string& content_key,
+                          const std::string& logical_path,
+                          const fs::path& physical_path, uint64_t size_bytes) {
+    if (content_key.empty()) {
+      return false;
+    }
+    std::lock_guard<std::mutex> lock(mu_);
+    sqlite3_stmt* stmt = nullptr;
+    Prepare("SELECT COUNT(*) FROM content_members "
+            "WHERE content_key=? AND logical_path != ?;",
+            &stmt);
+    sqlite3_bind_text(stmt, 1, content_key.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 2, logical_path.c_str(), -1, SQLITE_TRANSIENT);
+    bool duplicate = false;
+    if (sqlite3_step(stmt) == SQLITE_ROW) {
+      duplicate = sqlite3_column_int64(stmt, 0) > 0;
+    }
+    sqlite3_finalize(stmt);
+
+    const auto now = UnixNow();
+    const auto physical = physical_path.string();
+    Prepare("INSERT OR IGNORE INTO content_refs("
+            "content_key,primary_logical_path,physical_path,size_bytes,"
+            "ref_count,first_seen_at,last_seen_at) "
+            "VALUES(?,?,?,?,0,?,?);",
+            &stmt);
+    sqlite3_bind_text(stmt, 1, content_key.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 2, logical_path.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 3, physical.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_int64(stmt, 4, static_cast<sqlite3_int64>(size_bytes));
+    sqlite3_bind_int64(stmt, 5, now);
+    sqlite3_bind_int64(stmt, 6, now);
+    StepDone(stmt);
+
+    Prepare("INSERT OR IGNORE INTO content_members(content_key,logical_path) "
+            "VALUES(?,?);",
+            &stmt);
+    sqlite3_bind_text(stmt, 1, content_key.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 2, logical_path.c_str(), -1, SQLITE_TRANSIENT);
+    StepDone(stmt);
+
+    Prepare("UPDATE content_refs SET "
+            "size_bytes=?,"
+            "last_seen_at=?,"
+            "ref_count=(SELECT COUNT(*) FROM content_members "
+            "           WHERE content_key=?) "
+            "WHERE content_key=?;",
+            &stmt);
+    sqlite3_bind_int64(stmt, 1, static_cast<sqlite3_int64>(size_bytes));
+    sqlite3_bind_int64(stmt, 2, now);
+    sqlite3_bind_text(stmt, 3, content_key.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 4, content_key.c_str(), -1, SQLITE_TRANSIENT);
+    StepDone(stmt);
+    return duplicate;
   }
 
   std::vector<FileMeta> ChildrenUnder(const std::string& logical_dir) {
@@ -313,7 +451,9 @@ class MetadataStore {
     sqlite3_stmt* stmt = nullptr;
     Prepare("SELECT logical_path,gpu_id,tier,backend_id,physical_path,size_bytes,"
             "COALESCE(checksum,''),state,COALESCE(read_count,0),"
-            "COALESCE(last_access_at,0) "
+            "COALESCE(last_access_at,0),COALESCE(content_key,''),"
+            "COALESCE(recompute_cost,10),COALESCE(remote_access_cost,10),"
+            "COALESCE(producer_gpu,0),COALESCE(share_count,1) "
             "FROM files WHERE gpu_id=? AND tier='local' AND state='COMMITTED' "
             "AND logical_path != ? "
             "ORDER BY COALESCE(read_count,0) ASC,"
@@ -348,6 +488,15 @@ class MetadataStore {
           static_cast<uint64_t>(sqlite3_column_int64(stmt, 8));
       candidate.last_access_at =
           static_cast<uint64_t>(sqlite3_column_int64(stmt, 9));
+      candidate.meta.content_key = ColumnText(stmt, 10);
+      candidate.meta.recompute_cost =
+          static_cast<uint64_t>(sqlite3_column_int64(stmt, 11));
+      candidate.meta.remote_access_cost =
+          static_cast<uint64_t>(sqlite3_column_int64(stmt, 12));
+      candidate.meta.producer_gpu =
+          static_cast<uint64_t>(sqlite3_column_int64(stmt, 13));
+      candidate.meta.share_count =
+          static_cast<uint64_t>(sqlite3_column_int64(stmt, 14));
       out.push_back(std::move(candidate));
     }
     sqlite3_finalize(stmt);
@@ -567,21 +716,33 @@ class TokenFS {
     } else {
       auto local = gpu->local_root / rel;
       if (fs::exists(local)) {
-        meta = {path, gpu->gpu_id, "local", "local", local,
-                FileSizeNoThrow(local), "", "COMMITTED"};
+        meta.logical_path = path;
+        meta.gpu_id = gpu->gpu_id;
+        meta.tier = "local";
+        meta.backend_id = "local";
+        meta.physical_path = local;
+        meta.size_bytes = FileSizeNoThrow(local);
+        meta.state = "COMMITTED";
+        meta.producer_gpu = static_cast<uint64_t>(gpu->gpu_id);
       } else {
         auto remote = RemotePath(*gpu, rel);
         if (!fs::exists(remote)) {
           return -ENOENT;
         }
-        meta = {path, gpu->gpu_id, "remote", gpu->remote_backend, remote,
-                FileSizeNoThrow(remote), "", "COMMITTED"};
+        meta.logical_path = path;
+        meta.gpu_id = gpu->gpu_id;
+        meta.tier = "remote";
+        meta.backend_id = gpu->remote_backend;
+        meta.physical_path = remote;
+        meta.size_bytes = FileSizeNoThrow(remote);
+        meta.state = "COMMITTED";
+        meta.producer_gpu = static_cast<uint64_t>(gpu->gpu_id);
       }
       metadata_.Upsert(meta);
     }
     const bool writable = IsWritable(fi->flags);
     if (!writable) {
-      uint64_t read_count = metadata_.IncrementReadCount(path);
+      uint64_t read_count = metadata_.IncrementReadCount(path, gpu->gpu_id);
       meta.read_count = read_count;
       metadata_.AddMetric("read_open_count", 1);
       metadata_.AddMetric(meta.tier == "local" ? "local_read_open_count"
@@ -622,12 +783,24 @@ class TokenFS {
     }
     metadata_.AddMetric("read_ops", 1);
     metadata_.AddMetric("read_bytes", static_cast<uint64_t>(n));
+    metadata_.AddMetric("qos_gpu" + std::to_string(handle->gpu_id) + "_read_ops",
+                        1);
+    metadata_.AddMetric("qos_gpu" + std::to_string(handle->gpu_id) + "_read_bytes",
+                        static_cast<uint64_t>(n));
     metadata_.AddMetric(handle->tier == "local" ? "read_local_ops" : "read_remote_ops",
                         1);
     metadata_.AddMetric(handle->tier == "local" ? "read_local_bytes"
                                                 : "read_remote_bytes",
                         static_cast<uint64_t>(n));
-    metadata_.AddMetric("read_latency_us_total", ElapsedMicros(start));
+    const uint64_t latency_us = ElapsedMicros(start);
+    metadata_.AddMetric("read_latency_us_total", latency_us);
+    metadata_.AddMetric(handle->tier == "local" ? "read_local_latency_us_total"
+                                                : "read_remote_latency_us_total",
+                        latency_us);
+    metadata_.SetMetricMax("read_latency_us_max", latency_us);
+    metadata_.SetMetricMax(handle->tier == "local" ? "read_local_latency_us_max"
+                                                   : "read_remote_latency_us_max",
+                           latency_us);
     return static_cast<int>(n);
   }
 
@@ -650,13 +823,25 @@ class TokenFS {
     UpdateHandleMeta(*handle, "CREATING");
     metadata_.AddMetric("write_ops", 1);
     metadata_.AddMetric("write_bytes", static_cast<uint64_t>(n));
+    metadata_.AddMetric("qos_gpu" + std::to_string(handle->gpu_id) + "_write_ops",
+                        1);
+    metadata_.AddMetric("qos_gpu" + std::to_string(handle->gpu_id) + "_write_bytes",
+                        static_cast<uint64_t>(n));
     metadata_.AddMetric(handle->tier == "local" ? "write_local_ops"
                                                 : "write_remote_ops",
                         1);
     metadata_.AddMetric(handle->tier == "local" ? "write_local_bytes"
                                                 : "write_remote_bytes",
                         static_cast<uint64_t>(n));
-    metadata_.AddMetric("write_latency_us_total", ElapsedMicros(start));
+    const uint64_t latency_us = ElapsedMicros(start);
+    metadata_.AddMetric("write_latency_us_total", latency_us);
+    metadata_.AddMetric(handle->tier == "local" ? "write_local_latency_us_total"
+                                                : "write_remote_latency_us_total",
+                        latency_us);
+    metadata_.SetMetricMax("write_latency_us_max", latency_us);
+    metadata_.SetMetricMax(handle->tier == "local" ? "write_local_latency_us_max"
+                                                   : "write_remote_latency_us_max",
+                           latency_us);
     return static_cast<int>(n);
   }
 
@@ -883,8 +1068,20 @@ class TokenFS {
             ? 0
             : (now - candidate.last_access_at) / 60;
     const uint64_t heat = candidate.meta.read_count;
+    const uint64_t reuse_probability_x100 = std::min<uint64_t>(100, heat * 20);
+    const uint64_t affinity_x100 =
+        candidate.meta.producer_gpu == static_cast<uint64_t>(candidate.meta.gpu_id)
+            ? 100
+            : 40;
+    const uint64_t share_bonus = std::max<uint64_t>(1, candidate.meta.share_count);
+    const uint64_t data_value =
+        (std::max<uint64_t>(1, reuse_probability_x100) *
+         std::max<uint64_t>(1, candidate.meta.recompute_cost) * affinity_x100 *
+         share_bonus) /
+        std::max<uint64_t>(1, size_mib * candidate.meta.remote_access_cost);
+
     return static_cast<int64_t>(size_mib * 1000 + age_minutes) -
-           static_cast<int64_t>(heat * 100000);
+           static_cast<int64_t>(data_value * 1000);
   }
 
   static bool IsWritable(int flags) {
@@ -966,7 +1163,8 @@ class TokenFS {
     if (used + required_size <= gpu.local_quota_bytes) {
       return true;
     }
-    if (config_.local_eviction_policy != "cost_aware") {
+    if (config_.local_eviction_policy != "cost_aware" &&
+        config_.local_eviction_policy != "value_aware") {
       return false;
     }
 
@@ -1013,12 +1211,24 @@ class TokenFS {
   FileMeta SelectNewFile(const GpuConfig& gpu, const fs::path& rel,
                          const std::string& logical_path) const {
     const uint64_t used = DirectoryBytes(gpu.local_root);
+    FileMeta meta;
+    meta.logical_path = logical_path;
+    meta.gpu_id = gpu.gpu_id;
+    meta.recompute_cost = config_.default_recompute_cost;
+    meta.remote_access_cost = config_.default_remote_access_cost;
+    meta.producer_gpu = static_cast<uint64_t>(gpu.gpu_id);
+    meta.share_count = 1;
+    meta.state = "CREATING";
     if (used < gpu.local_quota_bytes) {
-      return {logical_path, gpu.gpu_id, "local", "local", gpu.local_root / rel,
-              0, "", "CREATING"};
+      meta.tier = "local";
+      meta.backend_id = "local";
+      meta.physical_path = gpu.local_root / rel;
+      return meta;
     }
-    return {logical_path, gpu.gpu_id, "remote", gpu.remote_backend,
-            RemotePath(gpu, rel), 0, "", "CREATING"};
+    meta.tier = "remote";
+    meta.backend_id = gpu.remote_backend;
+    meta.physical_path = RemotePath(gpu, rel);
+    return meta;
   }
 
   bool ShouldPromoteOnRead(const FileMeta& meta, uint64_t read_count) const {
@@ -1030,6 +1240,7 @@ class TokenFS {
                      const std::string& metric_prefix) {
     const uint64_t size = FileSizeNoThrow(meta.physical_path);
     fs::path local = gpu.local_root / rel;
+    const fs::path source = meta.physical_path;
     if (!EnsureLocalCapacity(gpu, size, meta.logical_path,
                              fs::exists(local) ? &local : nullptr)) {
       metadata_.AddMetric(metric_prefix + "_skip_no_space", 1);
@@ -1043,7 +1254,13 @@ class TokenFS {
     std::error_code ec;
     fs::remove(tmp, ec);
     ec.clear();
-    fs::copy_file(meta.physical_path, tmp, fs::copy_options::overwrite_existing, ec);
+
+    FileMeta migrating = meta;
+    migrating.state = "COPYING_TO_LOCAL";
+    metadata_.Upsert(migrating);
+    metadata_.AddMetric("migration_to_local_begin", 1);
+
+    fs::copy_file(source, tmp, fs::copy_options::overwrite_existing, ec);
     if (ec) {
       fs::remove(tmp, ec);
       return -ec.value();
@@ -1068,13 +1285,16 @@ class TokenFS {
       return -ec.value();
     }
 
-    fs::remove(meta.physical_path, ec);
     meta.tier = "local";
     meta.backend_id = "local";
     meta.physical_path = local;
     meta.size_bytes = size;
+    meta.state = "LOCAL_READY";
+    metadata_.Upsert(meta);
     meta.state = "COMMITTED";
     metadata_.Upsert(meta);
+    fs::remove(source, ec);
+    metadata_.AddMetric("migration_to_local_commit", 1);
     metadata_.AddMetric(metric_prefix + "_count", 1);
     metadata_.AddMetric(metric_prefix + "_bytes", size);
     return 0;
@@ -1134,8 +1354,17 @@ class TokenFS {
         metadata_.AddMetric("prefetch_skip_missing", 1);
         return;
       }
-      meta = {logical_path, gpu.gpu_id, "remote", gpu.remote_backend, remote,
-              FileSizeNoThrow(remote), "", "COMMITTED"};
+      meta.logical_path = logical_path;
+      meta.gpu_id = gpu.gpu_id;
+      meta.tier = "remote";
+      meta.backend_id = gpu.remote_backend;
+      meta.physical_path = remote;
+      meta.size_bytes = FileSizeNoThrow(remote);
+      meta.state = "COMMITTED";
+      meta.recompute_cost = config_.default_recompute_cost;
+      meta.remote_access_cost = config_.default_remote_access_cost;
+      meta.producer_gpu = static_cast<uint64_t>(gpu.gpu_id);
+      meta.share_count = 1;
       metadata_.Upsert(meta);
     }
 
@@ -1219,25 +1448,44 @@ class TokenFS {
     fs::path remote = RemotePath(gpu, parsed->second);
     fs::create_directories(remote.parent_path());
     const uint64_t size = FileSizeNoThrow(meta.physical_path);
+    const fs::path source = meta.physical_path;
+    fs::path tmp = remote;
+    tmp += config_.temp_suffix + ".evict";
 
     std::error_code ec;
-    fs::rename(meta.physical_path, remote, ec);
+    fs::remove(tmp, ec);
+    ec.clear();
+
+    FileMeta migrating = meta;
+    migrating.state = "COPYING_TO_REMOTE";
+    metadata_.Upsert(migrating);
+    metadata_.AddMetric("migration_to_remote_begin", 1);
+
+    fs::copy_file(source, tmp, fs::copy_options::overwrite_existing, ec);
     if (ec) {
-      ec.clear();
-      fs::copy_file(meta.physical_path, remote,
-                    fs::copy_options::overwrite_existing, ec);
-      if (ec) {
-        return -ec.value();
-      }
-      fs::remove(meta.physical_path, ec);
+      fs::remove(tmp, ec);
+      return -ec.value();
+    }
+    if (int fd = open(tmp.c_str(), O_RDONLY); fd >= 0) {
+      fsync(fd);
+      close(fd);
+    }
+    fs::rename(tmp, remote, ec);
+    if (ec) {
+      fs::remove(tmp, ec);
+      return -ec.value();
     }
 
     meta.tier = "remote";
     meta.backend_id = gpu.remote_backend;
     meta.physical_path = remote;
     meta.size_bytes = size;
+    meta.state = "REMOTE_READY";
+    metadata_.Upsert(meta);
     meta.state = "COMMITTED";
     metadata_.Upsert(meta);
+    fs::remove(source, ec);
+    metadata_.AddMetric("migration_to_remote_commit", 1);
     metadata_.AddMetric("evict_count", 1);
     metadata_.AddMetric("evict_bytes", size);
     return 0;
@@ -1246,6 +1494,9 @@ class TokenFS {
   void UpdateHandleMeta(const Handle& handle, const std::string& state,
                         const std::string& checksum = "") {
     FileMeta meta;
+    if (auto existing = metadata_.Get(handle.logical_path)) {
+      meta = *existing;
+    }
     meta.logical_path = handle.logical_path;
     meta.gpu_id = handle.gpu_id;
     meta.tier = handle.tier;
@@ -1253,6 +1504,21 @@ class TokenFS {
     meta.physical_path = handle.physical_path;
     meta.size_bytes = FileSizeNoThrow(handle.physical_path);
     meta.checksum = checksum;
+    if (!checksum.empty()) {
+      meta.content_key = checksum;
+    }
+    if (meta.recompute_cost == 0) {
+      meta.recompute_cost = config_.default_recompute_cost;
+    }
+    if (meta.remote_access_cost == 0) {
+      meta.remote_access_cost = config_.default_remote_access_cost;
+    }
+    if (meta.producer_gpu == 0 && handle.gpu_id != 0) {
+      meta.producer_gpu = static_cast<uint64_t>(handle.gpu_id);
+    }
+    if (meta.share_count == 0) {
+      meta.share_count = 1;
+    }
     meta.state = state;
     metadata_.Upsert(meta);
   }
@@ -1274,6 +1540,14 @@ class TokenFS {
     }
     handle.state = "COMMITTED";
     UpdateHandleMeta(handle, "COMMITTED", checksum);
+    if (!checksum.empty()) {
+      if (metadata_.RegisterContentRef(checksum, handle.logical_path,
+                                       handle.physical_path,
+                                       FileSizeNoThrow(handle.physical_path))) {
+        metadata_.AddMetric("dedup_duplicate_content_count", 1);
+      }
+      metadata_.AddMetric("content_ref_register_count", 1);
+    }
     if (handle.created_remote) {
       metadata_.AddMetric("remote_place_count", 1);
       handle.created_remote = false;
@@ -1318,6 +1592,14 @@ class TokenFS {
 
   void RecoverIncompleteFiles() {
     for (const auto& meta : metadata_.IncompleteFiles()) {
+      if (meta.state == "COPYING_TO_REMOTE" || meta.state == "COPYING_TO_LOCAL" ||
+          meta.state == "REMOTE_READY" || meta.state == "LOCAL_READY") {
+        FileMeta recovered = meta;
+        recovered.state = "COMMITTED";
+        metadata_.Upsert(recovered);
+        metadata_.AddMetric("migration_recovered_count", 1);
+        continue;
+      }
       std::error_code ec;
       fs::remove(meta.physical_path, ec);
       metadata_.Remove(meta.logical_path);
@@ -1462,7 +1744,19 @@ Config LoadConfig(const fs::path& path) {
   }
   if (root["policy"] && root["policy"]["local_eviction_policy"]) {
     config.local_eviction_policy =
-        root["policy"]["local_eviction_policy"].as<std::string>("cost_aware");
+        root["policy"]["local_eviction_policy"].as<std::string>("value_aware");
+  }
+  if (root["policy"] && root["policy"]["placement_policy"]) {
+    config.placement_policy =
+        root["policy"]["placement_policy"].as<std::string>("value_aware");
+  }
+  if (root["policy"] && root["policy"]["default_recompute_cost"]) {
+    config.default_recompute_cost =
+        root["policy"]["default_recompute_cost"].as<uint64_t>(10);
+  }
+  if (root["policy"] && root["policy"]["default_remote_access_cost"]) {
+    config.default_remote_access_cost =
+        root["policy"]["default_remote_access_cost"].as<uint64_t>(10);
   }
   if (root["policy"] && root["policy"]["promote_on_read"]) {
     config.promote_on_read = root["policy"]["promote_on_read"].as<bool>(false);

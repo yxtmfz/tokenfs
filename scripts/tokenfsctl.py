@@ -256,7 +256,12 @@ def print_files(config: TokenfsConfig) -> None:
     rows = db_rows(
         config.metadata_db,
         "select logical_path,gpu_id,tier,physical_path,size_bytes,checksum,state,"
-        f"{read_count_expr} as read_count "
+        f"{read_count_expr} as read_count,"
+        "coalesce(content_key,'') as content_key,"
+        "coalesce(recompute_cost,10) as recompute_cost,"
+        "coalesce(remote_access_cost,10) as remote_access_cost,"
+        "coalesce(producer_gpu,0) as producer_gpu,"
+        "coalesce(share_count,1) as share_count "
         "from files order by logical_path",
     )
     if not rows:
@@ -266,9 +271,63 @@ def print_files(config: TokenfsConfig) -> None:
         print(
             f"{row['logical_path']} | gpu{row['gpu_id']} | {row['tier']} | "
             f"{bytes_to_mib(row['size_bytes'])} | {row['state']} | "
-            f"reads={row['read_count']} | {row['checksum'] or '-'}"
+            f"reads={row['read_count']} | producer_gpu={row['producer_gpu']} | "
+            f"recompute={row['recompute_cost']} | remote_cost={row['remote_access_cost']} | "
+            f"share={row['share_count']} | key={row['content_key'] or row['checksum'] or '-'}"
         )
         print(f"  -> {row['physical_path']}")
+
+
+def print_affinity(config: TokenfsConfig) -> None:
+    rows = db_rows(
+        config.metadata_db,
+        "select logical_path,gpu_id,read_count,coalesce(last_access_at,0) as last_access_at "
+        "from gpu_access order by logical_path,gpu_id",
+    )
+    if not rows:
+        print("没有 GPU 访问统计。先读取 TokenFS 文件后再查看。")
+        return
+    print("GPU 亲和访问统计")
+    print("=" * 60)
+    current = None
+    for row in rows:
+        if row["logical_path"] != current:
+            current = row["logical_path"]
+            print(current)
+        print(
+            f"  GPU {row['gpu_id']}: reads={row['read_count']}, "
+            f"last_access_at={row['last_access_at']}"
+        )
+
+
+def print_dedup(config: TokenfsConfig) -> None:
+    rows = db_rows(
+        config.metadata_db,
+        "select content_key,primary_logical_path,physical_path,size_bytes,ref_count,"
+        "coalesce(first_seen_at,0) as first_seen_at,"
+        "coalesce(last_seen_at,0) as last_seen_at "
+        "from content_refs order by ref_count desc, content_key",
+    )
+    if not rows:
+        print("没有内容寻址记录。启用 checksum 并写入文件后再查看。")
+        return
+    print("内容寻址与公共前缀去重观测")
+    print("=" * 60)
+    for row in rows:
+        print(
+            f"{row['content_key']} | refs={row['ref_count']} | "
+            f"{bytes_to_mib(row['size_bytes'])}"
+        )
+        print(f"  主逻辑路径: {row['primary_logical_path']}")
+        print(f"  物理路径:   {row['physical_path']}")
+        members = db_rows(
+            config.metadata_db,
+            "select logical_path from content_members "
+            "where content_key=? order by logical_path",
+            (row["content_key"],),
+        )
+        for member in members:
+            print(f"  - {member['logical_path']}")
 
 
 def metric_value(metrics: dict[str, int], name: str) -> int:
@@ -293,6 +352,18 @@ def print_metrics(config: TokenfsConfig) -> None:
     write_local_rate = (write_local / write_total * 100) if write_total else 0
     avg_read_us = metric_value(metrics, "read_latency_us_total") / read_ops if read_ops else 0
     avg_write_us = metric_value(metrics, "write_latency_us_total") / write_ops if write_ops else 0
+    avg_read_local_us = (
+        metric_value(metrics, "read_local_latency_us_total") / read_local if read_local else 0
+    )
+    avg_read_remote_us = (
+        metric_value(metrics, "read_remote_latency_us_total") / read_remote if read_remote else 0
+    )
+    avg_write_local_us = (
+        metric_value(metrics, "write_local_latency_us_total") / write_local if write_local else 0
+    )
+    avg_write_remote_us = (
+        metric_value(metrics, "write_remote_latency_us_total") / write_remote if write_remote else 0
+    )
 
     print("TokenFS Metrics")
     print("=" * 60)
@@ -306,6 +377,12 @@ def print_metrics(config: TokenfsConfig) -> None:
     print(f"本地写命中率: {write_local_rate:.1f}%")
     print(f"平均读耗时:   {avg_read_us:.1f} us")
     print(f"平均写耗时:   {avg_write_us:.1f} us")
+    print(f"本地平均读:   {avg_read_local_us:.1f} us")
+    print(f"远端平均读:   {avg_read_remote_us:.1f} us")
+    print(f"本地平均写:   {avg_write_local_us:.1f} us")
+    print(f"远端平均写:   {avg_write_remote_us:.1f} us")
+    print(f"最大读耗时:   {metric_value(metrics, 'read_latency_us_max')} us")
+    print(f"最大写耗时:   {metric_value(metrics, 'write_latency_us_max')} us")
     print(f"文件打开读取: {metric_value(metrics, 'read_open_count')} 次")
     print(f"本地打开读取: {metric_value(metrics, 'local_read_open_count')} 次")
     print(f"溢写次数:     {metric_value(metrics, 'spill_count')}")
@@ -325,11 +402,26 @@ def print_metrics(config: TokenfsConfig) -> None:
     print(f"预取失败次数: {metric_value(metrics, 'prefetch_error_count')} 次")
     print(f"本地淘汰次数: {metric_value(metrics, 'evict_count')} 次")
     print(f"本地淘汰数据: {bytes_to_mib(metric_value(metrics, 'evict_bytes'))}")
+    print(f"迁移到远端:   {metric_value(metrics, 'migration_to_remote_commit')} 次")
+    print(f"迁移回本地:   {metric_value(metrics, 'migration_to_local_commit')} 次")
+    print(f"迁移恢复次数: {metric_value(metrics, 'migration_recovered_count')} 次")
     print(f"跳过打开文件: {metric_value(metrics, 'evict_skip_open')} 次")
     print(f"跳过热点文件: {metric_value(metrics, 'evict_skip_hot')} 次")
     print(f"淘汰失败次数: {metric_value(metrics, 'evict_error_count')} 次")
     print(f"预分配次数:   {metric_value(metrics, 'fallocate_ops')}")
     print(f"预分配数据量: {bytes_to_mib(metric_value(metrics, 'fallocate_bytes'))}")
+    print(f"内容登记次数: {metric_value(metrics, 'content_ref_register_count')}")
+    print(f"重复内容发现: {metric_value(metrics, 'dedup_duplicate_content_count')}")
+    print()
+    print("每 GPU QoS 观测")
+    for gpu in config.gpus:
+        prefix = f"qos_gpu{gpu.gpu_id}"
+        print(
+            f"- GPU {gpu.gpu_id}: read {metric_value(metrics, prefix + '_read_ops')} 次/"
+            f"{bytes_to_mib(metric_value(metrics, prefix + '_read_bytes'))}, "
+            f"write {metric_value(metrics, prefix + '_write_ops')} 次/"
+            f"{bytes_to_mib(metric_value(metrics, prefix + '_write_bytes'))}"
+        )
     print()
     print("原始计数")
     for name in sorted(metrics):
@@ -521,6 +613,8 @@ def main() -> int:
     subparsers = parser.add_subparsers(dest="command")
     subparsers.add_parser("status", help="查看挂载、配额、后端和元数据状态")
     subparsers.add_parser("files", help="列出 SQLite 中记录的 TokenFS 文件")
+    subparsers.add_parser("affinity", help="查看每个文件的 GPU 访问亲和统计")
+    subparsers.add_parser("dedup", help="查看内容寻址和重复内容观测")
     subparsers.add_parser("metrics", help="查看读写、命中率、溢写和预分配指标")
     subparsers.add_parser("metrics-json", help="以 JSON 输出原始指标和派生命中率")
     subparsers.add_parser("check", help="检查 SQLite 元数据和物理文件是否一致")
@@ -536,6 +630,10 @@ def main() -> int:
         print_status(config, config_path)
     elif command == "files":
         print_files(config)
+    elif command == "affinity":
+        print_affinity(config)
+    elif command == "dedup":
+        print_dedup(config)
     elif command == "metrics":
         print_metrics(config)
     elif command == "metrics-json":

@@ -1,118 +1,179 @@
-# TokenFS
+# GPU-Aware TierFS / TokenFS
 
-TokenFS 是一个面向大规模机器学习 Token 数据的 GPU 感知本地-远端分层文件系统原型。它通过 FUSE 提供统一 POSIX 文件接口，为不同 GPU 分配独立本地 SSD 配额；写入时优先使用 GPU 本地目录，本地容量不足时自动溢写到远端后端。远端后端在开发阶段可以是普通目录，在双 VM 或真实环境中可以切换为 NVMe-oF 挂载目录。
-
-当前版本已经按“未知真实 IP 信息时可做到的最完整状态”收口：代码、说明文档、数据结果分成三大板块。真实 SSD Target 的 IP、端口、NQN 到位后，只需要改配置和运行连接脚本，不需要重写 TokenFS 主体逻辑。
-
-## 一、代码板块
-
-### 核心代码
+项目中文名：
 
 ```text
-src/main.cpp
+面向多 GPU 大模型 KV Cache 的本地-远程自适应分层文件系统
 ```
 
-核心能力：
+TokenFS 是一个面向大模型 prompt token、token shard 和 KV Cache 数据的 GPU 感知分层文件系统原型。它通过 FUSE 提供统一 POSIX 命名空间，为不同 GPU 分配独立本地 SSD 配额；写入时优先使用 GPU 对应本地 SSD，本地空间不足时自动溢写到远端 SSD 层。远端层在开发阶段可以用普通目录或双 VM NVMe-oF 模拟，真实环境中切换为 NVMe-oF 挂载目录。
 
-- FUSE 文件系统：支持 `getattr`、`readdir`、`mkdir`、`create`、`open`、`read`、`write`、`truncate`、`rename`、`unlink`、`fsync`、`release`。
+当前仓库按三大板块组织：
+
+```text
+代码：src/、scripts/、config/
+说明文档：README.md
+数据结果：reports/latest/final-report.md
+```
+
+## 1. 总体架构
+
+```text
+vLLM / SGLang / token workload 测试程序
+                  |
+                  v
+          FUSE 统一命名空间
+                  |
+                  v
+        元数据与放置决策模块
+          /                    \
+         v                      v
+ GPU 对应本地 SSD          NVMe-oF 远程 SSD 池
+         ^                      |
+         |                      v
+         +---- 异步迁移与预取 ----+
+```
+
+用户只看到统一目录：
+
+```text
+/mnt/tokenfs/gpu0/...
+/mnt/tokenfs/gpu1/...
+```
+
+系统内部记录每个文件或缓存块的逻辑路径、所属 GPU、local/remote 层级、物理路径、大小、checksum、内容键、访问次数、生产 GPU、重算代价和共享度。
+
+## 2. 当前能力
+
+核心文件系统能力：
+
+- FUSE 文件接口：`getattr`、`readdir`、`mkdir`、`create`、`open`、`read`、`write`、`truncate`、`rename`、`unlink`、`fsync`、`release`。
 - GPU namespace：默认支持 `/gpu0`、`/gpu1`，每个 GPU 有独立本地目录和本地配额。
-- 本地优先：本地空间足够时写本地。
-- 远端溢写：本地不足时把文件放到远端后端。
-- 热点提升：远端文件被多次读取后，可迁回本地。
-- 顺序预取：读取连续编号 shard 时，可提前把下一片 shard 拉回本地。
-- Cost-aware 淘汰：本地不足时，优先淘汰访问少、较久未访问、体积较大的冷文件。
-- SQLite 元数据：记录逻辑路径、GPU、local/remote 层级、物理路径、文件大小、checksum、状态和读取次数。
-- 一致性恢复：启动时清理未完成写入，避免半成品文件被当成有效 token 数据。
+- 本地优先：空间足够时写入 GPU 对应本地目录。
+- 远端溢写：本地不足时写入 remote 后端。
+- NVMe-oF ready：真实 IP 未到位时可 dry-run 或双 VM 验证；真实环境只需替换 IP、NQN、设备名和挂载目录。
+- SQLite WAL 元数据：记录文件位置、状态、checksum、访问统计和策略字段。
+- 一致性恢复：启动时处理未完成写入和迁移状态，清理临时文件。
 
-### 配置文件
+策略能力：
 
-```text
-config/tokenfs.dev.yaml
-```
+- 价值感知放置/淘汰：按复用概率、重算代价、GPU 亲和度、共享度、文件大小和远端访问代价综合打分。
+- GPU 亲和统计：记录每个文件被哪个 GPU 读取，支持判断数据更适合放在哪张 GPU 的本地层。
+- 热点提升：远端文件被多次读取后可迁回本地。
+- 顺序预取：连续编号 shard 被读取时，可提前迁入下一片。
+- 迁移状态机：本地到远端、远端到本地都经过可恢复状态。
+- QoS 观测：记录每 GPU 读写次数和字节量，为公平调度、限速和 SLO 实验预留接口。
+- 内容寻址去重观测：用 checksum 作为 content key，记录相同内容的逻辑引用，为公共 prompt 前缀/KV Cache 去重打基础。
 
-当前开发配置使用目录模拟远端：
+## 3. 论文创新点
 
-```text
-local:  /var/lib/tokenfs/local/gpu0
-remote: /var/lib/tokenfs/remote-sim/gpu0
-mount:  /mnt/tokenfs
-```
+### 创新点 1：AI 价值感知的数据放置
 
-真实环境到位后，把远端配置切换为 NVMe-oF 挂载目录：
-
-```yaml
-backends:
-  - id: remote0
-    type: nvmeof
-    root: /srv/tokenfs/remote0
-    nvme_transport: tcp
-    nvme_target_ip: "<SSD_TARGET_IP>"
-    nvme_port: "4420"
-    nvme_subnqn: "<SUBSYSTEM_NQN>"
-    nvme_device: "/dev/nvmeXnY"
-    nvme_mount: /srv/tokenfs/remote0
-    nvme_filesystem: ext4
-```
-
-### 脚本入口
-
-日常使用只需要记住这些：
-
-```bash
-./scripts/check_environment.sh        # 检查 Ubuntu/FUSE/NVMe 工具环境
-./scripts/start_tokenfs.sh            # 启动并挂载 TokenFS
-./scripts/stop_tokenfs.sh             # 停止并卸载 TokenFS
-./scripts/tokenfsctl.py status        # 查看系统状态
-./scripts/tokenfsctl.py files         # 查看文件元数据
-./scripts/tokenfsctl.py metrics       # 查看读写和策略指标
-./scripts/tokenfsctl.py check         # 检查元数据和物理文件一致性
-./scripts/integration_test.sh         # 核心功能测试
-./scripts/strategy_matrix_test.sh     # 策略矩阵/消融实验
-./scripts/nvmeof_two_vm_test.sh       # 双 VM NVMe-oF 协议路径测试
-```
-
-其他脚本是专项测试或部署辅助：
+不只按剩余空间或 LRU 淘汰，而是给每个缓存块计算价值：
 
 ```text
-connect_nvme.sh / disconnect_nvme.sh      连接和断开 NVMe-oF 后端
-setup_nvme_target.sh / cleanup_nvme_target.sh
-                                          在第二台 VM 上模拟 NVMe-oF Target
-promote_test.sh                           热点提升专项测试
-prefetch_test.sh                          顺序预取专项测试
-eviction_test.sh                          Cost-aware 淘汰专项测试
-fault_injection_test.sh                   故障注入测试
-random_io_test.sh                         小块随机 I/O 测试
-token_workload_test.sh                    token shard workload 测试
+数据价值 =
+复用概率 * 重新计算代价 * GPU 亲和度 * 共享度
+/ 数据大小
+/ 远程访问代价
 ```
 
-## 二、说明文档板块
-
-本仓库只保留这一份主说明文档：`README.md`。
-
-### 项目定位
-
-TokenFS 不是重复实现 CephFS、BeeGFS、3FS 这类通用分布式文件系统，而是聚焦一个更窄但更适合论文切入的场景：
+高价值数据尽量留在本地，低价值数据优先迁到远端或淘汰。实验可对比：
 
 ```text
-大模型训练/推理中的 prompt token、token shard、可复用中间数据，
-在 GPU 本地 SSD 容量有限、远端 NVMe-oF SSD 容量更大的条件下，
-如何自动放置、迁移、预取和淘汰，减少 GPU 等待数据的时间。
+静态阈值
+LRU
+LFU
+本地优先但不迁移
+TokenFS 价值感知算法
 ```
 
-### 当前差异化能力
+### 创新点 2：GPU 亲和感知
 
-- GPU-aware：不同 GPU 的本地空间和访问统计相互隔离。
-- Token workload-aware：围绕大文件 shard、连续编号 shard、重复热点读取设计策略。
-- Local-first + Remote-spill：本地优先，空间不足时远端扩展容量。
-- Hot promotion：远端热点数据自动回本地。
-- Sequential prefetch：连续 shard 自动预取下一片。
-- Cost-aware eviction：不是简单 LRU/LFU，而是综合热度、时间和大小选择淘汰对象。
-- Metrics-driven：所有策略都有可观测指标，方便做论文实验。
-- NVMe-oF-ready：没有真实 IP 时可以 dry-run 和双 VM 验证；真实 IP 到位后改配置即可接入。
+系统记录：
 
-### 编译和运行
+- 文件由哪个 GPU 产生；
+- 哪个 GPU 最常访问；
+- 是否被多 GPU 共享；
+- 是否适合放在共享远端层；
+- 是否应该迁入某个 GPU 的本地层。
 
-Ubuntu 24.04 LTS 推荐安装：
+例如 GPU0 访问 80%、GPU1 访问 15%、GPU2 访问 5% 的缓存，应优先靠近 GPU0；多个 GPU 访问比例接近的公共前缀，则更适合放在远端共享层并按需预取。
+
+### 创新点 3：延迟与拥塞驱动的动态迁移
+
+系统已经记录本地/远端读写耗时、最大耗时、每 GPU 读写量。真实环境中可继续接入：
+
+```text
+远端读取 P99
+网络带宽
+NVMe-oF 队列深度
+TCP 重传
+存储服务器负载
+GPU 等待数据时间
+```
+
+当远端 P99 升高时，提前把热点数据迁到本地；当本地 SSD 排队严重而远端空闲时，部分请求可转向远端。
+
+### 创新点 4：跨层迁移崩溃一致性
+
+迁移不是简单复制和删除，而是状态机：
+
+```text
+LOCAL
+  -> COPYING_TO_REMOTE
+  -> REMOTE_READY
+  -> COMMITTED
+
+REMOTE
+  -> COPYING_TO_LOCAL
+  -> LOCAL_READY
+  -> COMMITTED
+```
+
+系统使用 SQLite WAL、临时文件、fsync、原子 rename、checksum 和启动恢复，避免迁移中崩溃造成元数据指向半成品。
+
+### 创新点 5：多 GPU 配额公平和 QoS
+
+当前版本已经记录每个 GPU 的读写次数和数据量，后续可以在此基础上实现：
+
+```text
+每 GPU 独立请求队列
+带权公平调度
+Token Bucket 限速
+延迟敏感任务优先
+最低带宽保障
+动态配额借用
+空闲配额回收
+```
+
+论文指标可加入 Jain 公平性指数、每 GPU P99 延迟、SLO 违反率、配额违约次数。
+
+### 创新点 6：公共 Prompt 前缀 / KV Cache 去重
+
+系统用内容键登记相同缓存块：
+
+```text
+content_key = hash(模型版本、tokenizer、token 序列、层号、KV dtype、位置编码、张量并行配置等)
+```
+
+当前工程先实现“重复内容发现和引用统计”。下一步可把多个逻辑缓存映射到同一个物理 KV 块，从而减少公共系统提示词、公共 prompt 前缀和共享 KV Cache 的重复存储。
+
+## 4. 环境准备
+
+推荐环境：
+
+```text
+Ubuntu 24.04 LTS ARM64
+C++20
+CMake + Ninja
+FUSE3
+SQLite WAL
+nvme-cli
+fio
+```
+
+安装依赖：
 
 ```bash
 sudo apt update
@@ -136,7 +197,15 @@ cmake --build build
 ./scripts/start_tokenfs.sh
 ```
 
-使用：
+停止：
+
+```bash
+./scripts/stop_tokenfs.sh
+```
+
+## 5. 日常使用
+
+写入和读取：
 
 ```bash
 mkdir -p /mnt/tokenfs/gpu0/demo
@@ -144,141 +213,114 @@ echo "hello tokenfs" > /mnt/tokenfs/gpu0/demo/a.tokens
 cat /mnt/tokenfs/gpu0/demo/a.tokens
 ```
 
-停止：
+查看状态：
 
 ```bash
-./scripts/stop_tokenfs.sh
+./scripts/tokenfsctl.py status
+./scripts/tokenfsctl.py files
+./scripts/tokenfsctl.py metrics
+./scripts/tokenfsctl.py affinity
+./scripts/tokenfsctl.py dedup
+./scripts/tokenfsctl.py check
 ```
 
-### 未知 IP 时怎么做到可验证
-
-现在没有真实 SSD Target IP，并不意味着项目只能停留在理论层面。当前能真实验证：
-
-- FUSE 文件系统功能是否正确。
-- GPU 本地配额是否生效。
-- 本地优先和远端溢写逻辑是否正确。
-- 热点提升、顺序预取、Cost-aware 淘汰是否按预期改变元数据和物理位置。
-- checksum、启动恢复、一致性检查、故障注入是否有效。
-- 双 VM 环境下真实 NVMe/TCP 协议路径是否能跑通。
-
-当前不能验证：
-
-- 真实 SSD 和真实网络下的绝对带宽。
-- 真实 P95/P99 延迟。
-- 真实 GPU 等待数据时间。
-- 真实多 GPU 并发下的性能上限。
-
-因此当前实验结论应该表述为：
-
-```text
-当前阶段验证系统设计、策略逻辑、工程闭环和实验框架；
-真实 NVMe-oF 环境到位后，复用同一套脚本重新采集最终性能数据。
-```
-
-### 真实 NVMe-oF 接入流程
-
-第二台 VM 或真实 SSD Target 准备好后：
+核心测试：
 
 ```bash
-# Target 侧，模拟 NVMe-oF Target
+./scripts/integration_test.sh
+./scripts/token_workload_test.sh
+./scripts/strategy_matrix_test.sh
+./scripts/promote_test.sh
+./scripts/prefetch_test.sh
+./scripts/eviction_test.sh
+./scripts/fault_injection_test.sh
+```
+
+## 6. NVMe-oF 接入
+
+当前没有真实 IP 时，remote 后端可以是目录：
+
+```yaml
+backends:
+  - id: remote0
+    type: directory
+    root: /var/lib/tokenfs/remote-sim
+```
+
+真实环境到位后，改成 NVMe-oF 挂载目录：
+
+```yaml
+backends:
+  - id: remote0
+    type: nvmeof
+    root: /srv/tokenfs/remote0
+    nvme_transport: tcp
+    nvme_target_ip: "<SSD_TARGET_IP>"
+    nvme_port: "4420"
+    nvme_subnqn: "<SUBSYSTEM_NQN>"
+    nvme_device: "/dev/nvmeXnY"
+    nvme_mount: /srv/tokenfs/remote0
+    nvme_filesystem: ext4
+```
+
+连接流程：
+
+```bash
+./scripts/check_environment.sh
+sudo ./scripts/connect_nvme.sh config/tokenfs.dev.yaml
+./scripts/start_tokenfs.sh
+```
+
+双 VM 模拟真实 NVMe/TCP 路径：
+
+```bash
+# Target VM
 sudo ./scripts/setup_nvme_target.sh
 
-# Client 侧，连接远端 Namespace
+# Client VM
 sudo ./scripts/connect_nvme.sh config/tokenfs.dev.yaml
-
-# Client 侧，运行 TokenFS + NVMe-oF 测试
 ./scripts/nvmeof_two_vm_test.sh
 ./scripts/nvmeof_perf_test.sh
 ```
 
-真实实验室环境只需要替换：
+## 7. 当前能验证什么
+
+没有真实 SSD IP 时，仍然可以真实验证：
+
+- FUSE 文件系统语义；
+- GPU 配额隔离；
+- 本地优先和远端溢写；
+- 价值感知淘汰；
+- 热点提升；
+- 顺序预取；
+- 迁移状态机；
+- checksum 和启动恢复；
+- GPU 访问亲和统计；
+- 内容寻址重复发现；
+- QoS 指标采集；
+- 双 VM NVMe/TCP 协议路径。
+
+当前不能证明：
+
+- 真实 SSD 和真实网络下的绝对带宽；
+- 真实 P95/P99 延迟；
+- 真实 GPU 等待数据时间；
+- 多 GPU 并发下的系统上限。
+
+因此当前阶段的结论应表述为：
 
 ```text
-SSD Target IP
-NVMe/TCP 端口
-Subsystem NQN
-/dev/nvmeXnY 设备名
-挂载目录 /srv/tokenfs/remote0
+在未知真实 IP 和真实 SSD 环境前，TokenFS 已完成可部署软件框架、
+策略逻辑、可观测指标和实验脚本；真实环境到位后复用同一套接口
+重新采集最终性能数据。
 ```
 
-### 论文实验建议
+## 8. 数据结果
 
-建议最终对比组：
-
-```text
-Baseline 1：直接本地 SSD
-Baseline 2：直接 NVMe-oF 远端 SSD
-Baseline 3：TokenFS 本地优先 + 远端溢写
-Ours 1：TokenFS + 热点提升
-Ours 2：TokenFS + 顺序预取
-Ours 3：TokenFS + 热点提升 + 顺序预取 + Cost-aware 淘汰
-```
-
-建议指标：
-
-```text
-端到端 token workload 耗时
-本地读命中率
-远端读取次数和远端读取字节数
-平均读写延迟
-P95/P99 延迟
-IOPS
-溢写次数
-热点提升次数
-预取成功次数
-本地淘汰次数
-GPU 等待数据时间，真实 GPU 环境到位后补充
-```
-
-## 三、数据结果板块
-
-最新结果统一放在：
+统一结果入口：
 
 ```text
 reports/latest/final-report.md
 ```
 
-该文件是当前仓库唯一需要直接查看的数据结果入口，已经整合：
-
-- token shard workload 结果。
-- 本地/远端读写指标。
-- SQLite 文件分布。
-- 策略矩阵消融实验。
-- 当前结果能说明什么、不能说明什么。
-
-重新生成当前结果：
-
-```bash
-./scripts/token_workload_test.sh /tmp/tokenfs-workload-report
-./scripts/strategy_matrix_test.sh /tmp/tokenfs-strategy-matrix
-```
-
-如果要更新仓库里的最终报告，把新结果整理进 `reports/latest/final-report.md` 即可。
-
-## 当前完成度
-
-在没有真实 SSD IP 的条件下，TokenFS 已经做到：
-
-- 可编译。
-- 可挂载。
-- 可读写。
-- 可分 GPU 管理本地配额。
-- 可本地优先和远端溢写。
-- 可热点提升、顺序预取和 Cost-aware 淘汰。
-- 可连接双 VM NVMe-oF 模拟环境。
-- 可进行一致性检查、故障注入和策略矩阵实验。
-- 可在真实环境到位后通过配置切换到真实 NVMe-oF 后端。
-
-下一步真正需要的是实验室真实环境：
-
-```text
-GPU 服务器 IP
-SSD Target IP
-Subsystem NQN
-Namespace 设备名
-远端 SSD 容量和文件系统
-网络带宽、MTU、是否 RDMA
-真实 token 数据规模和访问模式
-```
-
-拿到这些信息后，重点不是改代码，而是跑真实实验和调参。
+后续实验继续更新这一个文件即可，不再分散生成多份说明文档。

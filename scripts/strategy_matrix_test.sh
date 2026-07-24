@@ -151,7 +151,7 @@ lines.extend([
     "- `baseline` 表示只做本地优先和远端溢写。",
     "- `promote` 表示远端文件重复读取后提升回本地。",
     "- `prefetch` 表示读取连续 shard 时提前把下一片拉回本地。",
-    "- `full` 表示热点提升、顺序预取和 Cost-aware 淘汰联合工作。",
+    "- `full` 表示热点提升、顺序预取和价值感知淘汰联合工作。",
     "- 当前开发环境没有真实 NVMe-oF SSD，因此绝对耗时不能代表最终论文结果；但命中率、溢写次数、提升次数、预取次数和淘汰次数可以验证策略逻辑是否生效。",
 ])
 (root / "strategy_report.md").write_text("\n".join(lines) + "\n", encoding="utf-8")

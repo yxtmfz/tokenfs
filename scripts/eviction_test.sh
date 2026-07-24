@@ -29,7 +29,7 @@ sqlite3 "$metadata_db" \
 sqlite3 "$metadata_db" \
   "update files set read_count=0,last_access_at=1 where logical_path='/gpu0/evict/cold-big.tokens';"
 
-echo "eviction: write another local file and force cost-aware eviction"
+echo "eviction: write another local file and force value-aware eviction"
 truncate -s 32M "$mount_point/gpu0/evict/new.tokens"
 sync
 
@@ -49,4 +49,4 @@ if [[ "$evict_count" -lt 1 ]]; then
 fi
 "$project_root/scripts/tokenfsctl.py" --config "$project_root/config/tokenfs.dev.yaml" check
 
-echo "TokenFS cost-aware eviction test passed."
+echo "TokenFS value-aware eviction test passed."
