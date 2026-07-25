@@ -15,6 +15,15 @@ policy:
   local_eviction_policy: value_aware
   default_recompute_cost: 10
   default_remote_access_cost: 10
+  value_promote_threshold: 100
+  # 默认不开自适应迁移，避免影响 baseline；真实环境或专项实验中打开。
+  adaptive_migration: false
+  adaptive_remote_promote_us: 10000
+  # 0 表示不限制。需要做 QoS 公平性实验时设置为具体 IOPS。
+  qos_read_iops_per_gpu: 0
+  qos_write_iops_per_gpu: 0
+  # 同内容文件在同一文件系统内可用硬链接共享物理数据；跨文件系统时自动降级为只记录去重机会。
+  physical_dedup: true
   # 热点提升默认关闭，便于和纯 local-first/remote-spill 策略做对照实验。
   promote_on_read: false
   promote_read_threshold: 2

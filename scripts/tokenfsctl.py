@@ -334,6 +334,25 @@ def metric_value(metrics: dict[str, int], name: str) -> int:
     return metrics.get(name, 0)
 
 
+def approx_p99_label(metrics: dict[str, int], prefix: str, total_ops: int) -> str:
+    if total_ops <= 0:
+        return "-"
+    buckets = [
+        ("le_100us", "<=100 us"),
+        ("le_1ms", "<=1 ms"),
+        ("le_10ms", "<=10 ms"),
+        ("le_100ms", "<=100 ms"),
+        ("gt_100ms", ">100 ms"),
+    ]
+    target = max(1, int(total_ops * 0.99 + 0.999))
+    seen = 0
+    for suffix, label in buckets:
+        seen += metric_value(metrics, f"{prefix}_latency_bucket_{suffix}")
+        if seen >= target:
+            return label
+    return ">100 ms"
+
+
 def print_metrics(config: TokenfsConfig) -> None:
     rows = db_rows(config.metadata_db, "select name,value from metrics order by name")
     if not rows:
@@ -383,6 +402,8 @@ def print_metrics(config: TokenfsConfig) -> None:
     print(f"远端平均写:   {avg_write_remote_us:.1f} us")
     print(f"最大读耗时:   {metric_value(metrics, 'read_latency_us_max')} us")
     print(f"最大写耗时:   {metric_value(metrics, 'write_latency_us_max')} us")
+    print(f"读 P99 区间:  {approx_p99_label(metrics, 'read', read_ops)}")
+    print(f"写 P99 区间:  {approx_p99_label(metrics, 'write', write_ops)}")
     print(f"文件打开读取: {metric_value(metrics, 'read_open_count')} 次")
     print(f"本地打开读取: {metric_value(metrics, 'local_read_open_count')} 次")
     print(f"溢写次数:     {metric_value(metrics, 'spill_count')}")
@@ -405,6 +426,7 @@ def print_metrics(config: TokenfsConfig) -> None:
     print(f"迁移到远端:   {metric_value(metrics, 'migration_to_remote_commit')} 次")
     print(f"迁移回本地:   {metric_value(metrics, 'migration_to_local_commit')} 次")
     print(f"迁移恢复次数: {metric_value(metrics, 'migration_recovered_count')} 次")
+    print(f"自适应提升触发: {metric_value(metrics, 'adaptive_promote_trigger_count')} 次")
     print(f"跳过打开文件: {metric_value(metrics, 'evict_skip_open')} 次")
     print(f"跳过热点文件: {metric_value(metrics, 'evict_skip_hot')} 次")
     print(f"淘汰失败次数: {metric_value(metrics, 'evict_error_count')} 次")
@@ -412,6 +434,11 @@ def print_metrics(config: TokenfsConfig) -> None:
     print(f"预分配数据量: {bytes_to_mib(metric_value(metrics, 'fallocate_bytes'))}")
     print(f"内容登记次数: {metric_value(metrics, 'content_ref_register_count')}")
     print(f"重复内容发现: {metric_value(metrics, 'dedup_duplicate_content_count')}")
+    print(f"物理去重次数: {metric_value(metrics, 'physical_dedup_count')}")
+    print(f"物理去重数据: {bytes_to_mib(metric_value(metrics, 'physical_dedup_bytes'))}")
+    print(f"硬链接失败:   {metric_value(metrics, 'physical_dedup_hardlink_fail')} 次")
+    print(f"QoS 延迟次数: {metric_value(metrics, 'qos_delay_ops')} 次")
+    print(f"QoS 总延迟:   {metric_value(metrics, 'qos_delay_us_total')} us")
     print()
     print("每 GPU QoS 观测")
     for gpu in config.gpus:

@@ -52,6 +52,12 @@ struct Config {
   std::string placement_policy = "value_aware";
   uint64_t default_recompute_cost = 10;
   uint64_t default_remote_access_cost = 10;
+  uint64_t value_promote_threshold = 100;
+  bool adaptive_migration = false;
+  uint64_t adaptive_remote_promote_us = 10000;
+  uint64_t qos_read_iops_per_gpu = 0;
+  uint64_t qos_write_iops_per_gpu = 0;
+  bool physical_dedup = true;
   bool promote_on_read = false;
   uint64_t promote_read_threshold = 2;
   bool prefetch_on_read = false;
@@ -76,6 +82,13 @@ struct FileMeta {
   uint64_t share_count = 1;
 };
 
+struct ContentRefResult {
+  bool duplicate = false;
+  uint64_t ref_count = 0;
+  std::string primary_logical_path;
+  fs::path primary_physical_path;
+};
+
 struct EvictionCandidate {
   FileMeta meta;
   uint64_t last_access_at = 0;
@@ -92,6 +105,9 @@ struct Handle {
   bool writable = false;
   bool created_remote = false;
   std::string state = "COMMITTED";
+  std::string last_checksum;
+  bool pending_physical_dedup = false;
+  fs::path dedup_primary_path;
 };
 
 class MetadataStore {
@@ -273,6 +289,14 @@ class MetadataStore {
     sqlite3_bind_int64(stmt, 3, now);
     StepDone(stmt);
 
+    Prepare("UPDATE files SET share_count=("
+            "SELECT COUNT(*) FROM gpu_access WHERE logical_path=?) "
+            "WHERE logical_path=?;",
+            &stmt);
+    sqlite3_bind_text(stmt, 1, logical_path.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_text(stmt, 2, logical_path.c_str(), -1, SQLITE_TRANSIENT);
+    StepDone(stmt);
+
     Prepare("SELECT COALESCE(read_count,0) FROM files WHERE logical_path=?;", &stmt);
     sqlite3_bind_text(stmt, 1, logical_path.c_str(), -1, SQLITE_TRANSIENT);
     int rc = sqlite3_step(stmt);
@@ -317,22 +341,58 @@ class MetadataStore {
     StepDone(stmt);
   }
 
-  bool RegisterContentRef(const std::string& content_key,
-                          const std::string& logical_path,
-                          const fs::path& physical_path, uint64_t size_bytes) {
+  uint64_t AccessAffinityX100(const std::string& logical_path, int gpu_id) {
+    std::lock_guard<std::mutex> lock(mu_);
+    sqlite3_stmt* stmt = nullptr;
+    Prepare("SELECT "
+            "COALESCE((SELECT read_count FROM gpu_access "
+            "          WHERE logical_path=? AND gpu_id=?),0),"
+            "COALESCE((SELECT SUM(read_count) FROM gpu_access "
+            "          WHERE logical_path=?),0);",
+            &stmt);
+    sqlite3_bind_text(stmt, 1, logical_path.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_int(stmt, 2, gpu_id);
+    sqlite3_bind_text(stmt, 3, logical_path.c_str(), -1, SQLITE_TRANSIENT);
+    uint64_t affinity = 0;
+    if (sqlite3_step(stmt) == SQLITE_ROW) {
+      uint64_t gpu_reads = static_cast<uint64_t>(sqlite3_column_int64(stmt, 0));
+      uint64_t total_reads = static_cast<uint64_t>(sqlite3_column_int64(stmt, 1));
+      if (total_reads > 0) {
+        affinity = std::max<uint64_t>(1, gpu_reads * 100 / total_reads);
+      }
+    }
+    sqlite3_finalize(stmt);
+    return affinity;
+  }
+
+  ContentRefResult RegisterContentRef(const std::string& content_key,
+                                      const std::string& logical_path,
+                                      const fs::path& physical_path,
+                                      uint64_t size_bytes) {
+    ContentRefResult result;
     if (content_key.empty()) {
-      return false;
+      return result;
     }
     std::lock_guard<std::mutex> lock(mu_);
     sqlite3_stmt* stmt = nullptr;
+    Prepare("SELECT primary_logical_path,physical_path,ref_count "
+            "FROM content_refs WHERE content_key=?;",
+            &stmt);
+    sqlite3_bind_text(stmt, 1, content_key.c_str(), -1, SQLITE_TRANSIENT);
+    if (sqlite3_step(stmt) == SQLITE_ROW) {
+      result.primary_logical_path = ColumnText(stmt, 0);
+      result.primary_physical_path = ColumnText(stmt, 1);
+      result.ref_count = static_cast<uint64_t>(sqlite3_column_int64(stmt, 2));
+    }
+    sqlite3_finalize(stmt);
+
     Prepare("SELECT COUNT(*) FROM content_members "
             "WHERE content_key=? AND logical_path != ?;",
             &stmt);
     sqlite3_bind_text(stmt, 1, content_key.c_str(), -1, SQLITE_TRANSIENT);
     sqlite3_bind_text(stmt, 2, logical_path.c_str(), -1, SQLITE_TRANSIENT);
-    bool duplicate = false;
     if (sqlite3_step(stmt) == SQLITE_ROW) {
-      duplicate = sqlite3_column_int64(stmt, 0) > 0;
+      result.duplicate = sqlite3_column_int64(stmt, 0) > 0;
     }
     sqlite3_finalize(stmt);
 
@@ -370,7 +430,18 @@ class MetadataStore {
     sqlite3_bind_text(stmt, 3, content_key.c_str(), -1, SQLITE_TRANSIENT);
     sqlite3_bind_text(stmt, 4, content_key.c_str(), -1, SQLITE_TRANSIENT);
     StepDone(stmt);
-    return duplicate;
+
+    Prepare("SELECT primary_logical_path,physical_path,ref_count "
+            "FROM content_refs WHERE content_key=?;",
+            &stmt);
+    sqlite3_bind_text(stmt, 1, content_key.c_str(), -1, SQLITE_TRANSIENT);
+    if (sqlite3_step(stmt) == SQLITE_ROW) {
+      result.primary_logical_path = ColumnText(stmt, 0);
+      result.primary_physical_path = ColumnText(stmt, 1);
+      result.ref_count = static_cast<uint64_t>(sqlite3_column_int64(stmt, 2));
+    }
+    sqlite3_finalize(stmt);
+    return result;
   }
 
   std::vector<FileMeta> ChildrenUnder(const std::string& logical_dir) {
@@ -697,9 +768,18 @@ class TokenFS {
       return -errno;
     }
     metadata_.Upsert(meta);
-    fi->fh = StoreHandle({fd, path, gpu->gpu_id, meta.tier, meta.backend_id,
-                          meta.physical_path, fi->flags, true,
-                          meta.tier == "remote", "CREATING"});
+    Handle handle;
+    handle.fd = fd;
+    handle.logical_path = path;
+    handle.gpu_id = gpu->gpu_id;
+    handle.tier = meta.tier;
+    handle.backend_id = meta.backend_id;
+    handle.physical_path = meta.physical_path;
+    handle.flags = fi->flags;
+    handle.writable = true;
+    handle.created_remote = meta.tier == "remote";
+    handle.state = "CREATING";
+    fi->fh = StoreHandle(std::move(handle));
     return 0;
   }
 
@@ -748,7 +828,8 @@ class TokenFS {
       metadata_.AddMetric(meta.tier == "local" ? "local_read_open_count"
                                                 : "remote_read_open_count",
                           1);
-      if (meta.tier == "remote" && ShouldPromoteOnRead(meta, read_count)) {
+      if (meta.tier == "remote" &&
+          ShouldPromoteOnRead(meta, read_count, gpu->gpu_id)) {
         if (int rc = PromoteToLocal(*gpu, rel, meta, "promote"); rc != 0) {
           metadata_.AddMetric("promote_error_count", 1);
         }
@@ -763,9 +844,17 @@ class TokenFS {
       meta.state = "CREATING";
       metadata_.Upsert(meta);
     }
-    fi->fh = StoreHandle({fd, path, gpu->gpu_id, meta.tier, meta.backend_id,
-                          meta.physical_path, fi->flags, writable, false,
-                          meta.state});
+    Handle handle;
+    handle.fd = fd;
+    handle.logical_path = path;
+    handle.gpu_id = gpu->gpu_id;
+    handle.tier = meta.tier;
+    handle.backend_id = meta.backend_id;
+    handle.physical_path = meta.physical_path;
+    handle.flags = fi->flags;
+    handle.writable = writable;
+    handle.state = meta.state;
+    fi->fh = StoreHandle(std::move(handle));
     metadata_.AddMetric(meta.tier == "local" ? "open_local" : "open_remote", 1);
     return 0;
   }
@@ -777,6 +866,7 @@ class TokenFS {
     if (handle == nullptr) {
       return -EBADF;
     }
+    ApplyQos(*handle, false, size);
     ssize_t n = pread(handle->fd, buf, size, offset);
     if (n < 0) {
       return -errno;
@@ -793,14 +883,10 @@ class TokenFS {
                                                 : "read_remote_bytes",
                         static_cast<uint64_t>(n));
     const uint64_t latency_us = ElapsedMicros(start);
-    metadata_.AddMetric("read_latency_us_total", latency_us);
-    metadata_.AddMetric(handle->tier == "local" ? "read_local_latency_us_total"
-                                                : "read_remote_latency_us_total",
-                        latency_us);
-    metadata_.SetMetricMax("read_latency_us_max", latency_us);
-    metadata_.SetMetricMax(handle->tier == "local" ? "read_local_latency_us_max"
-                                                   : "read_remote_latency_us_max",
-                           latency_us);
+    RecordLatency("read", handle->tier, latency_us);
+    if (n > 0) {
+      MaybeAdaptivePromote(*handle, latency_us);
+    }
     return static_cast<int>(n);
   }
 
@@ -811,6 +897,7 @@ class TokenFS {
     if (handle == nullptr) {
       return -EBADF;
     }
+    ApplyQos(*handle, true, size);
     if (int rc = SpillIfNeeded(*handle, static_cast<uint64_t>(offset + size));
         rc != 0) {
       return rc;
@@ -834,14 +921,7 @@ class TokenFS {
                                                 : "write_remote_bytes",
                         static_cast<uint64_t>(n));
     const uint64_t latency_us = ElapsedMicros(start);
-    metadata_.AddMetric("write_latency_us_total", latency_us);
-    metadata_.AddMetric(handle->tier == "local" ? "write_local_latency_us_total"
-                                                : "write_remote_latency_us_total",
-                        latency_us);
-    metadata_.SetMetricMax("write_latency_us_max", latency_us);
-    metadata_.SetMetricMax(handle->tier == "local" ? "write_local_latency_us_max"
-                                                   : "write_remote_latency_us_max",
-                           latency_us);
+    RecordLatency("write", handle->tier, latency_us);
     return static_cast<int>(n);
   }
 
@@ -851,6 +931,7 @@ class TokenFS {
     if (it == handles_.end()) {
       return 0;
     }
+    bool should_dedup = false;
     if (it->second.fd >= 0) {
       if (it->second.writable) {
         int rc = CommitHandle(it->second);
@@ -861,6 +942,11 @@ class TokenFS {
         }
       }
       close(it->second.fd);
+      it->second.fd = -1;
+      should_dedup = it->second.pending_physical_dedup;
+    }
+    if (should_dedup) {
+      ApplyPhysicalDedup(it->second);
     }
     handles_.erase(it);
     return 0;
@@ -1059,29 +1145,43 @@ class TokenFS {
             .count());
   }
 
-  static int64_t CostAwareEvictionScore(const EvictionCandidate& candidate,
-                                        uint64_t now) {
+  static uint64_t DataValueScore(const FileMeta& meta, uint64_t affinity_x100) {
+    const uint64_t size_mib = std::max<uint64_t>(1, meta.size_bytes / 1024 / 1024);
+    const uint64_t heat = meta.read_count;
+    const uint64_t reuse_probability_x100 = std::min<uint64_t>(100, heat * 20);
+    const uint64_t share_bonus = std::max<uint64_t>(1, meta.share_count);
+    return
+        (std::max<uint64_t>(1, reuse_probability_x100) *
+         std::max<uint64_t>(1, meta.recompute_cost) *
+         std::max<uint64_t>(1, affinity_x100) *
+         share_bonus) /
+        std::max<uint64_t>(1, size_mib * meta.remote_access_cost);
+  }
+
+  static int64_t ValueAwareEvictionScore(const EvictionCandidate& candidate,
+                                         uint64_t now) {
     const uint64_t size_mib =
         std::max<uint64_t>(1, candidate.meta.size_bytes / 1024 / 1024);
     const uint64_t age_minutes =
         candidate.last_access_at == 0 || now <= candidate.last_access_at
             ? 0
             : (now - candidate.last_access_at) / 60;
-    const uint64_t heat = candidate.meta.read_count;
-    const uint64_t reuse_probability_x100 = std::min<uint64_t>(100, heat * 20);
     const uint64_t affinity_x100 =
         candidate.meta.producer_gpu == static_cast<uint64_t>(candidate.meta.gpu_id)
             ? 100
             : 40;
-    const uint64_t share_bonus = std::max<uint64_t>(1, candidate.meta.share_count);
-    const uint64_t data_value =
-        (std::max<uint64_t>(1, reuse_probability_x100) *
-         std::max<uint64_t>(1, candidate.meta.recompute_cost) * affinity_x100 *
-         share_bonus) /
-        std::max<uint64_t>(1, size_mib * candidate.meta.remote_access_cost);
+    const uint64_t data_value = DataValueScore(candidate.meta, affinity_x100);
 
     return static_cast<int64_t>(size_mib * 1000 + age_minutes) -
            static_cast<int64_t>(data_value * 1000);
+  }
+
+  uint64_t CurrentAffinityX100(const FileMeta& meta, int gpu_id) {
+    uint64_t affinity = metadata_.AccessAffinityX100(meta.logical_path, gpu_id);
+    if (affinity == 0 && meta.producer_gpu == static_cast<uint64_t>(gpu_id)) {
+      affinity = 100;
+    }
+    return affinity == 0 ? 40 : affinity;
   }
 
   static bool IsWritable(int flags) {
@@ -1174,8 +1274,8 @@ class TokenFS {
     std::sort(candidates.begin(), candidates.end(),
               [now](const EvictionCandidate& lhs,
                     const EvictionCandidate& rhs) {
-                const auto lhs_score = CostAwareEvictionScore(lhs, now);
-                const auto rhs_score = CostAwareEvictionScore(rhs, now);
+                const auto lhs_score = ValueAwareEvictionScore(lhs, now);
+                const auto rhs_score = ValueAwareEvictionScore(rhs, now);
                 if (lhs_score != rhs_score) {
                   return lhs_score > rhs_score;
                 }
@@ -1187,7 +1287,7 @@ class TokenFS {
         metadata_.AddMetric("evict_skip_open", 1);
         continue;
       }
-      if (CostAwareEvictionScore(candidate, now) < 0) {
+      if (ValueAwareEvictionScore(candidate, now) < 0) {
         metadata_.AddMetric("evict_skip_hot", 1);
         continue;
       }
@@ -1231,9 +1331,20 @@ class TokenFS {
     return meta;
   }
 
-  bool ShouldPromoteOnRead(const FileMeta& meta, uint64_t read_count) const {
-    return config_.promote_on_read && meta.state == "COMMITTED" &&
-           meta.tier == "remote" && read_count >= config_.promote_read_threshold;
+  bool ShouldPromoteOnRead(FileMeta meta, uint64_t read_count, int gpu_id) {
+    if (meta.state != "COMMITTED" || meta.tier != "remote") {
+      return false;
+    }
+    meta.read_count = read_count;
+    if (config_.promote_on_read && read_count >= config_.promote_read_threshold) {
+      return true;
+    }
+    if (config_.placement_policy == "value_aware" && config_.adaptive_migration) {
+      const uint64_t value =
+          DataValueScore(meta, CurrentAffinityX100(meta, gpu_id));
+      return value >= config_.value_promote_threshold;
+    }
+    return false;
   }
 
   int PromoteToLocal(const GpuConfig& gpu, const fs::path& rel, FileMeta& meta,
@@ -1540,18 +1651,64 @@ class TokenFS {
     }
     handle.state = "COMMITTED";
     UpdateHandleMeta(handle, "COMMITTED", checksum);
+    handle.last_checksum = checksum;
     if (!checksum.empty()) {
-      if (metadata_.RegisterContentRef(checksum, handle.logical_path,
-                                       handle.physical_path,
-                                       FileSizeNoThrow(handle.physical_path))) {
+      auto content_ref = metadata_.RegisterContentRef(
+          checksum, handle.logical_path, handle.physical_path,
+          FileSizeNoThrow(handle.physical_path));
+      if (content_ref.duplicate) {
         metadata_.AddMetric("dedup_duplicate_content_count", 1);
       }
       metadata_.AddMetric("content_ref_register_count", 1);
+      if (config_.physical_dedup && content_ref.duplicate &&
+          !content_ref.primary_physical_path.empty() &&
+          content_ref.primary_physical_path != handle.physical_path) {
+        handle.pending_physical_dedup = true;
+        handle.dedup_primary_path = content_ref.primary_physical_path;
+        metadata_.AddMetric("physical_dedup_candidate_count", 1);
+      }
     }
     if (handle.created_remote) {
       metadata_.AddMetric("remote_place_count", 1);
       handle.created_remote = false;
     }
+    return 0;
+  }
+
+  int ApplyPhysicalDedup(const Handle& handle) {
+    if (!config_.physical_dedup || !handle.pending_physical_dedup ||
+        handle.dedup_primary_path.empty()) {
+      return 0;
+    }
+    std::error_code ec;
+    if (!fs::exists(handle.dedup_primary_path, ec) ||
+        !fs::exists(handle.physical_path, ec)) {
+      metadata_.AddMetric("physical_dedup_skip_missing", 1);
+      return 0;
+    }
+    ec.clear();
+    if (fs::equivalent(handle.dedup_primary_path, handle.physical_path, ec)) {
+      return 0;
+    }
+
+    fs::path tmp = handle.physical_path;
+    tmp += config_.temp_suffix + ".dedup";
+    fs::remove(tmp, ec);
+    ec.clear();
+    fs::create_hard_link(handle.dedup_primary_path, tmp, ec);
+    if (ec) {
+      metadata_.AddMetric("physical_dedup_hardlink_fail", 1);
+      return 0;
+    }
+    ec.clear();
+    fs::rename(tmp, handle.physical_path, ec);
+    if (ec) {
+      fs::remove(tmp, ec);
+      metadata_.AddMetric("physical_dedup_rename_fail", 1);
+      return 0;
+    }
+    metadata_.AddMetric("physical_dedup_count", 1);
+    metadata_.AddMetric("physical_dedup_bytes", FileSizeNoThrow(handle.physical_path));
     return 0;
   }
 
@@ -1675,6 +1832,92 @@ class TokenFS {
             .count());
   }
 
+  static std::string LatencyBucket(uint64_t latency_us) {
+    if (latency_us <= 100) {
+      return "le_100us";
+    }
+    if (latency_us <= 1000) {
+      return "le_1ms";
+    }
+    if (latency_us <= 10000) {
+      return "le_10ms";
+    }
+    if (latency_us <= 100000) {
+      return "le_100ms";
+    }
+    return "gt_100ms";
+  }
+
+  void RecordLatency(const std::string& op, const std::string& tier,
+                     uint64_t latency_us) {
+    metadata_.AddMetric(op + "_latency_us_total", latency_us);
+    metadata_.AddMetric(op + "_" + tier + "_latency_us_total", latency_us);
+    metadata_.SetMetricMax(op + "_latency_us_max", latency_us);
+    metadata_.SetMetricMax(op + "_" + tier + "_latency_us_max", latency_us);
+    const std::string bucket = LatencyBucket(latency_us);
+    metadata_.AddMetric(op + "_latency_bucket_" + bucket, 1);
+    metadata_.AddMetric(op + "_" + tier + "_latency_bucket_" + bucket, 1);
+  }
+
+  void ApplyQos(const Handle& handle, bool write, uint64_t bytes) {
+    const uint64_t limit =
+        write ? config_.qos_write_iops_per_gpu : config_.qos_read_iops_per_gpu;
+    if (limit == 0) {
+      return;
+    }
+    const auto gap = std::chrono::microseconds(
+        std::max<uint64_t>(1, 1000000ULL / std::max<uint64_t>(1, limit)));
+    const std::string key =
+        std::to_string(handle.gpu_id) + (write ? ":write" : ":read");
+    Clock::duration delay{};
+    {
+      std::lock_guard<std::mutex> lock(qos_mu_);
+      const auto now = Clock::now();
+      auto& next = qos_next_[key];
+      if (next > now) {
+        delay = next - now;
+        next += gap;
+      } else {
+        next = now + gap;
+      }
+    }
+    if (delay.count() <= 0) {
+      return;
+    }
+    const auto delay_us =
+        std::chrono::duration_cast<std::chrono::microseconds>(delay).count();
+    metadata_.AddMetric("qos_delay_us_total", static_cast<uint64_t>(delay_us));
+    metadata_.AddMetric("qos_delay_ops", 1);
+    metadata_.AddMetric("qos_gpu" + std::to_string(handle.gpu_id) +
+                            "_delay_us_total",
+                        static_cast<uint64_t>(delay_us));
+    metadata_.AddMetric("qos_gpu" + std::to_string(handle.gpu_id) +
+                            "_delayed_bytes",
+                        bytes);
+    std::this_thread::sleep_for(delay);
+  }
+
+  void MaybeAdaptivePromote(const Handle& handle, uint64_t latency_us) {
+    if (!config_.adaptive_migration || handle.tier != "remote" ||
+        latency_us < config_.adaptive_remote_promote_us) {
+      return;
+    }
+    auto parsed = ParseGpuPath(handle.logical_path);
+    if (!parsed) {
+      return;
+    }
+    const auto [gpu, rel] = *parsed;
+    auto existing = metadata_.Get(handle.logical_path);
+    if (!existing || existing->tier != "remote" || existing->state != "COMMITTED") {
+      return;
+    }
+    metadata_.AddMetric("adaptive_promote_trigger_count", 1);
+    FileMeta meta = *existing;
+    if (int rc = PromoteToLocal(*gpu, rel, meta, "adaptive_promote"); rc != 0) {
+      metadata_.AddMetric("adaptive_promote_error_count", 1);
+    }
+  }
+
   Config config_;
   MetadataStore metadata_;
   std::mutex handles_mu_;
@@ -1682,6 +1925,8 @@ class TokenFS {
   uint64_t next_handle_ = 1;
   std::mutex prefetch_mu_;
   std::set<std::string> prefetch_inflight_;
+  std::mutex qos_mu_;
+  std::unordered_map<std::string, Clock::time_point> qos_next_;
 };
 
 TokenFS* g_fs = nullptr;
@@ -1757,6 +2002,29 @@ Config LoadConfig(const fs::path& path) {
   if (root["policy"] && root["policy"]["default_remote_access_cost"]) {
     config.default_remote_access_cost =
         root["policy"]["default_remote_access_cost"].as<uint64_t>(10);
+  }
+  if (root["policy"] && root["policy"]["value_promote_threshold"]) {
+    config.value_promote_threshold =
+        root["policy"]["value_promote_threshold"].as<uint64_t>(100);
+  }
+  if (root["policy"] && root["policy"]["adaptive_migration"]) {
+    config.adaptive_migration =
+        root["policy"]["adaptive_migration"].as<bool>(false);
+  }
+  if (root["policy"] && root["policy"]["adaptive_remote_promote_us"]) {
+    config.adaptive_remote_promote_us =
+        root["policy"]["adaptive_remote_promote_us"].as<uint64_t>(10000);
+  }
+  if (root["policy"] && root["policy"]["qos_read_iops_per_gpu"]) {
+    config.qos_read_iops_per_gpu =
+        root["policy"]["qos_read_iops_per_gpu"].as<uint64_t>(0);
+  }
+  if (root["policy"] && root["policy"]["qos_write_iops_per_gpu"]) {
+    config.qos_write_iops_per_gpu =
+        root["policy"]["qos_write_iops_per_gpu"].as<uint64_t>(0);
+  }
+  if (root["policy"] && root["policy"]["physical_dedup"]) {
+    config.physical_dedup = root["policy"]["physical_dedup"].as<bool>(true);
   }
   if (root["policy"] && root["policy"]["promote_on_read"]) {
     config.promote_on_read = root["policy"]["promote_on_read"].as<bool>(false);

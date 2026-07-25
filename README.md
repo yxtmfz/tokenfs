@@ -62,8 +62,8 @@ vLLM / SGLang / token workload 测试程序
 - 热点提升：远端文件被多次读取后可迁回本地。
 - 顺序预取：连续编号 shard 被读取时，可提前迁入下一片。
 - 迁移状态机：本地到远端、远端到本地都经过可恢复状态。
-- QoS 观测：记录每 GPU 读写次数和字节量，为公平调度、限速和 SLO 实验预留接口。
-- 内容寻址去重观测：用 checksum 作为 content key，记录相同内容的逻辑引用，为公共 prompt 前缀/KV Cache 去重打基础。
+- QoS 原型：记录每 GPU 读写次数和字节量，并支持按 GPU 设置读/写 IOPS 限速。
+- 内容寻址去重：用 checksum 作为 content key，记录相同内容的逻辑引用；同一文件系统内可用硬链接共享物理数据。
 
 ## 3. 论文创新点
 
@@ -102,7 +102,7 @@ TokenFS 价值感知算法
 
 ### 创新点 3：延迟与拥塞驱动的动态迁移
 
-系统已经记录本地/远端读写耗时、最大耗时、每 GPU 读写量。真实环境中可继续接入：
+系统已经记录本地/远端读写耗时、最大耗时、延迟桶近似 P99、每 GPU 读写量。远端读取超过阈值时，可以自动把该文件迁回本地。真实环境中可继续接入：
 
 ```text
 远端读取 P99
@@ -135,12 +135,12 @@ REMOTE
 
 ### 创新点 5：多 GPU 配额公平和 QoS
 
-当前版本已经记录每个 GPU 的读写次数和数据量，后续可以在此基础上实现：
+当前版本已经记录每个 GPU 的读写次数和数据量，并实现了可配置的每 GPU 读/写 IOPS 限速。后续可以在此基础上继续增强：
 
 ```text
 每 GPU 独立请求队列
 带权公平调度
-Token Bucket 限速
+Token Bucket 更细粒度限速
 延迟敏感任务优先
 最低带宽保障
 动态配额借用
@@ -157,7 +157,7 @@ Token Bucket 限速
 content_key = hash(模型版本、tokenizer、token 序列、层号、KV dtype、位置编码、张量并行配置等)
 ```
 
-当前工程先实现“重复内容发现和引用统计”。下一步可把多个逻辑缓存映射到同一个物理 KV 块，从而减少公共系统提示词、公共 prompt 前缀和共享 KV Cache 的重复存储。
+当前工程已经实现“重复内容发现、引用统计、同文件系统硬链接物理去重”。下一步可把 content key 从简单文件 checksum 升级为真正 KV Cache 语义键，从而减少公共系统提示词、公共 prompt 前缀和共享 KV Cache 的重复存储。
 
 ## 4. 环境准备
 
@@ -233,6 +233,7 @@ cat /mnt/tokenfs/gpu0/demo/a.tokens
 ./scripts/promote_test.sh
 ./scripts/prefetch_test.sh
 ./scripts/eviction_test.sh
+./scripts/advanced_policy_test.sh
 ./scripts/fault_injection_test.sh
 ```
 
@@ -293,11 +294,12 @@ sudo ./scripts/connect_nvme.sh config/tokenfs.dev.yaml
 - 价值感知淘汰；
 - 热点提升；
 - 顺序预取；
+- 自适应远端提升；
 - 迁移状态机；
 - checksum 和启动恢复；
 - GPU 访问亲和统计；
-- 内容寻址重复发现；
-- QoS 指标采集；
+- 内容寻址重复发现和物理去重；
+- QoS 指标采集和限速原型；
 - 双 VM NVMe/TCP 协议路径。
 
 当前不能证明：
