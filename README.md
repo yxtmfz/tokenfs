@@ -65,7 +65,7 @@ vLLM / SGLang / token workload 测试程序
 - QoS 原型：记录每 GPU 读写次数和字节量，并支持按 GPU 设置读/写 IOPS 限速。
 - 内容寻址去重：用 checksum 作为 content key，记录相同内容的逻辑引用；同一文件系统内可用硬链接共享物理数据。
 
-## 3. 论文创新点
+## 3. 创新点
 
 ### 创新点 1：AI 价值感知的数据放置
 
