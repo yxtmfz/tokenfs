@@ -300,36 +300,6 @@ def print_affinity(config: TokenfsConfig) -> None:
         )
 
 
-def print_dedup(config: TokenfsConfig) -> None:
-    rows = db_rows(
-        config.metadata_db,
-        "select content_key,primary_logical_path,physical_path,size_bytes,ref_count,"
-        "coalesce(first_seen_at,0) as first_seen_at,"
-        "coalesce(last_seen_at,0) as last_seen_at "
-        "from content_refs order by ref_count desc, content_key",
-    )
-    if not rows:
-        print("没有内容寻址记录。启用 checksum 并写入文件后再查看。")
-        return
-    print("内容寻址与公共前缀去重观测")
-    print("=" * 60)
-    for row in rows:
-        print(
-            f"{row['content_key']} | refs={row['ref_count']} | "
-            f"{bytes_to_mib(row['size_bytes'])}"
-        )
-        print(f"  主逻辑路径: {row['primary_logical_path']}")
-        print(f"  物理路径:   {row['physical_path']}")
-        members = db_rows(
-            config.metadata_db,
-            "select logical_path from content_members "
-            "where content_key=? order by logical_path",
-            (row["content_key"],),
-        )
-        for member in members:
-            print(f"  - {member['logical_path']}")
-
-
 def metric_value(metrics: dict[str, int], name: str) -> int:
     return metrics.get(name, 0)
 
@@ -426,17 +396,12 @@ def print_metrics(config: TokenfsConfig) -> None:
     print(f"迁移到远端:   {metric_value(metrics, 'migration_to_remote_commit')} 次")
     print(f"迁移回本地:   {metric_value(metrics, 'migration_to_local_commit')} 次")
     print(f"迁移恢复次数: {metric_value(metrics, 'migration_recovered_count')} 次")
-    print(f"自适应提升触发: {metric_value(metrics, 'adaptive_promote_trigger_count')} 次")
+    print(f"慢读提升触发(工程指标): {metric_value(metrics, 'adaptive_promote_trigger_count')} 次")
     print(f"跳过打开文件: {metric_value(metrics, 'evict_skip_open')} 次")
     print(f"跳过热点文件: {metric_value(metrics, 'evict_skip_hot')} 次")
     print(f"淘汰失败次数: {metric_value(metrics, 'evict_error_count')} 次")
     print(f"预分配次数:   {metric_value(metrics, 'fallocate_ops')}")
     print(f"预分配数据量: {bytes_to_mib(metric_value(metrics, 'fallocate_bytes'))}")
-    print(f"内容登记次数: {metric_value(metrics, 'content_ref_register_count')}")
-    print(f"重复内容发现: {metric_value(metrics, 'dedup_duplicate_content_count')}")
-    print(f"物理去重次数: {metric_value(metrics, 'physical_dedup_count')}")
-    print(f"物理去重数据: {bytes_to_mib(metric_value(metrics, 'physical_dedup_bytes'))}")
-    print(f"硬链接失败:   {metric_value(metrics, 'physical_dedup_hardlink_fail')} 次")
     print(f"QoS 延迟次数: {metric_value(metrics, 'qos_delay_ops')} 次")
     print(f"QoS 总延迟:   {metric_value(metrics, 'qos_delay_us_total')} us")
     print()
@@ -641,7 +606,6 @@ def main() -> int:
     subparsers.add_parser("status", help="查看挂载、配额、后端和元数据状态")
     subparsers.add_parser("files", help="列出 SQLite 中记录的 TokenFS 文件")
     subparsers.add_parser("affinity", help="查看每个文件的 GPU 访问亲和统计")
-    subparsers.add_parser("dedup", help="查看内容寻址和重复内容观测")
     subparsers.add_parser("metrics", help="查看读写、命中率、溢写和预分配指标")
     subparsers.add_parser("metrics-json", help="以 JSON 输出原始指标和派生命中率")
     subparsers.add_parser("check", help="检查 SQLite 元数据和物理文件是否一致")
@@ -659,8 +623,6 @@ def main() -> int:
         print_files(config)
     elif command == "affinity":
         print_affinity(config)
-    elif command == "dedup":
-        print_dedup(config)
     elif command == "metrics":
         print_metrics(config)
     elif command == "metrics-json":

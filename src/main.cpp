@@ -57,7 +57,7 @@ struct Config {
   uint64_t adaptive_remote_promote_us = 10000;
   uint64_t qos_read_iops_per_gpu = 0;
   uint64_t qos_write_iops_per_gpu = 0;
-  bool physical_dedup = true;
+  bool physical_dedup = false;
   bool promote_on_read = false;
   uint64_t promote_read_threshold = 2;
   bool prefetch_on_read = false;
@@ -1615,7 +1615,7 @@ class TokenFS {
     meta.physical_path = handle.physical_path;
     meta.size_bytes = FileSizeNoThrow(handle.physical_path);
     meta.checksum = checksum;
-    if (!checksum.empty()) {
+    if (config_.physical_dedup && !checksum.empty()) {
       meta.content_key = checksum;
     }
     if (meta.recompute_cost == 0) {
@@ -1652,7 +1652,7 @@ class TokenFS {
     handle.state = "COMMITTED";
     UpdateHandleMeta(handle, "COMMITTED", checksum);
     handle.last_checksum = checksum;
-    if (!checksum.empty()) {
+    if (config_.physical_dedup && !checksum.empty()) {
       auto content_ref = metadata_.RegisterContentRef(
           checksum, handle.logical_path, handle.physical_path,
           FileSizeNoThrow(handle.physical_path));
@@ -2024,7 +2024,7 @@ Config LoadConfig(const fs::path& path) {
         root["policy"]["qos_write_iops_per_gpu"].as<uint64_t>(0);
   }
   if (root["policy"] && root["policy"]["physical_dedup"]) {
-    config.physical_dedup = root["policy"]["physical_dedup"].as<bool>(true);
+    config.physical_dedup = root["policy"]["physical_dedup"].as<bool>(false);
   }
   if (root["policy"] && root["policy"]["promote_on_read"]) {
     config.promote_on_read = root["policy"]["promote_on_read"].as<bool>(false);

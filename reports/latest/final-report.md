@@ -45,7 +45,6 @@ physical_path
 size_bytes
 checksum
 state
-content_key
 producer_gpu
 recompute_cost
 remote_access_cost
@@ -65,13 +64,9 @@ share_count
 顺序预取次数和数据量
 价值感知淘汰次数和数据量
 迁移到远端/迁移回本地次数
-自适应提升触发次数
 迁移恢复次数
 每 GPU 读写次数和字节量
 QoS 延迟次数和总延迟
-重复内容发现次数
-内容引用登记次数
-物理去重次数和数据量
 ```
 
 查看命令：
@@ -81,7 +76,6 @@ QoS 延迟次数和总延迟
 ./scripts/tokenfsctl.py files
 ./scripts/tokenfsctl.py metrics
 ./scripts/tokenfsctl.py affinity
-./scripts/tokenfsctl.py dedup
 ./scripts/tokenfsctl.py check
 ```
 
@@ -163,31 +157,26 @@ full       █████████████████████░░
 - `full` 本地读命中率最高，说明热点提升、顺序预取和价值感知淘汰可以协同工作。
 - `full` 在目录模拟中总耗时没有降低，是因为迁移、预取、淘汰也有额外开销；真实 NVMe-oF 环境中应重点观察远端读取等待是否下降。
 
-## 5. 六个创新点的当前工程落地
+## 5. 三个创新点的当前工程落地
 
 | 创新点 | 当前实现状态 | 可观测方式 |
 |---|---|---|
 | AI 价值感知放置 | 已接入淘汰和远端提升决策，支持配置阈值 | `tokenfsctl.py files`、`metrics` |
 | GPU 亲和感知 | 已记录每个文件按 GPU 的读取统计 | `tokenfsctl.py affinity` |
-| P99/拥塞驱动迁移 | 已记录延迟桶近似 P99，并支持远端慢读触发迁回本地 | `tokenfsctl.py metrics` |
-| 跨层迁移一致性 | 已实现本地到远端、远端到本地状态机和恢复计数 | `metrics`、故障注入测试 |
 | 多 GPU QoS | 已记录每 GPU 读写量，并支持按 GPU 读/写 IOPS 限速 | `metrics`、`advanced_policy_test.sh` |
-| 公共前缀去重 | 已实现内容键、引用表、重复内容发现和同文件系统硬链接物理去重 | `tokenfsctl.py dedup` |
 
-### 内容寻址去重观测样例
+### 工程可靠性能力
 
-向 `/gpu0` 和 `/gpu1` 各写入一个内容完全相同的 token 文件后：
+跨层迁移一致性是文件系统必备能力，不作为论文创新点单独包装。当前实现把本地到远端、远端到本地的迁移拆成可恢复状态：
 
 ```text
-fnv1a64:9703ed17f5ef4cf9 | refs=2
-  - /gpu0/dedup/prefix.tokens
-  - /gpu1/dedup/prefix-copy.tokens
-
-内容登记次数: 2
-重复内容发现: 1
+LOCAL -> COPYING_TO_REMOTE -> REMOTE_READY -> COMMITTED
+REMOTE -> COPYING_TO_LOCAL -> LOCAL_READY -> COMMITTED
 ```
 
-这说明当前系统已经可以发现跨 GPU 的公共 prompt 前缀/公共 KV Cache 去重机会。当前版本还会在同一文件系统内尝试使用硬链接让重复内容共享同一份物理数据；如果真实部署中 local 与 remote 跨设备，硬链接失败时会安全降级为只记录去重机会。
+它依赖 SQLite WAL、临时文件、fsync、原子 rename、checksum 和启动恢复，目标是在进程崩溃或远端中断后仍能恢复到可解释状态。
+
+P95/P99 延迟仍保留为性能评估指标，但不再作为当前论文主创新点。由于当前系统规模和虚拟环境较小，P99 驱动迁移难以稳定形成可复现实验收益，后续不把它作为主线。
 
 ## 6. 高级策略专项验证
 
@@ -199,11 +188,10 @@ fnv1a64:9703ed17f5ef4cf9 | refs=2
 
 该脚本验证：
 
-- 两个相同内容的逻辑 token 文件共享同一个 inode；
-- 相同 content key 的引用数为 2；
-- 远端读取超过阈值后触发自适应迁回本地；
+- 价值感知淘汰会优先保护高价值热点文件；
+- GPU 亲和统计能记录文件被哪个 GPU 读取；
 - 每 GPU QoS 限速会产生可观测延迟；
-- `tokenfsctl.py metrics`、`dedup`、`check` 均可正常输出。
+- `tokenfsctl.py metrics`、`affinity`、`check` 均可正常输出。
 
 ## 7. 当前能证明什么
 
@@ -214,7 +202,7 @@ fnv1a64:9703ed17f5ef4cf9 | refs=2
 - 本地优先、远端溢写、热点提升、顺序预取和价值感知淘汰逻辑可运行。
 - SQLite 元数据、checksum、提交状态和一致性检查可用。
 - 跨层迁移已经具备可恢复状态机。
-- GPU 亲和、QoS 限速、内容寻址和物理去重都已经有可运行原型。
+- GPU 亲和、价值感知放置和 QoS 限速都已经有可运行原型。
 - 策略矩阵实验可作为论文消融实验模板。
 
 当前不能证明：
@@ -261,5 +249,4 @@ P50/P95/P99 延迟
 GPU 等待数据时间
 Jain 公平性指数
 SLO 违反率
-公共前缀重复率和去重收益
 ```

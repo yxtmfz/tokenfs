@@ -41,7 +41,7 @@ vLLM / SGLang / token workload 测试程序
 /mnt/tokenfs/gpu1/...
 ```
 
-系统内部记录每个文件或缓存块的逻辑路径、所属 GPU、local/remote 层级、物理路径、大小、checksum、内容键、访问次数、生产 GPU、重算代价和共享度。
+系统内部记录每个文件或缓存块的逻辑路径、所属 GPU、local/remote 层级、物理路径、大小、checksum、访问次数、生产 GPU、重算代价和共享度。
 
 ## 2. 当前能力
 
@@ -63,7 +63,6 @@ vLLM / SGLang / token workload 测试程序
 - 顺序预取：连续编号 shard 被读取时，可提前迁入下一片。
 - 迁移状态机：本地到远端、远端到本地都经过可恢复状态。
 - QoS 原型：记录每 GPU 读写次数和字节量，并支持按 GPU 设置读/写 IOPS 限速。
-- 内容寻址去重：用 checksum 作为 content key，记录相同内容的逻辑引用；同一文件系统内可用硬链接共享物理数据。
 
 ## 3. 创新点
 
@@ -73,7 +72,7 @@ vLLM / SGLang / token workload 测试程序
 
 ```text
 数据价值 =
-复用概率 * 重新计算代价 * GPU 亲和度 * 共享度
+复用概率 * 重新计算代价 * GPU 亲和度
 / 数据大小
 / 远程访问代价
 ```
@@ -95,45 +94,12 @@ TokenFS 价值感知算法
 - 文件由哪个 GPU 产生；
 - 哪个 GPU 最常访问；
 - 是否被多 GPU 共享；
-- 是否适合放在共享远端层；
-- 是否应该迁入某个 GPU 的本地层。
+- 是否应该放在共享远端层，避免多份本地重复占用；
+- 是否应该迁入某个 GPU 的本地层，降低该 GPU 的数据等待时间。
 
-例如 GPU0 访问 80%、GPU1 访问 15%、GPU2 访问 5% 的缓存，应优先靠近 GPU0；多个 GPU 访问比例接近的公共前缀，则更适合放在远端共享层并按需预取。
+例如 GPU0 访问 80%、GPU1 访问 15%、GPU2 访问 5% 的缓存，应优先靠近 GPU0；如果多个 GPU 访问比例接近，则更适合留在共享远端层，避免在多个本地盘重复保存。
 
-### 创新点 3：延迟与拥塞驱动的动态迁移
-
-系统已经记录本地/远端读写耗时、最大耗时、延迟桶近似 P99、每 GPU 读写量。远端读取超过阈值时，可以自动把该文件迁回本地。真实环境中可继续接入：
-
-```text
-远端读取 P99
-网络带宽
-NVMe-oF 队列深度
-TCP 重传
-存储服务器负载
-GPU 等待数据时间
-```
-
-当远端 P99 升高时，提前把热点数据迁到本地；当本地 SSD 排队严重而远端空闲时，部分请求可转向远端。
-
-### 创新点 4：跨层迁移崩溃一致性
-
-迁移不是简单复制和删除，而是状态机：
-
-```text
-LOCAL
-  -> COPYING_TO_REMOTE
-  -> REMOTE_READY
-  -> COMMITTED
-
-REMOTE
-  -> COPYING_TO_LOCAL
-  -> LOCAL_READY
-  -> COMMITTED
-```
-
-系统使用 SQLite WAL、临时文件、fsync、原子 rename、checksum 和启动恢复，避免迁移中崩溃造成元数据指向半成品。
-
-### 创新点 5：多 GPU 配额公平和 QoS
+### 创新点 3：多 GPU 配额公平和 QoS
 
 当前版本已经记录每个 GPU 的读写次数和数据量，并实现了可配置的每 GPU 读/写 IOPS 限速。后续可以在此基础上继续增强：
 
@@ -149,17 +115,27 @@ Token Bucket 更细粒度限速
 
 论文指标可加入 Jain 公平性指数、每 GPU P99 延迟、SLO 违反率、配额违约次数。
 
-### 创新点 6：公共 Prompt 前缀 / KV Cache 去重
+## 4. 工程可靠性能力
 
-系统用内容键登记相同缓存块：
+跨层迁移一致性是文件系统必须具备的基础可靠性能力，不作为论文创新点单独包装。
 
 ```text
-content_key = hash(模型版本、tokenizer、token 序列、层号、KV dtype、位置编码、张量并行配置等)
+LOCAL
+  -> COPYING_TO_REMOTE
+  -> REMOTE_READY
+  -> COMMITTED
+
+REMOTE
+  -> COPYING_TO_LOCAL
+  -> LOCAL_READY
+  -> COMMITTED
 ```
 
-当前工程已经实现“重复内容发现、引用统计、同文件系统硬链接物理去重”。下一步可把 content key 从简单文件 checksum 升级为真正 KV Cache 语义键，从而减少公共系统提示词、公共 prompt 前缀和共享 KV Cache 的重复存储。
+系统使用 SQLite WAL、临时文件、fsync、原子 rename、checksum 和启动恢复，避免迁移中崩溃造成元数据指向半成品。
 
-## 4. 环境准备
+P95/P99 延迟、远端读写耗时和网络状态只作为性能评估指标，不作为当前阶段的核心创新点。真实环境较小时，P99 驱动迁移很难稳定测出论文级收益，因此后续重点不放在这里。
+
+## 5. 环境准备
 
 推荐环境：
 
@@ -203,7 +179,7 @@ cmake --build build
 ./scripts/stop_tokenfs.sh
 ```
 
-## 5. 日常使用
+## 6. 日常使用
 
 写入和读取：
 
@@ -220,7 +196,6 @@ cat /mnt/tokenfs/gpu0/demo/a.tokens
 ./scripts/tokenfsctl.py files
 ./scripts/tokenfsctl.py metrics
 ./scripts/tokenfsctl.py affinity
-./scripts/tokenfsctl.py dedup
 ./scripts/tokenfsctl.py check
 ```
 
@@ -237,7 +212,7 @@ cat /mnt/tokenfs/gpu0/demo/a.tokens
 ./scripts/fault_injection_test.sh
 ```
 
-## 6. NVMe-oF 接入
+## 7. NVMe-oF 接入
 
 当前没有真实 IP 时，remote 后端可以是目录：
 
@@ -284,7 +259,7 @@ sudo ./scripts/connect_nvme.sh config/tokenfs.dev.yaml
 ./scripts/nvmeof_perf_test.sh
 ```
 
-## 7. 当前能验证什么
+## 8. 当前能验证什么
 
 没有真实 SSD IP 时，仍然可以真实验证：
 
@@ -294,11 +269,9 @@ sudo ./scripts/connect_nvme.sh config/tokenfs.dev.yaml
 - 价值感知淘汰；
 - 热点提升；
 - 顺序预取；
-- 自适应远端提升；
 - 迁移状态机；
 - checksum 和启动恢复；
 - GPU 访问亲和统计；
-- 内容寻址重复发现和物理去重；
 - QoS 指标采集和限速原型；
 - 双 VM NVMe/TCP 协议路径。
 
@@ -317,7 +290,7 @@ sudo ./scripts/connect_nvme.sh config/tokenfs.dev.yaml
 重新采集最终性能数据。
 ```
 
-## 8. 数据结果
+## 9. 数据结果
 
 统一结果入口：
 

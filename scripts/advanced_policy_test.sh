@@ -5,10 +5,11 @@ project_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 mount_point="${TOKENFS_MOUNT:-/mnt/tokenfs}"
 metadata_db="${TOKENFS_DB:-/var/lib/tokenfs/metadata/tokenfs.db}"
 temp_config="$(mktemp /tmp/tokenfs-advanced.XXXXXX.yaml)"
+qos_config="$(mktemp /tmp/tokenfs-qos.XXXXXX.yaml)"
 
 cleanup() {
   "$project_root/scripts/stop_tokenfs.sh" "$mount_point" >/dev/null 2>&1 || true
-  rm -f "$temp_config"
+  rm -f "$temp_config" "$qos_config"
 }
 trap cleanup EXIT
 
@@ -19,10 +20,7 @@ from pathlib import Path
 src = Path(sys.argv[1])
 dst = Path(sys.argv[2])
 text = src.read_text(encoding="utf-8")
-text = text.replace("adaptive_migration: false", "adaptive_migration: true")
-text = text.replace("adaptive_remote_promote_us: 10000", "adaptive_remote_promote_us: 0")
-text = text.replace("value_promote_threshold: 100", "value_promote_threshold: 999999")
-text = text.replace("qos_read_iops_per_gpu: 0", "qos_read_iops_per_gpu: 2")
+text = text.replace("local_quota_mib: 64", "local_quota_mib: 96", 1)
 dst.write_text(text, encoding="utf-8")
 PY
 
@@ -31,61 +29,82 @@ cmake -S "$project_root" -B "$project_root/build" -G Ninja >/dev/null
 cmake --build "$project_root/build" >/dev/null
 "$project_root/scripts/start_tokenfs.sh" "$temp_config" "$mount_point" >/dev/null
 
-echo "advanced: physical dedup uses one inode for duplicate content"
-mkdir -p "$mount_point/gpu0/dedup" "$mount_point/gpu1/dedup"
-printf "shared prompt prefix kv cache\n" >"$mount_point/gpu0/dedup/prefix.tokens"
-printf "shared prompt prefix kv cache\n" >"$mount_point/gpu1/dedup/prefix-copy.tokens"
-sync
+echo "advanced: AI value-aware eviction protects hot high-value files"
+mkdir -p "$mount_point/gpu0/value"
 
-inode_a=""
-inode_b=""
-for _ in {1..20}; do
-  inode_a="$(stat -c '%i' /var/lib/tokenfs/local/gpu0/dedup/prefix.tokens)"
-  inode_b="$(stat -c '%i' /var/lib/tokenfs/local/gpu1/dedup/prefix-copy.tokens)"
-  [[ "$inode_a" == "$inode_b" ]] && break
-  sleep 0.1
-done
-if [[ "$inode_a" != "$inode_b" ]]; then
-  echo "expected duplicate files to share one inode"
-  echo "gpu0 inode: $inode_a"
-  echo "gpu1 inode: $inode_b"
-  exit 1
-fi
-
-refs="$(sqlite3 "$metadata_db" "select max(ref_count) from content_refs;")"
-if [[ "$refs" != "2" ]]; then
-  echo "expected content ref_count=2"
-  echo "actual: $refs"
-  exit 1
-fi
-
-echo "advanced: slow remote read triggers adaptive promotion"
-mkdir -p /var/lib/tokenfs/remote-sim/gpu0/adaptive
-python3 - /var/lib/tokenfs/remote-sim/gpu0/adaptive/slow.tokens <<'PY'
+python3 - "$mount_point/gpu0/value/hot.tokens" <<'PY'
 import sys
 from pathlib import Path
 
-path = Path(sys.argv[1])
-with path.open("wb") as f:
-    f.write((b"adaptive-remote-token-shard\n" * 4096) * 16)
+Path(sys.argv[1]).write_bytes(b"H" * 24 * 1024 * 1024)
 PY
 
-cat "$mount_point/gpu0/adaptive/slow.tokens" >/dev/null
-test -f /var/lib/tokenfs/local/gpu0/adaptive/slow.tokens
-sqlite3 "$metadata_db" \
-  "select tier,state from files where logical_path='/gpu0/adaptive/slow.tokens';" \
-  | grep -q '^local|COMMITTED$'
+for _ in {1..6}; do
+  cat "$mount_point/gpu0/value/hot.tokens" >/dev/null
+done
 
-adaptive_count="$(sqlite3 "$metadata_db" \
-  "select coalesce((select value from metrics where name='adaptive_promote_trigger_count'),0);")"
-if [[ "$adaptive_count" -lt 1 ]]; then
-  echo "expected adaptive_promote_trigger_count"
+python3 - "$mount_point/gpu0/value/cold.tokens" <<'PY'
+import sys
+from pathlib import Path
+
+Path(sys.argv[1]).write_bytes(b"C" * 40 * 1024 * 1024)
+PY
+
+python3 - "$mount_point/gpu0/value/new.tokens" <<'PY'
+import sys
+from pathlib import Path
+
+Path(sys.argv[1]).write_bytes(b"N" * 40 * 1024 * 1024)
+PY
+
+hot_tier="$(sqlite3 "$metadata_db" \
+  "select tier from files where logical_path='/gpu0/value/hot.tokens';")"
+if [[ "$hot_tier" != "local" ]]; then
+  echo "expected hot high-value file to remain local"
   exit 1
 fi
 
+evict_count="$(sqlite3 "$metadata_db" \
+  "select coalesce((select value from metrics where name='evict_count'),0);")"
+if [[ "$evict_count" -lt 1 ]]; then
+  echo "expected value-aware local eviction"
+  exit 1
+fi
+
+echo "advanced: GPU affinity stats identify the dominant GPU"
+cat "$mount_point/gpu0/value/hot.tokens" >/dev/null
+cat "$mount_point/gpu0/value/hot.tokens" >/dev/null
+gpu0_reads="$(sqlite3 "$metadata_db" \
+  "select coalesce((select read_count from gpu_access where logical_path='/gpu0/value/hot.tokens' and gpu_id=0),0);")"
+if [[ "$gpu0_reads" -lt 2 ]]; then
+  echo "expected gpu0 affinity reads to be recorded"
+  exit 1
+fi
+
+"$project_root/scripts/tokenfsctl.py" --config "$temp_config" metrics | grep -q "本地淘汰次数"
+"$project_root/scripts/tokenfsctl.py" --config "$temp_config" affinity | grep -q "GPU 0"
+"$project_root/scripts/tokenfsctl.py" --config "$temp_config" check
+"$project_root/scripts/stop_tokenfs.sh" "$mount_point" >/dev/null
+
+python3 - "$project_root/config/tokenfs.dev.yaml" "$qos_config" <<'PY'
+import sys
+from pathlib import Path
+
+src = Path(sys.argv[1])
+dst = Path(sys.argv[2])
+text = src.read_text(encoding="utf-8")
+text = text.replace("qos_read_iops_per_gpu: 0", "qos_read_iops_per_gpu: 2")
+dst.write_text(text, encoding="utf-8")
+PY
+
+"$project_root/scripts/reset_dev_state.sh" "$mount_point" >/dev/null
+"$project_root/scripts/start_tokenfs.sh" "$qos_config" "$mount_point" >/dev/null
+
 echo "advanced: QoS limiter records per-GPU delay"
-cat "$mount_point/gpu0/dedup/prefix.tokens" >/dev/null
-cat "$mount_point/gpu0/dedup/prefix.tokens" >/dev/null
+mkdir -p "$mount_point/gpu0/qos"
+printf "qos\n" >"$mount_point/gpu0/qos/tiny.tokens"
+cat "$mount_point/gpu0/qos/tiny.tokens" >/dev/null
+cat "$mount_point/gpu0/qos/tiny.tokens" >/dev/null
 qos_delay_ops="$(sqlite3 "$metadata_db" \
   "select coalesce((select value from metrics where name='qos_delay_ops'),0);")"
 if [[ "$qos_delay_ops" -lt 1 ]]; then
@@ -93,8 +112,7 @@ if [[ "$qos_delay_ops" -lt 1 ]]; then
   exit 1
 fi
 
-"$project_root/scripts/tokenfsctl.py" --config "$temp_config" metrics | grep -q "物理去重次数"
-"$project_root/scripts/tokenfsctl.py" --config "$temp_config" dedup | grep -q "refs=2"
-"$project_root/scripts/tokenfsctl.py" --config "$temp_config" check
+"$project_root/scripts/tokenfsctl.py" --config "$qos_config" metrics | grep -q "QoS 延迟次数"
+"$project_root/scripts/tokenfsctl.py" --config "$qos_config" check
 
 echo "TokenFS advanced policy test passed."
