@@ -1857,12 +1857,15 @@ class TokenFS {
     const uint64_t heat = meta.read_count;
     const uint64_t reuse_probability_x100 = std::min<uint64_t>(100, heat * 20);
     const uint64_t share_bonus = std::max<uint64_t>(1, meta.share_count);
+    const uint64_t remote_cost_factor_x100 =
+        std::max<uint64_t>(1, meta.remote_access_cost * 10);
     return
         (std::max<uint64_t>(1, reuse_probability_x100) *
          std::max<uint64_t>(1, meta.recompute_cost) *
          std::max<uint64_t>(1, affinity_x100) *
+         remote_cost_factor_x100 *
          share_bonus) /
-        std::max<uint64_t>(1, size_mib * meta.remote_access_cost);
+        (size_mib * 100);
   }
 
   static int64_t ValueAwareEvictionScore(const EvictionCandidate& candidate,

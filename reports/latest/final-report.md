@@ -122,46 +122,40 @@ affinity_updated_at
 
 ## 4. 三个研究重点
 
+当前研究重点围绕同一条数据路径展开：本地 SSD 负责低延迟热点缓存，远端 NVMe-oF SSD 负责共享主副本和容量扩展，系统根据缓存价值、GPU 热点和 QoS 约束动态调整数据位置。
+
 | 研究点 | 当前工程落地 | 可观测方式 |
 |---|---|---|
-| AI 价值感知缓存保留 | 判断数据值不值得继续占用本地缓存，已接入本地淘汰、热点提升和策略矩阵实验 | `files`、`metrics`、`eviction_test.sh` |
-| GPU 亲和感知副本放置 | 在价值层允许本地缓存的前提下，决定副本放在哪些 GPU 本地，已识别调用方 GPU、短窗口热度、趋势、多级亲和状态和目标本地副本数 | `affinity`、`replicas`、`advanced_policy_test.sh` |
+| AI 价值感知的本地缓存管理 | 管理新写入、本地溢写、热点提升和本地淘汰，让高价值缓存尽量留在本地 | `files`、`metrics`、`eviction_test.sh` |
+| GPU 热点亲和复制 | 观察哪个 GPU 正在高频读取哪份远端数据，并把远端主副本复制到热点 GPU 的本地 SSD | `affinity`、`replicas`、`advanced_policy_test.sh` |
 | 多 GPU QoS | 已区分前台读写与后台迁移/预取/淘汰，并记录每 GPU QoS 指标 | `metrics`、`advanced_policy_test.sh` |
-
-三者的分工：
-
-```text
-创新点一：留不留本地
-创新点二：如果留本地，放在哪些 GPU 本地，或保持远端共享
-创新点三：多个 GPU 同时访问/迁移时，资源怎么公平分
-```
 
 当前价值公式：
 
 ```text
-数据保留价值 =
+本地缓存价值 =
 复用概率
 × 重新计算代价
 × 远端访问代价
+× GPU 访问亲和度
 × 共享收益
 ÷ 数据大小
-÷ 本地空间压力
 ```
 
-该公式是启发式框架，不声称数学最优。它的意义是判断“这份数据该不该继续占本地缓存”。后续真实环境拿到后，可以通过消融实验调权重或替换为学习型策略。
+该公式是启发式框架，不声称数学最优。它的意义是让系统在本地空间有限时，不只是按照 LRU 删除文件，而是优先保护热、重算贵、远端访问代价高、和 GPU 访问关系强的数据。
 
-GPU 亲和层的位置评分：
+当前代码中 `remote_access_cost` 以归一化权重参与评分，避免默认配置下把低热度冷数据也误判为高价值。
+
+GPU 热点亲和复制的核心机制：
 
 ```text
-PlacementScore(gpu, file)
-  = recent_reads(gpu, file)
-  × (remote_read_cost - local_read_cost)
-  × affinity_score(gpu, file)
-  - copy_cost(file)
-  - local_space_pressure(gpu)
+1. 通过 TOKENFS_GPU_ID / CUDA_VISIBLE_DEVICES 识别调用方 GPU
+2. 记录每个文件被哪些 GPU 读取
+3. 使用短窗口访问事件判断最近热点 GPU
+4. 如果远端主副本被某个 GPU 高频访问，就在该 GPU 本地创建隐藏缓存副本
+5. 后续同一 GPU 再读时优先命中本地副本
+6. 使用副本上限、冷却时间和最短驻留时间避免复制抖动
 ```
-
-它不单独决定数据是否保留，而是在价值层允许保留本地副本时，判断这个副本应该放在哪个 GPU 本地，是否值得多 GPU 各保留一份，或者继续只放远端共享层。
 
 GPU 亲和分类当前使用：
 
@@ -172,7 +166,7 @@ GPU 亲和分类当前使用：
 | `REMOTE_SHARED_HOT` | 多 GPU 近期都在访问，且整体热 | 远端主副本保留，目标本地副本数可大于 1 |
 | `CROSS_GPU_SHARED` | 多 GPU 访问较均衡，但热度不高 | 倾向远端共享，暂不复制太多本地副本 |
 | `AFFINITY_SHIFTING` | 最近 dominant GPU 与长期 dominant GPU 不一致 | 表示亲和正在转移，先观测并准备迁移 |
-| `REMOTE_COLD` | 最近访问量很低 | 向价值层反馈低热度，通常可以减少本地副本 |
+| `REMOTE_COLD` | 最近访问量很低 | 不主动创建本地副本 |
 | `MIXED_AFFINITY` | 有偏向但还不够稳定 | 暂不激进迁移，继续观察访问 |
 | `UNKNOWN` | 访问样本不足 | 使用默认本地优先/远端溢写策略 |
 
@@ -352,8 +346,8 @@ sudo ./scripts/connect_nvme.sh --config config/tokenfs.dev.yaml --backend remote
 直接本地 SSD baseline
 直接 NVMe-oF SSD baseline
 TokenFS baseline
-TokenFS + AI 价值感知缓存保留
-TokenFS + GPU 亲和感知副本放置
+TokenFS + AI 价值感知本地缓存管理
+TokenFS + GPU 热点亲和复制
 TokenFS + 多 GPU QoS
 TokenFS full
 P50/P95/P99 延迟
