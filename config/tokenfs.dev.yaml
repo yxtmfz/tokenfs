@@ -19,12 +19,20 @@ policy:
   default_recompute_cost: 10
   default_remote_access_cost: 10
   value_promote_threshold: 100
+  # GPU 亲和分类阈值：dominant 表示明显偏向单 GPU，shared 表示多 GPU 共享倾向远端。
+  affinity_dominant_threshold_x100: 70
+  affinity_shared_threshold_x100: 55
+  # 当前版本先保守禁止跨 GPU 本地缓存，只记录外部 GPU 访问和共享倾向。
+  cross_gpu_local_cache: false
   # 默认不开自适应迁移，避免影响 baseline；真实环境或专项实验中打开。
   adaptive_migration: false
   adaptive_remote_promote_us: 10000
   # 0 表示不限制。需要做 QoS 公平性实验时设置为具体 IOPS。
   qos_read_iops_per_gpu: 0
   qos_write_iops_per_gpu: 0
+  # 后台迁移/预取/淘汰的 QoS，默认不限速；专项实验中打开。
+  qos_background_iops_per_gpu: 0
+  qos_background_mib_per_sec_per_gpu: 0
   # 热点提升默认关闭，便于和纯 local-first/remote-spill 策略做对照实验。
   promote_on_read: false
   promote_read_threshold: 2

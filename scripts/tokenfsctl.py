@@ -291,7 +291,10 @@ def print_files(config: TokenfsConfig) -> None:
         "coalesce(producer_gpu,0) as producer_gpu,"
         "coalesce(share_count,1) as share_count,"
         "coalesce(primary_tier,'local') as primary_tier,"
-        "coalesce(replica_state,'LOCAL_ONLY') as replica_state "
+        "coalesce(replica_state,'LOCAL_ONLY') as replica_state,"
+        "coalesce(dominant_gpu_id,-1) as dominant_gpu_id,"
+        "coalesce(dominant_gpu_read_share_x100,0) as dominant_gpu_read_share_x100,"
+        "coalesce(affinity_state,'UNKNOWN') as affinity_state "
         "from files order by logical_path",
     )
     if not rows:
@@ -302,6 +305,8 @@ def print_files(config: TokenfsConfig) -> None:
             f"{row['logical_path']} | gpu{row['gpu_id']} | {row['tier']} | "
             f"{bytes_to_mib(row['size_bytes'])} | {row['state']} | "
             f"primary={row['primary_tier']} | replica={row['replica_state']} | "
+            f"affinity={row['affinity_state']} | dominant_gpu={row['dominant_gpu_id']} "
+            f"({row['dominant_gpu_read_share_x100']}%) | "
             f"reads={row['read_count']} | producer_gpu={row['producer_gpu']} | "
             f"recompute={row['recompute_cost']} | remote_cost={row['remote_access_cost']} | "
             f"share={row['share_count']} | key={row['content_key'] or row['checksum'] or '-'}"
@@ -419,24 +424,51 @@ def cache_gc(config: TokenfsConfig, max_cache_mib: int, dry_run: bool) -> int:
 
 
 def print_affinity(config: TokenfsConfig) -> None:
+    summary_rows = db_rows(
+        config.metadata_db,
+        "select logical_path,coalesce(dominant_gpu_id,-1) as dominant_gpu_id,"
+        "coalesce(dominant_gpu_read_share_x100,0) as dominant_gpu_read_share_x100,"
+        "coalesce(affinity_state,'UNKNOWN') as affinity_state,"
+        "coalesce(share_count,1) as share_count "
+        "from files order by logical_path",
+    )
     rows = db_rows(
         config.metadata_db,
         "select logical_path,gpu_id,read_count,coalesce(last_access_at,0) as last_access_at "
         "from gpu_access order by logical_path,gpu_id",
     )
-    if not rows:
+    if not rows and not summary_rows:
         print("没有 GPU 访问统计。先读取 TokenFS 文件后再查看。")
         return
     print("GPU 亲和访问统计")
     print("=" * 60)
+    summary = {row["logical_path"]: row for row in summary_rows}
     current = None
     for row in rows:
         if row["logical_path"] != current:
             current = row["logical_path"]
-            print(current)
+            item = summary.get(current)
+            if item:
+                print(
+                    f"{current} | state={item['affinity_state']} | "
+                    f"dominant_gpu={item['dominant_gpu_id']} "
+                    f"({item['dominant_gpu_read_share_x100']}%) | "
+                    f"share_count={item['share_count']}"
+                )
+            else:
+                print(current)
         print(
             f"  GPU {row['gpu_id']}: reads={row['read_count']}, "
             f"last_access_at={row['last_access_at']}"
+        )
+    for logical, item in summary.items():
+        if logical == current or any(row["logical_path"] == logical for row in rows):
+            continue
+        print(
+            f"{logical} | state={item['affinity_state']} | "
+            f"dominant_gpu={item['dominant_gpu_id']} "
+            f"({item['dominant_gpu_read_share_x100']}%) | "
+            f"share_count={item['share_count']}"
         )
 
 
@@ -540,6 +572,10 @@ def print_metrics(config: TokenfsConfig) -> None:
     print(f"本地缓存删除: {metric_value(metrics, 'local_cache_delete_count')} 次")
     print(f"缓存 GC 删除: {metric_value(metrics, 'local_cache_gc_count')} 次")
     print(f"慢读提升触发(工程指标): {metric_value(metrics, 'adaptive_promote_trigger_count')} 次")
+    print(f"跨 GPU 调用识别: {metric_value(metrics, 'affinity_cross_gpu_caller_count')} 次")
+    print(f"跨 GPU 提升跳过: {metric_value(metrics, 'affinity_cross_gpu_promote_skip')} 次")
+    print(f"共享远端倾向跳过: {metric_value(metrics, 'affinity_shared_remote_preferred_skip')} 次")
+    print(f"非 dominant GPU 提升跳过: {metric_value(metrics, 'affinity_non_dominant_promote_skip')} 次")
     print(f"跳过打开文件: {metric_value(metrics, 'evict_skip_open')} 次")
     print(f"跳过热点文件: {metric_value(metrics, 'evict_skip_hot')} 次")
     print(f"淘汰失败次数: {metric_value(metrics, 'evict_error_count')} 次")
@@ -547,6 +583,14 @@ def print_metrics(config: TokenfsConfig) -> None:
     print(f"预分配数据量: {bytes_to_mib(metric_value(metrics, 'fallocate_bytes'))}")
     print(f"QoS 延迟次数: {metric_value(metrics, 'qos_delay_ops')} 次")
     print(f"QoS 总延迟:   {metric_value(metrics, 'qos_delay_us_total')} us")
+    print(f"前台 QoS 读:  {metric_value(metrics, 'qos_foreground_read_ops')} 次")
+    print(f"前台 QoS 写:  {metric_value(metrics, 'qos_foreground_write_ops')} 次")
+    print(f"前台 QoS 延迟:{metric_value(metrics, 'qos_foreground_delay_ops')} 次/"
+          f"{metric_value(metrics, 'qos_foreground_delay_us_total')} us")
+    print(f"后台 QoS 操作:{metric_value(metrics, 'qos_background_ops')} 次，"
+          f"{bytes_to_mib(metric_value(metrics, 'qos_background_bytes'))}")
+    print(f"后台 QoS 延迟:{metric_value(metrics, 'qos_background_delay_ops')} 次/"
+          f"{metric_value(metrics, 'qos_background_delay_us_total')} us")
     print()
     print("每 GPU QoS 观测")
     for gpu in config.gpus:

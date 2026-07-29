@@ -74,15 +74,31 @@ fi
 echo "advanced: GPU affinity stats identify the dominant GPU"
 cat "$mount_point/gpu0/value/hot.tokens" >/dev/null
 cat "$mount_point/gpu0/value/hot.tokens" >/dev/null
+for _ in {1..8}; do
+  TOKENFS_GPU_ID=1 cat "$mount_point/gpu0/value/hot.tokens" >/dev/null
+done
 gpu0_reads="$(sqlite3 "$metadata_db" \
   "select coalesce((select read_count from gpu_access where logical_path='/gpu0/value/hot.tokens' and gpu_id=0),0);")"
 if [[ "$gpu0_reads" -lt 2 ]]; then
   echo "expected gpu0 affinity reads to be recorded"
   exit 1
 fi
+gpu1_reads="$(sqlite3 "$metadata_db" \
+  "select coalesce((select read_count from gpu_access where logical_path='/gpu0/value/hot.tokens' and gpu_id=1),0);")"
+if [[ "$gpu1_reads" -lt 8 ]]; then
+  echo "expected gpu1 cross-GPU affinity reads to be recorded"
+  exit 1
+fi
+affinity_row="$(sqlite3 "$metadata_db" \
+  "select dominant_gpu_id,dominant_gpu_read_share_x100,affinity_state from files where logical_path='/gpu0/value/hot.tokens';")"
+if [[ "$affinity_row" != "0|50|SHARED_REMOTE_PREFERRED" ]]; then
+  echo "expected hot file to be classified as shared remote preferred after balanced GPU0/GPU1 reads"
+  echo "actual: $affinity_row"
+  exit 1
+fi
 
 "$project_root/scripts/tokenfsctl.py" --config "$temp_config" metrics | grep -q "本地淘汰次数"
-"$project_root/scripts/tokenfsctl.py" --config "$temp_config" affinity | grep -q "GPU 0"
+"$project_root/scripts/tokenfsctl.py" --config "$temp_config" affinity | grep -q "SHARED_REMOTE_PREFERRED"
 "$project_root/scripts/tokenfsctl.py" --config "$temp_config" check
 "$project_root/scripts/stop_tokenfs.sh" "$mount_point" >/dev/null
 
@@ -94,6 +110,8 @@ src = Path(sys.argv[1])
 dst = Path(sys.argv[2])
 text = src.read_text(encoding="utf-8")
 text = text.replace("qos_read_iops_per_gpu: 0", "qos_read_iops_per_gpu: 2")
+text = text.replace("qos_background_mib_per_sec_per_gpu: 0", "qos_background_mib_per_sec_per_gpu: 1024")
+text = text.replace("promote_on_read: false", "promote_on_read: true")
 dst.write_text(text, encoding="utf-8")
 PY
 
@@ -105,14 +123,30 @@ mkdir -p "$mount_point/gpu0/qos"
 printf "qos\n" >"$mount_point/gpu0/qos/tiny.tokens"
 cat "$mount_point/gpu0/qos/tiny.tokens" >/dev/null
 cat "$mount_point/gpu0/qos/tiny.tokens" >/dev/null
+mkdir -p /var/lib/tokenfs/remote-sim/gpu0/qos
+python3 - /var/lib/tokenfs/remote-sim/gpu0/qos/bg.tokens <<'PY'
+import sys
+from pathlib import Path
+
+Path(sys.argv[1]).write_bytes(b"B" * 1024 * 1024)
+PY
+cat "$mount_point/gpu0/qos/bg.tokens" >/dev/null
+cat "$mount_point/gpu0/qos/bg.tokens" >/dev/null
 qos_delay_ops="$(sqlite3 "$metadata_db" \
   "select coalesce((select value from metrics where name='qos_delay_ops'),0);")"
 if [[ "$qos_delay_ops" -lt 1 ]]; then
   echo "expected qos_delay_ops"
   exit 1
 fi
+qos_background_ops="$(sqlite3 "$metadata_db" \
+  "select coalesce((select value from metrics where name='qos_background_ops'),0);")"
+if [[ "$qos_background_ops" -lt 1 ]]; then
+  echo "expected qos_background_ops"
+  exit 1
+fi
 
 "$project_root/scripts/tokenfsctl.py" --config "$qos_config" metrics | grep -q "QoS 延迟次数"
+"$project_root/scripts/tokenfsctl.py" --config "$qos_config" metrics | grep -q "后台 QoS 操作"
 "$project_root/scripts/tokenfsctl.py" --config "$qos_config" check
 
 echo "TokenFS advanced policy test passed."

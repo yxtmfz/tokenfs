@@ -31,8 +31,8 @@ TokenFS 是一个面向大模型 Prompt Token、Token Shard 和 KV Cache 数据�
 | checksum 校验 | 已完成 | 当前使用 `fnv1a64`，可替换 |
 | 迁移一致性状态机 | 已完成基础版 | 支持启动恢复和临时文件清理 |
 | AI 价值感知放置 | 已完成原型 | 已接入淘汰和策略实验 |
-| GPU 亲和感知 | 已完成原型 | 已记录每文件按 GPU 的访问统计 |
-| 多 GPU QoS | 已完成原型 | 已支持每 GPU IOPS 限速和指标记录 |
+| GPU 亲和感知 | 已深化 | 可识别调用方 GPU、dominant GPU、共享倾向和跨 GPU 访问 |
+| 多 GPU QoS | 已深化 | 已区分前台读写和后台迁移/预取/淘汰，并支持独立 QoS 指标 |
 | 热点提升 | 已完成 | 远端热点数据可复制成本地缓存 |
 | 顺序预取 | 已完成 | 连续 shard 可提前拉到本地 |
 | 缓存 GC | 已完成 | 可删除远端已有主副本的本地缓存 |
@@ -297,12 +297,40 @@ GPU2 访问 32%
 
 这说明它更像共享数据。如果每张 GPU 都复制一份，会浪费本地 SSD 空间；更合理的是保留远端主副本，必要时短期缓存到本地。
 
+当前工程落地已经不只停留在“记录访问次数”。TokenFS 会读取调用进程的环境变量来识别真正发起访问的 GPU：
+
+```bash
+TOKENFS_GPU_ID=1 cat /mnt/tokenfs/gpu0/value/hot.tokens
+```
+
+这表示“GPU1 访问了 `/gpu0/value/hot.tokens`”。如果没有设置 `TOKENFS_GPU_ID`，系统会退回使用路径所属 GPU，例如 `/gpu0/...` 默认记为 GPU0。
+
 当前工程落地：
 
 ```text
 gpu_access 表记录 logical_path + gpu_id 的访问次数
 files 表记录 producer_gpu 和 share_count
+files 表记录 dominant_gpu_id
+files 表记录 dominant_gpu_read_share_x100
+files 表记录 affinity_state
 tokenfsctl.py affinity 可以查看访问亲和统计
+```
+
+当前亲和分类：
+
+| 状态 | 含义 | 放置倾向 |
+|---|---|---|
+| `PRIVATE_DOMINANT` | 某个 GPU 明显占主导访问 | 可以靠近 dominant GPU |
+| `SHARED_REMOTE_PREFERRED` | 多个 GPU 访问较均衡 | 保留远端主副本，避免本地重复副本过多 |
+| `MIXED_AFFINITY` | 有偏向但不够绝对 | 暂时保守，继续观察 |
+| `UNKNOWN` | 访问数据不足 | 使用默认策略 |
+
+当前版本的保守边界：
+
+```text
+跨 GPU 访问会被记录；
+跨 GPU 本地缓存暂不自动创建；
+共享倾向的数据会跳过本地提升/预取，优先保留远端主副本。
 ```
 
 查看命令：
@@ -329,6 +357,10 @@ QoS 要解决的是：
 支持按 GPU 设置读 IOPS 限速
 支持按 GPU 设置写 IOPS 限速
 记录 QoS 延迟次数和总延迟
+区分前台 read/write 请求
+区分后台 promote/prefetch/evict 请求
+支持后台迁移 IOPS 限制
+支持后台迁移 MiB/s 限制
 ```
 
 配置项：
@@ -336,6 +368,8 @@ QoS 要解决的是：
 ```yaml
 qos_read_iops_per_gpu: 0
 qos_write_iops_per_gpu: 0
+qos_background_iops_per_gpu: 0
+qos_background_mib_per_sec_per_gpu: 0
 ```
 
 `0` 表示不限速。做 QoS 实验时可以改成具体数值，例如：
@@ -343,6 +377,8 @@ qos_write_iops_per_gpu: 0
 ```yaml
 qos_read_iops_per_gpu: 100
 qos_write_iops_per_gpu: 50
+qos_background_iops_per_gpu: 10
+qos_background_mib_per_sec_per_gpu: 200
 ```
 
 查看命令：
@@ -406,6 +442,10 @@ filesystem:
 | `cache_generation` | 缓存代数，每次生成本地缓存递增 |
 | `last_promoted_at` | 最近提升到本地缓存的时间 |
 | `last_demoted_at` | 最近转回远端/删除本地缓存的时间 |
+| `dominant_gpu_id` | 当前访问占比最高的 GPU |
+| `dominant_gpu_read_share_x100` | dominant GPU 的读取占比，单位是百分比整数 |
+| `affinity_state` | GPU 亲和分类，例如 `PRIVATE_DOMINANT`、`SHARED_REMOTE_PREFERRED` |
+| `affinity_updated_at` | 最近一次更新亲和分类的时间 |
 
 ### 6.2 metrics 表
 
@@ -423,8 +463,17 @@ evict_count
 local_cache_create_count
 local_cache_gc_count
 qos_delay_ops
+qos_foreground_read_ops
+qos_foreground_write_ops
+qos_background_ops
+qos_background_bytes
+qos_background_delay_ops
 qos_gpu0_read_ops
 qos_gpu1_write_bytes
+affinity_cross_gpu_caller_count
+affinity_cross_gpu_promote_skip
+affinity_shared_remote_preferred_skip
+affinity_non_dominant_promote_skip
 ```
 
 ### 6.3 gpu_access 表
@@ -469,6 +518,11 @@ policy:
   prefetch_on_read: false
   qos_read_iops_per_gpu: 0
   qos_write_iops_per_gpu: 0
+  qos_background_iops_per_gpu: 0
+  qos_background_mib_per_sec_per_gpu: 0
+  affinity_dominant_threshold_x100: 70
+  affinity_shared_threshold_x100: 55
+  cross_gpu_local_cache: false
 
 gpus:
   - gpu_id: 0
@@ -586,6 +640,15 @@ cat /mnt/tokenfs/gpu0/demo/a.tokens
 ```bash
 ./scripts/tokenfsctl.py affinity
 ```
+
+模拟“GPU1 访问 GPU0 目录中的缓存”：
+
+```bash
+TOKENFS_GPU_ID=1 cat /mnt/tokenfs/gpu0/demo/a.tokens >/dev/null
+./scripts/tokenfsctl.py affinity
+```
+
+这条命令的意义是验证第二个创新点：文件路径属于 `/gpu0`，但实际调用方可以被识别成 GPU1。TokenFS 会把这次访问记入 `gpu_access`，并重新计算该文件是偏向某一张 GPU，还是更像多 GPU 共享数据。
 
 查看读写、命中率、迁移、QoS 指标：
 

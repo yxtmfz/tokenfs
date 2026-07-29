@@ -76,6 +76,10 @@ producer_gpu
 recompute_cost
 remote_access_cost
 share_count
+dominant_gpu_id
+dominant_gpu_read_share_x100
+affinity_state
+affinity_updated_at
 ```
 
 策略与性能：
@@ -94,7 +98,10 @@ share_count
 迁移到远端/迁移回本地次数
 迁移恢复次数
 每 GPU 读写次数和字节量
-QoS 延迟次数和总延迟
+调用方 GPU 识别次数
+跨 GPU 访问次数
+前台读写 QoS 次数和延迟
+后台迁移/预取/淘汰 QoS 次数和延迟
 ```
 
 查看命令：
@@ -113,8 +120,8 @@ QoS 延迟次数和总延迟
 | 研究点 | 当前工程落地 | 可观测方式 |
 |---|---|---|
 | AI 价值感知放置 | 已接入本地淘汰、热点提升和策略矩阵实验 | `files`、`metrics`、`eviction_test.sh` |
-| GPU 亲和感知 | 已记录每个文件按 GPU 的读取统计 | `affinity`、`advanced_policy_test.sh` |
-| 多 GPU QoS | 已记录每 GPU 读写量，并支持每 GPU IOPS 限速 | `metrics`、`advanced_policy_test.sh` |
+| GPU 亲和感知 | 已识别调用方 GPU，计算 dominant GPU、访问占比和共享倾向 | `affinity`、`advanced_policy_test.sh` |
+| 多 GPU QoS | 已区分前台读写与后台迁移/预取/淘汰，并记录每 GPU QoS 指标 | `metrics`、`advanced_policy_test.sh` |
 
 当前价值公式：
 
@@ -123,6 +130,24 @@ QoS 延迟次数和总延迟
 ```
 
 该公式是启发式框架，不声称数学最优。它的意义是把大模型缓存场景中的关键因素统一到可解释、可替换的决策模型里。后续真实环境拿到后，可以通过消融实验调权重或替换为学习型策略。
+
+GPU 亲和分类当前使用：
+
+| 状态 | 含义 | 策略含义 |
+|---|---|---|
+| `PRIVATE_DOMINANT` | 某张 GPU 的读取占比明显最高 | 可优先靠近 dominant GPU |
+| `SHARED_REMOTE_PREFERRED` | 多 GPU 访问较均衡 | 保留远端主副本，减少本地重复缓存 |
+| `MIXED_AFFINITY` | 有偏向但还不够稳定 | 暂不激进迁移，继续观察访问 |
+| `UNKNOWN` | 访问样本不足 | 使用默认本地优先/远端溢写策略 |
+
+QoS 当前分为两类：
+
+```text
+前台 QoS：用户 read/write 路径，直接影响上层推理或训练等待时间
+后台 QoS：promote、prefetch、evict 等迁移任务，不能抢占太多前台资源
+```
+
+这使第三个创新点不只是“限速”，而是开始具备研究多 GPU 公平性的基础：后续可以在真实环境中加入带权公平调度、延迟敏感任务优先级和 Jain 公平性指数。
 
 ## 5. Token Workload 样例结果
 
@@ -224,8 +249,8 @@ full       █████████████████████░░
 - 顺序预取：连续 shard 的下一片提前生成本地缓存。
 - 缓存 GC：只删除本地缓存，不删除远端主副本。
 - 价值感知淘汰：低价值数据优先迁远端或删本地缓存。
-- GPU 亲和统计：记录文件被哪个 GPU 读取。
-- 多 GPU QoS：记录并限制每 GPU 读写 IOPS。
+- GPU 亲和统计：识别调用方 GPU，记录跨 GPU 访问，并计算共享/私有倾向。
+- 多 GPU QoS：记录并限制每 GPU 前台读写 IOPS，同时观测后台迁移/预取/淘汰开销。
 - 故障恢复：临时文件和未完成迁移状态可恢复。
 
 ## 8. 当前能证明什么
@@ -240,6 +265,8 @@ GPU namespace 和本地配额隔离可用
 SQLite 元数据、checksum、提交状态和一致性检查可用
 跨层迁移已经具备可恢复状态机
 GPU 亲和、价值感知放置和 QoS 限速已有可运行原型
+调用方 GPU、dominant GPU、共享远端倾向已经进入元数据和管理工具
+前台 I/O 与后台迁移/预取/淘汰已经分开观测
 策略矩阵实验可作为论文消融实验模板
 ```
 

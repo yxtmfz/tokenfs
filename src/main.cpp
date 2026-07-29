@@ -10,8 +10,10 @@
 #include <cctype>
 #include <cstring>
 #include <filesystem>
+#include <fstream>
 #include <iomanip>
 #include <iostream>
+#include <iterator>
 #include <mutex>
 #include <optional>
 #include <set>
@@ -57,6 +59,11 @@ struct Config {
   uint64_t adaptive_remote_promote_us = 10000;
   uint64_t qos_read_iops_per_gpu = 0;
   uint64_t qos_write_iops_per_gpu = 0;
+  uint64_t qos_background_iops_per_gpu = 0;
+  uint64_t qos_background_mib_per_sec_per_gpu = 0;
+  uint64_t affinity_dominant_threshold_x100 = 70;
+  uint64_t affinity_shared_threshold_x100 = 55;
+  bool cross_gpu_local_cache = false;
   bool physical_dedup = false;
   bool promote_on_read = false;
   uint64_t promote_read_threshold = 2;
@@ -87,6 +94,10 @@ struct FileMeta {
   uint64_t cache_generation = 0;
   uint64_t last_promoted_at = 0;
   uint64_t last_demoted_at = 0;
+  int dominant_gpu_id = -1;
+  uint64_t dominant_gpu_read_share_x100 = 0;
+  std::string affinity_state = "UNKNOWN";
+  uint64_t affinity_updated_at = 0;
 };
 
 struct ContentRefResult {
@@ -105,6 +116,7 @@ struct Handle {
   int fd = -1;
   std::string logical_path;
   int gpu_id = -1;
+  int caller_gpu_id = -1;
   std::string tier;
   std::string backend_id;
   fs::path physical_path;
@@ -158,7 +170,11 @@ class MetadataStore {
          "replica_state TEXT NOT NULL DEFAULT 'LOCAL_ONLY',"
          "cache_generation INTEGER NOT NULL DEFAULT 0,"
          "last_promoted_at INTEGER NOT NULL DEFAULT 0,"
-         "last_demoted_at INTEGER NOT NULL DEFAULT 0"
+         "last_demoted_at INTEGER NOT NULL DEFAULT 0,"
+         "dominant_gpu_id INTEGER NOT NULL DEFAULT -1,"
+         "dominant_gpu_read_share_x100 INTEGER NOT NULL DEFAULT 0,"
+         "affinity_state TEXT NOT NULL DEFAULT 'UNKNOWN',"
+         "affinity_updated_at INTEGER NOT NULL DEFAULT 0"
          ");");
     EnsureColumn("files", "checksum", "TEXT");
     EnsureColumn("files", "read_count", "INTEGER NOT NULL DEFAULT 0");
@@ -176,6 +192,12 @@ class MetadataStore {
     EnsureColumn("files", "cache_generation", "INTEGER NOT NULL DEFAULT 0");
     EnsureColumn("files", "last_promoted_at", "INTEGER NOT NULL DEFAULT 0");
     EnsureColumn("files", "last_demoted_at", "INTEGER NOT NULL DEFAULT 0");
+    EnsureColumn("files", "dominant_gpu_id", "INTEGER NOT NULL DEFAULT -1");
+    EnsureColumn("files", "dominant_gpu_read_share_x100",
+                 "INTEGER NOT NULL DEFAULT 0");
+    EnsureColumn("files", "affinity_state",
+                 "TEXT NOT NULL DEFAULT 'UNKNOWN'");
+    EnsureColumn("files", "affinity_updated_at", "INTEGER NOT NULL DEFAULT 0");
     Exec("CREATE TABLE IF NOT EXISTS metrics ("
          "name TEXT PRIMARY KEY,"
          "value INTEGER NOT NULL DEFAULT 0"
@@ -213,7 +235,10 @@ class MetadataStore {
         "COALESCE(share_count,1),COALESCE(primary_tier,'local'),"
         "COALESCE(has_remote_copy,0),COALESCE(local_cache_owner_gpu,-1),"
         "COALESCE(replica_state,'LOCAL_ONLY'),COALESCE(cache_generation,0),"
-        "COALESCE(last_promoted_at,0),COALESCE(last_demoted_at,0) "
+        "COALESCE(last_promoted_at,0),COALESCE(last_demoted_at,0),"
+        "COALESCE(dominant_gpu_id,-1),"
+        "COALESCE(dominant_gpu_read_share_x100,0),"
+        "COALESCE(affinity_state,'UNKNOWN'),COALESCE(affinity_updated_at,0) "
         "FROM files WHERE logical_path=?;";
     sqlite3_stmt* stmt = nullptr;
     Prepare(sql, &stmt);
@@ -254,6 +279,12 @@ class MetadataStore {
         static_cast<uint64_t>(sqlite3_column_int64(stmt, 19));
     meta.last_demoted_at =
         static_cast<uint64_t>(sqlite3_column_int64(stmt, 20));
+    meta.dominant_gpu_id = sqlite3_column_int(stmt, 21);
+    meta.dominant_gpu_read_share_x100 =
+        static_cast<uint64_t>(sqlite3_column_int64(stmt, 22));
+    meta.affinity_state = ColumnText(stmt, 23);
+    meta.affinity_updated_at =
+        static_cast<uint64_t>(sqlite3_column_int64(stmt, 24));
     sqlite3_finalize(stmt);
     return meta;
   }
@@ -266,8 +297,9 @@ class MetadataStore {
         "size_bytes,checksum,state,created_at,updated_at,last_access_at,read_count,"
         "content_key,recompute_cost,remote_access_cost,producer_gpu,share_count,"
         "primary_tier,has_remote_copy,local_cache_owner_gpu,replica_state,"
-        "cache_generation,last_promoted_at,last_demoted_at) "
-        "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) "
+        "cache_generation,last_promoted_at,last_demoted_at,dominant_gpu_id,"
+        "dominant_gpu_read_share_x100,affinity_state,affinity_updated_at) "
+        "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) "
         "ON CONFLICT(logical_path) DO UPDATE SET "
         "gpu_id=excluded.gpu_id,"
         "tier=excluded.tier,"
@@ -288,6 +320,10 @@ class MetadataStore {
         "cache_generation=excluded.cache_generation,"
         "last_promoted_at=excluded.last_promoted_at,"
         "last_demoted_at=excluded.last_demoted_at,"
+        "dominant_gpu_id=excluded.dominant_gpu_id,"
+        "dominant_gpu_read_share_x100=excluded.dominant_gpu_read_share_x100,"
+        "affinity_state=excluded.affinity_state,"
+        "affinity_updated_at=excluded.affinity_updated_at,"
         "updated_at=excluded.updated_at;";
     sqlite3_stmt* stmt = nullptr;
     Prepare(sql, &stmt);
@@ -322,10 +358,20 @@ class MetadataStore {
                        static_cast<sqlite3_int64>(meta.last_promoted_at));
     sqlite3_bind_int64(stmt, 24,
                        static_cast<sqlite3_int64>(meta.last_demoted_at));
+    sqlite3_bind_int(stmt, 25, meta.dominant_gpu_id);
+    sqlite3_bind_int64(
+        stmt, 26,
+        static_cast<sqlite3_int64>(meta.dominant_gpu_read_share_x100));
+    sqlite3_bind_text(stmt, 27, meta.affinity_state.c_str(), -1,
+                      SQLITE_TRANSIENT);
+    sqlite3_bind_int64(stmt, 28,
+                       static_cast<sqlite3_int64>(meta.affinity_updated_at));
     StepDone(stmt);
   }
 
-  uint64_t IncrementReadCount(const std::string& logical_path, int gpu_id) {
+  uint64_t IncrementReadCount(const std::string& logical_path, int gpu_id,
+                              uint64_t dominant_threshold_x100,
+                              uint64_t shared_threshold_x100) {
     std::lock_guard<std::mutex> lock(mu_);
     const auto now = UnixNow();
     sqlite3_stmt* stmt = nullptr;
@@ -353,6 +399,9 @@ class MetadataStore {
     sqlite3_bind_text(stmt, 1, logical_path.c_str(), -1, SQLITE_TRANSIENT);
     sqlite3_bind_text(stmt, 2, logical_path.c_str(), -1, SQLITE_TRANSIENT);
     StepDone(stmt);
+
+    UpdateAffinityLocked(logical_path, dominant_threshold_x100,
+                         shared_threshold_x100);
 
     Prepare("SELECT COALESCE(read_count,0) FROM files WHERE logical_path=?;", &stmt);
     sqlite3_bind_text(stmt, 1, logical_path.c_str(), -1, SQLITE_TRANSIENT);
@@ -585,7 +634,10 @@ class MetadataStore {
             "COALESCE(primary_tier,'local'),COALESCE(has_remote_copy,0),"
             "COALESCE(local_cache_owner_gpu,-1),"
             "COALESCE(replica_state,'LOCAL_ONLY'),COALESCE(cache_generation,0),"
-            "COALESCE(last_promoted_at,0),COALESCE(last_demoted_at,0) "
+            "COALESCE(last_promoted_at,0),COALESCE(last_demoted_at,0),"
+            "COALESCE(dominant_gpu_id,-1),"
+            "COALESCE(dominant_gpu_read_share_x100,0),"
+            "COALESCE(affinity_state,'UNKNOWN'),COALESCE(affinity_updated_at,0) "
             "FROM files WHERE gpu_id=? AND tier='local' AND state='COMMITTED' "
             "AND logical_path != ? "
             "ORDER BY COALESCE(read_count,0) ASC,"
@@ -639,6 +691,12 @@ class MetadataStore {
           static_cast<uint64_t>(sqlite3_column_int64(stmt, 20));
       candidate.meta.last_demoted_at =
           static_cast<uint64_t>(sqlite3_column_int64(stmt, 21));
+      candidate.meta.dominant_gpu_id = sqlite3_column_int(stmt, 22);
+      candidate.meta.dominant_gpu_read_share_x100 =
+          static_cast<uint64_t>(sqlite3_column_int64(stmt, 23));
+      candidate.meta.affinity_state = ColumnText(stmt, 24);
+      candidate.meta.affinity_updated_at =
+          static_cast<uint64_t>(sqlite3_column_int64(stmt, 25));
       out.push_back(std::move(candidate));
     }
     sqlite3_finalize(stmt);
@@ -646,6 +704,68 @@ class MetadataStore {
   }
 
  private:
+  void UpdateAffinityLocked(const std::string& logical_path,
+                            uint64_t dominant_threshold_x100,
+                            uint64_t shared_threshold_x100) {
+    sqlite3_stmt* stmt = nullptr;
+    Prepare("SELECT gpu_id,read_count FROM gpu_access WHERE logical_path=? "
+            "ORDER BY read_count DESC,gpu_id ASC;",
+            &stmt);
+    sqlite3_bind_text(stmt, 1, logical_path.c_str(), -1, SQLITE_TRANSIENT);
+    int dominant_gpu = -1;
+    uint64_t dominant_reads = 0;
+    uint64_t total_reads = 0;
+    uint64_t gpu_count = 0;
+    while (true) {
+      int rc = sqlite3_step(stmt);
+      if (rc == SQLITE_DONE) {
+        break;
+      }
+      if (rc != SQLITE_ROW) {
+        std::string err = sqlite3_errmsg(db_);
+        sqlite3_finalize(stmt);
+        throw std::runtime_error(err);
+      }
+      const int current_gpu = sqlite3_column_int(stmt, 0);
+      const uint64_t current_reads =
+          static_cast<uint64_t>(sqlite3_column_int64(stmt, 1));
+      if (gpu_count == 0) {
+        dominant_gpu = current_gpu;
+        dominant_reads = current_reads;
+      }
+      total_reads += current_reads;
+      ++gpu_count;
+    }
+    sqlite3_finalize(stmt);
+
+    uint64_t dominant_share_x100 = 0;
+    if (total_reads > 0) {
+      dominant_share_x100 = dominant_reads * 100 / total_reads;
+    }
+
+    std::string state = "UNKNOWN";
+    if (total_reads == 0) {
+      state = "UNKNOWN";
+    } else if (gpu_count == 1 || dominant_share_x100 >= dominant_threshold_x100) {
+      state = "PRIVATE_DOMINANT";
+    } else if (gpu_count > 1 && dominant_share_x100 <= shared_threshold_x100) {
+      state = "SHARED_REMOTE_PREFERRED";
+    } else {
+      state = "MIXED_AFFINITY";
+    }
+
+    Prepare("UPDATE files SET dominant_gpu_id=?,"
+            "dominant_gpu_read_share_x100=?,affinity_state=?,"
+            "affinity_updated_at=? WHERE logical_path=?;",
+            &stmt);
+    sqlite3_bind_int(stmt, 1, dominant_gpu);
+    sqlite3_bind_int64(stmt, 2, static_cast<sqlite3_int64>(dominant_share_x100));
+    sqlite3_bind_text(stmt, 3, state.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_int64(stmt, 4, UnixNow());
+    sqlite3_bind_text(stmt, 5, logical_path.c_str(), -1, SQLITE_TRANSIENT);
+    StepDone(stmt);
+  }
+
   static sqlite3_int64 UnixNow() {
     return static_cast<sqlite3_int64>(
         std::chrono::duration_cast<std::chrono::seconds>(
@@ -843,6 +963,7 @@ class TokenFS {
     handle.fd = fd;
     handle.logical_path = path;
     handle.gpu_id = gpu->gpu_id;
+    handle.caller_gpu_id = DetectCallerGpuId(gpu->gpu_id);
     handle.tier = meta.tier;
     handle.backend_id = meta.backend_id;
     handle.physical_path = meta.physical_path;
@@ -900,20 +1021,31 @@ class TokenFS {
       metadata_.Upsert(meta);
     }
     const bool writable = IsWritable(fi->flags);
+    const int caller_gpu_id = DetectCallerGpuId(gpu->gpu_id);
     if (!writable) {
-      uint64_t read_count = metadata_.IncrementReadCount(path, gpu->gpu_id);
+      uint64_t read_count = metadata_.IncrementReadCount(
+          path, caller_gpu_id, config_.affinity_dominant_threshold_x100,
+          config_.affinity_shared_threshold_x100);
       meta.read_count = read_count;
+      if (auto updated = metadata_.Get(path)) {
+        meta = *updated;
+      }
       metadata_.AddMetric("read_open_count", 1);
       metadata_.AddMetric(meta.tier == "local" ? "local_read_open_count"
                                                 : "remote_read_open_count",
                           1);
       if (meta.tier == "remote" &&
-          ShouldPromoteOnRead(meta, read_count, gpu->gpu_id)) {
+          ShouldPromoteOnRead(meta, read_count, caller_gpu_id)) {
         if (int rc = PromoteToLocal(*gpu, rel, meta, "promote"); rc != 0) {
           metadata_.AddMetric("promote_error_count", 1);
         }
       }
-      MaybeSchedulePrefetch(*gpu, rel);
+      if (caller_gpu_id == gpu->gpu_id &&
+          meta.affinity_state != "SHARED_REMOTE_PREFERRED") {
+        MaybeSchedulePrefetch(*gpu, rel);
+      } else {
+        metadata_.AddMetric("prefetch_skip_affinity", 1);
+      }
     }
     int fd = open(meta.physical_path.c_str(), fi->flags);
     if (fd < 0) {
@@ -927,6 +1059,7 @@ class TokenFS {
     handle.fd = fd;
     handle.logical_path = path;
     handle.gpu_id = gpu->gpu_id;
+    handle.caller_gpu_id = caller_gpu_id;
     handle.tier = meta.tier;
     handle.backend_id = meta.backend_id;
     handle.physical_path = meta.physical_path;
@@ -952,9 +1085,9 @@ class TokenFS {
     }
     metadata_.AddMetric("read_ops", 1);
     metadata_.AddMetric("read_bytes", static_cast<uint64_t>(n));
-    metadata_.AddMetric("qos_gpu" + std::to_string(handle->gpu_id) + "_read_ops",
+    metadata_.AddMetric("qos_gpu" + std::to_string(handle->caller_gpu_id) + "_read_ops",
                         1);
-    metadata_.AddMetric("qos_gpu" + std::to_string(handle->gpu_id) + "_read_bytes",
+    metadata_.AddMetric("qos_gpu" + std::to_string(handle->caller_gpu_id) + "_read_bytes",
                         static_cast<uint64_t>(n));
     metadata_.AddMetric(handle->tier == "local" ? "read_local_ops" : "read_remote_ops",
                         1);
@@ -989,9 +1122,9 @@ class TokenFS {
     UpdateHandleMeta(*handle, "CREATING");
     metadata_.AddMetric("write_ops", 1);
     metadata_.AddMetric("write_bytes", static_cast<uint64_t>(n));
-    metadata_.AddMetric("qos_gpu" + std::to_string(handle->gpu_id) + "_write_ops",
+    metadata_.AddMetric("qos_gpu" + std::to_string(handle->caller_gpu_id) + "_write_ops",
                         1);
-    metadata_.AddMetric("qos_gpu" + std::to_string(handle->gpu_id) + "_write_bytes",
+    metadata_.AddMetric("qos_gpu" + std::to_string(handle->caller_gpu_id) + "_write_bytes",
                         static_cast<uint64_t>(n));
     metadata_.AddMetric(handle->tier == "local" ? "write_local_ops"
                                                 : "write_remote_ops",
@@ -1223,6 +1356,81 @@ class TokenFS {
     return std::nullopt;
   }
 
+  bool KnownGpuId(int gpu_id) const {
+    return std::any_of(config_.gpus.begin(), config_.gpus.end(),
+                       [gpu_id](const GpuConfig& gpu) {
+                         return gpu.gpu_id == gpu_id;
+                       });
+  }
+
+  int DetectCallerGpuId(int fallback_gpu_id) {
+    auto* ctx = fuse_get_context();
+    if (ctx == nullptr || ctx->pid <= 0) {
+      return fallback_gpu_id;
+    }
+    const fs::path environ_path =
+        fs::path("/proc") / std::to_string(ctx->pid) / "environ";
+    std::ifstream in(environ_path, std::ios::binary);
+    if (!in) {
+      metadata_.AddMetric("affinity_caller_env_unreadable", 1);
+      return fallback_gpu_id;
+    }
+    std::string env((std::istreambuf_iterator<char>(in)),
+                    std::istreambuf_iterator<char>());
+    auto read_env_value = [&env](const std::string& key) -> std::optional<std::string> {
+      size_t pos = 0;
+      const std::string prefix = key + "=";
+      while (pos < env.size()) {
+        const size_t end = env.find('\0', pos);
+        const size_t item_end = end == std::string::npos ? env.size() : end;
+        std::string item = env.substr(pos, item_end - pos);
+        if (item.rfind(prefix, 0) == 0) {
+          return item.substr(prefix.size());
+        }
+        if (end == std::string::npos) {
+          break;
+        }
+        pos = end + 1;
+      }
+      return std::nullopt;
+    };
+
+    auto parse_gpu = [](const std::string& value) -> std::optional<int> {
+      std::string digits;
+      for (char ch : value) {
+        if (std::isdigit(static_cast<unsigned char>(ch))) {
+          digits.push_back(ch);
+        } else if (!digits.empty()) {
+          break;
+        }
+      }
+      if (digits.empty()) {
+        return std::nullopt;
+      }
+      try {
+        return std::stoi(digits);
+      } catch (...) {
+        return std::nullopt;
+      }
+    };
+
+    for (const char* key : {"TOKENFS_GPU_ID", "CUDA_VISIBLE_DEVICES"}) {
+      auto value = read_env_value(key);
+      if (!value) {
+        continue;
+      }
+      auto parsed = parse_gpu(*value);
+      if (parsed && KnownGpuId(*parsed)) {
+        if (*parsed != fallback_gpu_id) {
+          metadata_.AddMetric("affinity_cross_gpu_caller_count", 1);
+        }
+        return *parsed;
+      }
+      metadata_.AddMetric("affinity_caller_env_invalid", 1);
+    }
+    return fallback_gpu_id;
+  }
+
   static uint64_t FileSizeNoThrow(const fs::path& path) {
     std::error_code ec;
     auto size = fs::file_size(path, ec);
@@ -1435,6 +1643,20 @@ class TokenFS {
       return false;
     }
     meta.read_count = read_count;
+    if (gpu_id != meta.gpu_id) {
+      metadata_.AddMetric("affinity_cross_gpu_promote_skip", 1);
+      return false;
+    }
+    if (meta.affinity_state == "SHARED_REMOTE_PREFERRED") {
+      metadata_.AddMetric("affinity_shared_remote_preferred_skip", 1);
+      return false;
+    }
+    if (meta.dominant_gpu_id >= 0 && meta.dominant_gpu_id != gpu_id &&
+        meta.dominant_gpu_read_share_x100 >=
+            config_.affinity_dominant_threshold_x100) {
+      metadata_.AddMetric("affinity_non_dominant_promote_skip", 1);
+      return false;
+    }
     if (config_.promote_on_read && read_count >= config_.promote_read_threshold) {
       return true;
     }
@@ -1449,6 +1671,7 @@ class TokenFS {
   int PromoteToLocal(const GpuConfig& gpu, const fs::path& rel, FileMeta& meta,
                      const std::string& metric_prefix) {
     const uint64_t size = FileSizeNoThrow(meta.physical_path);
+    ApplyBackgroundQos(gpu.gpu_id, size, metric_prefix);
     fs::path local = gpu.local_root / rel;
     const fs::path source = meta.physical_path;
     if (!EnsureLocalCapacity(gpu, size, meta.logical_path,
@@ -1672,6 +1895,7 @@ class TokenFS {
     fs::path remote = RemotePath(gpu, parsed->second);
     const uint64_t size = FileSizeNoThrow(meta.physical_path);
     const fs::path source = meta.physical_path;
+    ApplyBackgroundQos(gpu.gpu_id, size, "evict");
 
     std::error_code ec;
     if (meta.has_remote_copy && fs::exists(remote, ec)) {
@@ -2045,12 +2269,18 @@ class TokenFS {
     const uint64_t limit =
         write ? config_.qos_write_iops_per_gpu : config_.qos_read_iops_per_gpu;
     if (limit == 0) {
+      metadata_.AddMetric(write ? "qos_foreground_write_ops"
+                                : "qos_foreground_read_ops",
+                          1);
       return;
     }
+    metadata_.AddMetric(write ? "qos_foreground_write_ops"
+                              : "qos_foreground_read_ops",
+                        1);
     const auto gap = std::chrono::microseconds(
         std::max<uint64_t>(1, 1000000ULL / std::max<uint64_t>(1, limit)));
     const std::string key =
-        std::to_string(handle.gpu_id) + (write ? ":write" : ":read");
+        std::to_string(handle.caller_gpu_id) + (write ? ":fg_write" : ":fg_read");
     Clock::duration delay{};
     {
       std::lock_guard<std::mutex> lock(qos_mu_);
@@ -2070,12 +2300,62 @@ class TokenFS {
         std::chrono::duration_cast<std::chrono::microseconds>(delay).count();
     metadata_.AddMetric("qos_delay_us_total", static_cast<uint64_t>(delay_us));
     metadata_.AddMetric("qos_delay_ops", 1);
-    metadata_.AddMetric("qos_gpu" + std::to_string(handle.gpu_id) +
+    metadata_.AddMetric("qos_foreground_delay_ops", 1);
+    metadata_.AddMetric("qos_foreground_delay_us_total",
+                        static_cast<uint64_t>(delay_us));
+    metadata_.AddMetric("qos_gpu" + std::to_string(handle.caller_gpu_id) +
                             "_delay_us_total",
                         static_cast<uint64_t>(delay_us));
-    metadata_.AddMetric("qos_gpu" + std::to_string(handle.gpu_id) +
+    metadata_.AddMetric("qos_gpu" + std::to_string(handle.caller_gpu_id) +
                             "_delayed_bytes",
                         bytes);
+    std::this_thread::sleep_for(delay);
+  }
+
+  void ApplyBackgroundQos(int gpu_id, uint64_t bytes,
+                          const std::string& activity) {
+    metadata_.AddMetric("qos_background_ops", 1);
+    metadata_.AddMetric("qos_background_bytes", bytes);
+    metadata_.AddMetric("qos_background_" + activity + "_ops", 1);
+    metadata_.AddMetric("qos_background_" + activity + "_bytes", bytes);
+
+    Clock::duration delay{};
+    if (config_.qos_background_iops_per_gpu > 0) {
+      const auto gap = std::chrono::microseconds(std::max<uint64_t>(
+          1, 1000000ULL / config_.qos_background_iops_per_gpu));
+      const std::string key = std::to_string(gpu_id) + ":bg_op";
+      std::lock_guard<std::mutex> lock(qos_mu_);
+      const auto now = Clock::now();
+      auto& next = qos_next_[key];
+      if (next > now) {
+        delay = std::max(delay, next - now);
+        next += gap;
+      } else {
+        next = now + gap;
+      }
+    }
+    if (config_.qos_background_mib_per_sec_per_gpu > 0 && bytes > 0) {
+      const uint64_t mib = std::max<uint64_t>(1, bytes / 1024 / 1024);
+      const uint64_t delay_us =
+          mib * 1000000ULL / config_.qos_background_mib_per_sec_per_gpu;
+      delay = std::max(
+          delay,
+          std::chrono::duration_cast<Clock::duration>(
+              std::chrono::microseconds(delay_us)));
+    }
+    if (delay.count() <= 0) {
+      return;
+    }
+    const auto delay_us =
+        std::chrono::duration_cast<std::chrono::microseconds>(delay).count();
+    metadata_.AddMetric("qos_delay_us_total", static_cast<uint64_t>(delay_us));
+    metadata_.AddMetric("qos_delay_ops", 1);
+    metadata_.AddMetric("qos_background_delay_ops", 1);
+    metadata_.AddMetric("qos_background_delay_us_total",
+                        static_cast<uint64_t>(delay_us));
+    metadata_.AddMetric("qos_gpu" + std::to_string(gpu_id) +
+                            "_background_delay_us_total",
+                        static_cast<uint64_t>(delay_us));
     std::this_thread::sleep_for(delay);
   }
 
@@ -2204,6 +2484,26 @@ Config LoadConfig(const fs::path& path) {
   if (root["policy"] && root["policy"]["qos_write_iops_per_gpu"]) {
     config.qos_write_iops_per_gpu =
         root["policy"]["qos_write_iops_per_gpu"].as<uint64_t>(0);
+  }
+  if (root["policy"] && root["policy"]["qos_background_iops_per_gpu"]) {
+    config.qos_background_iops_per_gpu =
+        root["policy"]["qos_background_iops_per_gpu"].as<uint64_t>(0);
+  }
+  if (root["policy"] && root["policy"]["qos_background_mib_per_sec_per_gpu"]) {
+    config.qos_background_mib_per_sec_per_gpu =
+        root["policy"]["qos_background_mib_per_sec_per_gpu"].as<uint64_t>(0);
+  }
+  if (root["policy"] && root["policy"]["affinity_dominant_threshold_x100"]) {
+    config.affinity_dominant_threshold_x100 =
+        root["policy"]["affinity_dominant_threshold_x100"].as<uint64_t>(70);
+  }
+  if (root["policy"] && root["policy"]["affinity_shared_threshold_x100"]) {
+    config.affinity_shared_threshold_x100 =
+        root["policy"]["affinity_shared_threshold_x100"].as<uint64_t>(55);
+  }
+  if (root["policy"] && root["policy"]["cross_gpu_local_cache"]) {
+    config.cross_gpu_local_cache =
+        root["policy"]["cross_gpu_local_cache"].as<bool>(false);
   }
   if (root["policy"] && root["policy"]["physical_dedup"]) {
     config.physical_dedup = root["policy"]["physical_dedup"].as<bool>(false);
