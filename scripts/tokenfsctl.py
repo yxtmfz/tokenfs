@@ -294,6 +294,11 @@ def print_files(config: TokenfsConfig) -> None:
         "coalesce(replica_state,'LOCAL_ONLY') as replica_state,"
         "coalesce(dominant_gpu_id,-1) as dominant_gpu_id,"
         "coalesce(dominant_gpu_read_share_x100,0) as dominant_gpu_read_share_x100,"
+        "coalesce(recent_dominant_gpu_id,-1) as recent_dominant_gpu_id,"
+        "coalesce(recent_dominant_gpu_read_share_x100,0) as recent_dominant_gpu_read_share_x100,"
+        "coalesce(recent_read_count,0) as recent_read_count,"
+        "coalesce(affinity_trend,'STABLE') as affinity_trend,"
+        "coalesce(target_local_replica_count,0) as target_local_replica_count,"
         "coalesce(affinity_state,'UNKNOWN') as affinity_state "
         "from files order by logical_path",
     )
@@ -307,6 +312,10 @@ def print_files(config: TokenfsConfig) -> None:
             f"primary={row['primary_tier']} | replica={row['replica_state']} | "
             f"affinity={row['affinity_state']} | dominant_gpu={row['dominant_gpu_id']} "
             f"({row['dominant_gpu_read_share_x100']}%) | "
+            f"recent_gpu={row['recent_dominant_gpu_id']} "
+            f"({row['recent_dominant_gpu_read_share_x100']}%, "
+            f"{row['recent_read_count']} reads) | trend={row['affinity_trend']} | "
+            f"target_local_replicas={row['target_local_replica_count']} | "
             f"reads={row['read_count']} | producer_gpu={row['producer_gpu']} | "
             f"recompute={row['recompute_cost']} | remote_cost={row['remote_access_cost']} | "
             f"share={row['share_count']} | key={row['content_key'] or row['checksum'] or '-'}"
@@ -428,6 +437,11 @@ def print_affinity(config: TokenfsConfig) -> None:
         config.metadata_db,
         "select logical_path,coalesce(dominant_gpu_id,-1) as dominant_gpu_id,"
         "coalesce(dominant_gpu_read_share_x100,0) as dominant_gpu_read_share_x100,"
+        "coalesce(recent_dominant_gpu_id,-1) as recent_dominant_gpu_id,"
+        "coalesce(recent_dominant_gpu_read_share_x100,0) as recent_dominant_gpu_read_share_x100,"
+        "coalesce(recent_read_count,0) as recent_read_count,"
+        "coalesce(affinity_trend,'STABLE') as affinity_trend,"
+        "coalesce(target_local_replica_count,0) as target_local_replica_count,"
         "coalesce(affinity_state,'UNKNOWN') as affinity_state,"
         "coalesce(share_count,1) as share_count "
         "from files order by logical_path",
@@ -453,6 +467,11 @@ def print_affinity(config: TokenfsConfig) -> None:
                     f"{current} | state={item['affinity_state']} | "
                     f"dominant_gpu={item['dominant_gpu_id']} "
                     f"({item['dominant_gpu_read_share_x100']}%) | "
+                    f"recent_gpu={item['recent_dominant_gpu_id']} "
+                    f"({item['recent_dominant_gpu_read_share_x100']}%, "
+                    f"{item['recent_read_count']} reads) | "
+                    f"trend={item['affinity_trend']} | "
+                    f"target_local_replicas={item['target_local_replica_count']} | "
                     f"share_count={item['share_count']}"
                 )
             else:
@@ -468,6 +487,11 @@ def print_affinity(config: TokenfsConfig) -> None:
             f"{logical} | state={item['affinity_state']} | "
             f"dominant_gpu={item['dominant_gpu_id']} "
             f"({item['dominant_gpu_read_share_x100']}%) | "
+            f"recent_gpu={item['recent_dominant_gpu_id']} "
+            f"({item['recent_dominant_gpu_read_share_x100']}%, "
+            f"{item['recent_read_count']} reads) | "
+            f"trend={item['affinity_trend']} | "
+            f"target_local_replicas={item['target_local_replica_count']} | "
             f"share_count={item['share_count']}"
         )
 

@@ -22,6 +22,14 @@ policy:
   # GPU 亲和分类阈值：dominant 表示明显偏向单 GPU，shared 表示多 GPU 共享倾向远端。
   affinity_dominant_threshold_x100: 70
   affinity_shared_threshold_x100: 55
+  # GPU 亲和不只看累计次数，还看短窗口热度、长窗口背景和趋势变化。
+  affinity_short_window_sec: 300
+  affinity_long_window_sec: 3600
+  affinity_trend_min_reads: 3
+  affinity_hot_read_threshold: 4
+  affinity_warm_read_threshold: 2
+  # 当前用于计算目标本地副本数，真实多机环境中可按本地 SSD 容量调大。
+  max_local_replicas_per_file: 2
   # 当前版本先保守禁止跨 GPU 本地缓存，只记录外部 GPU 访问和共享倾向。
   cross_gpu_local_cache: false
   # 默认不开自适应迁移，避免影响 baseline；真实环境或专项实验中打开。

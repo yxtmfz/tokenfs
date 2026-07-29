@@ -63,6 +63,12 @@ struct Config {
   uint64_t qos_background_mib_per_sec_per_gpu = 0;
   uint64_t affinity_dominant_threshold_x100 = 70;
   uint64_t affinity_shared_threshold_x100 = 55;
+  uint64_t affinity_short_window_sec = 300;
+  uint64_t affinity_long_window_sec = 3600;
+  uint64_t affinity_trend_min_reads = 3;
+  uint64_t affinity_hot_read_threshold = 4;
+  uint64_t affinity_warm_read_threshold = 2;
+  uint64_t max_local_replicas_per_file = 2;
   bool cross_gpu_local_cache = false;
   bool physical_dedup = false;
   bool promote_on_read = false;
@@ -96,6 +102,11 @@ struct FileMeta {
   uint64_t last_demoted_at = 0;
   int dominant_gpu_id = -1;
   uint64_t dominant_gpu_read_share_x100 = 0;
+  int recent_dominant_gpu_id = -1;
+  uint64_t recent_dominant_gpu_read_share_x100 = 0;
+  uint64_t recent_read_count = 0;
+  std::string affinity_trend = "STABLE";
+  uint64_t target_local_replica_count = 0;
   std::string affinity_state = "UNKNOWN";
   uint64_t affinity_updated_at = 0;
 };
@@ -173,6 +184,11 @@ class MetadataStore {
          "last_demoted_at INTEGER NOT NULL DEFAULT 0,"
          "dominant_gpu_id INTEGER NOT NULL DEFAULT -1,"
          "dominant_gpu_read_share_x100 INTEGER NOT NULL DEFAULT 0,"
+         "recent_dominant_gpu_id INTEGER NOT NULL DEFAULT -1,"
+         "recent_dominant_gpu_read_share_x100 INTEGER NOT NULL DEFAULT 0,"
+         "recent_read_count INTEGER NOT NULL DEFAULT 0,"
+         "affinity_trend TEXT NOT NULL DEFAULT 'STABLE',"
+         "target_local_replica_count INTEGER NOT NULL DEFAULT 0,"
          "affinity_state TEXT NOT NULL DEFAULT 'UNKNOWN',"
          "affinity_updated_at INTEGER NOT NULL DEFAULT 0"
          ");");
@@ -195,6 +211,15 @@ class MetadataStore {
     EnsureColumn("files", "dominant_gpu_id", "INTEGER NOT NULL DEFAULT -1");
     EnsureColumn("files", "dominant_gpu_read_share_x100",
                  "INTEGER NOT NULL DEFAULT 0");
+    EnsureColumn("files", "recent_dominant_gpu_id",
+                 "INTEGER NOT NULL DEFAULT -1");
+    EnsureColumn("files", "recent_dominant_gpu_read_share_x100",
+                 "INTEGER NOT NULL DEFAULT 0");
+    EnsureColumn("files", "recent_read_count", "INTEGER NOT NULL DEFAULT 0");
+    EnsureColumn("files", "affinity_trend",
+                 "TEXT NOT NULL DEFAULT 'STABLE'");
+    EnsureColumn("files", "target_local_replica_count",
+                 "INTEGER NOT NULL DEFAULT 0");
     EnsureColumn("files", "affinity_state",
                  "TEXT NOT NULL DEFAULT 'UNKNOWN'");
     EnsureColumn("files", "affinity_updated_at", "INTEGER NOT NULL DEFAULT 0");
@@ -209,6 +234,13 @@ class MetadataStore {
          "last_access_at INTEGER,"
          "PRIMARY KEY(logical_path,gpu_id)"
          ");");
+    Exec("CREATE TABLE IF NOT EXISTS gpu_access_events ("
+         "logical_path TEXT NOT NULL,"
+         "gpu_id INTEGER NOT NULL,"
+         "access_at INTEGER NOT NULL"
+         ");");
+    Exec("CREATE INDEX IF NOT EXISTS idx_gpu_access_events_path_time "
+         "ON gpu_access_events(logical_path,access_at);");
     Exec("CREATE TABLE IF NOT EXISTS content_refs ("
          "content_key TEXT PRIMARY KEY,"
          "primary_logical_path TEXT NOT NULL,"
@@ -238,6 +270,11 @@ class MetadataStore {
         "COALESCE(last_promoted_at,0),COALESCE(last_demoted_at,0),"
         "COALESCE(dominant_gpu_id,-1),"
         "COALESCE(dominant_gpu_read_share_x100,0),"
+        "COALESCE(recent_dominant_gpu_id,-1),"
+        "COALESCE(recent_dominant_gpu_read_share_x100,0),"
+        "COALESCE(recent_read_count,0),"
+        "COALESCE(affinity_trend,'STABLE'),"
+        "COALESCE(target_local_replica_count,0),"
         "COALESCE(affinity_state,'UNKNOWN'),COALESCE(affinity_updated_at,0) "
         "FROM files WHERE logical_path=?;";
     sqlite3_stmt* stmt = nullptr;
@@ -282,9 +319,17 @@ class MetadataStore {
     meta.dominant_gpu_id = sqlite3_column_int(stmt, 21);
     meta.dominant_gpu_read_share_x100 =
         static_cast<uint64_t>(sqlite3_column_int64(stmt, 22));
-    meta.affinity_state = ColumnText(stmt, 23);
-    meta.affinity_updated_at =
+    meta.recent_dominant_gpu_id = sqlite3_column_int(stmt, 23);
+    meta.recent_dominant_gpu_read_share_x100 =
         static_cast<uint64_t>(sqlite3_column_int64(stmt, 24));
+    meta.recent_read_count =
+        static_cast<uint64_t>(sqlite3_column_int64(stmt, 25));
+    meta.affinity_trend = ColumnText(stmt, 26);
+    meta.target_local_replica_count =
+        static_cast<uint64_t>(sqlite3_column_int64(stmt, 27));
+    meta.affinity_state = ColumnText(stmt, 28);
+    meta.affinity_updated_at =
+        static_cast<uint64_t>(sqlite3_column_int64(stmt, 29));
     sqlite3_finalize(stmt);
     return meta;
   }
@@ -298,8 +343,10 @@ class MetadataStore {
         "content_key,recompute_cost,remote_access_cost,producer_gpu,share_count,"
         "primary_tier,has_remote_copy,local_cache_owner_gpu,replica_state,"
         "cache_generation,last_promoted_at,last_demoted_at,dominant_gpu_id,"
-        "dominant_gpu_read_share_x100,affinity_state,affinity_updated_at) "
-        "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) "
+        "dominant_gpu_read_share_x100,recent_dominant_gpu_id,"
+        "recent_dominant_gpu_read_share_x100,recent_read_count,affinity_trend,"
+        "target_local_replica_count,affinity_state,affinity_updated_at) "
+        "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) "
         "ON CONFLICT(logical_path) DO UPDATE SET "
         "gpu_id=excluded.gpu_id,"
         "tier=excluded.tier,"
@@ -322,6 +369,11 @@ class MetadataStore {
         "last_demoted_at=excluded.last_demoted_at,"
         "dominant_gpu_id=excluded.dominant_gpu_id,"
         "dominant_gpu_read_share_x100=excluded.dominant_gpu_read_share_x100,"
+        "recent_dominant_gpu_id=excluded.recent_dominant_gpu_id,"
+        "recent_dominant_gpu_read_share_x100=excluded.recent_dominant_gpu_read_share_x100,"
+        "recent_read_count=excluded.recent_read_count,"
+        "affinity_trend=excluded.affinity_trend,"
+        "target_local_replica_count=excluded.target_local_replica_count,"
         "affinity_state=excluded.affinity_state,"
         "affinity_updated_at=excluded.affinity_updated_at,"
         "updated_at=excluded.updated_at;";
@@ -362,16 +414,33 @@ class MetadataStore {
     sqlite3_bind_int64(
         stmt, 26,
         static_cast<sqlite3_int64>(meta.dominant_gpu_read_share_x100));
-    sqlite3_bind_text(stmt, 27, meta.affinity_state.c_str(), -1,
+    sqlite3_bind_int(stmt, 27, meta.recent_dominant_gpu_id);
+    sqlite3_bind_int64(
+        stmt, 28,
+        static_cast<sqlite3_int64>(meta.recent_dominant_gpu_read_share_x100));
+    sqlite3_bind_int64(stmt, 29,
+                       static_cast<sqlite3_int64>(meta.recent_read_count));
+    sqlite3_bind_text(stmt, 30, meta.affinity_trend.c_str(), -1,
                       SQLITE_TRANSIENT);
-    sqlite3_bind_int64(stmt, 28,
+    sqlite3_bind_int64(
+        stmt, 31,
+        static_cast<sqlite3_int64>(meta.target_local_replica_count));
+    sqlite3_bind_text(stmt, 32, meta.affinity_state.c_str(), -1,
+                      SQLITE_TRANSIENT);
+    sqlite3_bind_int64(stmt, 33,
                        static_cast<sqlite3_int64>(meta.affinity_updated_at));
     StepDone(stmt);
   }
 
   uint64_t IncrementReadCount(const std::string& logical_path, int gpu_id,
                               uint64_t dominant_threshold_x100,
-                              uint64_t shared_threshold_x100) {
+                              uint64_t shared_threshold_x100,
+                              uint64_t short_window_sec,
+                              uint64_t long_window_sec,
+                              uint64_t trend_min_reads,
+                              uint64_t hot_read_threshold,
+                              uint64_t warm_read_threshold,
+                              uint64_t max_local_replicas) {
     std::lock_guard<std::mutex> lock(mu_);
     const auto now = UnixNow();
     sqlite3_stmt* stmt = nullptr;
@@ -392,6 +461,22 @@ class MetadataStore {
     sqlite3_bind_int64(stmt, 3, now);
     StepDone(stmt);
 
+    Prepare("INSERT INTO gpu_access_events(logical_path,gpu_id,access_at) "
+            "VALUES(?,?,?);",
+            &stmt);
+    sqlite3_bind_text(stmt, 1, logical_path.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_int(stmt, 2, gpu_id);
+    sqlite3_bind_int64(stmt, 3, now);
+    StepDone(stmt);
+
+    Prepare("DELETE FROM gpu_access_events WHERE logical_path=? AND access_at<?;",
+            &stmt);
+    sqlite3_bind_text(stmt, 1, logical_path.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_int64(
+        stmt, 2,
+        now - static_cast<sqlite3_int64>(std::max<uint64_t>(long_window_sec, short_window_sec)));
+    StepDone(stmt);
+
     Prepare("UPDATE files SET share_count=("
             "SELECT COUNT(*) FROM gpu_access WHERE logical_path=?) "
             "WHERE logical_path=?;",
@@ -401,7 +486,10 @@ class MetadataStore {
     StepDone(stmt);
 
     UpdateAffinityLocked(logical_path, dominant_threshold_x100,
-                         shared_threshold_x100);
+                         shared_threshold_x100, short_window_sec,
+                         long_window_sec, trend_min_reads,
+                         hot_read_threshold, warm_read_threshold,
+                         max_local_replicas);
 
     Prepare("SELECT COALESCE(read_count,0) FROM files WHERE logical_path=?;", &stmt);
     sqlite3_bind_text(stmt, 1, logical_path.c_str(), -1, SQLITE_TRANSIENT);
@@ -637,6 +725,11 @@ class MetadataStore {
             "COALESCE(last_promoted_at,0),COALESCE(last_demoted_at,0),"
             "COALESCE(dominant_gpu_id,-1),"
             "COALESCE(dominant_gpu_read_share_x100,0),"
+            "COALESCE(recent_dominant_gpu_id,-1),"
+            "COALESCE(recent_dominant_gpu_read_share_x100,0),"
+            "COALESCE(recent_read_count,0),"
+            "COALESCE(affinity_trend,'STABLE'),"
+            "COALESCE(target_local_replica_count,0),"
             "COALESCE(affinity_state,'UNKNOWN'),COALESCE(affinity_updated_at,0) "
             "FROM files WHERE gpu_id=? AND tier='local' AND state='COMMITTED' "
             "AND logical_path != ? "
@@ -694,9 +787,17 @@ class MetadataStore {
       candidate.meta.dominant_gpu_id = sqlite3_column_int(stmt, 22);
       candidate.meta.dominant_gpu_read_share_x100 =
           static_cast<uint64_t>(sqlite3_column_int64(stmt, 23));
-      candidate.meta.affinity_state = ColumnText(stmt, 24);
-      candidate.meta.affinity_updated_at =
+      candidate.meta.recent_dominant_gpu_id = sqlite3_column_int(stmt, 24);
+      candidate.meta.recent_dominant_gpu_read_share_x100 =
           static_cast<uint64_t>(sqlite3_column_int64(stmt, 25));
+      candidate.meta.recent_read_count =
+          static_cast<uint64_t>(sqlite3_column_int64(stmt, 26));
+      candidate.meta.affinity_trend = ColumnText(stmt, 27);
+      candidate.meta.target_local_replica_count =
+          static_cast<uint64_t>(sqlite3_column_int64(stmt, 28));
+      candidate.meta.affinity_state = ColumnText(stmt, 29);
+      candidate.meta.affinity_updated_at =
+          static_cast<uint64_t>(sqlite3_column_int64(stmt, 30));
       out.push_back(std::move(candidate));
     }
     sqlite3_finalize(stmt);
@@ -706,16 +807,35 @@ class MetadataStore {
  private:
   void UpdateAffinityLocked(const std::string& logical_path,
                             uint64_t dominant_threshold_x100,
-                            uint64_t shared_threshold_x100) {
+                            uint64_t shared_threshold_x100,
+                            uint64_t short_window_sec,
+                            uint64_t long_window_sec,
+                            uint64_t trend_min_reads,
+                            uint64_t hot_read_threshold,
+                            uint64_t warm_read_threshold,
+                            uint64_t max_local_replicas) {
+    struct AccessStats {
+      int dominant_gpu = -1;
+      uint64_t dominant_reads = 0;
+      uint64_t total_reads = 0;
+      uint64_t gpu_count = 0;
+      uint64_t dominant_share_x100 = 0;
+    };
+
+    auto finalize_stats = [](AccessStats stats) {
+      if (stats.total_reads > 0) {
+        stats.dominant_share_x100 =
+            stats.dominant_reads * 100 / stats.total_reads;
+      }
+      return stats;
+    };
+
     sqlite3_stmt* stmt = nullptr;
     Prepare("SELECT gpu_id,read_count FROM gpu_access WHERE logical_path=? "
             "ORDER BY read_count DESC,gpu_id ASC;",
             &stmt);
     sqlite3_bind_text(stmt, 1, logical_path.c_str(), -1, SQLITE_TRANSIENT);
-    int dominant_gpu = -1;
-    uint64_t dominant_reads = 0;
-    uint64_t total_reads = 0;
-    uint64_t gpu_count = 0;
+    AccessStats cumulative;
     while (true) {
       int rc = sqlite3_step(stmt);
       if (rc == SQLITE_DONE) {
@@ -729,40 +849,114 @@ class MetadataStore {
       const int current_gpu = sqlite3_column_int(stmt, 0);
       const uint64_t current_reads =
           static_cast<uint64_t>(sqlite3_column_int64(stmt, 1));
-      if (gpu_count == 0) {
-        dominant_gpu = current_gpu;
-        dominant_reads = current_reads;
+      if (cumulative.gpu_count == 0) {
+        cumulative.dominant_gpu = current_gpu;
+        cumulative.dominant_reads = current_reads;
       }
-      total_reads += current_reads;
-      ++gpu_count;
+      cumulative.total_reads += current_reads;
+      ++cumulative.gpu_count;
     }
     sqlite3_finalize(stmt);
+    cumulative = finalize_stats(cumulative);
 
-    uint64_t dominant_share_x100 = 0;
-    if (total_reads > 0) {
-      dominant_share_x100 = dominant_reads * 100 / total_reads;
-    }
+    auto read_window_stats = [&](uint64_t window_sec) {
+      AccessStats stats;
+      const auto now = UnixNow();
+      Prepare("SELECT gpu_id,COUNT(*) FROM gpu_access_events "
+              "WHERE logical_path=? AND access_at>=? "
+              "GROUP BY gpu_id ORDER BY COUNT(*) DESC,gpu_id ASC;",
+              &stmt);
+      sqlite3_bind_text(stmt, 1, logical_path.c_str(), -1, SQLITE_TRANSIENT);
+      sqlite3_bind_int64(stmt, 2,
+                         now - static_cast<sqlite3_int64>(window_sec));
+      while (true) {
+        int rc = sqlite3_step(stmt);
+        if (rc == SQLITE_DONE) {
+          break;
+        }
+        if (rc != SQLITE_ROW) {
+          std::string err = sqlite3_errmsg(db_);
+          sqlite3_finalize(stmt);
+          throw std::runtime_error(err);
+        }
+        const int current_gpu = sqlite3_column_int(stmt, 0);
+        const uint64_t current_reads =
+            static_cast<uint64_t>(sqlite3_column_int64(stmt, 1));
+        if (stats.gpu_count == 0) {
+          stats.dominant_gpu = current_gpu;
+          stats.dominant_reads = current_reads;
+        }
+        stats.total_reads += current_reads;
+        ++stats.gpu_count;
+      }
+      sqlite3_finalize(stmt);
+      return finalize_stats(stats);
+    };
+
+    const AccessStats recent = read_window_stats(short_window_sec);
+    const AccessStats longer = read_window_stats(long_window_sec);
 
     std::string state = "UNKNOWN";
-    if (total_reads == 0) {
+    std::string trend = "STABLE";
+    uint64_t target_local_replicas = 0;
+    const uint64_t replica_cap = std::max<uint64_t>(1, max_local_replicas);
+
+    if (recent.total_reads == 0) {
       state = "UNKNOWN";
-    } else if (gpu_count == 1 || dominant_share_x100 >= dominant_threshold_x100) {
-      state = "PRIVATE_DOMINANT";
-    } else if (gpu_count > 1 && dominant_share_x100 <= shared_threshold_x100) {
-      state = "SHARED_REMOTE_PREFERRED";
+    } else if (recent.total_reads < warm_read_threshold) {
+      state = "REMOTE_COLD";
+    } else if (recent.total_reads >= trend_min_reads &&
+               recent.dominant_gpu >= 0 &&
+               cumulative.dominant_gpu >= 0 &&
+               recent.dominant_gpu != cumulative.dominant_gpu &&
+               recent.dominant_share_x100 >= dominant_threshold_x100) {
+      state = "AFFINITY_SHIFTING";
+      trend = "SHIFTING_TO_GPU" + std::to_string(recent.dominant_gpu);
+      target_local_replicas = 1;
+    } else if (recent.gpu_count > 1 &&
+               recent.dominant_share_x100 <= shared_threshold_x100) {
+      if (recent.total_reads >= hot_read_threshold) {
+        state = "REMOTE_SHARED_HOT";
+        target_local_replicas = std::min<uint64_t>(recent.gpu_count, replica_cap);
+      } else {
+        state = "CROSS_GPU_SHARED";
+      }
+    } else if (recent.dominant_share_x100 >= dominant_threshold_x100) {
+      if (recent.total_reads >= hot_read_threshold) {
+        state = "GPU_LOCAL_HOT";
+      } else {
+        state = "GPU_LOCAL_WARM";
+      }
+      target_local_replicas = 1;
     } else {
       state = "MIXED_AFFINITY";
+      target_local_replicas = 1;
+    }
+
+    if (trend == "STABLE" && longer.dominant_gpu >= 0 &&
+        recent.dominant_gpu >= 0 && longer.dominant_gpu != recent.dominant_gpu) {
+      trend = "OBSERVING_GPU" + std::to_string(recent.dominant_gpu);
     }
 
     Prepare("UPDATE files SET dominant_gpu_id=?,"
-            "dominant_gpu_read_share_x100=?,affinity_state=?,"
-            "affinity_updated_at=? WHERE logical_path=?;",
+            "dominant_gpu_read_share_x100=?,recent_dominant_gpu_id=?,"
+            "recent_dominant_gpu_read_share_x100=?,recent_read_count=?,"
+            "affinity_trend=?,target_local_replica_count=?,"
+            "affinity_state=?,affinity_updated_at=? WHERE logical_path=?;",
             &stmt);
-    sqlite3_bind_int(stmt, 1, dominant_gpu);
-    sqlite3_bind_int64(stmt, 2, static_cast<sqlite3_int64>(dominant_share_x100));
-    sqlite3_bind_text(stmt, 3, state.c_str(), -1, SQLITE_TRANSIENT);
-    sqlite3_bind_int64(stmt, 4, UnixNow());
-    sqlite3_bind_text(stmt, 5, logical_path.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_int(stmt, 1, cumulative.dominant_gpu);
+    sqlite3_bind_int64(
+        stmt, 2, static_cast<sqlite3_int64>(cumulative.dominant_share_x100));
+    sqlite3_bind_int(stmt, 3, recent.dominant_gpu);
+    sqlite3_bind_int64(
+        stmt, 4, static_cast<sqlite3_int64>(recent.dominant_share_x100));
+    sqlite3_bind_int64(stmt, 5, static_cast<sqlite3_int64>(recent.total_reads));
+    sqlite3_bind_text(stmt, 6, trend.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_int64(stmt, 7,
+                       static_cast<sqlite3_int64>(target_local_replicas));
+    sqlite3_bind_text(stmt, 8, state.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_int64(stmt, 9, UnixNow());
+    sqlite3_bind_text(stmt, 10, logical_path.c_str(), -1, SQLITE_TRANSIENT);
     StepDone(stmt);
   }
 
@@ -1025,7 +1219,13 @@ class TokenFS {
     if (!writable) {
       uint64_t read_count = metadata_.IncrementReadCount(
           path, caller_gpu_id, config_.affinity_dominant_threshold_x100,
-          config_.affinity_shared_threshold_x100);
+          config_.affinity_shared_threshold_x100,
+          config_.affinity_short_window_sec,
+          config_.affinity_long_window_sec,
+          config_.affinity_trend_min_reads,
+          config_.affinity_hot_read_threshold,
+          config_.affinity_warm_read_threshold,
+          config_.max_local_replicas_per_file);
       meta.read_count = read_count;
       if (auto updated = metadata_.Get(path)) {
         meta = *updated;
@@ -1041,7 +1241,8 @@ class TokenFS {
         }
       }
       if (caller_gpu_id == gpu->gpu_id &&
-          meta.affinity_state != "SHARED_REMOTE_PREFERRED") {
+          meta.affinity_state != "REMOTE_SHARED_HOT" &&
+          meta.affinity_state != "CROSS_GPU_SHARED") {
         MaybeSchedulePrefetch(*gpu, rel);
       } else {
         metadata_.AddMetric("prefetch_skip_affinity", 1);
@@ -1647,8 +1848,13 @@ class TokenFS {
       metadata_.AddMetric("affinity_cross_gpu_promote_skip", 1);
       return false;
     }
-    if (meta.affinity_state == "SHARED_REMOTE_PREFERRED") {
+    if (meta.affinity_state == "REMOTE_SHARED_HOT" ||
+        meta.affinity_state == "CROSS_GPU_SHARED") {
       metadata_.AddMetric("affinity_shared_remote_preferred_skip", 1);
+      return false;
+    }
+    if (meta.affinity_state == "REMOTE_COLD") {
+      metadata_.AddMetric("affinity_remote_cold_promote_skip", 1);
       return false;
     }
     if (meta.dominant_gpu_id >= 0 && meta.dominant_gpu_id != gpu_id &&
@@ -2500,6 +2706,30 @@ Config LoadConfig(const fs::path& path) {
   if (root["policy"] && root["policy"]["affinity_shared_threshold_x100"]) {
     config.affinity_shared_threshold_x100 =
         root["policy"]["affinity_shared_threshold_x100"].as<uint64_t>(55);
+  }
+  if (root["policy"] && root["policy"]["affinity_short_window_sec"]) {
+    config.affinity_short_window_sec =
+        root["policy"]["affinity_short_window_sec"].as<uint64_t>(300);
+  }
+  if (root["policy"] && root["policy"]["affinity_long_window_sec"]) {
+    config.affinity_long_window_sec =
+        root["policy"]["affinity_long_window_sec"].as<uint64_t>(3600);
+  }
+  if (root["policy"] && root["policy"]["affinity_trend_min_reads"]) {
+    config.affinity_trend_min_reads =
+        root["policy"]["affinity_trend_min_reads"].as<uint64_t>(3);
+  }
+  if (root["policy"] && root["policy"]["affinity_hot_read_threshold"]) {
+    config.affinity_hot_read_threshold =
+        root["policy"]["affinity_hot_read_threshold"].as<uint64_t>(4);
+  }
+  if (root["policy"] && root["policy"]["affinity_warm_read_threshold"]) {
+    config.affinity_warm_read_threshold =
+        root["policy"]["affinity_warm_read_threshold"].as<uint64_t>(2);
+  }
+  if (root["policy"] && root["policy"]["max_local_replicas_per_file"]) {
+    config.max_local_replicas_per_file =
+        root["policy"]["max_local_replicas_per_file"].as<uint64_t>(2);
   }
   if (root["policy"] && root["policy"]["cross_gpu_local_cache"]) {
     config.cross_gpu_local_cache =

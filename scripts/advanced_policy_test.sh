@@ -90,15 +90,40 @@ if [[ "$gpu1_reads" -lt 8 ]]; then
   exit 1
 fi
 affinity_row="$(sqlite3 "$metadata_db" \
-  "select dominant_gpu_id,dominant_gpu_read_share_x100,affinity_state from files where logical_path='/gpu0/value/hot.tokens';")"
-if [[ "$affinity_row" != "0|50|SHARED_REMOTE_PREFERRED" ]]; then
-  echo "expected hot file to be classified as shared remote preferred after balanced GPU0/GPU1 reads"
+  "select dominant_gpu_id,dominant_gpu_read_share_x100,recent_dominant_gpu_id,recent_dominant_gpu_read_share_x100,recent_read_count,affinity_state,target_local_replica_count from files where logical_path='/gpu0/value/hot.tokens';")"
+if [[ "$affinity_row" != "0|50|0|50|16|REMOTE_SHARED_HOT|2" ]]; then
+  echo "expected hot file to be classified as recent shared hot after balanced GPU0/GPU1 reads"
   echo "actual: $affinity_row"
   exit 1
 fi
 
+echo "advanced: GPU affinity trend detects a shift to another GPU"
+python3 - "$mount_point/gpu0/value/trend.tokens" <<'PY'
+import sys
+from pathlib import Path
+
+Path(sys.argv[1]).write_bytes(b"T" * 1024 * 1024)
+PY
+
+for _ in {1..5}; do
+  TOKENFS_GPU_ID=0 cat "$mount_point/gpu0/value/trend.tokens" >/dev/null
+done
+sqlite3 "$metadata_db" \
+  "update gpu_access_events set access_at=access_at-400 where logical_path='/gpu0/value/trend.tokens' and gpu_id=0;"
+for _ in {1..3}; do
+  TOKENFS_GPU_ID=1 cat "$mount_point/gpu0/value/trend.tokens" >/dev/null
+done
+trend_row="$(sqlite3 "$metadata_db" \
+  "select dominant_gpu_id,recent_dominant_gpu_id,recent_dominant_gpu_read_share_x100,recent_read_count,affinity_trend,affinity_state,target_local_replica_count from files where logical_path='/gpu0/value/trend.tokens';")"
+if [[ "$trend_row" != "0|1|100|3|SHIFTING_TO_GPU1|AFFINITY_SHIFTING|1" ]]; then
+  echo "expected affinity trend to shift from cumulative GPU0 to recent GPU1"
+  echo "actual: $trend_row"
+  exit 1
+fi
+
 "$project_root/scripts/tokenfsctl.py" --config "$temp_config" metrics | grep -q "本地淘汰次数"
-"$project_root/scripts/tokenfsctl.py" --config "$temp_config" affinity | grep -q "SHARED_REMOTE_PREFERRED"
+"$project_root/scripts/tokenfsctl.py" --config "$temp_config" affinity | grep -q "REMOTE_SHARED_HOT"
+"$project_root/scripts/tokenfsctl.py" --config "$temp_config" affinity | grep -q "AFFINITY_SHIFTING"
 "$project_root/scripts/tokenfsctl.py" --config "$temp_config" check
 "$project_root/scripts/stop_tokenfs.sh" "$mount_point" >/dev/null
 

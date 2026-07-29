@@ -308,20 +308,39 @@ TOKENFS_GPU_ID=1 cat /mnt/tokenfs/gpu0/value/hot.tokens
 当前工程落地：
 
 ```text
-gpu_access 表记录 logical_path + gpu_id 的访问次数
+gpu_access 表记录 logical_path + gpu_id 的累计访问次数
+gpu_access_events 表记录每次访问的时间，用于计算时间窗口热度
 files 表记录 producer_gpu 和 share_count
 files 表记录 dominant_gpu_id
 files 表记录 dominant_gpu_read_share_x100
+files 表记录 recent_dominant_gpu_id
+files 表记录 recent_dominant_gpu_read_share_x100
+files 表记录 recent_read_count
+files 表记录 affinity_trend
+files 表记录 target_local_replica_count
 files 表记录 affinity_state
 tokenfsctl.py affinity 可以查看访问亲和统计
+```
+
+当前不再只看累计访问次数，而是同时看：
+
+```text
+累计访问：判断长期 dominant GPU
+短时间窗口：判断最近真正变热的是哪张 GPU
+长时间窗口：判断短期变化是不是偏离历史趋势
+趋势变化：判断缓存亲和是否正在从一张 GPU 转向另一张 GPU
 ```
 
 当前亲和分类：
 
 | 状态 | 含义 | 放置倾向 |
 |---|---|---|
-| `PRIVATE_DOMINANT` | 某个 GPU 明显占主导访问 | 可以靠近 dominant GPU |
-| `SHARED_REMOTE_PREFERRED` | 多个 GPU 访问较均衡 | 保留远端主副本，避免本地重复副本过多 |
+| `GPU_LOCAL_HOT` | 最近访问集中在某张 GPU，且热度高 | 目标是保留 1 个本地热点副本 |
+| `GPU_LOCAL_WARM` | 最近访问集中在某张 GPU，但热度还不高 | 可以保留 1 个本地温副本 |
+| `REMOTE_SHARED_HOT` | 多 GPU 近期都在访问，且整体热 | 远端主副本保留，目标本地副本数可大于 1 |
+| `CROSS_GPU_SHARED` | 多 GPU 访问较均衡，但热度不高 | 倾向远端共享，暂不复制太多本地副本 |
+| `AFFINITY_SHIFTING` | 最近 dominant GPU 与长期 dominant GPU 不一致 | 说明亲和正在转移，先观测并准备迁移 |
+| `REMOTE_COLD` | 最近访问量很低 | 倾向留远端或被淘汰本地缓存 |
 | `MIXED_AFFINITY` | 有偏向但不够绝对 | 暂时保守，继续观察 |
 | `UNKNOWN` | 访问数据不足 | 使用默认策略 |
 
@@ -329,8 +348,9 @@ tokenfsctl.py affinity 可以查看访问亲和统计
 
 ```text
 跨 GPU 访问会被记录；
-跨 GPU 本地缓存暂不自动创建；
-共享倾向的数据会跳过本地提升/预取，优先保留远端主副本。
+系统会计算目标本地副本数 target_local_replica_count；
+共享热数据会避免盲目只靠近某一张 GPU；
+跨 GPU 物理本地缓存默认不开启，真实多机环境到位后再按拓扑打开。
 ```
 
 查看命令：
@@ -444,7 +464,12 @@ filesystem:
 | `last_demoted_at` | 最近转回远端/删除本地缓存的时间 |
 | `dominant_gpu_id` | 当前访问占比最高的 GPU |
 | `dominant_gpu_read_share_x100` | dominant GPU 的读取占比，单位是百分比整数 |
-| `affinity_state` | GPU 亲和分类，例如 `PRIVATE_DOMINANT`、`SHARED_REMOTE_PREFERRED` |
+| `recent_dominant_gpu_id` | 短时间窗口内访问占比最高的 GPU |
+| `recent_dominant_gpu_read_share_x100` | 短时间窗口 dominant GPU 读取占比 |
+| `recent_read_count` | 短时间窗口内的读取次数 |
+| `affinity_trend` | 亲和趋势，例如 `STABLE`、`SHIFTING_TO_GPU1` |
+| `target_local_replica_count` | 当前策略建议保留的本地缓存副本数量 |
+| `affinity_state` | GPU 亲和分类，例如 `GPU_LOCAL_HOT`、`REMOTE_SHARED_HOT` |
 | `affinity_updated_at` | 最近一次更新亲和分类的时间 |
 
 ### 6.2 metrics 表
@@ -478,7 +503,7 @@ affinity_non_dominant_promote_skip
 
 ### 6.3 gpu_access 表
 
-记录每个文件被哪个 GPU 访问：
+记录每个文件被哪个 GPU 累计访问：
 
 ```text
 logical_path
@@ -487,7 +512,17 @@ read_count
 last_access_at
 ```
 
-这个表是 GPU 亲和感知的基础。
+### 6.4 gpu_access_events 表
+
+记录每一次读访问发生的时间：
+
+```text
+logical_path
+gpu_id
+access_at
+```
+
+这个表用于计算短窗口热度和访问趋势。当前默认短窗口为 300 秒，长窗口为 3600 秒。
 
 ---
 
@@ -522,6 +557,12 @@ policy:
   qos_background_mib_per_sec_per_gpu: 0
   affinity_dominant_threshold_x100: 70
   affinity_shared_threshold_x100: 55
+  affinity_short_window_sec: 300
+  affinity_long_window_sec: 3600
+  affinity_trend_min_reads: 3
+  affinity_hot_read_threshold: 4
+  affinity_warm_read_threshold: 2
+  max_local_replicas_per_file: 2
   cross_gpu_local_cache: false
 
 gpus:
