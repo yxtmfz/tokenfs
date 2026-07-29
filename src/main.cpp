@@ -69,6 +69,8 @@ struct Config {
   uint64_t affinity_hot_read_threshold = 4;
   uint64_t affinity_warm_read_threshold = 2;
   uint64_t max_local_replicas_per_file = 2;
+  uint64_t affinity_replica_cooldown_sec = 30;
+  uint64_t affinity_replica_min_residency_sec = 120;
   bool cross_gpu_local_cache = false;
   bool physical_dedup = false;
   bool promote_on_read = false;
@@ -121,6 +123,17 @@ struct ContentRefResult {
 struct EvictionCandidate {
   FileMeta meta;
   uint64_t last_access_at = 0;
+};
+
+struct LocalReplica {
+  std::string logical_path;
+  int gpu_id = -1;
+  fs::path physical_path;
+  uint64_t size_bytes = 0;
+  uint64_t cache_generation = 0;
+  uint64_t created_at = 0;
+  uint64_t last_access_at = 0;
+  std::string state = "READY";
 };
 
 struct Handle {
@@ -241,6 +254,17 @@ class MetadataStore {
          ");");
     Exec("CREATE INDEX IF NOT EXISTS idx_gpu_access_events_path_time "
          "ON gpu_access_events(logical_path,access_at);");
+    Exec("CREATE TABLE IF NOT EXISTS local_replicas ("
+         "logical_path TEXT NOT NULL,"
+         "gpu_id INTEGER NOT NULL,"
+         "physical_path TEXT NOT NULL,"
+         "size_bytes INTEGER NOT NULL DEFAULT 0,"
+         "cache_generation INTEGER NOT NULL DEFAULT 0,"
+         "created_at INTEGER NOT NULL,"
+         "last_access_at INTEGER NOT NULL,"
+         "state TEXT NOT NULL DEFAULT 'READY',"
+         "PRIMARY KEY(logical_path,gpu_id)"
+         ");");
     Exec("CREATE TABLE IF NOT EXISTS content_refs ("
          "content_key TEXT PRIMARY KEY,"
          "primary_logical_path TEXT NOT NULL,"
@@ -507,6 +531,18 @@ class MetadataStore {
   void Remove(const std::string& logical_path) {
     std::lock_guard<std::mutex> lock(mu_);
     sqlite3_stmt* stmt = nullptr;
+    Prepare("DELETE FROM local_replicas WHERE logical_path=?;", &stmt);
+    sqlite3_bind_text(stmt, 1, logical_path.c_str(), -1, SQLITE_TRANSIENT);
+    StepDone(stmt);
+    Prepare("DELETE FROM gpu_access WHERE logical_path=?;", &stmt);
+    sqlite3_bind_text(stmt, 1, logical_path.c_str(), -1, SQLITE_TRANSIENT);
+    StepDone(stmt);
+    Prepare("DELETE FROM gpu_access_events WHERE logical_path=?;", &stmt);
+    sqlite3_bind_text(stmt, 1, logical_path.c_str(), -1, SQLITE_TRANSIENT);
+    StepDone(stmt);
+    Prepare("DELETE FROM content_members WHERE logical_path=?;", &stmt);
+    sqlite3_bind_text(stmt, 1, logical_path.c_str(), -1, SQLITE_TRANSIENT);
+    StepDone(stmt);
     Prepare("DELETE FROM files WHERE logical_path=?;", &stmt);
     sqlite3_bind_text(stmt, 1, logical_path.c_str(), -1, SQLITE_TRANSIENT);
     StepDone(stmt);
@@ -557,6 +593,136 @@ class MetadataStore {
     }
     sqlite3_finalize(stmt);
     return affinity;
+  }
+
+  std::optional<LocalReplica> GetLocalReplica(const std::string& logical_path,
+                                               int gpu_id) {
+    std::lock_guard<std::mutex> lock(mu_);
+    sqlite3_stmt* stmt = nullptr;
+    Prepare("SELECT logical_path,gpu_id,physical_path,size_bytes,"
+            "cache_generation,created_at,last_access_at,state "
+            "FROM local_replicas WHERE logical_path=? AND gpu_id=?;",
+            &stmt);
+    sqlite3_bind_text(stmt, 1, logical_path.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_int(stmt, 2, gpu_id);
+    int rc = sqlite3_step(stmt);
+    if (rc == SQLITE_DONE) {
+      sqlite3_finalize(stmt);
+      return std::nullopt;
+    }
+    if (rc != SQLITE_ROW) {
+      std::string err = sqlite3_errmsg(db_);
+      sqlite3_finalize(stmt);
+      throw std::runtime_error(err);
+    }
+    LocalReplica replica;
+    replica.logical_path = ColumnText(stmt, 0);
+    replica.gpu_id = sqlite3_column_int(stmt, 1);
+    replica.physical_path = ColumnText(stmt, 2);
+    replica.size_bytes = static_cast<uint64_t>(sqlite3_column_int64(stmt, 3));
+    replica.cache_generation =
+        static_cast<uint64_t>(sqlite3_column_int64(stmt, 4));
+    replica.created_at = static_cast<uint64_t>(sqlite3_column_int64(stmt, 5));
+    replica.last_access_at =
+        static_cast<uint64_t>(sqlite3_column_int64(stmt, 6));
+    replica.state = ColumnText(stmt, 7);
+    sqlite3_finalize(stmt);
+    return replica;
+  }
+
+  std::vector<LocalReplica> LocalReplicas(const std::string& logical_path) {
+    std::lock_guard<std::mutex> lock(mu_);
+    sqlite3_stmt* stmt = nullptr;
+    Prepare("SELECT logical_path,gpu_id,physical_path,size_bytes,"
+            "cache_generation,created_at,last_access_at,state "
+            "FROM local_replicas WHERE logical_path=? "
+            "ORDER BY last_access_at ASC,created_at ASC;",
+            &stmt);
+    sqlite3_bind_text(stmt, 1, logical_path.c_str(), -1, SQLITE_TRANSIENT);
+    std::vector<LocalReplica> out;
+    while (true) {
+      int rc = sqlite3_step(stmt);
+      if (rc == SQLITE_DONE) {
+        break;
+      }
+      if (rc != SQLITE_ROW) {
+        std::string err = sqlite3_errmsg(db_);
+        sqlite3_finalize(stmt);
+        throw std::runtime_error(err);
+      }
+      LocalReplica replica;
+      replica.logical_path = ColumnText(stmt, 0);
+      replica.gpu_id = sqlite3_column_int(stmt, 1);
+      replica.physical_path = ColumnText(stmt, 2);
+      replica.size_bytes = static_cast<uint64_t>(sqlite3_column_int64(stmt, 3));
+      replica.cache_generation =
+          static_cast<uint64_t>(sqlite3_column_int64(stmt, 4));
+      replica.created_at = static_cast<uint64_t>(sqlite3_column_int64(stmt, 5));
+      replica.last_access_at =
+          static_cast<uint64_t>(sqlite3_column_int64(stmt, 6));
+      replica.state = ColumnText(stmt, 7);
+      out.push_back(std::move(replica));
+    }
+    sqlite3_finalize(stmt);
+    return out;
+  }
+
+  void UpsertLocalReplica(const LocalReplica& replica) {
+    std::lock_guard<std::mutex> lock(mu_);
+    sqlite3_stmt* stmt = nullptr;
+    const auto physical = replica.physical_path.string();
+    Prepare("INSERT INTO local_replicas(logical_path,gpu_id,physical_path,"
+            "size_bytes,cache_generation,created_at,last_access_at,state) "
+            "VALUES(?,?,?,?,?,?,?,?) "
+            "ON CONFLICT(logical_path,gpu_id) DO UPDATE SET "
+            "physical_path=excluded.physical_path,"
+            "size_bytes=excluded.size_bytes,"
+            "cache_generation=excluded.cache_generation,"
+            "last_access_at=excluded.last_access_at,"
+            "state=excluded.state;",
+            &stmt);
+    sqlite3_bind_text(stmt, 1, replica.logical_path.c_str(), -1,
+                      SQLITE_TRANSIENT);
+    sqlite3_bind_int(stmt, 2, replica.gpu_id);
+    sqlite3_bind_text(stmt, 3, physical.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_int64(stmt, 4, static_cast<sqlite3_int64>(replica.size_bytes));
+    sqlite3_bind_int64(
+        stmt, 5, static_cast<sqlite3_int64>(replica.cache_generation));
+    sqlite3_bind_int64(stmt, 6, static_cast<sqlite3_int64>(replica.created_at));
+    sqlite3_bind_int64(stmt, 7,
+                       static_cast<sqlite3_int64>(replica.last_access_at));
+    sqlite3_bind_text(stmt, 8, replica.state.c_str(), -1, SQLITE_TRANSIENT);
+    StepDone(stmt);
+  }
+
+  void TouchLocalReplica(const std::string& logical_path, int gpu_id) {
+    std::lock_guard<std::mutex> lock(mu_);
+    sqlite3_stmt* stmt = nullptr;
+    Prepare("UPDATE local_replicas SET last_access_at=? "
+            "WHERE logical_path=? AND gpu_id=?;",
+            &stmt);
+    sqlite3_bind_int64(stmt, 1, UnixNow());
+    sqlite3_bind_text(stmt, 2, logical_path.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_int(stmt, 3, gpu_id);
+    StepDone(stmt);
+  }
+
+  void RemoveLocalReplica(const std::string& logical_path, int gpu_id) {
+    std::lock_guard<std::mutex> lock(mu_);
+    sqlite3_stmt* stmt = nullptr;
+    Prepare("DELETE FROM local_replicas WHERE logical_path=? AND gpu_id=?;",
+            &stmt);
+    sqlite3_bind_text(stmt, 1, logical_path.c_str(), -1, SQLITE_TRANSIENT);
+    sqlite3_bind_int(stmt, 2, gpu_id);
+    StepDone(stmt);
+  }
+
+  void RemoveLocalReplicas(const std::string& logical_path) {
+    std::lock_guard<std::mutex> lock(mu_);
+    sqlite3_stmt* stmt = nullptr;
+    Prepare("DELETE FROM local_replicas WHERE logical_path=?;", &stmt);
+    sqlite3_bind_text(stmt, 1, logical_path.c_str(), -1, SQLITE_TRANSIENT);
+    StepDone(stmt);
   }
 
   ContentRefResult RegisterContentRef(const std::string& content_key,
@@ -1230,6 +1396,22 @@ class TokenFS {
       if (auto updated = metadata_.Get(path)) {
         meta = *updated;
       }
+      MaybeManageCrossGpuReplica(meta, caller_gpu_id);
+      if (auto updated = metadata_.Get(path)) {
+        meta = *updated;
+      }
+      if (caller_gpu_id != gpu->gpu_id) {
+        if (auto replica = metadata_.GetLocalReplica(path, caller_gpu_id);
+            replica && replica->state == "READY" &&
+            fs::exists(replica->physical_path)) {
+          metadata_.TouchLocalReplica(path, caller_gpu_id);
+          meta.tier = "local";
+          meta.backend_id = "local-replica";
+          meta.physical_path = replica->physical_path;
+          meta.size_bytes = std::max(meta.size_bytes, replica->size_bytes);
+          metadata_.AddMetric("cross_gpu_local_replica_hit", 1);
+        }
+      }
       metadata_.AddMetric("read_open_count", 1);
       metadata_.AddMetric(meta.tier == "local" ? "local_read_open_count"
                                                 : "remote_read_open_count",
@@ -1452,6 +1634,10 @@ class TokenFS {
       std::error_code ec;
       removed = fs::remove(meta->physical_path, ec) || removed;
     }
+    for (const auto& replica : metadata_.LocalReplicas(path)) {
+      std::error_code ec;
+      removed = fs::remove(replica.physical_path, ec) || removed;
+    }
     std::error_code local_ec;
     std::error_code remote_ec;
     removed = fs::remove(gpu->local_root / rel, local_ec) || removed;
@@ -1495,6 +1681,11 @@ class TokenFS {
           }
         }
       }
+      for (const auto& replica : metadata_.LocalReplicas(from)) {
+        std::error_code replica_ec;
+        fs::remove(replica.physical_path, replica_ec);
+      }
+      metadata_.RemoveLocalReplicas(from);
       meta->logical_path = to;
       meta->physical_path = dest;
       metadata_.Remove(from);
@@ -1546,6 +1737,15 @@ class TokenFS {
     return nullptr;
   }
 
+  const GpuConfig* GpuById(int gpu_id) const {
+    for (const auto& gpu : config_.gpus) {
+      if (gpu.gpu_id == gpu_id) {
+        return &gpu;
+      }
+    }
+    return nullptr;
+  }
+
   std::optional<std::pair<const GpuConfig*, fs::path>> ParseGpuPath(
       const std::string& path) const {
     for (const auto& gpu : config_.gpus) {
@@ -1555,6 +1755,13 @@ class TokenFS {
       }
     }
     return std::nullopt;
+  }
+
+  fs::path CrossGpuReplicaPath(const GpuConfig& caller_gpu,
+                               const GpuConfig& owner_gpu,
+                               const fs::path& rel) const {
+    return caller_gpu.local_root / ".tokenfs-replicas" /
+           GpuDirName(owner_gpu.gpu_id) / rel;
   }
 
   bool KnownGpuId(int gpu_id) const {
@@ -1872,6 +2079,170 @@ class TokenFS {
       return value >= config_.value_promote_threshold;
     }
     return false;
+  }
+
+  bool ShouldCreateCrossGpuReplica(const FileMeta& meta, int caller_gpu_id) {
+    if (!config_.cross_gpu_local_cache || caller_gpu_id == meta.gpu_id ||
+        meta.state != "COMMITTED" || !meta.has_remote_copy) {
+      return false;
+    }
+    if (meta.target_local_replica_count == 0) {
+      metadata_.AddMetric("cross_gpu_replica_skip_target_zero", 1);
+      return false;
+    }
+    if (meta.affinity_state != "REMOTE_SHARED_HOT" &&
+        meta.affinity_state != "AFFINITY_SHIFTING" &&
+        meta.affinity_state != "GPU_LOCAL_HOT" &&
+        meta.affinity_state != "GPU_LOCAL_WARM") {
+      metadata_.AddMetric("cross_gpu_replica_skip_state", 1);
+      return false;
+    }
+    if (meta.affinity_state == "AFFINITY_SHIFTING" &&
+        meta.recent_dominant_gpu_id != caller_gpu_id) {
+      metadata_.AddMetric("cross_gpu_replica_skip_non_recent_dominant", 1);
+      return false;
+    }
+    if ((meta.affinity_state == "GPU_LOCAL_HOT" ||
+         meta.affinity_state == "GPU_LOCAL_WARM") &&
+        meta.recent_dominant_gpu_id != caller_gpu_id) {
+      metadata_.AddMetric("cross_gpu_replica_skip_non_recent_dominant", 1);
+      return false;
+    }
+    const uint64_t now = UnixNowSeconds();
+    if (meta.last_promoted_at > 0 &&
+        now < meta.last_promoted_at + config_.affinity_replica_cooldown_sec) {
+      metadata_.AddMetric("cross_gpu_replica_skip_cooldown", 1);
+      return false;
+    }
+    return true;
+  }
+
+  void MaybeManageCrossGpuReplica(const FileMeta& meta, int caller_gpu_id) {
+    ReconcileCrossGpuReplicas(meta);
+    auto parsed = ParseGpuPath(meta.logical_path);
+    if (!parsed) {
+      return;
+    }
+    const auto [owner_gpu, rel] = *parsed;
+    const auto* caller_gpu = GpuById(caller_gpu_id);
+    if (caller_gpu == nullptr || caller_gpu->gpu_id == owner_gpu->gpu_id) {
+      return;
+    }
+    if (auto existing =
+            metadata_.GetLocalReplica(meta.logical_path, caller_gpu_id)) {
+      if (existing->state == "READY" && fs::exists(existing->physical_path)) {
+        metadata_.TouchLocalReplica(meta.logical_path, caller_gpu_id);
+        metadata_.AddMetric("cross_gpu_replica_reuse_count", 1);
+        return;
+      }
+      metadata_.RemoveLocalReplica(meta.logical_path, caller_gpu_id);
+    }
+    if (!ShouldCreateCrossGpuReplica(meta, caller_gpu_id)) {
+      return;
+    }
+    if (metadata_.LocalReplicas(meta.logical_path).size() >=
+        meta.target_local_replica_count) {
+      ReconcileCrossGpuReplicas(meta);
+      if (metadata_.LocalReplicas(meta.logical_path).size() >=
+          meta.target_local_replica_count) {
+        metadata_.AddMetric("cross_gpu_replica_skip_cap", 1);
+        return;
+      }
+    }
+    CreateCrossGpuReplica(*caller_gpu, *owner_gpu, rel, meta);
+  }
+
+  void CreateCrossGpuReplica(const GpuConfig& caller_gpu,
+                             const GpuConfig& owner_gpu, const fs::path& rel,
+                             FileMeta meta) {
+    fs::path source = RemotePath(owner_gpu, rel);
+    if (!fs::exists(source)) {
+      source = meta.physical_path;
+    }
+    if (!fs::exists(source)) {
+      metadata_.AddMetric("cross_gpu_replica_skip_missing_source", 1);
+      return;
+    }
+    const uint64_t size = FileSizeNoThrow(source);
+    fs::path local = CrossGpuReplicaPath(caller_gpu, owner_gpu, rel);
+    if (!EnsureLocalCapacity(caller_gpu, size, meta.logical_path,
+                             fs::exists(local) ? &local : nullptr)) {
+      metadata_.AddMetric("cross_gpu_replica_skip_no_space", 1);
+      return;
+    }
+    ApplyBackgroundQos(caller_gpu.gpu_id, size, "cross_gpu_replica");
+    fs::create_directories(local.parent_path());
+    fs::path tmp = local;
+    tmp += config_.temp_suffix + ".xgpu";
+    std::error_code ec;
+    fs::remove(tmp, ec);
+    ec.clear();
+    fs::copy_file(source, tmp, fs::copy_options::overwrite_existing, ec);
+    if (ec) {
+      fs::remove(tmp, ec);
+      metadata_.AddMetric("cross_gpu_replica_error_count", 1);
+      return;
+    }
+    int fd = open(tmp.c_str(), O_RDONLY);
+    if (fd >= 0) {
+      fsync(fd);
+      close(fd);
+    }
+    fs::rename(tmp, local, ec);
+    if (ec) {
+      fs::remove(tmp, ec);
+      metadata_.AddMetric("cross_gpu_replica_error_count", 1);
+      return;
+    }
+    const uint64_t now = UnixNowSeconds();
+    LocalReplica replica;
+    replica.logical_path = meta.logical_path;
+    replica.gpu_id = caller_gpu.gpu_id;
+    replica.physical_path = local;
+    replica.size_bytes = size;
+    replica.cache_generation = meta.cache_generation + 1;
+    replica.created_at = now;
+    replica.last_access_at = now;
+    replica.state = "READY";
+    metadata_.UpsertLocalReplica(replica);
+    meta.last_promoted_at = now;
+    meta.target_local_replica_count =
+        std::max<uint64_t>(meta.target_local_replica_count, 1);
+    metadata_.Upsert(meta);
+    metadata_.AddMetric("cross_gpu_replica_create_count", 1);
+    metadata_.AddMetric("cross_gpu_replica_create_bytes", size);
+  }
+
+  void ReconcileCrossGpuReplicas(const FileMeta& meta) {
+    auto replicas = metadata_.LocalReplicas(meta.logical_path);
+    if (replicas.empty()) {
+      return;
+    }
+    const uint64_t now = UnixNowSeconds();
+    const uint64_t target = meta.target_local_replica_count;
+    if (replicas.size() <= target) {
+      return;
+    }
+    std::sort(replicas.begin(), replicas.end(),
+              [](const LocalReplica& lhs, const LocalReplica& rhs) {
+                if (lhs.last_access_at != rhs.last_access_at) {
+                  return lhs.last_access_at < rhs.last_access_at;
+                }
+                return lhs.created_at < rhs.created_at;
+              });
+    while (replicas.size() > target) {
+      const auto replica = replicas.front();
+      if (now < replica.created_at + config_.affinity_replica_min_residency_sec) {
+        metadata_.AddMetric("cross_gpu_replica_keep_min_residency", 1);
+        break;
+      }
+      std::error_code ec;
+      fs::remove(replica.physical_path, ec);
+      metadata_.RemoveLocalReplica(replica.logical_path, replica.gpu_id);
+      metadata_.AddMetric("cross_gpu_replica_delete_count", 1);
+      metadata_.AddMetric("cross_gpu_replica_delete_bytes", replica.size_bytes);
+      replicas.erase(replicas.begin());
+    }
   }
 
   int PromoteToLocal(const GpuConfig& gpu, const fs::path& rel, FileMeta& meta,
@@ -2425,7 +2796,11 @@ class TokenFS {
       return;
     }
     for (const auto& entry : fs::directory_iterator(dir, ec)) {
-      names.insert(entry.path().filename().string());
+      const auto name = entry.path().filename().string();
+      if (name == ".tokenfs-replicas") {
+        continue;
+      }
+      names.insert(name);
     }
   }
 
@@ -2730,6 +3105,14 @@ Config LoadConfig(const fs::path& path) {
   if (root["policy"] && root["policy"]["max_local_replicas_per_file"]) {
     config.max_local_replicas_per_file =
         root["policy"]["max_local_replicas_per_file"].as<uint64_t>(2);
+  }
+  if (root["policy"] && root["policy"]["affinity_replica_cooldown_sec"]) {
+    config.affinity_replica_cooldown_sec =
+        root["policy"]["affinity_replica_cooldown_sec"].as<uint64_t>(30);
+  }
+  if (root["policy"] && root["policy"]["affinity_replica_min_residency_sec"]) {
+    config.affinity_replica_min_residency_sec =
+        root["policy"]["affinity_replica_min_residency_sec"].as<uint64_t>(120);
   }
   if (root["policy"] && root["policy"]["cross_gpu_local_cache"]) {
     config.cross_gpu_local_cache =

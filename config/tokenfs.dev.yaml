@@ -30,8 +30,11 @@ policy:
   affinity_warm_read_threshold: 2
   # 当前用于计算目标本地副本数，真实多机环境中可按本地 SSD 容量调大。
   max_local_replicas_per_file: 2
-  # 当前版本先保守禁止跨 GPU 本地缓存，只记录外部 GPU 访问和共享倾向。
-  cross_gpu_local_cache: false
+  # 跨 GPU 本地副本：GPU1 高频访问 GPU0 数据时，可在 GPU1 本地生成受控缓存副本。
+  cross_gpu_local_cache: true
+  # 防抖动：避免热点刚变化就反复复制/删除。
+  affinity_replica_cooldown_sec: 30
+  affinity_replica_min_residency_sec: 120
   # 默认不开自适应迁移，避免影响 baseline；真实环境或专项实验中打开。
   adaptive_migration: false
   adaptive_remote_promote_us: 10000

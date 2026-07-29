@@ -31,7 +31,7 @@ TokenFS 是一个面向大模型 Prompt Token、Token Shard 和 KV Cache 数据�
 | checksum 校验 | 已完成 | 当前使用 `fnv1a64`，可替换 |
 | 迁移一致性状态机 | 已完成基础版 | 支持启动恢复和临时文件清理 |
 | AI 价值感知放置 | 已完成原型 | 已接入淘汰和策略实验 |
-| GPU 亲和感知 | 已深化 | 可识别调用方 GPU、dominant GPU、共享倾向和跨 GPU 访问 |
+| GPU 亲和感知 | 已深化 | 可识别调用方 GPU、时间窗口热度、趋势变化、跨 GPU 本地副本和防抖动 |
 | 多 GPU QoS | 已深化 | 已区分前台读写和后台迁移/预取/淘汰，并支持独立 QoS 指标 |
 | 热点提升 | 已完成 | 远端热点数据可复制成本地缓存 |
 | 顺序预取 | 已完成 | 连续 shard 可提前拉到本地 |
@@ -273,90 +273,242 @@ share_count             共享度
 
 ### 5.2 GPU 亲和感知
 
-GPU 亲和感知解决的问题是：同一份缓存应该更靠近哪张 GPU。
+GPU 亲和感知解决的问题是：同一份 KV Cache 或 Token Shard 应该靠近哪张 GPU，什么时候应该留在远端共享层，什么时候值得在另一个 GPU 的本地 SSD 上生成临时副本。
 
-例子：
-
-```text
-cache_A:
-GPU0 访问 80%
-GPU1 访问 15%
-GPU2 访问 5%
-```
-
-这说明 `cache_A` 对 GPU0 亲和度最高，应优先缓存在 GPU0 所在节点的本地 SSD。
-
-另一个例子：
-
-```text
-cache_B:
-GPU0 访问 35%
-GPU1 访问 33%
-GPU2 访问 32%
-```
-
-这说明它更像共享数据。如果每张 GPU 都复制一份，会浪费本地 SSD 空间；更合理的是保留远端主副本，必要时短期缓存到本地。
-
-当前工程落地已经不只停留在“记录访问次数”。TokenFS 会读取调用进程的环境变量来识别真正发起访问的 GPU：
+这不是简单地说“路径在 `/gpu0` 就永远归 GPU0”。例如：
 
 ```bash
 TOKENFS_GPU_ID=1 cat /mnt/tokenfs/gpu0/value/hot.tokens
 ```
 
-这表示“GPU1 访问了 `/gpu0/value/hot.tokens`”。如果没有设置 `TOKENFS_GPU_ID`，系统会退回使用路径所属 GPU，例如 `/gpu0/...` 默认记为 GPU0。
+这表示文件逻辑上属于 `/gpu0`，但实际调用方是 GPU1。TokenFS 会把这次访问记入 GPU1，用来判断数据是否正在从 GPU0 私有热点变成跨 GPU 共享热点，或者亲和是否正在转向 GPU1。
 
-当前工程落地：
+#### 5.2.1 调用方 GPU 识别
 
-```text
-gpu_access 表记录 logical_path + gpu_id 的累计访问次数
-gpu_access_events 表记录每次访问的时间，用于计算时间窗口热度
-files 表记录 producer_gpu 和 share_count
-files 表记录 dominant_gpu_id
-files 表记录 dominant_gpu_read_share_x100
-files 表记录 recent_dominant_gpu_id
-files 表记录 recent_dominant_gpu_read_share_x100
-files 表记录 recent_read_count
-files 表记录 affinity_trend
-files 表记录 target_local_replica_count
-files 表记录 affinity_state
-tokenfsctl.py affinity 可以查看访问亲和统计
-```
-
-当前不再只看累计访问次数，而是同时看：
+TokenFS 会读取访问进程的环境变量：
 
 ```text
-累计访问：判断长期 dominant GPU
-短时间窗口：判断最近真正变热的是哪张 GPU
-长时间窗口：判断短期变化是不是偏离历史趋势
-趋势变化：判断缓存亲和是否正在从一张 GPU 转向另一张 GPU
+TOKENFS_GPU_ID
+CUDA_VISIBLE_DEVICES
 ```
 
-当前亲和分类：
+如果识别成功，就按真实调用方 GPU 统计；如果没有设置，就退回到路径所属 GPU。例如 `/gpu0/...` 默认归 GPU0。
+
+这样做的意义是：文件系统虽然看不到 CUDA kernel，但可以通过训练/推理任务启动时注入的环境变量，知道“这次数据访问服务于哪张 GPU”。
+
+#### 5.2.2 时间窗口热度，而不是只看累计次数
+
+只看累计次数会有一个问题：早期 GPU0 读了很多次，后面 GPU1 开始变热，但累计统计仍然会被 GPU0 压住。
+
+所以当前实现同时维护两类统计：
+
+```text
+gpu_access         累计访问次数，用来判断长期 dominant GPU
+gpu_access_events  每次访问时间，用来计算短窗口热度和趋势
+```
+
+配置项：
+
+```yaml
+affinity_short_window_sec: 300
+affinity_long_window_sec: 3600
+affinity_trend_min_reads: 3
+affinity_hot_read_threshold: 4
+affinity_warm_read_threshold: 2
+```
+
+含义：
+
+```text
+短窗口：看最近谁真正变热
+长窗口：看背景趋势
+最小读数：避免一次偶然访问就改变判断
+热阈值/温阈值：区分 hot、warm、cold
+```
+
+#### 5.2.3 访问趋势判断
+
+TokenFS 会比较长期 dominant GPU 和短窗口 dominant GPU。
+
+例如：
+
+```text
+长期统计：GPU0 占 80%
+最近 300 秒：GPU1 占 100%
+```
+
+这说明访问亲和可能正在从 GPU0 转向 GPU1，系统会把状态标记为：
+
+```text
+AFFINITY_SHIFTING
+trend = SHIFTING_TO_GPU1
+```
+
+这个状态不会立刻粗暴删除旧副本，而是让系统进入“准备迁移/复制但防止抖动”的阶段。
+
+#### 5.2.4 多级亲和状态
+
+当前亲和分类如下：
 
 | 状态 | 含义 | 放置倾向 |
 |---|---|---|
-| `GPU_LOCAL_HOT` | 最近访问集中在某张 GPU，且热度高 | 目标是保留 1 个本地热点副本 |
-| `GPU_LOCAL_WARM` | 最近访问集中在某张 GPU，但热度还不高 | 可以保留 1 个本地温副本 |
-| `REMOTE_SHARED_HOT` | 多 GPU 近期都在访问，且整体热 | 远端主副本保留，目标本地副本数可大于 1 |
+| `GPU_LOCAL_HOT` | 短窗口内明显集中在某张 GPU，且访问热 | 保留 1 个本地热点副本 |
+| `GPU_LOCAL_WARM` | 短窗口内明显集中在某张 GPU，但访问量还不高 | 保留或准备 1 个本地温副本 |
+| `REMOTE_SHARED_HOT` | 多 GPU 近期都在访问，且整体热 | 远端主副本保留，同时允许多个 GPU 本地副本 |
 | `CROSS_GPU_SHARED` | 多 GPU 访问较均衡，但热度不高 | 倾向远端共享，暂不复制太多本地副本 |
-| `AFFINITY_SHIFTING` | 最近 dominant GPU 与长期 dominant GPU 不一致 | 说明亲和正在转移，先观测并准备迁移 |
-| `REMOTE_COLD` | 最近访问量很低 | 倾向留远端或被淘汰本地缓存 |
-| `MIXED_AFFINITY` | 有偏向但不够绝对 | 暂时保守，继续观察 |
+| `AFFINITY_SHIFTING` | 最近 dominant GPU 与长期 dominant GPU 不一致 | 说明亲和正在转移，可向新 dominant GPU 生成副本 |
+| `REMOTE_COLD` | 最近访问量很低 | 倾向留远端或删除本地缓存 |
+| `MIXED_AFFINITY` | 有偏向但不够绝对 | 保守观察 |
 | `UNKNOWN` | 访问数据不足 | 使用默认策略 |
 
-当前版本的保守边界：
-
-```text
-跨 GPU 访问会被记录；
-系统会计算目标本地副本数 target_local_replica_count；
-共享热数据会避免盲目只靠近某一张 GPU；
-跨 GPU 物理本地缓存默认不开启，真实多机环境到位后再按拓扑打开。
-```
-
-查看命令：
+查看：
 
 ```bash
 ./scripts/tokenfsctl.py affinity
+```
+
+#### 5.2.5 自适应本地副本数量
+
+每个文件都有一个策略建议字段：
+
+```text
+target_local_replica_count
+```
+
+例子：
+
+```text
+GPU_LOCAL_HOT      -> 目标本地副本数 1
+AFFINITY_SHIFTING  -> 目标本地副本数 1
+REMOTE_SHARED_HOT  -> 目标本地副本数 min(近期访问 GPU 数, max_local_replicas_per_file)
+REMOTE_COLD        -> 目标本地副本数 0
+```
+
+配置项：
+
+```yaml
+max_local_replicas_per_file: 2
+```
+
+这个值不是越大越好。副本越多，读本地的机会越高，但本地 SSD 空间占用也越大。真实环境中需要结合本地 SSD 容量、远端延迟和 GPU 并发数调参。
+
+#### 5.2.6 跨 GPU 本地副本管理
+
+当前已经支持跨 GPU 本地副本。典型场景：
+
+```text
+文件逻辑路径：/gpu0/shared/a.tokens
+远端主副本：/var/lib/tokenfs/remote-sim/gpu0/shared/a.tokens
+GPU1 近期频繁读取它
+```
+
+如果系统判断它是共享热数据，或亲和正在转向 GPU1，就会在 GPU1 本地生成隐藏副本：
+
+```text
+/var/lib/tokenfs/local/gpu1/.tokenfs-replicas/gpu0/shared/a.tokens
+```
+
+之后 GPU1 再读这个文件时，可以直接命中 GPU1 本地副本，而不是每次都走远端。
+
+跨 GPU 副本记录在 `local_replicas` 表中：
+
+```text
+logical_path
+gpu_id
+physical_path
+size_bytes
+cache_generation
+created_at
+last_access_at
+state
+```
+
+查看：
+
+```bash
+./scripts/tokenfsctl.py replicas
+./scripts/tokenfsctl.py metrics
+```
+
+相关指标：
+
+```text
+cross_gpu_replica_create_count
+cross_gpu_replica_create_bytes
+cross_gpu_local_replica_hit
+cross_gpu_replica_reuse_count
+cross_gpu_replica_delete_count
+cross_gpu_replica_skip_cap
+```
+
+#### 5.2.7 防抖动机制
+
+缓存系统最怕“刚复制过去又删掉，刚删掉又复制回来”。这种现象叫抖动，会浪费网络和 SSD 写入寿命。
+
+当前实现了两个防抖参数：
+
+```yaml
+affinity_replica_cooldown_sec: 30
+affinity_replica_min_residency_sec: 120
+```
+
+含义：
+
+```text
+cooldown：同一个文件刚生成过本地副本后，短时间内不重复触发复制
+min_residency：副本刚创建后至少保留一段时间，即使目标副本数下降也不立刻删除
+```
+
+当前删除逻辑：
+
+```text
+如果实际本地副本数 > target_local_replica_count
+  先选最久未访问的副本
+  如果还没达到最短驻留时间，暂时保留
+  否则删除副本并更新 local_replicas
+```
+
+相关指标：
+
+```text
+cross_gpu_replica_skip_cooldown
+cross_gpu_replica_keep_min_residency
+cross_gpu_replica_delete_count
+cross_gpu_replica_delete_bytes
+```
+
+#### 5.2.8 当前创新点二已经包含的技术
+
+目前 GPU 亲和感知已经包括：
+
+```text
+1. 调用方 GPU 识别
+2. 累计访问统计
+3. 时间窗口热度统计
+4. 访问趋势判断
+5. 多级亲和状态分类
+6. 自适应目标本地副本数量
+7. 跨 GPU 本地副本创建、命中、复用和删除
+8. 防抖动机制：冷却时间 + 最短驻留时间
+9. 与 AI 价值感知淘汰联动
+10. 与多 GPU QoS 指标联动
+```
+
+测试：
+
+```bash
+./scripts/advanced_policy_test.sh
+```
+
+这个脚本会验证：
+
+```text
+高价值热点文件不会被优先淘汰
+GPU 访问亲和状态能识别 REMOTE_SHARED_HOT
+GPU 访问趋势能识别 AFFINITY_SHIFTING
+跨 GPU 本地副本可以创建并命中
+QoS 延迟指标可以记录
+一致性检查可以通过
 ```
 
 ### 5.3 多 GPU QoS
@@ -524,6 +676,27 @@ access_at
 
 这个表用于计算短窗口热度和访问趋势。当前默认短窗口为 300 秒，长窗口为 3600 秒。
 
+### 6.5 local_replicas 表
+
+记录跨 GPU 本地缓存副本：
+
+| 字段 | 含义 |
+|---|---|
+| `logical_path` | 原始逻辑路径，例如 `/gpu0/xgpu/shared.tokens` |
+| `gpu_id` | 这份本地副本放在哪个 GPU 的本地空间 |
+| `physical_path` | 隐藏副本的真实路径 |
+| `size_bytes` | 副本大小 |
+| `cache_generation` | 副本代数 |
+| `created_at` | 创建时间 |
+| `last_access_at` | 最近命中时间 |
+| `state` | 当前为 `READY` |
+
+跨 GPU 本地副本使用隐藏目录，不会暴露给 `/mnt/tokenfs` 的普通目录列表：
+
+```text
+/var/lib/tokenfs/local/gpu1/.tokenfs-replicas/gpu0/...
+```
+
 ---
 
 ## 7. 配置文件说明
@@ -563,7 +736,9 @@ policy:
   affinity_hot_read_threshold: 4
   affinity_warm_read_threshold: 2
   max_local_replicas_per_file: 2
-  cross_gpu_local_cache: false
+  cross_gpu_local_cache: true
+  affinity_replica_cooldown_sec: 30
+  affinity_replica_min_residency_sec: 120
 
 gpus:
   - gpu_id: 0

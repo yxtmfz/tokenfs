@@ -121,9 +121,46 @@ if [[ "$trend_row" != "0|1|100|3|SHIFTING_TO_GPU1|AFFINITY_SHIFTING|1" ]]; then
   exit 1
 fi
 
+echo "advanced: cross-GPU local replicas are created for shared hot remote data"
+mkdir -p /var/lib/tokenfs/remote-sim/gpu0/xgpu
+python3 - /var/lib/tokenfs/remote-sim/gpu0/xgpu/shared.tokens <<'PY'
+import sys
+from pathlib import Path
+
+Path(sys.argv[1]).write_bytes(b"X" * 1024 * 1024)
+PY
+
+for _ in {1..4}; do
+  TOKENFS_GPU_ID=0 cat "$mount_point/gpu0/xgpu/shared.tokens" >/dev/null
+done
+for _ in {1..4}; do
+  TOKENFS_GPU_ID=1 cat "$mount_point/gpu0/xgpu/shared.tokens" >/dev/null
+done
+TOKENFS_GPU_ID=1 cat "$mount_point/gpu0/xgpu/shared.tokens" >/dev/null
+
+replica_row="$(sqlite3 "$metadata_db" \
+  "select gpu_id,state,size_bytes from local_replicas where logical_path='/gpu0/xgpu/shared.tokens' and gpu_id=1;")"
+if [[ "$replica_row" != "1|READY|1048576" ]]; then
+  echo "expected a ready cross-GPU local replica on GPU1"
+  echo "actual: $replica_row"
+  exit 1
+fi
+if [[ ! -f /var/lib/tokenfs/local/gpu1/.tokenfs-replicas/gpu0/xgpu/shared.tokens ]]; then
+  echo "expected physical cross-GPU replica file"
+  exit 1
+fi
+replica_hits="$(sqlite3 "$metadata_db" \
+  "select coalesce((select value from metrics where name='cross_gpu_local_replica_hit'),0);")"
+if [[ "$replica_hits" -lt 1 ]]; then
+  echo "expected cross_gpu_local_replica_hit"
+  exit 1
+fi
+
 "$project_root/scripts/tokenfsctl.py" --config "$temp_config" metrics | grep -q "本地淘汰次数"
+"$project_root/scripts/tokenfsctl.py" --config "$temp_config" metrics | grep -q "跨 GPU 本地副本创建"
 "$project_root/scripts/tokenfsctl.py" --config "$temp_config" affinity | grep -q "REMOTE_SHARED_HOT"
 "$project_root/scripts/tokenfsctl.py" --config "$temp_config" affinity | grep -q "AFFINITY_SHIFTING"
+"$project_root/scripts/tokenfsctl.py" --config "$temp_config" replicas | grep -q "cross-gpu local replica"
 "$project_root/scripts/tokenfsctl.py" --config "$temp_config" check
 "$project_root/scripts/stop_tokenfs.sh" "$mount_point" >/dev/null
 

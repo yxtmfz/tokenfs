@@ -186,6 +186,20 @@ def db_has_column(db_path: Path, table: str, column: str) -> bool:
         conn.close()
 
 
+def db_has_table(db_path: Path, table: str) -> bool:
+    if not db_path.exists():
+        return False
+    conn = sqlite3.connect(db_path)
+    try:
+        row = conn.execute(
+            "select 1 from sqlite_master where type='table' and name=?",
+            (table,),
+        ).fetchone()
+        return row is not None
+    finally:
+        conn.close()
+
+
 def gpu_for_logical(config: TokenfsConfig, logical_path: str) -> tuple[GpuConfig, Path] | None:
     for gpu in config.gpus:
         prefix = gpu.logical_root + "/"
@@ -359,6 +373,21 @@ def print_replicas(config: TokenfsConfig) -> None:
         print(f"  active path: {row['physical_path']}")
         if remote_path is not None:
             print(f"  remote path: {remote_path}")
+        if db_has_table(config.metadata_db, "local_replicas"):
+            replica_rows = db_rows(
+                config.metadata_db,
+                "select gpu_id,physical_path,size_bytes,cache_generation,"
+                "created_at,last_access_at,state from local_replicas "
+                "where logical_path=? order by gpu_id",
+                (row["logical_path"],),
+            )
+            for replica in replica_rows:
+                print(
+                    f"  cross-gpu local replica: gpu{replica['gpu_id']} | "
+                    f"state={replica['state']} | gen={replica['cache_generation']} | "
+                    f"{bytes_to_mib(replica['size_bytes'])}"
+                )
+                print(f"    path: {replica['physical_path']}")
 
 
 def cache_gc(config: TokenfsConfig, max_cache_mib: int, dry_run: bool) -> int:
@@ -600,6 +629,14 @@ def print_metrics(config: TokenfsConfig) -> None:
     print(f"跨 GPU 提升跳过: {metric_value(metrics, 'affinity_cross_gpu_promote_skip')} 次")
     print(f"共享远端倾向跳过: {metric_value(metrics, 'affinity_shared_remote_preferred_skip')} 次")
     print(f"非 dominant GPU 提升跳过: {metric_value(metrics, 'affinity_non_dominant_promote_skip')} 次")
+    print(f"跨 GPU 本地副本创建: {metric_value(metrics, 'cross_gpu_replica_create_count')} 次")
+    print(f"跨 GPU 本地副本数据: {bytes_to_mib(metric_value(metrics, 'cross_gpu_replica_create_bytes'))}")
+    print(f"跨 GPU 本地副本命中: {metric_value(metrics, 'cross_gpu_local_replica_hit')} 次")
+    print(f"跨 GPU 本地副本复用: {metric_value(metrics, 'cross_gpu_replica_reuse_count')} 次")
+    print(f"跨 GPU 本地副本删除: {metric_value(metrics, 'cross_gpu_replica_delete_count')} 次")
+    print(f"跨 GPU 副本冷却跳过: {metric_value(metrics, 'cross_gpu_replica_skip_cooldown')} 次")
+    print(f"跨 GPU 副本驻留保护: {metric_value(metrics, 'cross_gpu_replica_keep_min_residency')} 次")
+    print(f"跨 GPU 副本容量跳过: {metric_value(metrics, 'cross_gpu_replica_skip_cap')} 次")
     print(f"跳过打开文件: {metric_value(metrics, 'evict_skip_open')} 次")
     print(f"跳过热点文件: {metric_value(metrics, 'evict_skip_hot')} 次")
     print(f"淘汰失败次数: {metric_value(metrics, 'evict_error_count')} 次")
@@ -687,7 +724,11 @@ def logical_for_physical(config: TokenfsConfig, physical: Path) -> tuple[int, st
     return None
 
 
-def iter_physical_files(config: TokenfsConfig) -> list[Path]:
+def is_internal_replica_path(path: Path) -> bool:
+    return ".tokenfs-replicas" in path.parts
+
+
+def iter_physical_files(config: TokenfsConfig, include_internal: bool = False) -> list[Path]:
     roots: list[Path] = []
     for gpu in config.gpus:
         roots.append(gpu.local_root)
@@ -705,6 +746,8 @@ def iter_physical_files(config: TokenfsConfig) -> list[Path]:
                 if config.temp_suffix and config.temp_suffix in name:
                     continue
                 path = Path(dirpath) / name
+                if not include_internal and is_internal_replica_path(path):
+                    continue
                 try:
                     resolved = path.resolve()
                 except OSError:
@@ -796,6 +839,35 @@ def print_check(config: TokenfsConfig) -> int:
                 f"{logical}: 物理路径反推出 {expected[1]} / gpu{expected[0]}，与数据库不一致"
             )
 
+    replica_rows = []
+    if db_has_table(config.metadata_db, "local_replicas"):
+        replica_rows = db_rows(
+            config.metadata_db,
+            "select logical_path,gpu_id,physical_path,size_bytes,state "
+            "from local_replicas order by logical_path,gpu_id",
+        )
+    for row in replica_rows:
+        logical = row["logical_path"]
+        path = Path(row["physical_path"])
+        try:
+            physical_in_db.add(path.resolve())
+        except OSError:
+            physical_in_db.add(path)
+        if logical not in logical_paths:
+            problems.append(f"{logical}: 本地副本存在，但主文件元数据不存在")
+        if row["gpu_id"] not in gpu_ids:
+            problems.append(f"{logical}: 本地副本引用未知 GPU ID {row['gpu_id']}")
+        if row["state"] != "READY":
+            problems.append(f"{logical}: 本地副本状态不是 READY，而是 {row['state']}")
+        if not path.exists():
+            problems.append(f"{logical}: 本地副本物理文件不存在: {path}")
+            continue
+        actual_size = path.stat().st_size
+        if actual_size != row["size_bytes"]:
+            problems.append(
+                f"{logical}: 本地副本大小不一致，DB={row['size_bytes']}，实际={actual_size}"
+            )
+
     for path in iter_physical_files(config):
         try:
             resolved = path.resolve()
@@ -811,6 +883,7 @@ def print_check(config: TokenfsConfig) -> int:
     print("=" * 60)
     print(f"检查数据库: {config.metadata_db}")
     print(f"数据库记录: {len(rows)}")
+    print(f"本地副本:   {len(replica_rows)}")
     print(f"物理文件:   {len(iter_physical_files(config))}")
     print(f"问题数量:   {len(problems)}")
     print(f"警告数量:   {len(warnings)}")
