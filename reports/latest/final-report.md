@@ -124,17 +124,44 @@ affinity_updated_at
 
 | 研究点 | 当前工程落地 | 可观测方式 |
 |---|---|---|
-| AI 价值感知放置 | 已接入本地淘汰、热点提升和策略矩阵实验 | `files`、`metrics`、`eviction_test.sh` |
-| GPU 亲和感知 | 已识别调用方 GPU，计算累计 dominant、短窗口 dominant、趋势、多级亲和状态和目标本地副本数 | `affinity`、`advanced_policy_test.sh` |
+| AI 价值感知缓存保留 | 判断数据值不值得继续占用本地缓存，已接入本地淘汰、热点提升和策略矩阵实验 | `files`、`metrics`、`eviction_test.sh` |
+| GPU 亲和感知副本放置 | 在价值层允许本地缓存的前提下，决定副本放在哪些 GPU 本地，已识别调用方 GPU、短窗口热度、趋势、多级亲和状态和目标本地副本数 | `affinity`、`replicas`、`advanced_policy_test.sh` |
 | 多 GPU QoS | 已区分前台读写与后台迁移/预取/淘汰，并记录每 GPU QoS 指标 | `metrics`、`advanced_policy_test.sh` |
+
+三者的分工：
+
+```text
+创新点一：留不留本地
+创新点二：如果留本地，放在哪些 GPU 本地，或保持远端共享
+创新点三：多个 GPU 同时访问/迁移时，资源怎么公平分
+```
 
 当前价值公式：
 
 ```text
-数据价值 = 复用概率 * 重新计算代价 * GPU 亲和度 / 数据大小 / 远程访问代价
+数据保留价值 =
+复用概率
+× 重新计算代价
+× 远端访问代价
+× 共享收益
+÷ 数据大小
+÷ 本地空间压力
 ```
 
-该公式是启发式框架，不声称数学最优。它的意义是把大模型缓存场景中的关键因素统一到可解释、可替换的决策模型里。后续真实环境拿到后，可以通过消融实验调权重或替换为学习型策略。
+该公式是启发式框架，不声称数学最优。它的意义是判断“这份数据该不该继续占本地缓存”。后续真实环境拿到后，可以通过消融实验调权重或替换为学习型策略。
+
+GPU 亲和层的位置评分：
+
+```text
+PlacementScore(gpu, file)
+  = recent_reads(gpu, file)
+  × (remote_read_cost - local_read_cost)
+  × affinity_score(gpu, file)
+  - copy_cost(file)
+  - local_space_pressure(gpu)
+```
+
+它不单独决定数据是否保留，而是在价值层允许保留本地副本时，判断这个副本应该放在哪个 GPU 本地，是否值得多 GPU 各保留一份，或者继续只放远端共享层。
 
 GPU 亲和分类当前使用：
 
@@ -145,7 +172,7 @@ GPU 亲和分类当前使用：
 | `REMOTE_SHARED_HOT` | 多 GPU 近期都在访问，且整体热 | 远端主副本保留，目标本地副本数可大于 1 |
 | `CROSS_GPU_SHARED` | 多 GPU 访问较均衡，但热度不高 | 倾向远端共享，暂不复制太多本地副本 |
 | `AFFINITY_SHIFTING` | 最近 dominant GPU 与长期 dominant GPU 不一致 | 表示亲和正在转移，先观测并准备迁移 |
-| `REMOTE_COLD` | 最近访问量很低 | 倾向留远端或被淘汰本地缓存 |
+| `REMOTE_COLD` | 最近访问量很低 | 向价值层反馈低热度，通常可以减少本地副本 |
 | `MIXED_AFFINITY` | 有偏向但还不够稳定 | 暂不激进迁移，继续观察访问 |
 | `UNKNOWN` | 访问样本不足 | 使用默认本地优先/远端溢写策略 |
 
@@ -325,8 +352,8 @@ sudo ./scripts/connect_nvme.sh --config config/tokenfs.dev.yaml --backend remote
 直接本地 SSD baseline
 直接 NVMe-oF SSD baseline
 TokenFS baseline
-TokenFS + AI 价值感知放置
-TokenFS + GPU 亲和感知
+TokenFS + AI 价值感知缓存保留
+TokenFS + GPU 亲和感知副本放置
 TokenFS + 多 GPU QoS
 TokenFS full
 P50/P95/P99 延迟
