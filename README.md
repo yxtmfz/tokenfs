@@ -367,7 +367,88 @@ trend = SHIFTING_TO_GPU1
 ./scripts/tokenfsctl.py affinity
 ```
 
-#### 5.2.5 自适应本地副本数量
+#### 5.2.5 GPU 亲和副本创建与删除机制
+
+自适应本地副本数量和跨 GPU 本地副本管理，本质上是同一个问题：
+
+```text
+远端 SSD 保存主副本/容量层
+各 GPU 本地 SSD 是巨大缓存层
+
+系统要决定：
+1. 什么时候为某个 GPU 创建本地副本
+2. 创建到哪些 GPU 的本地 SSD
+3. 总共创建多少个本地副本
+4. 什么时候删除某个本地副本
+```
+
+所以这一节的核心不是“副本越多越好”，而是一个 GPU 感知的缓存副本决策机制。
+
+##### 5.2.5.1 决策输入
+
+TokenFS 为每个文件持续收集以下信息：
+
+```text
+文件大小
+远端主副本是否存在
+每个 GPU 的累计访问次数
+每个 GPU 的短窗口访问次数
+最近 dominant GPU
+长期 dominant GPU
+访问趋势是否正在变化
+本地 SSD 剩余空间
+远端访问代价
+本地副本复制成本
+副本创建后的驻留时间
+```
+
+其中最重要的是时间窗口热度和趋势：
+
+```text
+如果 GPU1 最近突然频繁访问 GPU0 的数据
+说明这份数据可能正在变成 GPU1 的热点
+系统应考虑在 GPU1 本地创建副本
+```
+
+##### 5.2.5.2 副本收益评分
+
+对每个候选 GPU，系统可以抽象出一个本地副本收益：
+
+```text
+副本收益 =
+未来复用概率
+× 远端访问节省
+× GPU 亲和度
+÷ 数据大小
+÷ 复制成本
+```
+
+更工程化地写，可以理解为：
+
+```text
+ReplicaBenefit(gpu, file)
+  = recent_reads(gpu, file)
+  × (remote_read_cost - local_read_cost)
+  × affinity_score(gpu, file)
+  / max(file_size, 1)
+  - copy_cost(file)
+  - local_space_pressure(gpu)
+```
+
+解释：
+
+| 因素 | 作用 |
+|---|---|
+| `recent_reads` | 最近读得越多，越值得复制 |
+| `remote_read_cost - local_read_cost` | 远端比本地慢得越多，复制收益越高 |
+| `affinity_score` | 越偏向某个 GPU，越应该靠近它 |
+| `file_size` | 文件越大，占用本地空间越多，复制要更谨慎 |
+| `copy_cost` | 创建副本本身要消耗网络和 SSD 写入 |
+| `local_space_pressure` | 本地越满，越不应该随便复制 |
+
+当前代码里先实现了可解释启发式版本：用访问热度、亲和状态、目标副本数、空间配额和防抖参数共同决定是否复制。真实 NVMe-oF 环境到位后，可以把 `remote_read_cost`、`local_read_cost` 和 `copy_cost` 替换成实测延迟/带宽数据。
+
+##### 5.2.5.3 目标副本数
 
 每个文件都有一个策略建议字段：
 
@@ -375,34 +456,66 @@ trend = SHIFTING_TO_GPU1
 target_local_replica_count
 ```
 
-例子：
+它表示“当前系统认为这份文件最多应该保留几个本地缓存副本”。
+
+当前规则：
 
 ```text
-GPU_LOCAL_HOT      -> 目标本地副本数 1
-AFFINITY_SHIFTING  -> 目标本地副本数 1
-REMOTE_SHARED_HOT  -> 目标本地副本数 min(近期访问 GPU 数, max_local_replicas_per_file)
-REMOTE_COLD        -> 目标本地副本数 0
+GPU_LOCAL_HOT
+  -> 目标本地副本数 1
+  -> 放在最近 dominant GPU 本地
+
+GPU_LOCAL_WARM
+  -> 目标本地副本数 1
+  -> 可以准备本地温副本
+
+AFFINITY_SHIFTING
+  -> 目标本地副本数 1
+  -> 放向新的 recent dominant GPU
+
+REMOTE_SHARED_HOT
+  -> 目标本地副本数 min(近期访问 GPU 数, max_local_replicas_per_file)
+  -> 多个 GPU 都热时，允许多个本地副本
+
+CROSS_GPU_SHARED
+  -> 先倾向远端共享
+  -> 热度不足时不急着复制
+
+REMOTE_COLD
+  -> 目标本地副本数 0
+  -> 删除本地副本，只留远端
 ```
 
-配置项：
+配置上限：
 
 ```yaml
 max_local_replicas_per_file: 2
 ```
 
-这个值不是越大越好。副本越多，读本地的机会越高，但本地 SSD 空间占用也越大。真实环境中需要结合本地 SSD 容量、远端延迟和 GPU 并发数调参。
+这个值控制“最多允许多少个 GPU 同时拥有该文件的本地缓存副本”。它不是越大越好，因为副本多会占本地 SSD 空间，也会增加复制和删除成本。
 
-#### 5.2.6 跨 GPU 本地副本管理
+##### 5.2.5.4 副本创建
 
-当前已经支持跨 GPU 本地副本。典型场景：
+典型场景：
 
 ```text
-文件逻辑路径：/gpu0/shared/a.tokens
-远端主副本：/var/lib/tokenfs/remote-sim/gpu0/shared/a.tokens
-GPU1 近期频繁读取它
+文件：/gpu0/shared/a.tokens
+远端主副本：remote/gpu0/shared/a.tokens
+GPU1 最近频繁读取它
+状态变成 REMOTE_SHARED_HOT 或 AFFINITY_SHIFTING
 ```
 
-如果系统判断它是共享热数据，或亲和正在转向 GPU1，就会在 GPU1 本地生成隐藏副本：
+系统会判断：
+
+```text
+远端主副本是否存在
+GPU1 是否是近期热点访问者
+当前副本数是否低于 target_local_replica_count
+GPU1 本地空间是否足够
+是否刚创建过副本，避免重复复制
+```
+
+如果条件满足，就在 GPU1 本地生成隐藏副本：
 
 ```text
 /var/lib/tokenfs/local/gpu1/.tokenfs-replicas/gpu0/shared/a.tokens
@@ -410,7 +523,7 @@ GPU1 近期频繁读取它
 
 之后 GPU1 再读这个文件时，可以直接命中 GPU1 本地副本，而不是每次都走远端。
 
-跨 GPU 副本记录在 `local_replicas` 表中：
+副本记录在 `local_replicas` 表中：
 
 ```text
 logical_path
@@ -421,6 +534,57 @@ cache_generation
 created_at
 last_access_at
 state
+```
+
+##### 5.2.5.5 副本删除
+
+副本删除也不能只看“有没有访问”，而是要结合空间压力和防抖。
+
+当前删除逻辑：
+
+```text
+如果实际本地副本数 > target_local_replica_count
+  找出最久未访问的本地副本
+  如果仍处于最短驻留时间内，则暂时不删
+  否则删除该 GPU 本地副本
+  更新 local_replicas 表
+```
+
+当本地空间紧张时，价值感知淘汰策略也会优先删除低价值本地缓存，而不是删除高价值热点缓存。
+
+##### 5.2.5.6 防抖动机制
+
+缓存系统最怕“刚复制过去又删掉，刚删掉又复制回来”。这种现象叫抖动，会浪费网络和 SSD 写入寿命。
+
+当前实现了两个防抖参数：
+
+```yaml
+affinity_replica_cooldown_sec: 30
+affinity_replica_min_residency_sec: 120
+```
+
+含义：
+
+```text
+cooldown：同一个文件刚生成过本地副本后，短时间内不重复触发复制
+min_residency：副本刚创建后至少保留一段时间，即使目标副本数下降也不立刻删除
+```
+
+##### 5.2.5.7 当前实现中的副本算法流程
+
+一次读请求到来时，TokenFS 的决策流程可以概括为：
+
+```text
+1. 识别调用方 GPU
+2. 更新 gpu_access 和 gpu_access_events
+3. 计算短窗口热度、长期 dominant GPU、recent dominant GPU
+4. 判断 affinity_state
+5. 计算 target_local_replica_count
+6. 如果调用方 GPU 本地已有副本，直接命中本地
+7. 如果没有副本，判断是否值得创建
+8. 如果值得创建，复制远端主副本到调用方 GPU 本地隐藏目录
+9. 如果副本数超过目标值，选择低价值/久未访问副本删除
+10. 通过 cooldown 和 min_residency 防止频繁复制删除
 ```
 
 查看：
@@ -439,45 +603,12 @@ cross_gpu_local_replica_hit
 cross_gpu_replica_reuse_count
 cross_gpu_replica_delete_count
 cross_gpu_replica_skip_cap
-```
-
-#### 5.2.7 防抖动机制
-
-缓存系统最怕“刚复制过去又删掉，刚删掉又复制回来”。这种现象叫抖动，会浪费网络和 SSD 写入寿命。
-
-当前实现了两个防抖参数：
-
-```yaml
-affinity_replica_cooldown_sec: 30
-affinity_replica_min_residency_sec: 120
-```
-
-含义：
-
-```text
-cooldown：同一个文件刚生成过本地副本后，短时间内不重复触发复制
-min_residency：副本刚创建后至少保留一段时间，即使目标副本数下降也不立刻删除
-```
-
-当前删除逻辑：
-
-```text
-如果实际本地副本数 > target_local_replica_count
-  先选最久未访问的副本
-  如果还没达到最短驻留时间，暂时保留
-  否则删除副本并更新 local_replicas
-```
-
-相关指标：
-
-```text
 cross_gpu_replica_skip_cooldown
 cross_gpu_replica_keep_min_residency
-cross_gpu_replica_delete_count
 cross_gpu_replica_delete_bytes
 ```
 
-#### 5.2.8 当前创新点二已经包含的技术
+#### 5.2.6 当前创新点二已经包含的技术
 
 目前 GPU 亲和感知已经包括：
 
@@ -487,8 +618,8 @@ cross_gpu_replica_delete_bytes
 3. 时间窗口热度统计
 4. 访问趋势判断
 5. 多级亲和状态分类
-6. 自适应目标本地副本数量
-7. 跨 GPU 本地副本创建、命中、复用和删除
+6. GPU 亲和副本创建与删除机制：何时创建、放到哪里、创建几个、何时删除
+7. 副本收益评分：访问热度、远端节省、GPU 亲和度、文件大小、复制成本和空间压力
 8. 防抖动机制：冷却时间 + 最短驻留时间
 9. 与 AI 价值感知淘汰联动
 10. 与多 GPU QoS 指标联动
