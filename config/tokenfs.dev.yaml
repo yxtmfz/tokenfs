@@ -12,6 +12,9 @@ policy:
   checksum: fnv1a64
   # 本地空间不足时按复用概率、重算代价、GPU 亲和度、文件大小和远端访问代价综合决策。
   placement_policy: value_aware
+  # 远端作为共享容量层/主副本层，本地作为 GPU 热点缓存层。
+  replica_policy: remote_primary_local_cache
+  cache_gc_policy: value_aware
   local_eviction_policy: value_aware
   default_recompute_cost: 10
   default_remote_access_cost: 10

@@ -38,6 +38,9 @@ sqlite3 "$metadata_db" \
 sqlite3 "$metadata_db" \
   "select tier from files where logical_path='/gpu0/evict/cold-big.tokens';" | grep -q '^remote$'
 sqlite3 "$metadata_db" \
+  "select primary_tier,has_remote_copy,local_cache_owner_gpu,replica_state from files where logical_path='/gpu0/evict/cold-big.tokens';" \
+  | grep -q '^remote|1|-1|REMOTE_ONLY$'
+sqlite3 "$metadata_db" \
   "select tier from files where logical_path='/gpu0/evict/hot.tokens';" | grep -q '^local$'
 test -f /var/lib/tokenfs/remote-sim/gpu0/evict/cold-big.tokens
 test ! -e /var/lib/tokenfs/local/gpu0/evict/cold-big.tokens

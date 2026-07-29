@@ -4,6 +4,7 @@ import os
 import json
 import sqlite3
 import sys
+import time
 from dataclasses import dataclass
 from pathlib import Path
 
@@ -185,6 +186,33 @@ def db_has_column(db_path: Path, table: str, column: str) -> bool:
         conn.close()
 
 
+def gpu_for_logical(config: TokenfsConfig, logical_path: str) -> tuple[GpuConfig, Path] | None:
+    for gpu in config.gpus:
+        prefix = gpu.logical_root + "/"
+        if logical_path.startswith(prefix):
+            return gpu, Path(logical_path[len(prefix):])
+    return None
+
+
+def remote_path_for(config: TokenfsConfig, logical_path: str) -> Path | None:
+    parsed = gpu_for_logical(config, logical_path)
+    if parsed is None:
+        return None
+    gpu, rel = parsed
+    backend = config.backends.get(gpu.remote_backend)
+    if backend is None:
+        return None
+    return backend.root / f"gpu{gpu.gpu_id}" / rel
+
+
+def metric_add(conn: sqlite3.Connection, name: str, value: int) -> None:
+    conn.execute(
+        "insert into metrics(name,value) values(?,?) "
+        "on conflict(name) do update set value=value+excluded.value",
+        (name, value),
+    )
+
+
 def print_status(config: TokenfsConfig, config_path: Path) -> None:
     print("TokenFS 状态")
     print("=" * 60)
@@ -261,7 +289,9 @@ def print_files(config: TokenfsConfig) -> None:
         "coalesce(recompute_cost,10) as recompute_cost,"
         "coalesce(remote_access_cost,10) as remote_access_cost,"
         "coalesce(producer_gpu,0) as producer_gpu,"
-        "coalesce(share_count,1) as share_count "
+        "coalesce(share_count,1) as share_count,"
+        "coalesce(primary_tier,'local') as primary_tier,"
+        "coalesce(replica_state,'LOCAL_ONLY') as replica_state "
         "from files order by logical_path",
     )
     if not rows:
@@ -271,11 +301,121 @@ def print_files(config: TokenfsConfig) -> None:
         print(
             f"{row['logical_path']} | gpu{row['gpu_id']} | {row['tier']} | "
             f"{bytes_to_mib(row['size_bytes'])} | {row['state']} | "
+            f"primary={row['primary_tier']} | replica={row['replica_state']} | "
             f"reads={row['read_count']} | producer_gpu={row['producer_gpu']} | "
             f"recompute={row['recompute_cost']} | remote_cost={row['remote_access_cost']} | "
             f"share={row['share_count']} | key={row['content_key'] or row['checksum'] or '-'}"
         )
         print(f"  -> {row['physical_path']}")
+
+
+def print_replicas(config: TokenfsConfig) -> None:
+    rows = db_rows(
+        config.metadata_db,
+        "select logical_path,gpu_id,tier,physical_path,size_bytes,state,"
+        "coalesce(primary_tier,'local') as primary_tier,"
+        "coalesce(has_remote_copy,0) as has_remote_copy,"
+        "coalesce(local_cache_owner_gpu,-1) as local_cache_owner_gpu,"
+        "coalesce(replica_state,'LOCAL_ONLY') as replica_state,"
+        "coalesce(cache_generation,0) as cache_generation,"
+        "coalesce(last_promoted_at,0) as last_promoted_at,"
+        "coalesce(last_demoted_at,0) as last_demoted_at,"
+        "coalesce(read_count,0) as read_count "
+        "from files order by logical_path",
+    )
+    if not rows:
+        print("没有副本元数据记录。")
+        return
+    print("TokenFS 副本生命周期视图")
+    print("=" * 60)
+    for row in rows:
+        remote_path = remote_path_for(config, row["logical_path"])
+        local_cache = (
+            f"gpu{row['local_cache_owner_gpu']}"
+            if row["local_cache_owner_gpu"] >= 0
+            else "-"
+        )
+        print(
+            f"{row['logical_path']} | state={row['replica_state']} | "
+            f"active={row['tier']} | primary={row['primary_tier']} | "
+            f"remote_copy={'yes' if row['has_remote_copy'] else 'no'} | "
+            f"local_cache={local_cache} | gen={row['cache_generation']} | "
+            f"reads={row['read_count']} | {bytes_to_mib(row['size_bytes'])}"
+        )
+        print(f"  active path: {row['physical_path']}")
+        if remote_path is not None:
+            print(f"  remote path: {remote_path}")
+
+
+def cache_gc(config: TokenfsConfig, max_cache_mib: int, dry_run: bool) -> int:
+    if not config.metadata_db.exists():
+        print(f"元数据库不存在: {config.metadata_db}", file=sys.stderr)
+        return 1
+    max_bytes = max(0, max_cache_mib) * MIB
+    conn = sqlite3.connect(config.metadata_db)
+    conn.row_factory = sqlite3.Row
+    deleted = 0
+    deleted_bytes = 0
+    try:
+        for gpu in config.gpus:
+            rows = list(
+                conn.execute(
+                    "select logical_path,physical_path,size_bytes,read_count "
+                    "from files where gpu_id=? and tier='local' "
+                    "and state='COMMITTED' and coalesce(has_remote_copy,0)=1 "
+                    "order by coalesce(read_count,0) asc, size_bytes desc",
+                    (gpu.gpu_id,),
+                )
+            )
+            cache_bytes = sum(int(row["size_bytes"]) for row in rows)
+            if cache_bytes <= max_bytes:
+                continue
+            for row in rows:
+                if cache_bytes <= max_bytes:
+                    break
+                logical = row["logical_path"]
+                local_path = Path(row["physical_path"])
+                remote_path = remote_path_for(config, logical)
+                if remote_path is None or not remote_path.exists():
+                    print(f"跳过 {logical}: 远端副本不存在，不能删除本地缓存")
+                    continue
+                size = int(row["size_bytes"])
+                print(
+                    f"{'dry-run: ' if dry_run else ''}删除本地缓存 {logical} "
+                    f"({bytes_to_mib(size)})"
+                )
+                if dry_run:
+                    cache_bytes = max(0, cache_bytes - size)
+                    continue
+                try:
+                    local_path.unlink(missing_ok=True)
+                except OSError as exc:
+                    print(f"删除失败 {local_path}: {exc}", file=sys.stderr)
+                    continue
+                conn.execute(
+                    "update files set tier='remote',backend_id=?,physical_path=?,"
+                    "primary_tier='remote',has_remote_copy=1,"
+                    "local_cache_owner_gpu=-1,replica_state='REMOTE_ONLY',"
+                    "last_demoted_at=?,updated_at=? where logical_path=?",
+                    (
+                        gpu.remote_backend,
+                        str(remote_path),
+                        int(time.time()),
+                        int(time.time()),
+                        logical,
+                    ),
+                )
+                metric_add(conn, "local_cache_gc_count", 1)
+                metric_add(conn, "local_cache_gc_bytes", size)
+                deleted += 1
+                deleted_bytes += size
+                cache_bytes = max(0, cache_bytes - size)
+        if not dry_run:
+            conn.commit()
+    finally:
+        conn.close()
+    print(f"本地缓存 GC 完成: 删除 {deleted} 个，{bytes_to_mib(deleted_bytes)}")
+    return 0
 
 
 def print_affinity(config: TokenfsConfig) -> None:
@@ -396,6 +536,9 @@ def print_metrics(config: TokenfsConfig) -> None:
     print(f"迁移到远端:   {metric_value(metrics, 'migration_to_remote_commit')} 次")
     print(f"迁移回本地:   {metric_value(metrics, 'migration_to_local_commit')} 次")
     print(f"迁移恢复次数: {metric_value(metrics, 'migration_recovered_count')} 次")
+    print(f"本地缓存创建: {metric_value(metrics, 'local_cache_create_count')} 次")
+    print(f"本地缓存删除: {metric_value(metrics, 'local_cache_delete_count')} 次")
+    print(f"缓存 GC 删除: {metric_value(metrics, 'local_cache_gc_count')} 次")
     print(f"慢读提升触发(工程指标): {metric_value(metrics, 'adaptive_promote_trigger_count')} 次")
     print(f"跳过打开文件: {metric_value(metrics, 'evict_skip_open')} 次")
     print(f"跳过热点文件: {metric_value(metrics, 'evict_skip_hot')} 次")
@@ -512,7 +655,11 @@ def print_check(config: TokenfsConfig) -> int:
     rows = db_rows(
         config.metadata_db,
         "select logical_path,gpu_id,tier,backend_id,physical_path,size_bytes,"
-        "coalesce(checksum,'') as checksum,state "
+        "coalesce(checksum,'') as checksum,state,"
+        "coalesce(primary_tier,'local') as primary_tier,"
+        "coalesce(has_remote_copy,0) as has_remote_copy,"
+        "coalesce(local_cache_owner_gpu,-1) as local_cache_owner_gpu,"
+        "coalesce(replica_state,'LOCAL_ONLY') as replica_state "
         "from files order by logical_path",
     )
 
@@ -527,6 +674,12 @@ def print_check(config: TokenfsConfig) -> int:
             physical_in_db.add(path.resolve())
         except OSError:
             physical_in_db.add(path)
+        remote_path = remote_path_for(config, logical)
+        if row["has_remote_copy"] and remote_path is not None:
+            try:
+                physical_in_db.add(remote_path.resolve())
+            except OSError:
+                physical_in_db.add(remote_path)
 
         if row["gpu_id"] not in gpu_ids:
             problems.append(f"{logical}: 未知 GPU ID {row['gpu_id']}")
@@ -538,9 +691,23 @@ def print_check(config: TokenfsConfig) -> int:
             problems.append(f"{logical}: remote 文件引用未知后端 {row['backend_id']}")
         if row["state"] != "COMMITTED":
             problems.append(f"{logical}: 文件状态不是 COMMITTED，而是 {row['state']}")
+        if row["replica_state"] not in {
+            "LOCAL_ONLY",
+            "REMOTE_ONLY",
+            "REMOTE_WITH_LOCAL_CACHE",
+            "COPYING_TO_REMOTE",
+            "COPYING_TO_LOCAL",
+            "DELETING_CACHE",
+        }:
+            problems.append(f"{logical}: 非法 replica_state={row['replica_state']}")
         if not path.exists():
             problems.append(f"{logical}: 数据库记录的物理文件不存在: {path}")
             continue
+        if row["has_remote_copy"]:
+            if remote_path is None:
+                problems.append(f"{logical}: 标记有远端副本，但无法从配置推出远端路径")
+            elif not remote_path.exists():
+                problems.append(f"{logical}: 标记有远端副本，但远端文件不存在: {remote_path}")
         actual_size = path.stat().st_size
         if actual_size != row["size_bytes"]:
             problems.append(
@@ -605,10 +772,21 @@ def main() -> int:
     subparsers = parser.add_subparsers(dest="command")
     subparsers.add_parser("status", help="查看挂载、配额、后端和元数据状态")
     subparsers.add_parser("files", help="列出 SQLite 中记录的 TokenFS 文件")
+    subparsers.add_parser("replicas", help="查看远端主副本和本地缓存副本状态")
     subparsers.add_parser("affinity", help="查看每个文件的 GPU 访问亲和统计")
     subparsers.add_parser("metrics", help="查看读写、命中率、溢写和预分配指标")
     subparsers.add_parser("metrics-json", help="以 JSON 输出原始指标和派生命中率")
     subparsers.add_parser("check", help="检查 SQLite 元数据和物理文件是否一致")
+    cache_gc_parser = subparsers.add_parser(
+        "cache-gc", help="删除远端已有主副本的低价值本地缓存副本"
+    )
+    cache_gc_parser.add_argument(
+        "--max-cache-mib",
+        type=int,
+        default=0,
+        help="每个 GPU 最多保留多少 MiB 本地缓存副本，默认 0 表示尽量清空可删缓存",
+    )
+    cache_gc_parser.add_argument("--dry-run", action="store_true", help="只展示将删除的缓存")
     args = parser.parse_args()
 
     command = args.command or "status"
@@ -621,6 +799,8 @@ def main() -> int:
         print_status(config, config_path)
     elif command == "files":
         print_files(config)
+    elif command == "replicas":
+        print_replicas(config)
     elif command == "affinity":
         print_affinity(config)
     elif command == "metrics":
@@ -629,6 +809,8 @@ def main() -> int:
         print_metrics_json(config)
     elif command == "check":
         return print_check(config)
+    elif command == "cache-gc":
+        return cache_gc(config, args.max_cache_mib, args.dry_run)
     else:
         parser.print_help()
         return 1

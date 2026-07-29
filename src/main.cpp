@@ -80,6 +80,13 @@ struct FileMeta {
   uint64_t remote_access_cost = 10;
   uint64_t producer_gpu = 0;
   uint64_t share_count = 1;
+  std::string primary_tier = "local";
+  bool has_remote_copy = false;
+  int local_cache_owner_gpu = -1;
+  std::string replica_state = "LOCAL_ONLY";
+  uint64_t cache_generation = 0;
+  uint64_t last_promoted_at = 0;
+  uint64_t last_demoted_at = 0;
 };
 
 struct ContentRefResult {
@@ -144,7 +151,14 @@ class MetadataStore {
          "recompute_cost INTEGER NOT NULL DEFAULT 10,"
          "remote_access_cost INTEGER NOT NULL DEFAULT 10,"
          "producer_gpu INTEGER NOT NULL DEFAULT 0,"
-         "share_count INTEGER NOT NULL DEFAULT 1"
+         "share_count INTEGER NOT NULL DEFAULT 1,"
+         "primary_tier TEXT NOT NULL DEFAULT 'local',"
+         "has_remote_copy INTEGER NOT NULL DEFAULT 0,"
+         "local_cache_owner_gpu INTEGER NOT NULL DEFAULT -1,"
+         "replica_state TEXT NOT NULL DEFAULT 'LOCAL_ONLY',"
+         "cache_generation INTEGER NOT NULL DEFAULT 0,"
+         "last_promoted_at INTEGER NOT NULL DEFAULT 0,"
+         "last_demoted_at INTEGER NOT NULL DEFAULT 0"
          ");");
     EnsureColumn("files", "checksum", "TEXT");
     EnsureColumn("files", "read_count", "INTEGER NOT NULL DEFAULT 0");
@@ -153,6 +167,15 @@ class MetadataStore {
     EnsureColumn("files", "remote_access_cost", "INTEGER NOT NULL DEFAULT 10");
     EnsureColumn("files", "producer_gpu", "INTEGER NOT NULL DEFAULT 0");
     EnsureColumn("files", "share_count", "INTEGER NOT NULL DEFAULT 1");
+    EnsureColumn("files", "primary_tier", "TEXT NOT NULL DEFAULT 'local'");
+    EnsureColumn("files", "has_remote_copy", "INTEGER NOT NULL DEFAULT 0");
+    EnsureColumn("files", "local_cache_owner_gpu",
+                 "INTEGER NOT NULL DEFAULT -1");
+    EnsureColumn("files", "replica_state",
+                 "TEXT NOT NULL DEFAULT 'LOCAL_ONLY'");
+    EnsureColumn("files", "cache_generation", "INTEGER NOT NULL DEFAULT 0");
+    EnsureColumn("files", "last_promoted_at", "INTEGER NOT NULL DEFAULT 0");
+    EnsureColumn("files", "last_demoted_at", "INTEGER NOT NULL DEFAULT 0");
     Exec("CREATE TABLE IF NOT EXISTS metrics ("
          "name TEXT PRIMARY KEY,"
          "value INTEGER NOT NULL DEFAULT 0"
@@ -187,7 +210,10 @@ class MetadataStore {
         "COALESCE(checksum,''),state,COALESCE(read_count,0),"
         "COALESCE(content_key,''),COALESCE(recompute_cost,10),"
         "COALESCE(remote_access_cost,10),COALESCE(producer_gpu,0),"
-        "COALESCE(share_count,1) "
+        "COALESCE(share_count,1),COALESCE(primary_tier,'local'),"
+        "COALESCE(has_remote_copy,0),COALESCE(local_cache_owner_gpu,-1),"
+        "COALESCE(replica_state,'LOCAL_ONLY'),COALESCE(cache_generation,0),"
+        "COALESCE(last_promoted_at,0),COALESCE(last_demoted_at,0) "
         "FROM files WHERE logical_path=?;";
     sqlite3_stmt* stmt = nullptr;
     Prepare(sql, &stmt);
@@ -218,6 +244,16 @@ class MetadataStore {
         static_cast<uint64_t>(sqlite3_column_int64(stmt, 11));
     meta.producer_gpu = static_cast<uint64_t>(sqlite3_column_int64(stmt, 12));
     meta.share_count = static_cast<uint64_t>(sqlite3_column_int64(stmt, 13));
+    meta.primary_tier = ColumnText(stmt, 14);
+    meta.has_remote_copy = sqlite3_column_int64(stmt, 15) != 0;
+    meta.local_cache_owner_gpu = sqlite3_column_int(stmt, 16);
+    meta.replica_state = ColumnText(stmt, 17);
+    meta.cache_generation =
+        static_cast<uint64_t>(sqlite3_column_int64(stmt, 18));
+    meta.last_promoted_at =
+        static_cast<uint64_t>(sqlite3_column_int64(stmt, 19));
+    meta.last_demoted_at =
+        static_cast<uint64_t>(sqlite3_column_int64(stmt, 20));
     sqlite3_finalize(stmt);
     return meta;
   }
@@ -228,8 +264,10 @@ class MetadataStore {
     const char* sql =
         "INSERT INTO files(logical_path,gpu_id,tier,backend_id,physical_path,"
         "size_bytes,checksum,state,created_at,updated_at,last_access_at,read_count,"
-        "content_key,recompute_cost,remote_access_cost,producer_gpu,share_count) "
-        "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) "
+        "content_key,recompute_cost,remote_access_cost,producer_gpu,share_count,"
+        "primary_tier,has_remote_copy,local_cache_owner_gpu,replica_state,"
+        "cache_generation,last_promoted_at,last_demoted_at) "
+        "VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?) "
         "ON CONFLICT(logical_path) DO UPDATE SET "
         "gpu_id=excluded.gpu_id,"
         "tier=excluded.tier,"
@@ -243,6 +281,13 @@ class MetadataStore {
         "remote_access_cost=excluded.remote_access_cost,"
         "producer_gpu=excluded.producer_gpu,"
         "share_count=excluded.share_count,"
+        "primary_tier=excluded.primary_tier,"
+        "has_remote_copy=excluded.has_remote_copy,"
+        "local_cache_owner_gpu=excluded.local_cache_owner_gpu,"
+        "replica_state=excluded.replica_state,"
+        "cache_generation=excluded.cache_generation,"
+        "last_promoted_at=excluded.last_promoted_at,"
+        "last_demoted_at=excluded.last_demoted_at,"
         "updated_at=excluded.updated_at;";
     sqlite3_stmt* stmt = nullptr;
     Prepare(sql, &stmt);
@@ -265,6 +310,18 @@ class MetadataStore {
                        static_cast<sqlite3_int64>(meta.remote_access_cost));
     sqlite3_bind_int64(stmt, 16, static_cast<sqlite3_int64>(meta.producer_gpu));
     sqlite3_bind_int64(stmt, 17, static_cast<sqlite3_int64>(meta.share_count));
+    sqlite3_bind_text(stmt, 18, meta.primary_tier.c_str(), -1,
+                      SQLITE_TRANSIENT);
+    sqlite3_bind_int64(stmt, 19, meta.has_remote_copy ? 1 : 0);
+    sqlite3_bind_int(stmt, 20, meta.local_cache_owner_gpu);
+    sqlite3_bind_text(stmt, 21, meta.replica_state.c_str(), -1,
+                      SQLITE_TRANSIENT);
+    sqlite3_bind_int64(stmt, 22,
+                       static_cast<sqlite3_int64>(meta.cache_generation));
+    sqlite3_bind_int64(stmt, 23,
+                       static_cast<sqlite3_int64>(meta.last_promoted_at));
+    sqlite3_bind_int64(stmt, 24,
+                       static_cast<sqlite3_int64>(meta.last_demoted_at));
     StepDone(stmt);
   }
 
@@ -524,7 +581,11 @@ class MetadataStore {
             "COALESCE(checksum,''),state,COALESCE(read_count,0),"
             "COALESCE(last_access_at,0),COALESCE(content_key,''),"
             "COALESCE(recompute_cost,10),COALESCE(remote_access_cost,10),"
-            "COALESCE(producer_gpu,0),COALESCE(share_count,1) "
+            "COALESCE(producer_gpu,0),COALESCE(share_count,1),"
+            "COALESCE(primary_tier,'local'),COALESCE(has_remote_copy,0),"
+            "COALESCE(local_cache_owner_gpu,-1),"
+            "COALESCE(replica_state,'LOCAL_ONLY'),COALESCE(cache_generation,0),"
+            "COALESCE(last_promoted_at,0),COALESCE(last_demoted_at,0) "
             "FROM files WHERE gpu_id=? AND tier='local' AND state='COMMITTED' "
             "AND logical_path != ? "
             "ORDER BY COALESCE(read_count,0) ASC,"
@@ -568,6 +629,16 @@ class MetadataStore {
           static_cast<uint64_t>(sqlite3_column_int64(stmt, 13));
       candidate.meta.share_count =
           static_cast<uint64_t>(sqlite3_column_int64(stmt, 14));
+      candidate.meta.primary_tier = ColumnText(stmt, 15);
+      candidate.meta.has_remote_copy = sqlite3_column_int64(stmt, 16) != 0;
+      candidate.meta.local_cache_owner_gpu = sqlite3_column_int(stmt, 17);
+      candidate.meta.replica_state = ColumnText(stmt, 18);
+      candidate.meta.cache_generation =
+          static_cast<uint64_t>(sqlite3_column_int64(stmt, 19));
+      candidate.meta.last_promoted_at =
+          static_cast<uint64_t>(sqlite3_column_int64(stmt, 20));
+      candidate.meta.last_demoted_at =
+          static_cast<uint64_t>(sqlite3_column_int64(stmt, 21));
       out.push_back(std::move(candidate));
     }
     sqlite3_finalize(stmt);
@@ -804,6 +875,10 @@ class TokenFS {
         meta.size_bytes = FileSizeNoThrow(local);
         meta.state = "COMMITTED";
         meta.producer_gpu = static_cast<uint64_t>(gpu->gpu_id);
+        meta.primary_tier = "local";
+        meta.has_remote_copy = false;
+        meta.local_cache_owner_gpu = gpu->gpu_id;
+        meta.replica_state = "LOCAL_ONLY";
       } else {
         auto remote = RemotePath(*gpu, rel);
         if (!fs::exists(remote)) {
@@ -817,6 +892,10 @@ class TokenFS {
         meta.size_bytes = FileSizeNoThrow(remote);
         meta.state = "COMMITTED";
         meta.producer_gpu = static_cast<uint64_t>(gpu->gpu_id);
+        meta.primary_tier = "remote";
+        meta.has_remote_copy = true;
+        meta.local_cache_owner_gpu = -1;
+        meta.replica_state = "REMOTE_ONLY";
       }
       metadata_.Upsert(meta);
     }
@@ -1069,6 +1148,18 @@ class TokenFS {
       fs::rename(meta->physical_path, dest, ec);
       if (ec) {
         return -ec.value();
+      }
+      if (meta->has_remote_copy && meta->tier == "local") {
+        const fs::path old_remote = RemotePath(*gpu, from_rel);
+        const fs::path new_remote = RemotePath(*gpu, to_rel);
+        if (fs::exists(old_remote)) {
+          fs::create_directories(new_remote.parent_path());
+          std::error_code remote_ec;
+          fs::rename(old_remote, new_remote, remote_ec);
+          if (remote_ec) {
+            return -remote_ec.value();
+          }
+        }
       }
       meta->logical_path = to;
       meta->physical_path = dest;
@@ -1323,11 +1414,19 @@ class TokenFS {
       meta.tier = "local";
       meta.backend_id = "local";
       meta.physical_path = gpu.local_root / rel;
+      meta.primary_tier = "local";
+      meta.has_remote_copy = false;
+      meta.local_cache_owner_gpu = gpu.gpu_id;
+      meta.replica_state = "LOCAL_ONLY";
       return meta;
     }
     meta.tier = "remote";
     meta.backend_id = gpu.remote_backend;
     meta.physical_path = RemotePath(gpu, rel);
+    meta.primary_tier = "remote";
+    meta.has_remote_copy = true;
+    meta.local_cache_owner_gpu = -1;
+    meta.replica_state = "REMOTE_ONLY";
     return meta;
   }
 
@@ -1400,12 +1499,18 @@ class TokenFS {
     meta.backend_id = "local";
     meta.physical_path = local;
     meta.size_bytes = size;
+    meta.primary_tier = "remote";
+    meta.has_remote_copy = true;
+    meta.local_cache_owner_gpu = gpu.gpu_id;
+    meta.replica_state = "REMOTE_WITH_LOCAL_CACHE";
+    meta.cache_generation += 1;
+    meta.last_promoted_at = UnixNowSeconds();
     meta.state = "LOCAL_READY";
     metadata_.Upsert(meta);
     meta.state = "COMMITTED";
     metadata_.Upsert(meta);
-    fs::remove(source, ec);
     metadata_.AddMetric("migration_to_local_commit", 1);
+    metadata_.AddMetric("local_cache_create_count", 1);
     metadata_.AddMetric(metric_prefix + "_count", 1);
     metadata_.AddMetric(metric_prefix + "_bytes", size);
     return 0;
@@ -1546,6 +1651,14 @@ class TokenFS {
       return -errno;
     }
     UpdateHandleMeta(handle, handle.state);
+    if (auto meta = metadata_.Get(handle.logical_path)) {
+      meta->primary_tier = "remote";
+      meta->has_remote_copy = true;
+      meta->local_cache_owner_gpu = -1;
+      meta->replica_state = "REMOTE_ONLY";
+      meta->last_demoted_at = UnixNowSeconds();
+      metadata_.Upsert(*meta);
+    }
     metadata_.AddMetric("spill_count", 1);
     metadata_.AddMetric("spill_bytes", std::max(moved_bytes, new_size));
     return 0;
@@ -1557,13 +1670,42 @@ class TokenFS {
       return -EINVAL;
     }
     fs::path remote = RemotePath(gpu, parsed->second);
-    fs::create_directories(remote.parent_path());
     const uint64_t size = FileSizeNoThrow(meta.physical_path);
     const fs::path source = meta.physical_path;
+
+    std::error_code ec;
+    if (meta.has_remote_copy && fs::exists(remote, ec)) {
+      FileMeta deleting = meta;
+      deleting.state = "DELETING_CACHE";
+      metadata_.Upsert(deleting);
+
+      fs::remove(source, ec);
+      if (ec) {
+        return -ec.value();
+      }
+
+      meta.tier = "remote";
+      meta.backend_id = gpu.remote_backend;
+      meta.physical_path = remote;
+      meta.size_bytes = std::max(size, FileSizeNoThrow(remote));
+      meta.primary_tier = "remote";
+      meta.has_remote_copy = true;
+      meta.local_cache_owner_gpu = -1;
+      meta.replica_state = "REMOTE_ONLY";
+      meta.last_demoted_at = UnixNowSeconds();
+      meta.state = "COMMITTED";
+      metadata_.Upsert(meta);
+      metadata_.AddMetric("local_cache_delete_count", 1);
+      metadata_.AddMetric("local_cache_delete_bytes", size);
+      metadata_.AddMetric("evict_count", 1);
+      metadata_.AddMetric("evict_bytes", size);
+      return 0;
+    }
+
+    fs::create_directories(remote.parent_path());
     fs::path tmp = remote;
     tmp += config_.temp_suffix + ".evict";
 
-    std::error_code ec;
     fs::remove(tmp, ec);
     ec.clear();
 
@@ -1591,6 +1733,11 @@ class TokenFS {
     meta.backend_id = gpu.remote_backend;
     meta.physical_path = remote;
     meta.size_bytes = size;
+    meta.primary_tier = "remote";
+    meta.has_remote_copy = true;
+    meta.local_cache_owner_gpu = -1;
+    meta.replica_state = "REMOTE_ONLY";
+    meta.last_demoted_at = UnixNowSeconds();
     meta.state = "REMOTE_READY";
     metadata_.Upsert(meta);
     meta.state = "COMMITTED";
@@ -1629,6 +1776,20 @@ class TokenFS {
     }
     if (meta.share_count == 0) {
       meta.share_count = 1;
+    }
+    if (handle.tier == "remote") {
+      meta.primary_tier = "remote";
+      meta.has_remote_copy = true;
+      meta.local_cache_owner_gpu = -1;
+      meta.replica_state = "REMOTE_ONLY";
+    } else if (meta.primary_tier.empty()) {
+      meta.primary_tier = "local";
+      meta.has_remote_copy = false;
+      meta.local_cache_owner_gpu = handle.gpu_id;
+      meta.replica_state = "LOCAL_ONLY";
+    } else if (meta.primary_tier == "local" && !meta.has_remote_copy) {
+      meta.local_cache_owner_gpu = handle.gpu_id;
+      meta.replica_state = "LOCAL_ONLY";
     }
     meta.state = state;
     metadata_.Upsert(meta);
@@ -1749,6 +1910,27 @@ class TokenFS {
 
   void RecoverIncompleteFiles() {
     for (const auto& meta : metadata_.IncompleteFiles()) {
+      if (meta.state == "DELETING_CACHE") {
+        FileMeta recovered = meta;
+        auto parsed = ParseGpuPath(meta.logical_path);
+        if (parsed) {
+          const auto [gpu, rel] = *parsed;
+          recovered.tier = "remote";
+          recovered.backend_id = gpu->remote_backend;
+          recovered.physical_path = RemotePath(*gpu, rel);
+          recovered.primary_tier = "remote";
+          recovered.has_remote_copy = true;
+          recovered.local_cache_owner_gpu = -1;
+          recovered.replica_state = "REMOTE_ONLY";
+          recovered.state = "COMMITTED";
+          recovered.last_demoted_at = UnixNowSeconds();
+          std::error_code ec;
+          fs::remove(meta.physical_path, ec);
+          metadata_.Upsert(recovered);
+          metadata_.AddMetric("cache_delete_recovered_count", 1);
+          continue;
+        }
+      }
       if (meta.state == "COPYING_TO_REMOTE" || meta.state == "COPYING_TO_LOCAL" ||
           meta.state == "REMOTE_READY" || meta.state == "LOCAL_READY") {
         FileMeta recovered = meta;

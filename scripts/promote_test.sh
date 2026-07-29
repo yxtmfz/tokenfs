@@ -61,12 +61,12 @@ echo "test: second read promotes hot shard to local"
 sha256sum "$mount_point/gpu0/hot/shard.tokens" \
   | awk '{print $1}' >/tmp/tokenfs-promote-read2.sha256
 test -f /var/lib/tokenfs/local/gpu0/hot/shard.tokens
-test ! -e /var/lib/tokenfs/remote-sim/gpu0/hot/shard.tokens
+test -f /var/lib/tokenfs/remote-sim/gpu0/hot/shard.tokens
 
 second_row="$(sqlite3 "$metadata_db" \
-  "select tier,backend_id,read_count,state from files where logical_path='/gpu0/hot/shard.tokens';")"
-if [[ "$second_row" != "local|local|2|COMMITTED" ]]; then
-  echo "expected second read to promote local|local|2|COMMITTED"
+  "select tier,backend_id,read_count,state,primary_tier,has_remote_copy,local_cache_owner_gpu,replica_state from files where logical_path='/gpu0/hot/shard.tokens';")"
+if [[ "$second_row" != "local|local|2|COMMITTED|remote|1|0|REMOTE_WITH_LOCAL_CACHE" ]]; then
+  echo "expected second read to create a local cache while keeping the remote primary"
   echo "actual: $second_row"
   exit 1
 fi
@@ -84,5 +84,6 @@ fi
 
 "$project_root/scripts/tokenfsctl.py" --config "$temp_config" metrics | grep -q "热点提升次数"
 "$project_root/scripts/tokenfsctl.py" --config "$temp_config" files | grep -q "reads=2"
+"$project_root/scripts/tokenfsctl.py" --config "$temp_config" replicas | grep -q "REMOTE_WITH_LOCAL_CACHE"
 
 echo "TokenFS promote-on-read test passed."

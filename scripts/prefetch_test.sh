@@ -62,12 +62,12 @@ for _ in {1..50}; do
 done
 
 test -f /var/lib/tokenfs/local/gpu0/prefetch/shard-000002.tokens
-test ! -e /var/lib/tokenfs/remote-sim/gpu0/prefetch/shard-000002.tokens
+test -f /var/lib/tokenfs/remote-sim/gpu0/prefetch/shard-000002.tokens
 
 prefetched_row="$(sqlite3 "$metadata_db" \
-  "select tier,backend_id,read_count,state from files where logical_path='/gpu0/prefetch/shard-000002.tokens';")"
-if [[ "$prefetched_row" != "local|local|0|COMMITTED" ]]; then
-  echo "expected shard-000002 to be prefetched as local|local|0|COMMITTED"
+  "select tier,backend_id,read_count,state,primary_tier,has_remote_copy,local_cache_owner_gpu,replica_state from files where logical_path='/gpu0/prefetch/shard-000002.tokens';")"
+if [[ "$prefetched_row" != "local|local|0|COMMITTED|remote|1|0|REMOTE_WITH_LOCAL_CACHE" ]]; then
+  echo "expected shard-000002 to be prefetched as local cache with remote primary"
   echo "actual: $prefetched_row"
   exit 1
 fi
@@ -87,5 +87,6 @@ fi
 
 "$project_root/scripts/tokenfsctl.py" --config "$temp_config" metrics | grep -q "预取成功次数"
 "$project_root/scripts/tokenfsctl.py" --config "$temp_config" files | grep -q "/gpu0/prefetch/shard-000002.tokens"
+"$project_root/scripts/tokenfsctl.py" --config "$temp_config" replicas | grep -q "REMOTE_WITH_LOCAL_CACHE"
 
 echo "TokenFS prefetch test passed."
