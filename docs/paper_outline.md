@@ -1,115 +1,146 @@
 # AURA-KV 论文大纲草案
 
-## Abstract
+## 1. Abstract
 
-说明大模型推理 KV Cache 对分层存储的需求，提出 AURA-KV 作为候选研究原型，联合考虑替代来源感知替换和共享拓扑感知副本放置。
+要证明：多 GPU KV Cache 分层存储需要联合考虑替换和共享副本放置。图表不放在摘要，但摘要应给出问题、方法和谨慎结论。当前还不能写真实性能提升百分比，必须等真实实验。
 
-## Introduction
+审稿人可能质疑：是否只是缓存策略组合。回应方向：强调替代来源、共享拓扑、预算和联合控制的系统问题，并用消融证明各部分必要性。
+
+## 2. Introduction
 
 论证链：
 
 ```text
-KV Cache 容量压力增大
-本地 SSD 延迟低但容量有限
-NVMe-oF 远端 SSD 容量大但访问更慢
-前缀/KV Cache 共享存在但并非所有任务都共享
-简单 LRU/LFU 或固定副本策略无法同时处理价值、替代来源、共享拓扑和预算
+长上下文和 Agent 推理增加 KV Cache 压力
+本地 SSD 低延迟但容量有限
+远端 NVMe-oF 容量大但有网络长尾
+共享前缀存在但并非所有数据共享
+简单替换或固定副本策略不够
+AURA-KV 提出候选联合方案
 ```
 
-## Motivation
+需要图：系统动机图和简单 baseline 对比图。
 
-通过模拟和后续真实微基准展示：
+当前证据：模拟器和 FUSE 原型。真实性能结论待补。
+
+## 3. Motivation
+
+要证明几个痛点：
 
 ```text
-远端读取长尾影响 P99
-高重算成本前缀被 LRU 误淘汰
-固定副本浪费重复空间
-ProducerLocal 在跨节点共享时远端流量高
-独立替换和独立副本控制可能冲突
+RemoteOnly 远端流量高
+ProducerLocal 跨节点共享差
+LRU 可能误删高重算前缀
+StaticNReplica 可能浪费空间
+独立模块可能互相冲突
 ```
 
-## Problem Definition
+实验：motivation benchmark，先用模拟，后用真实 NVMe-oF。
 
-把问题定义为多动作在线决策：
+## 4. Problem Definition
 
-```text
-KEEP / PROMOTE / REPLICATE / DEMOTE / EVICT_LOCAL / DROP_RECOMPUTABLE / PIN / PREFETCH
-```
+定义 K、N、动作集合、容量和预算约束、SLO 目标。需要把公式和变量解释清楚，不追求复杂证明。
 
-约束包括容量、重复预算、SLO、后台带宽、安全域和一致性。
+## 5. System Design
 
-## System Design
-
-介绍：
+使用架构图说明：
 
 ```text
-FUSE 统一命名空间
-远端权威副本
-节点本地缓存副本
-访问图
-预测器
-替代来源解析器
-共享状态分类器
+FUSE/统一接口
+元数据
+访问预测
+共享拓扑
+替代来源
 联合控制器
-决策日志
+I/O 调度
+本地/远端存储
 ```
 
-## Candidate Innovation 1
+审稿人可能问为什么不用现成缓存系统。回应：现有系统通常不同时处理替代来源、前缀依赖、共享拓扑和 NVMe-oF 分层约束。
 
-替代来源感知的学习型 KV Cache 多动作替换。
+## 6. Candidate Innovation 1
 
-## Candidate Innovation 2
+写替代来源与前缀结构感知的多动作替换。图：替代来源流程图、前缀树示例。
 
-动态共享拓扑感知的预算化 KV Cache 副本放置。
+当前证据：`AlternativeAwareNoLearning` 和 `AURA-KV` baseline 已可模拟。学习模型尚未训练，论文中不能过度强调“AI”效果。
 
-## Joint Controller
+## 7. Candidate Innovation 2
 
-强调两个模块不是独立 if-else：替换策略需要知道全局副本和替代来源，副本放置需要使用预测、冷却概率和重计算代价。
+写动态共享拓扑感知的预算化副本放置。图：CacheNodeGraph、私有/共享状态机、副本租约状态机。
 
-## Implementation
+当前证据：simulator 有 node_shared、cluster_shared、hotspot_shift、tenant_isolation 场景。
 
-介绍 TokenFS 原型、SQLite、FUSE、模拟后端、MountedNVMeOFBackend 预留方式和 trace-driven simulator。
+## 8. Joint Controller
 
-## Evaluation
+这是核心章节。要证明两个创新点不是独立 if-else。图：控制周期时序图、冲突矩阵、资源影子价格变化图。
 
-比较 baseline：
+当前证据：`AuraKVPolicy` 是简化联合策略；完整事务控制器尚未实现，论文前必须补足或诚实限制。
+
+## 9. Implementation
+
+说明 TokenFS FUSE 原型、SQLite、目录后端、NVMe-oF 脚本、AURA-KV simulator。不要把 Planned 写成 Implemented。
+
+## 10. Evaluation
+
+baseline：
 
 ```text
-RemoteOnly
-ProducerLocal
-NodeLRU
-NodeLFU
-StaticNReplica
-AffinityOnly
-AIReplacementOnly
-AlternativeAwareNoLearning
-AURA-KV
+RemoteOnly / ProducerLocal / NodeLRU / NodeLFU / StaticNReplica
+AffinityOnly / AIReplacementOnly / AlternativeAwareNoLearning / AURA-KV
 ```
 
-指标包括本地命中率、远端读取、重复空间、P99、SLO 违约率和 churn。
-
-## Related Work
-
-分类讨论：
+指标：
 
 ```text
-KV Cache 管理
-Prefix Cache
-分层存储
-NVMe-oF 存储系统
+P99/TTFT
+local hit rate
+remote bytes
+duplicate bytes
+churn
+recompute_ms
+decision overhead
+```
+
+真实实验前，所有结果必须标注 simulated。
+
+## 11. Related Work
+
+分类：
+
+```text
+LLM KV Cache / Prefix Cache
 分布式缓存替换
 副本放置
+分层存储
+NVMe-oF 存储系统
+vLLM/SGLang/LMCache 等系统
 ```
 
-## Limitations
+需要系统检索后才能写新颖性边界。
 
-当前没有真实 GPU/NVMe-oF 环境；模拟结果不能作为真实性能结论；学习模型尚未证明优于解析式策略；新颖性仍需系统检索。
+## 12. Limitations
 
-## Conclusion
+必须承认：
 
-总结 AURA-KV 的候选贡献和后续真实环境验证计划。
+```text
+真实硬件未到位
+学习模型尚未证明优于 EWMA
+当前联合控制器是原型
+FUSE 路径性能可能不是最终部署形态
+NVMe/RDMA 和 SPDK 尚未评估
+```
 
-## 谨慎声明
+## 13. Conclusion
 
-AURA-KV 的新颖性主张仍需通过系统性论文、专利和开源系统检索验证，当前实现属于候选研究原型，不得直接宣称全球首创。
+总结候选贡献和后续验证路线，不写过强结论。
 
+## 14. 实现状态
+
+| 章节材料 | 状态 | 证据 | 缺口 |
+|---|---|---|---|
+| Background | Partial | README/docs | 需要补相关工作 |
+| System Design | Partial | docs + code | 需要图表打磨 |
+| Innovation 1 | Partial | simulator | 需要真实 trace/训练模型 |
+| Innovation 2 | Partial | simulator | 需要更多消融 |
+| Joint Controller | Partial | `AuraKVPolicy` | 缺事务和后台执行器 |
+| Evaluation | Partial | simulated report | 缺真实 NVMe-oF/GPU |

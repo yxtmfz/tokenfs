@@ -11,47 +11,416 @@ Adaptive Unified Replacement and Affinity-aware KV Cache Management
 面向 NVMe-oF 分层存储的自适应 KV Cache 联合替换与共享副本管理系统
 ```
 
-AURA-KV 的目标是在 TokenFS 已有 FUSE 原型上，补齐论文实验所需的研究控制层。当前实现仍是候选研究原型，不声称已经具备论文结论，也不声称全球首次。
+本文是整个项目的总入口。它既面向第一次接触本项目的人，也面向后续继续开发、调试和写论文的人。AURA-KV 当前仍是候选研究原型，不声称已经具备论文结论，不声称全球首次，也不把模拟结果包装成真实硬件实验。
 
-## 背景
+## 1. 本文解决的问题
 
-目标环境中，远端 NVMe-oF SSD 保存大容量权威数据，本地 SSD 保存热点 KV Cache 副本。不同 GPU 的任务大多可能不同，但前缀共享、系统提示词共享、Agent 模板共享和长文档前缀共享确实存在。
-
-系统要回答的问题不是“本地满了删最旧文件”，而是：
+大语言模型推理时会产生大量中间数据，尤其是 KV Cache。GPU 显存速度最快但容量最贵，本地 SSD 容量更大但延迟更高，远端 NVMe-oF SSD 容量更大、可共享，但通过网络访问会有额外延迟和长尾。AURA-KV 研究的问题是：
 
 ```text
-哪些缓存值得留在本地？
-删除某个本地副本后还能从哪里恢复？
-共享缓存应复制到哪些计算节点？
-副本数量如何受容量预算和预测收益约束？
-后台复制如何不干扰前台推理？
+在多 GPU、多节点、本地 SSD 容量有限、远端 NVMe-oF SSD 容量较大的场景中，
+如何在线决定哪些 KV Cache 留在本地，哪些放远端，
+哪些共享缓存值得在某些节点建立本地副本，
+以及这些决策如何避免互相冲突？
 ```
 
-## 当前落地范围
+它不是一个普通网盘，也不是从零替代 ext4/XFS 的通用文件系统。现阶段由两层组成：
 
-当前仓库新增了独立的 `aura_kv/` 研究实验框架：
+```text
+TokenFS: 真实可挂载的 FUSE 文件系统原型
+AURA-KV: 面向论文实验的策略、模拟器和联合控制框架
+```
 
-| 模块 | 状态 | 说明 |
+## 2. 阅读前需要知道的基础概念
+
+### 2.1 Prompt、Token、Prefill、Decode 和 KV Cache
+
+**Prompt** 是用户输入给大模型的文本，例如“请总结这篇论文”。模型不会直接处理汉字或英文单词，而是先把文本切成 **Token**，Token 可以理解为模型能够识别的“小词块”。
+
+推理通常分两段：
+
+```text
+Prefill: 处理输入 Prompt，计算整段上下文的中间状态
+Decode: 逐个生成新 token
+```
+
+Transformer 模型每一层注意力计算会产生 Key 和 Value 张量。为了避免每次生成新 token 都重新计算历史上下文，系统会保存这些 Key/Value 张量，这就是 **KV Cache**。KV Cache 的价值在于：如果同一段前缀之后还会被使用，保存它可以减少重复 prefill 计算。
+
+本项目把 KV Cache、Prompt Token 和 Token Shard 抽象成不可变文件或不可变块。这样做是为了先研究存储和调度策略，而不是一开始陷入具体模型张量格式。
+
+### 2.2 为什么 KV Cache 会占用大量空间
+
+KV Cache 的大小和以下因素有关：
+
+```text
+模型层数
+hidden size
+注意力头数
+token 数
+数据类型，例如 fp16/bf16/int8
+并行策略，例如 tensor parallel / pipeline parallel
+```
+
+长 Prompt、长文档问答、多轮 Agent 任务都会产生较大的缓存。GPU 显存优先服务正在运行的模型权重和活跃请求，不适合无限保存历史 KV Cache；本地 SSD 和远端 SSD 就成为“显存外缓存层”。
+
+### 2.3 GPU 显存、CPU 内存、本地 SSD、远端 SSD 的区别
+
+可以用办公桌类比：
+
+```text
+GPU 显存：手边最小但最快的桌面，正在计算的东西放这里
+CPU 内存：旁边的大桌子，快但不如 GPU 显存
+本地 SSD：办公室柜子，容量大、拿取较快
+远端 NVMe-oF SSD：楼下仓库，容量更大、多人共享，但需要走网络
+```
+
+本项目重点在本地 SSD 和远端 SSD 之间做策略。GPU 在这里不是存储设备，而是访问来源和计算资源：系统要知道某份缓存由哪个 GPU 产生、哪个节点最常访问、是否跨节点共享。
+
+### 2.4 NVMe-oF 是什么
+
+NVMe 是主机访问高速 SSD 的协议。NVMe-oF，全称 **NVMe over Fabrics**，意思是把 NVMe 命令通过网络传到远端存储服务器。常见传输包括：
+
+```text
+NVMe/TCP: 通过普通 TCP/IP 网络传输，部署简单
+NVMe/RDMA: 通过 RDMA 网络传输，延迟更低但环境复杂
+```
+
+在本项目中，AURA-KV 策略层不直接关心 TCP 还是 RDMA。真实设备接入后，启动脚本负责把远端 Namespace 连接并挂载成目录，例如：
+
+```text
+/srv/tokenfs/remote0
+```
+
+上层算法只看到“远端后端目录”和采集到的延迟、带宽、P99 等指标。这样做可以避免算法写死 IP、端口、RDMA 或 SPDK。
+
+## 3. 通俗场景示例
+
+假设有一个小型集群：
+
+```text
+NodeA: GPU0, GPU1, 本地 SSD 100 GB
+NodeB: GPU0, GPU1, 本地 SSD 100 GB
+NodeC: GPU0, GPU1, 本地 SSD 100 GB
+RemotePool: 远端 NVMe-oF SSD 10 TB
+```
+
+请求分为三类：
+
+```text
+私有请求：每个 GPU 处理完全不同用户，不共享缓存
+同节点共享：NodeA 的两个 GPU 都使用相同系统提示词
+跨节点共享：NodeA、NodeB、NodeC 都反复访问同一个长文档前缀
+```
+
+如果所有数据只放远端，容量够但延迟高；如果所有热点都复制到所有节点，本地空间很快被重复副本占满；如果只看 LRU，可能删掉很久没访问但重算极贵的公共前缀；如果只看 AI 预测冷热，可能不知道删掉后还有没有可靠替代来源。AURA-KV 试图把这些因素放进统一决策。
+
+## 4. 现有简单方案及其不足
+
+| 简单方案 | 通俗理解 | 不足 |
 |---|---|---|
-| CacheIdentity | 已实现 | 包含 sharing_domain、模型、token 前缀、tenant 等共享安全键 |
-| EWMAAccessPredictor | 已实现 | 无需训练的解析式预测器，作为安全回退 |
-| SharednessClassifier | 已实现 | 使用样本数、主导比例、共享熵和跨节点访问判断共享状态 |
-| AlternativeSourceResolver | 已实现 | 判断 SAME_NODE、PEER_NODE、REMOTE、RECOMPUTE、NONE |
-| ResourcePrices | 已实现基础版 | 维护容量、副本预算和 SLO 的影子价格 |
-| AURA-KV Policy | 已实现原型 | 联合预测、替代来源、共享状态、预算和副本收益选择动作 |
-| Trace Simulator | 已实现 | 可在无真实 IP 环境下运行可重复模拟 |
-| 9 个 baseline | 已实现 | RemoteOnly、ProducerLocal、LRU、LFU、StaticNReplica 等 |
+| RemoteOnly | 所有东西都放楼下仓库 | 本地命中率为 0，远端长尾会影响 P99 |
+| ProducerLocal | 谁产生就放谁旁边 | 跨节点共享时其他节点仍频繁读远端 |
+| NodeLRU | 每个节点删最久没用的 | 不知道重算代价、前缀依赖和替代来源 |
+| NodeLFU | 每个节点删访问次数少的 | 对阶段变化和热点迁移反应慢 |
+| StaticNReplica | 共享数据固定复制 N 份 | N 太小命中不足，N 太大浪费空间 |
+| AffinityOnly | 哪个节点访问多就放哪 | 不看容量预算、替代来源和重算成本 |
+| AIReplacementOnly | AI 预测冷热后替换 | AI 不应直接决定危险删除，也不知道全局副本 |
+| 替换和副本模块分开跑 | 两个团队各管一摊 | 可能刚删完又复制回来，造成 churn 和预算冲突 |
 
-## 与现有 TokenFS 的关系
+这些方案都可以作为 baseline，但不足以作为最终研究方案。
+
+## 5. 本项目的核心设计
+
+AURA-KV 保留两个候选研究重点：
 
 ```text
-TokenFS FUSE 主程序：负责真实挂载、读写、元数据和本地/远端目录后端
-AURA-KV simulator：负责研究策略验证、基线对比和论文实验框架
+候选创新一：替代来源与前缀结构感知的学习型 KV Cache 多动作替换
+候选创新二：动态共享拓扑感知的预算化 KV Cache 副本放置
 ```
 
-这样做的好处是：当前没有真实 NVMe-oF IP 时，也可以先验证联合决策逻辑；未来有真实环境后，再把 AURA-KV 策略逐步接入 FUSE 主路径。
+二者必须联合运行。创新点一回答“本地空间不够时，哪些缓存应该保留、降级、删除或预取”；创新点二回答“共享缓存应该在几个计算节点建立本地副本”。联合控制器把两者放进一个控制周期，统一检查容量、重复预算、SLO 和安全规则。
 
-## 谨慎声明
+## 6. 系统总架构
 
-AURA-KV 的新颖性主张仍需通过系统性论文、专利和开源系统检索验证。当前实现属于候选研究原型，不得直接宣称全球首创。
+### 6.1 Mermaid 架构图
 
+```mermaid
+flowchart TD
+    A["vLLM / SGLang / Token workload"] --> B["AURA-KV 统一接口"]
+    B --> C["访问跟踪与元数据"]
+    C --> D["AI/EWMA 访问预测器"]
+    C --> E["共享拓扑分析器"]
+    C --> F["替代来源解析器"]
+    D --> G["联合在线控制器"]
+    E --> G
+    F --> G
+    H["资源影子价格"] --> G
+    G --> I["前后台 I/O 调度器"]
+    I --> J["节点本地 SSD"]
+    I --> K["NVMe-oF 远端 SSD 池"]
+    G --> L["Decision Log / 实验指标"]
+```
+
+图中上半部分是控制面，负责记录、预测和决策；下半部分是数据面，负责真实读写。本项目当前 FUSE 主程序已经能真实挂载和访问目录后端；AURA-KV 新增的 simulator 用于研究控制面。
+
+### 6.2 ASCII 架构图
+
+```text
+AI 推理引擎
+  |
+  v
+FUSE / AURA-KV 接口
+  |
+  +--> 访问事件 AccessEvent
+  +--> 元数据 CacheObject / Replica
+  |
+  v
+联合控制器
+  |-- 访问预测器
+  |-- 共享拓扑分类器
+  |-- 替代来源解析器
+  |-- 资源影子价格
+  |-- SafetyGuard
+  |
+  +--> 前台读取: 立即选择本地/远端/peer/recompute
+  +--> 后台任务: prefetch / replicate / demote / GC
+          |
+          v
+本地 SSD <----> 远端 NVMe-oF SSD
+```
+
+## 7. 关键数据结构和元数据
+
+当前 AURA-KV 研究层的真实代码路径如下：
+
+| 概念 | 作用 | 当前代码 |
+|---|---|---|
+| `CacheIdentity` | 判断缓存是否技术上可共享 | `aura_kv/core.py` |
+| `CacheObject` | 缓存对象元数据，包含大小、生产者、重算成本 | `aura_kv/core.py` |
+| `AccessEvent` | 每次访问事件，包含 node、gpu、bytes、foreground | `aura_kv/core.py` |
+| `Replica` | 本地副本状态、租约和效用 | `aura_kv/core.py` |
+| `NodeState` | 节点本地容量和已有副本 | `aura_kv/core.py` |
+| `EWMAAccessPredictor` | 时间衰减访问预测 | `aura_kv/prediction.py` |
+| `SharednessClassifier` | 私有/共享状态分类 | `aura_kv/policies.py` |
+| `AlternativeSourceResolver` | 删除后的替代来源解析 | `aura_kv/policies.py` |
+| `AuraKVPolicy` | 联合策略原型 | `aura_kv/policies.py` |
+| `TraceSimulator` | trace-driven simulator | `aura_kv/simulator.py` |
+
+TokenFS FUSE 主路径仍在 `src/main.cpp`，里面有 SQLite 表 `files`、`gpu_access`、`gpu_access_events`、`local_replicas`、`metrics` 等。AURA-KV simulator 当前没有直接写入 TokenFS 的 SQLite，而是独立验证策略逻辑。
+
+## 8. KV Cache 完整生命周期
+
+一份 KV Cache 从产生到删除的过程如下：
+
+```mermaid
+stateDiagram-v2
+    [*] --> Created: 推理产生缓存
+    Created --> Identified: 生成 cache_key
+    Identified --> RemoteAuthoritative: 写入远端权威副本
+    RemoteAuthoritative --> ProvisionalPrivate: 样本不足
+    ProvisionalPrivate --> NodeShared: 同节点多 GPU 访问
+    ProvisionalPrivate --> ClusterShared: 跨节点访问
+    NodeShared --> LocalReplicaReady: 创建节点本地副本
+    ClusterShared --> LocalReplicaReady: 预算允许且边际收益为正
+    LocalReplicaReady --> LeaseRenewed: 前台命中续租
+    LeaseRenewed --> Expired: 访问下降
+    Expired --> Deleting: 无 pin 且替代来源可靠
+    Deleting --> RemoteAuthoritative: 删除本地副本
+    RemoteAuthoritative --> [*]: 远端权威副本按策略删除或保留
+```
+
+实际流程：
+
+1. KV Cache 创建：推理引擎生成某段前缀的 KV。
+2. cache_key 生成：包含模型、tokenizer、前缀 hash、sharing_domain 等。
+3. 远端权威副本写入：远端层保证可恢复。
+4. 初始状态分类：样本不足时是 `PROVISIONAL_PRIVATE`。
+5. 前台读取：优先本地 READY 副本，否则立即选远端或重算。
+6. 访问事件记录：写入 `AccessEvent`。
+7. 预测更新：EWMA 根据时间衰减访问更新未来访问估计。
+8. 共享状态更新：根据 dominance、sharedness entropy、跨节点访问分类。
+9. 本地副本创建：后台复制，前台不等待。
+10. 租约续期：命中副本后更新 last_hit 和 lease。
+11. 空间不足：联合控制器比较保留、迁移、淘汰。
+12. 执行动作：promotion、replication、demotion、eviction 等。
+13. 租约到期：标记 EXPIRED。
+14. GC：安全删除可恢复的本地副本。
+15. 崩溃恢复：扫描 COPYING、READY 但文件缺失、孤儿临时文件。
+
+## 9. 一个端到端实例
+
+### 9.1 NodeA GPU0 首次产生公共前缀
+
+NodeA 的 GPU0 处理一个长文档问答任务，产生缓存：
+
+```text
+cache_key = common-doc-prefix
+producer_node = NodeA
+producer_gpu = GPU0
+size = 256 MiB
+recompute_cost = 5000 ms
+sharing_domain = tenantA
+```
+
+系统先写远端权威副本。由于访问样本不足，状态为 `PROVISIONAL_PRIVATE`。此时不急着复制到所有节点。
+
+### 9.2 NodeA GPU1 随后访问
+
+NodeA 的 GPU1 也访问同一个公共前缀。访问图中 `common-doc-prefix -> NodeA` 的边权升高，但仍然只有一个节点活跃，因此它可能从 `PROVISIONAL_PRIVATE` 走向 `NODE_SHARED`。因为 NodeA 的两个 GPU 共享同一块本地 SSD，所以只需要一个节点级本地副本，不为 GPU0/GPU1 各复制一份。
+
+### 9.3 NodeB 重复访问
+
+NodeB 多次访问同一缓存后，访问图出现：
+
+```text
+NodeA: 8 次
+NodeB: 6 次
+NodeC: 0 次
+```
+
+active_node_count = 2，sharedness_entropy 较高，cross_node_accesses 足够，状态可能升级为 `CLUSTER_SHARED`。联合控制器计算 NodeB 新增副本的边际收益：
+
+```text
+本地命中节省 + 远端 I/O 节省 + 重算节省
+- 副本复制成本 - 本地容量价格 - 重复空间价格 - churn 惩罚
+```
+
+如果收益密度为正且预算允许，就在 NodeB 建立本地副本。
+
+### 9.4 NodeA 空间不足
+
+NodeA 本地 SSD 使用率达到 92%。控制器不会简单删除最旧缓存，而是解析替代来源：
+
+```text
+如果 common-doc-prefix 在远端有权威副本，并且 NodeB 有 READY 副本，
+删除 NodeA 本地副本后的替代来源至少是 REMOTE_NVME_OF 或 PEER_NODE_REPLICA。
+```
+
+如果当前 NodeA 未来访问预测很低，删除 NodeA 本地副本可能安全；但如果它是高重算成本公共前缀且 NodeA 仍会访问，则可能保留它，转而淘汰低价值私有后缀。
+
+### 9.5 前台 P99 过高
+
+如果前台 P99 接近 SLO，后台复制应暂停或降速。当前 TokenFS 主路径已有 QoS 工程指标；AURA-KV 文档和模拟器已保留 SLO 价格接口，但完整前后台调度器仍是 Planned。
+
+## 10. 算法、公式和变量
+
+总览文档只给核心公式，详细公式见：
+
+```text
+docs/innovation1_replacement.md
+docs/innovation2_sharing_replication.md
+docs/joint_optimization.md
+```
+
+保留价值：
+
+```text
+RetentionBenefit(k,n) =
+    predicted_future_hits(k,n) * alternative_source_penalty(k,n)
+  + recompute_saving(k,n)
+  + prefix_dependency_benefit(k)
+  + foreground_slo_benefit(k,n)
+  - local_capacity_cost(k,n)
+  - duplicate_storage_cost(k,n)
+  - migration_interference_cost(k,n)
+  - churn_cost(k,n)
+```
+
+其中 `k` 是缓存对象，`n` 是节点。当前 simulator 使用毫秒等价收益的简化版本，不代表最终论文公式。
+
+## 11. 异常和边界情况
+
+容易出错的情况包括：
+
+```text
+没有远端权威副本时误删唯一本地副本
+不同 tenant 但相同前缀被错误共享
+COPYING 状态崩溃后留下临时文件
+预测器冷启动导致过度复制
+固定 N 副本导致重复空间浪费
+后台复制占用远端带宽导致前台 P99 变差
+```
+
+AURA-KV 的安全原则是：AI 只预测未来访问，不直接删除文件；真正删除前必须经过替代来源解析、预算检查和 SafetyGuard。
+
+## 12. 配置项
+
+TokenFS 主路径配置：
+
+```text
+config/tokenfs.dev.yaml
+```
+
+AURA-KV 研究层配置模板：
+
+```text
+config/aura_kv.example.yaml
+```
+
+关键配置包括：
+
+```text
+prediction_horizon_seconds
+access_decay_tau_seconds
+confidence_fallback_threshold
+global_duplicate_budget_bytes
+node_duplicate_budget_bytes
+target_foreground_read_p99_ms
+max_actions_per_cycle
+max_migration_bytes_per_cycle
+```
+
+## 13. 监控指标和实验入口
+
+TokenFS 主路径：
+
+```bash
+./scripts/tokenfsctl.py status
+./scripts/tokenfsctl.py metrics
+./scripts/tokenfsctl.py replicas
+./scripts/tokenfsctl.py affinity
+./scripts/tokenfsctl.py check
+```
+
+AURA-KV simulator：
+
+```bash
+./scripts/aura_kv_test.sh
+python3 scripts/aura_kv_sim.py --output reports/latest/aura-kv-sim
+```
+
+模拟结果在：
+
+```text
+reports/latest/aura-kv-sim/aura_sim_report.md
+reports/latest/aura-kv-sim/aura_sim_results.csv
+reports/latest/aura-kv-sim/aura_sim_results.json
+```
+
+这些结果明确标注 `SIMULATED RESULT`，不能作为真实硬件结论。
+
+## 14. 容易误解的地方
+
+1. **GPU 不是存储设备。** GPU 只是产生和访问缓存的计算资源，本地 SSD 才保存文件。
+2. **远端 SSD 不是云盘抽象。** 在真实环境中它通过 NVMe-oF 暴露，最终仍表现为块设备或挂载目录。
+3. **共享不是默认发生。** 大多数任务可以是私有的，只有前缀/KV Cache 确实被多节点访问时才考虑共享副本。
+4. **副本越多不一定越好。** 副本能提高本地命中，但会占用本地 SSD 和后台带宽。
+5. **模拟结果不是真实性能。** 它只能验证算法流程和实验框架。
+
+## 15. 与论文贡献的关系
+
+本文对应论文中的 Background、Motivation、System Overview 和 Implementation Overview。真正论文贡献仍需通过真实硬件实验、系统性相关工作检索和消融实验验证。
+
+## 16. 实现状态
+
+| 功能 | 状态 | 对应代码 | 对应测试 | 未完成原因 | 后续计划 |
+|---|---|---|---|---|---|
+| FUSE 统一命名空间 | Implemented | `src/main.cpp` | `scripts/smoke_test.sh` | 无 | 接入真实 workload |
+| 本地/远端目录后端 | Implemented | `src/main.cpp` | `scripts/integration_test.sh` | 无 | 用真实 NVMe-oF 挂载目录替换 remote-sim |
+| NVMe-oF 脚本 | Partial | `scripts/connect_nvme.sh`, `scripts/setup_nvme_target.sh` | `scripts/nvmeof_two_vm_test.sh` | 缺少导师真实 IP/NQN | 真实环境到位后复测 |
+| CacheIdentity | Implemented | `aura_kv/core.py` | `tests/aura_kv_unit_test.py` | 无 | 与真实 KV schema 对齐 |
+| EWMA 预测器 | Implemented | `aura_kv/prediction.py` | `tests/aura_kv_unit_test.py` | 无 | 增加训练型 predictor |
+| 共享拓扑分类 | Implemented | `aura_kv/policies.py` | `tests/aura_kv_unit_test.py` | 目前是 simulator 内分类 | 接入 FUSE 元数据 |
+| AURA-KV 联合策略 | Partial | `aura_kv/policies.py` | `scripts/aura_kv_test.sh` | 仍是模拟器原型 | 接入真实控制周期和 decision_log |
+| 前后台 I/O 调度器 | Planned | 文档设计 | 无 | 真实 P99 采集未到位 | 接入真实 metrics 后实现 |
+| 学习型模型训练 | Planned | 文档设计 | 无 | 缺少真实 trace | 先从 trace 导出特征 |

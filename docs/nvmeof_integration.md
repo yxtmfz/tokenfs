@@ -1,38 +1,98 @@
-# AURA-KV / TokenFS 的 NVMe-oF 接入方式
+# NVMe-oF 接入说明
 
-当前算法不写死 IP、端口、RDMA、TCP 或 SPDK。真实环境到位后，上层策略只需要知道“远端后端挂载目录”和采集到的性能指标。
+## 1. 本文解决的问题
 
-## 当前后端模式
+本文解释未来导师给出真实 IP、NQN 和设备信息后，AURA-KV/TokenFS 如何接入真实 NVMe-oF 环境，同时保持算法层与传输层解耦。
+
+## 2. 基础概念
+
+NVMe-oF 是 NVMe over Fabrics，即通过网络访问远端 NVMe 存储。
+
+| 概念 | 中文解释 | 本项目作用 |
+|---|---|---|
+| Initiator/Host | 发起连接的客户端 | GPU 计算节点 |
+| Target | 提供存储的服务端 | 远端 SSD 服务器 |
+| Namespace | 暴露给 Host 的逻辑块设备 | 远端容量层 |
+| NVMe/TCP | 通过 TCP 传输 NVMe 命令 | 易部署，适合当前实验 |
+| NVMe/RDMA | 通过 RDMA 传输 | 延迟更低，后续优化 |
+| SPDK | 用户态高性能存储栈 | 后续可能比较 |
+
+## 3. 挂载目录模式
+
+AURA-KV 不在算法层直接写 NVMe 命令。连接流程由脚本完成：
 
 ```text
-LocalDirectoryBackend       本地 SSD 目录
-SimulatedRemoteBackend      普通目录模拟远端层
-MountedNVMeOFBackend        已挂载的 NVMe-oF 目录
+nvme discover
+nvme connect
+等待 /dev/nvmeXnY
+mkfs 仅首次手动确认
+mount 到 /srv/tokenfs/remote0
+TokenFS/AURA-KV 通过 POSIX 文件接口访问
 ```
 
-MountedNVMeOFBackend 不在策略中直接执行 NVMe/TCP 协议，而是依赖启动脚本把远端 Namespace 挂载为目录：
+这样策略层只依赖：
 
 ```text
-/srv/tokenfs/remote0
+remote_mount_path
+remote_read_p99_ms
+remote_bandwidth
+queue_depth
 ```
 
-TokenFS 和 AURA-KV 只通过 POSIX 文件接口访问该目录。
+不依赖 TCP/RDMA/IP 写死。
 
-## 真实环境所需信息
+## 4. 需要导师提供的信息
 
 ```text
-Target IP
-NVMe-oF transport: tcp 或 rdma
+SSD Target IP
 端口，通常 4420
+transport: tcp 或 rdma
 Subsystem NQN
-Host NQN / ACL
-连接后设备名
-远端挂载点
+Host NQN / ACL / 认证方式
+Namespace 是否独占
+设备名或 by-id 路径
+是否已有文件系统
 本地 SSD 路径
-节点 ID 和 GPU 拓扑
+节点/GPU 拓扑
 ```
 
-## 已有脚本
+## 5. 避免误格式化
+
+普通启动脚本不得默认执行 `mkfs`。首次初始化必须显式设置：
+
+```bash
+ALLOW_FORMAT=1 ./scripts/...
+```
+
+连接后先检查：
+
+```bash
+nvme list
+lsblk
+blkid
+mount
+```
+
+确认不是系统盘、不是已有重要数据盘后才能格式化。
+
+## 6. 指标采集
+
+真实环境需要采集：
+
+```text
+fio local/remote P50/P95/P99
+远端带宽 MiB/s
+IOPS
+NVMe 队列深度
+TCP 重传
+Target CPU
+Host CPU
+后台迁移期间前台 P99
+```
+
+这些指标将作为 AURA-KV 公式中的 remote penalty、bandwidth price 和 SLO price 输入。
+
+## 7. 当前脚本
 
 ```text
 scripts/connect_nvme.sh
@@ -42,16 +102,11 @@ scripts/nvmeof_two_vm_test.sh
 scripts/nvmeof_loopback_test.sh
 ```
 
-## 注意
+## 8. 实现状态
 
-多个计算节点不能把同一个普通 ext4 Namespace 同时读写挂载。真实共享方案应采用：
-
-```text
-每节点独立 Namespace
-或远端主副本服务化
-或集群文件系统
-或由 TokenFS/AURA-KV 管理共享语义
-```
-
-当前项目默认远端层是权威 KV Cache 对象池，不把同一个 ext4 裸设备随意多机挂载。
-
+| 功能 | 状态 | 对应代码 | 对应测试 | 未完成原因 | 后续计划 |
+|---|---|---|---|---|---|
+| NVMe-oF 配置字段 | Implemented | `config/tokenfs.dev.yaml` | dry-run | 无 | 用真实值替换占位符 |
+| 连接脚本 | Partial | `scripts/connect_nvme.sh` | loopback/two-vm | 缺真实 target | 真实环境复测 |
+| MountedNVMeOFBackend | Partial | 目录后端模式 | FUSE 测试 | 尚未独立类化 | 抽象 StorageBackend |
+| P99 采集 | Planned | 无 | 无 | 缺真实设备 | fio + token workload |
