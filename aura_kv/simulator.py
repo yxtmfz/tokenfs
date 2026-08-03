@@ -9,16 +9,22 @@ from pathlib import Path
 
 from .core import AccessEvent, CacheIdentity, CacheObject, NodeState, Replica
 from .policies import (
-    AIReplacementOnlyPolicy,
     AffinityOnlyPolicy,
-    AlternativeAwareNoLearningPolicy,
     AuraKVPolicy,
+    EWMAReplacementPolicy,
+    ExhaustiveOptimalPolicy,
+    IndependentControllersPolicy,
     NodeLFUPolicy,
     NodeLRUPolicy,
+    OracleDemandPolicy,
+    PrefixSourceAwareReplacementPolicy,
     ProducerLocalPolicy,
     RemoteOnlyPolicy,
+    SizeAwareLRUPolicy,
     SimulationPolicy,
+    SourceAwareReplacementPolicy,
     StaticNReplicaPolicy,
+    WeightedScoreBaselinePolicy,
     AlternativeSourceResolver,
 )
 
@@ -39,6 +45,7 @@ class SimulationConfig:
     foreground_slo_ms: float = 10.0
     duplicate_budget_mib: int = 128
     node_duplicate_budget_mib: int = 64
+    demand_horizon_seconds: float = 600.0
 
 
 @dataclass
@@ -169,6 +176,12 @@ class TraceSimulator:
             return None
         if evict == "lfu":
             return min(node.replicas, key=lambda key: node.lfu_count.get(key, 0))
+        if evict == "size_aware_lru":
+            def size_aware_lru(key: str) -> float:
+                cache = self.caches[key]
+                age = max(0.0, cache.last_access_at - node.lru_clock.get(key, 0.0))
+                return age / max(1.0, cache.size_bytes / MIB)
+            return max(node.replicas, key=size_aware_lru)
         if evict == "value":
             def value(key: str) -> float:
                 cache = self.caches[key]
@@ -239,16 +252,28 @@ def make_policy(name: str, config: SimulationConfig) -> SimulationPolicy:
         return ProducerLocalPolicy()
     if name == "NodeLRU":
         return NodeLRUPolicy()
+    if name == "SizeAwareLRU":
+        return SizeAwareLRUPolicy()
     if name == "NodeLFU":
         return NodeLFUPolicy()
     if name == "StaticNReplica":
         return StaticNReplicaPolicy(n=2)
     if name == "AffinityOnly":
         return AffinityOnlyPolicy()
-    if name == "AIReplacementOnly":
-        return AIReplacementOnlyPolicy()
-    if name == "AlternativeAwareNoLearning":
-        return AlternativeAwareNoLearningPolicy()
+    if name == "WeightedScoreBaseline":
+        return WeightedScoreBaselinePolicy()
+    if name == "EWMAReplacement":
+        return EWMAReplacementPolicy()
+    if name == "SourceAwareReplacement":
+        return SourceAwareReplacementPolicy()
+    if name == "PrefixSourceAwareReplacement":
+        return PrefixSourceAwareReplacementPolicy()
+    if name == "IndependentControllers":
+        return IndependentControllersPolicy()
+    if name == "OracleDemand":
+        return OracleDemandPolicy()
+    if name == "ExhaustiveOptimal":
+        return ExhaustiveOptimalPolicy()
     if name == "AURA-KV":
         return AuraKVPolicy(
             duplicate_budget_bytes=config.duplicate_budget_mib * MIB,
@@ -262,11 +287,17 @@ POLICIES = [
     "ProducerLocal",
     "NodeLRU",
     "NodeLFU",
+    "SizeAwareLRU",
+    "WeightedScoreBaseline",
+    "EWMAReplacement",
+    "SourceAwareReplacement",
+    "PrefixSourceAwareReplacement",
     "StaticNReplica",
     "AffinityOnly",
-    "AIReplacementOnly",
-    "AlternativeAwareNoLearning",
+    "IndependentControllers",
     "AURA-KV",
+    "OracleDemand",
+    "ExhaustiveOptimal",
 ]
 
 
@@ -364,7 +395,7 @@ def generate_trace(scenario: str, config: SimulationConfig) -> tuple[dict[str, C
                 add_event(i, "tenantA-prefix", "node0", 0, i * 0.5, tenant="tenantA")
             else:
                 add_event(i, "tenantB-prefix", "node1", 0, i * 0.5, tenant="tenantB")
-    elif scenario == "prediction_error":
+    elif scenario == "demand_estimation_error":
         caches["bursty-prefix"] = make_cache("bursty-prefix", "node0", 0, 20, 60)
         for i in range(150):
             node_i = rng.choice([0, 1]) if i % 10 == 0 else (0 if i < 90 else 1)
@@ -385,7 +416,7 @@ SCENARIOS = [
     "hotspot_shift",
     "high_recompute",
     "remote_congestion",
-    "prediction_error",
+    "demand_estimation_error",
     "tenant_isolation",
 ]
 
@@ -405,6 +436,8 @@ def run_matrix(config: SimulationConfig, scenarios: list[str], policies: list[st
                 make_policy(policy_name, scenario_config),
                 scenario,
             )
+            if hasattr(sim.policy, "set_future_trace"):
+                sim.policy.set_future_trace(trace)  # type: ignore[attr-defined]
             results.append(sim.run())
     return results
 

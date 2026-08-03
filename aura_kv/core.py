@@ -167,15 +167,6 @@ class NodeState:
 
 
 @dataclass
-class Prediction:
-    future_hits_by_node: dict[str, float]
-    next_access_seconds: float
-    cold_probability: float
-    confidence: float
-    cross_node_sharedness: float = 0.0
-
-
-@dataclass
 class Decision:
     cache_key: str
     node_id: str
@@ -201,4 +192,3 @@ class StorageBackend(Protocol):
     def free_space(self) -> int: ...
 
     def checksum(self, key: str) -> str: ...
-

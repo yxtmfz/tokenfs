@@ -8,7 +8,7 @@ src/main.cpp
   SQLite 元数据
   本地/远端目录后端
   本地优先、远端溢写
-  价值感知淘汰
+  代价驱动淘汰
   GPU 访问统计
   本地缓存副本
   QoS 工程观测
@@ -29,7 +29,7 @@ config/tokenfs.dev.yaml
 ```text
 缺少独立研究策略模块
 缺少 trace-driven simulator
-缺少 9 个 baseline
+缺少 15 个 baseline/策略
 缺少替代来源解析器
 缺少共享拓扑分类器
 缺少资源影子价格

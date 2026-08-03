@@ -36,15 +36,15 @@ TokenFS 是底层可运行 FUSE 文件系统原型，AURA-KV 是在 TokenFS 之�
 | SQLite 元数据 | 已完成 | WAL 模式，记录路径、层级、副本、指标等 |
 | checksum 校验 | 已完成 | 当前使用 `fnv1a64`，可替换 |
 | 迁移一致性状态机 | 已完成基础版 | 支持启动恢复和临时文件清理 |
-| AI 价值感知本地缓存管理 | 已完成原型 | 管理本地写入、热点提升和低价值淘汰 |
+| 代价驱动型本地缓存管理 | 已完成原型 | 管理本地写入、热点提升和低价值淘汰 |
 | 多 GPU 共享热点复制 | 已深化 | 面向前缀共享和 KV Cache 共享，按需创建和命中本地副本 |
 | QoS 工程观测 | 已完成基础版 | 记录前台读写和后台迁移/预取/淘汰开销，不作为当前论文创新点 |
 | AURA-KV CacheIdentity | 已完成原型 | 建模 sharing_domain、模型版本、token 前缀和 tenant 隔离 |
-| AURA-KV EWMA 预测器 | 已完成原型 | 无需训练的解析式预测器，作为 AI 策略安全回退 |
+| AURA-KV 统计需求估计器 | 已完成原型 | Gamma-Poisson 与 EWMA 均为无需训练的在线统计估计 |
 | 替代来源感知 | 已完成原型 | 区分本节点、其他节点、远端 NVMe-oF、重算和不可删除 |
 | 共享拓扑分类 | 已完成原型 | 使用主导比例、共享熵和跨节点访问判断私有/共享状态 |
 | 预算化副本放置 | 已完成原型 | 使用全局/节点重复副本预算和影子价格控制副本数量 |
-| Trace-driven simulator | 已完成基础版 | 无真实 IP 时可跑 8 个场景、9 个 baseline |
+| Trace-driven simulator | 已完成基础版 | 无真实 IP 时可跑 8 个场景、15 个 baseline/策略 |
 | 热点提升 | 已完成 | 远端热点数据可复制成本地缓存 |
 | 顺序预取 | 已完成 | 连续 shard 可提前拉到本地 |
 | 缓存 GC | 已完成 | 可删除远端已有主副本的本地缓存 |
@@ -77,8 +77,11 @@ TokenFS 是底层可运行 FUSE 文件系统原型，AURA-KV 是在 TokenFS 之�
 |---|---|
 | `src/main.cpp` | TokenFS FUSE 主程序，文件系统核心逻辑都在这里 |
 | `aura_kv/core.py` | AURA-KV 缓存身份、替代来源、动作、副本和节点状态 |
-| `aura_kv/prediction.py` | EWMA、LastAccess、MovingAverage 等访问预测器 |
-| `aura_kv/policies.py` | baseline、共享分类、替代来源、资源价格和 AURA-KV 联合策略 |
+| `aura_kv/demand.py` | Gamma-Poisson、EWMA、Oracle 等统计需求估计器 |
+| `aura_kv/cost_model.py` | 本地、peer、远端和重算来源代价模型 |
+| `aura_kv/layout.py` | EvictionLoss、ReplicaGain 和 RobustBenefit 计算 |
+| `aura_kv/optimization.py` | 容量、重复预算、后台带宽、SLO 和安全约束 |
+| `aura_kv/policies.py` | baseline、共享分类和 AURA-KV 联合策略 |
 | `aura_kv/simulator.py` | trace-driven simulator 和实验结果导出 |
 | `config/tokenfs.dev.yaml` | 开发环境配置，包括 GPU、本地目录、远端后端、策略开关 |
 | `config/aura_kv.example.yaml` | AURA-KV 研究控制层配置模板 |
@@ -267,13 +270,13 @@ REMOTE_WITH_LOCAL_CACHE
 围绕这个问题，TokenFS 保留两个研究重点：
 
 ```text
-1. AI 价值感知的本地缓存管理
+1. 代价驱动型本地缓存管理
 2. 多 GPU 共享热点复制
 ```
 
 跨层迁移一致性、NVMe-oF 接入、QoS 观测和限速都作为文件系统必要工程能力，不单独包装为当前论文创新点。
 
-### 5.1 AI 价值感知的本地缓存管理
+### 5.1 代价驱动型本地缓存管理
 
 本地 SSD 速度快，但容量有限；远端 NVMe-oF SSD 容量大、方便共享，但访问路径更长。TokenFS 的第一层策略就是管理本地缓存：新数据写到哪里，远端数据要不要拉回本地，本地空间不够时淘汰谁。
 
@@ -339,8 +342,11 @@ replica_state
 代码中对应的关键能力：
 
 ```text
-DataValueScore()
-ValueAwareEvictionScore()
+GammaPoissonDemandEstimator()
+SourceCostModel()
+EvictionLoss()
+ReplicaGain()
+RobustBenefit()
 EnsureLocalCapacity()
 ShouldPromoteOnRead()
 PromoteToLocal()
@@ -979,9 +985,9 @@ TOKENFS_GPU_ID=1 cat /mnt/tokenfs/gpu0/demo/a.tokens >/dev/null
 | `scripts/strategy_matrix_test.sh` | baseline/promote/prefetch/full 策略矩阵 |
 | `scripts/promote_test.sh` | 远端热点数据提升成本地缓存 |
 | `scripts/prefetch_test.sh` | 连续 shard 顺序预取 |
-| `scripts/eviction_test.sh` | 价值感知淘汰低价值本地数据 |
+| `scripts/eviction_test.sh` | 代价驱动淘汰低价值本地数据 |
 | `scripts/replica_lifecycle_test.sh` | 远端主副本 + 本地缓存 + 缓存 GC 生命周期 |
-| `scripts/advanced_policy_test.sh` | 价值感知、GPU 亲和、QoS 综合验证 |
+| `scripts/advanced_policy_test.sh` | 代价驱动替换、共享副本和 QoS 工程综合验证 |
 | `scripts/fault_injection_test.sh` | 故障注入和恢复 |
 | `scripts/consistency_test.sh` | 元数据和物理文件一致性 |
 | `scripts/random_io_test.sh` | 随机读写行为 |
@@ -1223,7 +1229,7 @@ QoS 指标作为工程观测保留，不作为当前论文主创新点
 本地 SSD baseline
 直接 NVMe-oF baseline
 TokenFS baseline
-TokenFS + AI 价值感知本地缓存管理
+TokenFS + 代价驱动型本地缓存管理
 TokenFS + 多 GPU 共享热点复制
 TokenFS full
 P50/P95/P99 延迟
@@ -1306,7 +1312,7 @@ cmake --build build
 ```text
 远端主副本 + GPU 本地热缓存副本生命周期
 README 和 final-report 整合
-论文主线聚焦：AI 价值感知本地缓存管理、多 GPU 共享热点复制
+论文主线聚焦：代价驱动型本地缓存管理、多 GPU 共享热点复制
 ```
 
 最新实验结论和结果请看：

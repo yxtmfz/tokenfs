@@ -16,12 +16,12 @@ ProducerLocal: 跨节点共享时其他节点仍频繁访问远端
 NodeLRU/NodeLFU: 不理解重算成本、前缀依赖和替代来源
 StaticNReplica: 固定 N 份无法适应共享强度和容量压力
 AffinityOnly: 只知道谁访问多，不知道是否值得复制
-AIReplacementOnly: 预测冷热但不知道删掉后从哪里恢复
+EWMAReplacement: 估计未来需求但不知道删掉后从哪里恢复
 ```
 
 ## 4. 两个候选创新各自负责什么
 
-候选创新一负责本地容量紧张时的多动作替换：保留、提升、降级、删除、预取或 pin。它重点看缓存价值、重算代价、前缀依赖和替代来源。
+候选创新一负责本地容量紧张时的多动作替换：保留、提升、降级、删除、预取或 pin。它重点看未来有效需求、重算代价、前缀依赖、替代来源和删除后的来源代价变化。
 
 候选创新二负责共享缓存的副本放置：先判断是否能共享，再看访问图和预算，决定在哪些计算节点建立本地副本。
 
@@ -95,7 +95,7 @@ Recompute Saving Density = avoided_recompute_ms / local_cache_bytes
 谨慎表述为：
 
 ```text
-候选贡献一：替代来源与前缀结构感知的多动作替换
+候选贡献一：替代来源与前缀有效需求感知的代价驱动型替换
 候选贡献二：动态共享拓扑感知的预算化副本放置
 候选贡献三：二者的联合在线控制和可复现实验框架
 ```
@@ -104,13 +104,13 @@ Recompute Saving Density = avoided_recompute_ms / local_cache_bytes
 
 ## 10. 实验验证关系
 
-当前 simulator 已支持 8 个场景和 9 个 baseline，能验证机制是否运行。真实论文结果必须在导师提供真实 IP、NQN、GPU 拓扑和 NVMe-oF Target 后重新采集。
+当前 simulator 已支持 8 个场景和 15 个 baseline/策略，能验证机制是否运行。真实论文结果必须在导师提供真实 IP、NQN、GPU 拓扑和 NVMe-oF Target 后重新采集。
 
 ## 11. 实现状态
 
 | 功能 | 状态 | 对应代码 | 对应测试 | 未完成原因 | 后续计划 |
 |---|---|---|---|---|---|
 | 问题抽象 | Implemented | `aura_kv/core.py` | unit/sim | 无 | 与真实 trace 对齐 |
-| 9 个 baseline | Implemented | `aura_kv/simulator.py`, `aura_kv/policies.py` | `scripts/aura_kv_test.sh` | 无 | 增加 ablation |
+| 15 个 baseline/策略 | Implemented | `aura_kv/simulator.py`, `aura_kv/policies.py` | `scripts/aura_kv_test.sh` | 无 | 增加 ablation |
 | 8 个场景 | Implemented | `generate_trace()` | simulator | 无 | 增加崩溃恢复 trace |
 | 真实 TTFT 指标 | Planned | 无 | 无 | 缺真实推理环境 | 接入 vLLM/SGLang |

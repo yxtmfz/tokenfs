@@ -29,7 +29,7 @@ cmake -S "$project_root" -B "$project_root/build" -G Ninja >/dev/null
 cmake --build "$project_root/build" >/dev/null
 "$project_root/scripts/start_tokenfs.sh" "$temp_config" "$mount_point" >/dev/null
 
-echo "advanced: AI value-aware eviction protects hot high-value files"
+echo "advanced: cost-driven eviction protects hot high-value files"
 mkdir -p "$mount_point/gpu0/value"
 
 python3 - "$mount_point/gpu0/value/hot.tokens" <<'PY'

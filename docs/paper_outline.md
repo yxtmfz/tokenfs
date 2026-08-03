@@ -48,7 +48,7 @@ StaticNReplica 可能浪费空间
 ```text
 FUSE/统一接口
 元数据
-访问预测
+需求估计
 共享拓扑
 替代来源
 联合控制器
@@ -60,9 +60,9 @@ I/O 调度
 
 ## 6. Candidate Innovation 1
 
-写替代来源与前缀结构感知的多动作替换。图：替代来源流程图、前缀树示例。
+写替代来源与前缀有效需求感知的代价驱动型替换。图：替代来源流程图、前缀树示例。
 
-当前证据：`AlternativeAwareNoLearning` 和 `AURA-KV` baseline 已可模拟。学习模型尚未训练，论文中不能过度强调“AI”效果。
+当前证据：`SourceAwareReplacement` 和 `AURA-KV` baseline 已可模拟。当前证据来自统计需求估计和代价模型模拟，真实结论需硬件实验验证。
 
 ## 7. Candidate Innovation 2
 
@@ -85,8 +85,10 @@ I/O 调度
 baseline：
 
 ```text
-RemoteOnly / ProducerLocal / NodeLRU / NodeLFU / StaticNReplica
-AffinityOnly / AIReplacementOnly / AlternativeAwareNoLearning / AURA-KV
+RemoteOnly / ProducerLocal / NodeLRU / NodeLFU / SizeAwareLRU
+WeightedScoreBaseline / EWMAReplacement / SourceAwareReplacement
+PrefixSourceAwareReplacement / StaticNReplica / AffinityOnly
+IndependentControllers / AURA-KV / OracleDemand / ExhaustiveOptimal
 ```
 
 指标：
@@ -124,7 +126,7 @@ vLLM/SGLang/LMCache 等系统
 
 ```text
 真实硬件未到位
-学习模型尚未证明优于 EWMA
+统计需求估计仍需真实 trace 校准
 当前联合控制器是原型
 FUSE 路径性能可能不是最终部署形态
 NVMe/RDMA 和 SPDK 尚未评估
@@ -140,7 +142,7 @@ NVMe/RDMA 和 SPDK 尚未评估
 |---|---|---|---|
 | Background | Partial | README/docs | 需要补相关工作 |
 | System Design | Partial | docs + code | 需要图表打磨 |
-| Innovation 1 | Partial | simulator | 需要真实 trace/训练模型 |
+| Innovation 1 | Partial | simulator | 需要真实 trace 校准 |
 | Innovation 2 | Partial | simulator | 需要更多消融 |
 | Joint Controller | Partial | `AuraKVPolicy` | 缺事务和后台执行器 |
 | Evaluation | Partial | simulated report | 缺真实 NVMe-oF/GPU |

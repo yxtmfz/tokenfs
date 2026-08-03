@@ -112,7 +112,7 @@ RemotePool: 远端 NVMe-oF SSD 10 TB
 跨节点共享：NodeA、NodeB、NodeC 都反复访问同一个长文档前缀
 ```
 
-如果所有数据只放远端，容量够但延迟高；如果所有热点都复制到所有节点，本地空间很快被重复副本占满；如果只看 LRU，可能删掉很久没访问但重算极贵的公共前缀；如果只看 AI 预测冷热，可能不知道删掉后还有没有可靠替代来源。AURA-KV 试图把这些因素放进统一决策。
+如果所有数据只放远端，容量够但延迟高；如果所有热点都复制到所有节点，本地空间很快被重复副本占满；如果只看 LRU，可能删掉很久没访问但重算极贵的公共前缀；如果只看简单访问次数，可能不知道删掉后还有没有可靠替代来源。AURA-KV 试图把这些因素放进统一的代价驱动决策。
 
 ## 4. 现有简单方案及其不足
 
@@ -124,7 +124,8 @@ RemotePool: 远端 NVMe-oF SSD 10 TB
 | NodeLFU | 每个节点删访问次数少的 | 对阶段变化和热点迁移反应慢 |
 | StaticNReplica | 共享数据固定复制 N 份 | N 太小命中不足，N 太大浪费空间 |
 | AffinityOnly | 哪个节点访问多就放哪 | 不看容量预算、替代来源和重算成本 |
-| AIReplacementOnly | AI 预测冷热后替换 | AI 不应直接决定危险删除，也不知道全局副本 |
+| EWMAReplacement | 用 EWMA 估计未来需求后替换 | 不知道完整来源代价和布局变化 |
+| WeightedScoreBaseline | 人工权重打分 | 权重缺少明确系统单位，容易重复计算 |
 | 替换和副本模块分开跑 | 两个团队各管一摊 | 可能刚删完又复制回来，造成 churn 和预算冲突 |
 
 这些方案都可以作为 baseline，但不足以作为最终研究方案。
@@ -134,7 +135,7 @@ RemotePool: 远端 NVMe-oF SSD 10 TB
 AURA-KV 保留两个候选研究重点：
 
 ```text
-候选创新一：替代来源与前缀结构感知的学习型 KV Cache 多动作替换
+候选创新一：替代来源与前缀有效需求感知的代价驱动型 KV Cache 替换
 候选创新二：动态共享拓扑感知的预算化 KV Cache 副本放置
 ```
 
@@ -148,13 +149,13 @@ AURA-KV 保留两个候选研究重点：
 flowchart TD
     A["vLLM / SGLang / Token workload"] --> B["AURA-KV 统一接口"]
     B --> C["访问跟踪与元数据"]
-    C --> D["AI/EWMA 访问预测器"]
+    C --> D["DemandEstimator 需求估计器"]
     C --> E["共享拓扑分析器"]
-    C --> F["替代来源解析器"]
+    C --> F["SourceCostModel 来源代价模型"]
     D --> G["联合在线控制器"]
     E --> G
     F --> G
-    H["资源影子价格"] --> G
+    H["布局收益计算器"] --> G
     G --> I["前后台 I/O 调度器"]
     I --> J["节点本地 SSD"]
     I --> K["NVMe-oF 远端 SSD 池"]
@@ -166,7 +167,7 @@ flowchart TD
 ### 6.2 ASCII 架构图
 
 ```text
-AI 推理引擎
+LLM 推理引擎
   |
   v
 FUSE / AURA-KV 接口
@@ -176,11 +177,11 @@ FUSE / AURA-KV 接口
   |
   v
 联合控制器
-  |-- 访问预测器
+  |-- 需求估计器
   |-- 共享拓扑分类器
-  |-- 替代来源解析器
-  |-- 资源影子价格
-  |-- SafetyGuard
+  |-- SourceCostModel 来源代价模型
+  |-- 布局收益计算器
+  |-- 硬约束与 SafetyGuard
   |
   +--> 前台读取: 立即选择本地/远端/peer/recompute
   +--> 后台任务: prefetch / replicate / demote / GC
@@ -200,7 +201,11 @@ FUSE / AURA-KV 接口
 | `AccessEvent` | 每次访问事件，包含 node、gpu、bytes、foreground | `aura_kv/core.py` |
 | `Replica` | 本地副本状态、租约和效用 | `aura_kv/core.py` |
 | `NodeState` | 节点本地容量和已有副本 | `aura_kv/core.py` |
-| `EWMAAccessPredictor` | 时间衰减访问预测 | `aura_kv/prediction.py` |
+| `GammaPoissonDemandEstimator` | 统计未来需求均值、下界和上界 | `aura_kv/demand.py` |
+| `EWMADemandEstimator` | 简单时间衰减需求估计 baseline | `aura_kv/demand.py` |
+| `SourceCostModel` | 计算本地、peer、远端、重算来源代价 | `aura_kv/cost_model.py` |
+| `LayoutCostEvaluator` | 计算 EvictionLoss、ReplicaGain、RobustBenefit | `aura_kv/layout.py` |
+| `LayoutConstraints` | 检查容量、预算、带宽和 SLO 等硬约束 | `aura_kv/optimization.py` |
 | `SharednessClassifier` | 私有/共享状态分类 | `aura_kv/policies.py` |
 | `AlternativeSourceResolver` | 删除后的替代来源解析 | `aura_kv/policies.py` |
 | `AuraKVPolicy` | 联合策略原型 | `aura_kv/policies.py` |
@@ -237,7 +242,7 @@ stateDiagram-v2
 4. 初始状态分类：样本不足时是 `PROVISIONAL_PRIVATE`。
 5. 前台读取：优先本地 READY 副本，否则立即选远端或重算。
 6. 访问事件记录：写入 `AccessEvent`。
-7. 预测更新：EWMA 根据时间衰减访问更新未来访问估计。
+7. 需求更新：Gamma-Poisson/EWMA 根据时间衰减访问更新未来需求上下界。
 8. 共享状态更新：根据 dominance、sharedness entropy、跨节点访问分类。
 9. 本地副本创建：后台复制，前台不等待。
 10. 租约续期：命中副本后更新 last_hit 和 lease。
@@ -278,14 +283,16 @@ NodeB: 6 次
 NodeC: 0 次
 ```
 
-active_node_count = 2，sharedness_entropy 较高，cross_node_accesses 足够，状态可能升级为 `CLUSTER_SHARED`。联合控制器计算 NodeB 新增副本的边际收益：
+active_node_count = 2，sharedness_entropy 较高，cross_node_accesses 足够，状态可能升级为 `CLUSTER_SHARED`。联合控制器计算 NodeB 新增副本的鲁棒收益：
 
 ```text
-本地命中节省 + 远端 I/O 节省 + 重算节省
-- 副本复制成本 - 本地容量价格 - 重复空间价格 - churn 惩罚
+ReplicaGain =
+    未来需求下界
+    ×
+    新增副本前后的最优来源代价差
 ```
 
-如果收益密度为正且预算允许，就在 NodeB 建立本地副本。
+如果 `ReplicaGain` 大于最小收益阈值，且容量、重复预算、后台带宽和前台 SLO 门控都允许，就在 NodeB 建立本地副本。
 
 ### 9.4 NodeA 空间不足
 
@@ -296,7 +303,7 @@ NodeA 本地 SSD 使用率达到 92%。控制器不会简单删除最旧缓存�
 删除 NodeA 本地副本后的替代来源至少是 REMOTE_NVME_OF 或 PEER_NODE_REPLICA。
 ```
 
-如果当前 NodeA 未来访问预测很低，删除 NodeA 本地副本可能安全；但如果它是高重算成本公共前缀且 NodeA 仍会访问，则可能保留它，转而淘汰低价值私有后缀。
+如果当前 NodeA 的未来需求上界很低，删除 NodeA 本地副本可能安全；但如果它是高重算成本公共前缀且 NodeA 仍会访问，则可能保留它，转而淘汰低价值私有后缀。
 
 ### 9.5 前台 P99 过高
 
@@ -307,26 +314,20 @@ NodeA 本地 SSD 使用率达到 92%。控制器不会简单删除最旧缓存�
 总览文档只给核心公式，详细公式见：
 
 ```text
+docs/formal_cost_model.md
 docs/innovation1_replacement.md
 docs/innovation2_sharing_replication.md
 docs/joint_optimization.md
 ```
 
-保留价值：
+统一服务代价：
 
 ```text
-RetentionBenefit(k,n) =
-    predicted_future_hits(k,n) * alternative_source_penalty(k,n)
-  + recompute_saving(k,n)
-  + prefix_dependency_benefit(k)
-  + foreground_slo_benefit(k,n)
-  - local_capacity_cost(k,n)
-  - duplicate_storage_cost(k,n)
-  - migration_interference_cost(k,n)
-  - churn_cost(k,n)
+J(X,H,N) =
+    Σ_k Σ_m N_effective(k,m,H) * C_X(k,m)
 ```
 
-其中 `k` 是缓存对象，`n` 是节点。当前 simulator 使用毫秒等价收益的简化版本，不代表最终论文公式。
+`N_effective` 是未来窗口内的有效需求，`C_X` 是当前布局下的最优来源代价。删除使用 `EvictionLoss`，复制使用 `ReplicaGain`，最终候选动作使用 `RobustBenefit` 做布局差分验证。
 
 ## 11. 异常和边界情况
 
@@ -336,12 +337,12 @@ RetentionBenefit(k,n) =
 没有远端权威副本时误删唯一本地副本
 不同 tenant 但相同前缀被错误共享
 COPYING 状态崩溃后留下临时文件
-预测器冷启动导致过度复制
+需求估计冷启动导致过度保守或过度复制
 固定 N 副本导致重复空间浪费
 后台复制占用远端带宽导致前台 P99 变差
 ```
 
-AURA-KV 的安全原则是：AI 只预测未来访问，不直接删除文件；真正删除前必须经过替代来源解析、预算检查和 SafetyGuard。
+AURA-KV 的安全原则是：需求估计只提供未来需求上下界；真正删除前必须经过来源代价解析、候选布局验证、预算检查和 SafetyGuard。
 
 ## 12. 配置项
 
@@ -419,8 +420,9 @@ reports/latest/aura-kv-sim/aura_sim_results.json
 | 本地/远端目录后端 | Implemented | `src/main.cpp` | `scripts/integration_test.sh` | 无 | 用真实 NVMe-oF 挂载目录替换 remote-sim |
 | NVMe-oF 脚本 | Partial | `scripts/connect_nvme.sh`, `scripts/setup_nvme_target.sh` | `scripts/nvmeof_two_vm_test.sh` | 缺少导师真实 IP/NQN | 真实环境到位后复测 |
 | CacheIdentity | Implemented | `aura_kv/core.py` | `tests/aura_kv_unit_test.py` | 无 | 与真实 KV schema 对齐 |
-| EWMA 预测器 | Implemented | `aura_kv/prediction.py` | `tests/aura_kv_unit_test.py` | 无 | 增加训练型 predictor |
+| 统计需求估计器 | Implemented | `aura_kv/demand.py` | `tests/aura_kv_unit_test.py` | 无 | 接入真实 trace |
+| 来源代价模型 | Implemented | `aura_kv/cost_model.py` | `tests/aura_kv_unit_test.py` | 无真实 metrics | 接入 NVMe-oF 指标 |
+| 布局收益计算 | Implemented | `aura_kv/layout.py` | `tests/aura_kv_unit_test.py` | SWAP 仍简化 | 增加完整 swap planner |
 | 共享拓扑分类 | Implemented | `aura_kv/policies.py` | `tests/aura_kv_unit_test.py` | 目前是 simulator 内分类 | 接入 FUSE 元数据 |
 | AURA-KV 联合策略 | Partial | `aura_kv/policies.py` | `scripts/aura_kv_test.sh` | 仍是模拟器原型 | 接入真实控制周期和 decision_log |
 | 前后台 I/O 调度器 | Planned | 文档设计 | 无 | 真实 P99 采集未到位 | 接入真实 metrics 后实现 |
-| 学习型模型训练 | Planned | 文档设计 | 无 | 缺少真实 trace | 先从 trace 导出特征 |

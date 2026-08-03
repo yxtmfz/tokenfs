@@ -135,7 +135,7 @@ affinity_updated_at
 
 | 研究点 | 当前工程落地 | 可观测方式 |
 |---|---|---|
-| AI 价值感知的本地缓存管理 | 管理新写入、本地溢写、热点提升和本地淘汰，让高价值缓存尽量留在本地 | `files`、`metrics`、`eviction_test.sh` |
+| 代价驱动型本地缓存管理 | 管理新写入、本地溢写、热点提升和本地淘汰，让高价值缓存尽量留在本地 | `files`、`metrics`、`eviction_test.sh` |
 | 多 GPU 共享热点复制 | 观察哪个 GPU 正在高频读取共享前缀或共享 KV Cache，并把远端主副本复制到热点 GPU 的本地 SSD | `affinity`、`replicas`、`advanced_policy_test.sh` |
 
 当前价值公式：
@@ -173,7 +173,7 @@ affinity_updated_at
 
 ```text
 aura_kv/core.py
-aura_kv/prediction.py
+aura_kv/demand.py
 aura_kv/policies.py
 aura_kv/simulator.py
 scripts/aura_kv_sim.py
@@ -193,8 +193,8 @@ NodeLRU
 NodeLFU
 StaticNReplica
 AffinityOnly
-AIReplacementOnly
-AlternativeAwareNoLearning
+EWMAReplacement
+SourceAwareReplacement
 AURA-KV
 ```
 
@@ -211,11 +211,11 @@ cluster_shared
 hotspot_shift
 high_recompute
 remote_congestion
-prediction_error
+demand_estimation_error
 tenant_isolation
 ```
 
-覆盖私有缓存、同节点共享、跨节点共享、热点迁移、高重算成本、远端拥塞、预测误差和租户隔离。
+覆盖私有缓存、同节点共享、跨节点共享、热点迁移、高重算成本、远端拥塞、需求估计误差和租户隔离。
 
 ### 5.3 模拟实验结果入口
 
@@ -281,7 +281,7 @@ python3 scripts/aura_kv_sim.py --output reports/latest/aura-kv-sim
 CacheIdentity 能阻止跨 sharing_domain 共享
 EWMA 预测器能低置信度回退
 共享状态分类具备最小样本限制
-模拟器能运行 9 个 baseline
+模拟器能运行 15 个 baseline/策略
 AURA-KV 能跑核心共享/迁移场景
 ```
 
@@ -478,7 +478,7 @@ sudo ./scripts/connect_nvme.sh --config config/tokenfs.dev.yaml --backend remote
 直接本地 SSD baseline
 直接 NVMe-oF SSD baseline
 TokenFS baseline
-TokenFS + AI 价值感知本地缓存管理
+TokenFS + 代价驱动型本地缓存管理
 TokenFS + 多 GPU 共享热点复制
 TokenFS full
 P50/P95/P99 延迟

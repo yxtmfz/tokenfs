@@ -24,6 +24,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--remote-p99-ms", type=float, default=8.0)
     parser.add_argument("--duplicate-budget-mib", type=int, default=128)
     parser.add_argument("--node-duplicate-budget-mib", type=int, default=64)
+    parser.add_argument("--demand-horizon-seconds", type=float, default=600.0)
     return parser.parse_args()
 
 
@@ -37,6 +38,7 @@ def main() -> int:
         remote_read_p99_ms=args.remote_p99_ms,
         duplicate_budget_mib=args.duplicate_budget_mib,
         node_duplicate_budget_mib=args.node_duplicate_budget_mib,
+        demand_horizon_seconds=args.demand_horizon_seconds,
     )
     scenarios = args.scenario or SCENARIOS
     policies = args.policy or POLICIES
@@ -56,4 +58,3 @@ def main() -> int:
 
 if __name__ == "__main__":
     raise SystemExit(main())
-

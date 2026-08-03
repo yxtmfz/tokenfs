@@ -10,10 +10,12 @@ from .core import (
     CacheObject,
     Decision,
     NodeState,
-    Replica,
     SharedState,
 )
-from .prediction import AccessPredictor, EWMAAccessPredictor
+from .cost_model import SourceCostModel
+from .demand import DemandEstimator, EWMADemandEstimator, GammaPoissonDemandEstimator, OracleDemandEstimator
+from .layout import LayoutCostEvaluator
+from .optimization import LayoutConstraints
 
 
 @dataclass
@@ -153,6 +155,20 @@ class NodeLRUPolicy(SimulationPolicy):
         return "remote", []
 
 
+class SizeAwareLRUPolicy(SimulationPolicy):
+    name = "SizeAwareLRU"
+
+    def on_access(self, sim: "TraceSimulator", event: AccessEvent) -> tuple[str, list[Decision]]:
+        cache = sim.caches[event.cache_key]
+        node = sim.nodes[event.node_id]
+        if node.has_replica(event.cache_key):
+            node.lru_clock[event.cache_key] = event.timestamp
+            return "local", []
+        sim.ensure_space_and_add(event.node_id, cache, "size-aware lru fill", evict="size_aware_lru")
+        node.lru_clock[event.cache_key] = event.timestamp
+        return "remote", []
+
+
 class NodeLFUPolicy(SimulationPolicy):
     name = "NodeLFU"
 
@@ -196,8 +212,8 @@ class AffinityOnlyPolicy(SimulationPolicy):
         return ("local" if sim.nodes[event.node_id].has_replica(event.cache_key) else "remote"), []
 
 
-class AlternativeAwareNoLearningPolicy(SimulationPolicy):
-    name = "AlternativeAwareNoLearning"
+class SourceAwareReplacementPolicy(SimulationPolicy):
+    name = "SourceAwareReplacement"
 
     def on_access(self, sim: "TraceSimulator", event: AccessEvent) -> tuple[str, list[Decision]]:
         cache = sim.caches[event.cache_key]
@@ -215,32 +231,99 @@ class AlternativeAwareNoLearningPolicy(SimulationPolicy):
 
 
 @dataclass
-class AIReplacementOnlyPolicy(SimulationPolicy):
-    predictor: AccessPredictor = field(default_factory=EWMAAccessPredictor)
-    name: str = "AIReplacementOnly"
+class WeightedScoreBaselinePolicy(SimulationPolicy):
+    name: str = "WeightedScoreBaseline"
 
     def on_access(self, sim: "TraceSimulator", event: AccessEvent) -> tuple[str, list[Decision]]:
         cache = sim.caches[event.cache_key]
         node = sim.nodes[event.node_id]
         if node.has_replica(event.cache_key):
             return "local", []
-        pred = self.predictor.predict(event.cache_key, event.timestamp, list(sim.nodes))
-        if pred.future_hits_by_node.get(event.node_id, 0.0) >= 0.4 and pred.confidence >= 0.2:
-            sim.ensure_space_and_add(event.node_id, cache, "ai predicted fill", evict="value")
+        reads = sim.access_graph.get(event.cache_key, {}).get(event.node_id, 0.0)
+        score = 0.30 * reads + 0.30 * min(cache.recompute_cost_ms, 100.0) / 100.0 - 0.20 * cache.size_bytes / (64 * 1024 * 1024)
+        if score > 0.2:
+            sim.ensure_space_and_add(event.node_id, cache, "weighted-score fill", evict="value")
+        return ("local" if node.has_replica(event.cache_key) else "remote"), []
+
+
+@dataclass
+class EWMAReplacementPolicy(SimulationPolicy):
+    estimator: DemandEstimator = field(default_factory=EWMADemandEstimator)
+    name: str = "EWMAReplacement"
+
+    def on_access(self, sim: "TraceSimulator", event: AccessEvent) -> tuple[str, list[Decision]]:
+        cache = sim.caches[event.cache_key]
+        node = sim.nodes[event.node_id]
+        if node.has_replica(event.cache_key):
+            return "local", []
+        demand = self.estimator.estimate(event.cache_key, event.node_id, event.timestamp, sim.config.demand_horizon_seconds)
+        if demand.lower >= 0.25:
+            sim.ensure_space_and_add(event.node_id, cache, "ewma demand fill", evict="value")
         return ("local" if node.has_replica(event.cache_key) else "remote"), []
 
     def after_access(self, sim: "TraceSimulator", event: AccessEvent) -> None:
-        self.predictor.observe(event)
+        self.estimator.observe(event)
+
+
+class PrefixSourceAwareReplacementPolicy(SourceAwareReplacementPolicy):
+    name = "PrefixSourceAwareReplacement"
+
+    def on_access(self, sim: "TraceSimulator", event: AccessEvent) -> tuple[str, list[Decision]]:
+        source, decisions = super().on_access(sim, event)
+        cache = sim.caches[event.cache_key]
+        if cache.parent_cache_key and not sim.nodes[event.node_id].has_replica(cache.parent_cache_key):
+            parent = sim.caches.get(cache.parent_cache_key)
+            if parent is not None:
+                sim.ensure_space_and_add(event.node_id, parent, "effective prefix demand", evict="value")
+        return source, decisions
+
+
+@dataclass
+class OracleDemandPolicy(EWMAReplacementPolicy):
+    estimator: OracleDemandEstimator = field(default_factory=OracleDemandEstimator)
+    name: str = "OracleDemand"
+
+    def set_future_trace(self, trace: list[AccessEvent]) -> None:
+        self.estimator.future_trace = trace
+
+
+class ExhaustiveOptimalPolicy(SimulationPolicy):
+    name = "ExhaustiveOptimal"
+
+    def on_access(self, sim: "TraceSimulator", event: AccessEvent) -> tuple[str, list[Decision]]:
+        # Small-scale oracle baseline: greedily keep the currently requested cache if it fits.
+        cache = sim.caches[event.cache_key]
+        if sim.nodes[event.node_id].has_replica(event.cache_key):
+            return "local", []
+        sim.ensure_space_and_add(event.node_id, cache, "small exhaustive optimal proxy", evict="value")
+        return ("local" if sim.nodes[event.node_id].has_replica(event.cache_key) else "remote"), []
+
+
+class IndependentControllersPolicy(SimulationPolicy):
+    name = "IndependentControllers"
+
+    def __init__(self) -> None:
+        self.replacement = EWMAReplacementPolicy()
+        self.replication = AffinityOnlyPolicy()
+
+    def on_access(self, sim: "TraceSimulator", event: AccessEvent) -> tuple[str, list[Decision]]:
+        source, decisions = self.replacement.on_access(sim, event)
+        self.replication.on_access(sim, event)
+        return source, decisions
+
+    def after_access(self, sim: "TraceSimulator", event: AccessEvent) -> None:
+        self.replacement.after_access(sim, event)
 
 
 @dataclass
 class AuraKVPolicy(SimulationPolicy):
-    predictor: AccessPredictor = field(default_factory=EWMAAccessPredictor)
+    demand_estimator: DemandEstimator = field(default_factory=GammaPoissonDemandEstimator)
     classifier: SharednessClassifier = field(default_factory=SharednessClassifier)
     prices: ResourcePrices = field(default_factory=ResourcePrices)
     duplicate_budget_bytes: int = 128 * 1024 * 1024
     node_duplicate_budget_bytes: int = 64 * 1024 * 1024
-    confidence_fallback_threshold: float = 0.60
+    minimum_layout_improvement_ms: float = 1.0
+    cost_model: SourceCostModel = field(default_factory=SourceCostModel)
     name: str = "AURA-KV"
 
     def on_access(self, sim: "TraceSimulator", event: AccessEvent) -> tuple[str, list[Decision]]:
@@ -250,44 +333,38 @@ class AuraKVPolicy(SimulationPolicy):
         if node.has_replica(event.cache_key):
             return "local", decisions
 
-        pred = self.predictor.predict(event.cache_key, event.timestamp, list(sim.nodes))
-        if pred.confidence < self.confidence_fallback_threshold:
-            pred.confidence = max(pred.confidence, 0.25)
         counts = sim.access_graph.get(event.cache_key, {})
         state, shared_metrics = self.classifier.classify(cache, counts, int(sum(counts.values())))
         cache.state = state
-        source = sim.source_resolver.resolve(event.cache_key, event.node_id, sim.nodes, sim.remote_has(event.cache_key), cache.recompute_cost_ms > 0)
-        source_penalty = sim.source_resolver.penalty_ms(source, sim.remote_p99_ms, sim.peer_p99_ms, cache.recompute_cost_ms)
-        local_shadow = self.prices.lambda_capacity.get(event.node_id, 0.0) * cache.size_bytes / (1024 * 1024)
-        duplicate_shadow = self.prices.lambda_duplicate * cache.size_bytes / (1024 * 1024)
-        predicted_hits = pred.future_hits_by_node.get(event.node_id, 0.0)
-        prefix_bonus = sim.prefix_dependency_benefit(cache)
-        benefit = (
-            predicted_hits * source_penalty
-            + min(cache.recompute_cost_ms, 50.0) * 0.2
-            + prefix_bonus
-            - local_shadow
-            - duplicate_shadow
-            - sim.churn_penalty(event.cache_key, event.node_id)
+        evaluator = LayoutCostEvaluator(
+            cost_model=self.cost_model,
+            demand_estimator=self.demand_estimator,
+            minimum_layout_improvement_ms=self.minimum_layout_improvement_ms,
         )
-        density = benefit / max(1.0, cache.size_bytes / (1024 * 1024))
+        source_result = self.cost_model.best_source(cache, event.node_id, sim.nodes, sim.remote_has(event.cache_key), now=event.timestamp)
+        source = self.cost_model.to_alternative_source(source_result.best)
+        gain = evaluator.replica_gain(cache, event.node_id, sim.nodes, sim.remote_has(event.cache_key), event.timestamp, sim.config.demand_horizon_seconds)
         can_share = state in {SharedState.CLUSTER_SHARED, SharedState.NODE_SHARED, SharedState.GPU_PRIVATE}
-        under_budget = sim.duplicate_bytes + cache.size_bytes <= self.duplicate_budget_bytes
-        under_node_budget = sim.node_duplicate_bytes(event.node_id) + cache.size_bytes <= self.node_duplicate_budget_bytes
+        constraints = LayoutConstraints(
+            global_duplicate_budget_bytes=self.duplicate_budget_bytes,
+            node_duplicate_budget_bytes=self.node_duplicate_budget_bytes,
+            foreground_slo_gate=sim.p99_latency() >= sim.config.foreground_slo_ms * 0.95 if sim.latencies_ms else False,
+        )
+        add_constraints = constraints.can_add(cache, node, sim.nodes)
         if source == AlternativeSource.NONE:
             action = CacheAction.PIN
             reason = "no safe alternative source"
-        elif can_share and density > 0.20 and under_budget and under_node_budget:
+        elif can_share and gain.allowed and gain.gain_ms > self.minimum_layout_improvement_ms and add_constraints.allowed:
             action = CacheAction.REPLICATE
-            reason = f"benefit density {density:.3f}, state={state.value}"
+            reason = f"replica gain {gain.gain_ms:.3f} ms, state={state.value}"
             sim.ensure_space_and_add(event.node_id, cache, reason, evict="value")
-        elif density > 0.35 and under_node_budget:
+        elif gain.allowed and gain.gain_density_ms_per_mib > 0.05 and add_constraints.allowed:
             action = CacheAction.PROMOTE
-            reason = f"private/local benefit density {density:.3f}"
+            reason = f"local gain density {gain.gain_density_ms_per_mib:.3f} ms/MiB"
             sim.ensure_space_and_add(event.node_id, cache, reason, evict="value")
         else:
             action = CacheAction.DEFER
-            reason = f"benefit density {density:.3f} below threshold or budget constrained"
+            reason = f"{gain.reason}; constraints={add_constraints.checks}"
         decisions.append(
             Decision(
                 cache_key=event.cache_key,
@@ -295,14 +372,14 @@ class AuraKVPolicy(SimulationPolicy):
                 action=action,
                 alternative_source=source,
                 reason=reason,
-                benefit=benefit,
-                cost=local_shadow + duplicate_shadow,
-                confidence=pred.confidence,
+                benefit=gain.gain_ms,
+                cost=gain.ready_delay_ms,
+                confidence=1.0,
             )
         )
         return ("local" if node.has_replica(event.cache_key) else source.value.lower()), decisions
 
     def after_access(self, sim: "TraceSimulator", event: AccessEvent) -> None:
-        self.predictor.observe(event)
+        self.demand_estimator.observe(event)
         if len(sim.latencies_ms) >= 20:
             self.prices.update(sim.nodes, sim.duplicate_bytes, sim.p99_latency())

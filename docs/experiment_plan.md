@@ -27,7 +27,7 @@
 共享比例
 远端 P99
 重算成本
-预测误差
+需求估计误差
 重复副本预算
 ```
 
@@ -60,14 +60,16 @@ decision_count
 
 ```text
 private / node_shared / cluster_shared / hotspot_shift
-high_recompute / remote_congestion / prediction_error / tenant_isolation
+high_recompute / remote_congestion / demand_estimation_error / tenant_isolation
 ```
 
 baseline：
 
 ```text
-RemoteOnly / ProducerLocal / NodeLRU / NodeLFU / StaticNReplica
-AffinityOnly / AIReplacementOnly / AlternativeAwareNoLearning / AURA-KV
+RemoteOnly / ProducerLocal / NodeLRU / NodeLFU / SizeAwareLRU
+WeightedScoreBaseline / EWMAReplacement / SourceAwareReplacement
+PrefixSourceAwareReplacement / StaticNReplica / AffinityOnly
+IndependentControllers / AURA-KV / OracleDemand / ExhaustiveOptimal
 ```
 
 ## 5. 预期图表
@@ -78,7 +80,7 @@ AffinityOnly / AIReplacementOnly / AlternativeAwareNoLearning / AURA-KV
 图 3: 远端读取字节
 图 4: 重复副本空间
 图 5: 热点迁移时 churn
-图 6: 预测误差敏感性
+图 6: 需求估计误差敏感性
 图 7: 消融实验柱状图
 ```
 
@@ -89,9 +91,9 @@ AffinityOnly / AIReplacementOnly / AlternativeAwareNoLearning / AURA-KV
 会否定当前设计的结果：
 
 ```text
-AURA-KV 在多数场景不优于 AlternativeAwareNoLearning
+AURA-KV 在多数场景不优于 SourceAwareReplacement
 共享场景下重复空间显著高但 P99 无改善
-预测错误导致大量错误复制
+需求估计误差导致大量错误复制
 tenant_isolation 出现跨域命中
 真实 NVMe-oF 下后台复制严重恶化前台 P99
 ```
@@ -110,6 +112,6 @@ python3 scripts/aura_kv_sim.py --output reports/latest/aura-kv-sim
 | 功能 | 状态 | 对应代码 | 对应测试 | 未完成原因 | 后续计划 |
 |---|---|---|---|---|---|
 | 8 个模拟场景 | Implemented | `aura_kv/simulator.py` | `aura_kv_test.sh` | 无 | 增加崩溃场景 |
-| 9 个 baseline | Implemented | `aura_kv/policies.py` | simulator | 无 | 增加 ablation |
+| 15 个 baseline/策略 | Implemented | `aura_kv/policies.py` | simulator | 无 | 增加 ablation |
 | CSV/JSON/MD 输出 | Implemented | `write_results()` | simulator | 无 | 增加画图脚本 |
 | 真实硬件实验 | Planned | NVMe-oF scripts | 无 | 缺真实 IP/NQN | 环境到位后执行 |

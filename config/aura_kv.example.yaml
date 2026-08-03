@@ -9,12 +9,25 @@ storage:
   remote_backend: simulated
   remote_mount_path: ./data/remote
 
-prediction:
-  predictor: ewma
-  prediction_horizon_seconds: 600
+demand:
+  estimator: gamma_poisson
+  horizon_seconds: 600
   access_decay_tau_seconds: 600
-  min_training_samples: 1000
-  confidence_fallback_threshold: 0.60
+  bucket_seconds: 60
+  gamma_poisson_a0: 1.0
+  gamma_poisson_b0_seconds: 600
+  cantelli_delta: 0.10
+
+cost_model:
+  local_fixed_latency_ms: 0.08
+  peer_fixed_latency_ms: 0.35
+  remote_fixed_latency_ms: 1.20
+  local_bandwidth_mib_per_s: 3500
+  peer_bandwidth_mib_per_s: 800
+  remote_bandwidth_mib_per_s: 1200
+  host_to_device_bandwidth_mib_per_s: 12000
+  deserialize_cost_per_mib_ms: 0.0
+  format_conversion_cost_per_mib_ms: 0.0
 
 sharedness:
   min_access_samples: 5
@@ -65,4 +78,4 @@ simulator:
   peer_read_p99_ms: 4.0
   duplicate_budget_mib: 128
   node_duplicate_budget_mib: 64
-
+  demand_horizon_seconds: 600
