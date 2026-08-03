@@ -1,0 +1,68 @@
+system:
+  project_name: AURA-KV
+  node_id: node0
+  metadata_db: ./data/aura.db
+
+storage:
+  local_paths:
+    - ./data/local/node0
+  remote_backend: simulated
+  remote_mount_path: ./data/remote
+
+prediction:
+  predictor: ewma
+  prediction_horizon_seconds: 600
+  access_decay_tau_seconds: 600
+  min_training_samples: 1000
+  confidence_fallback_threshold: 0.60
+
+sharedness:
+  min_access_samples: 5
+  private_dominance_enter: 0.92
+  private_dominance_exit: 0.82
+  cluster_shared_entropy_enter: 0.60
+  cluster_shared_entropy_exit: 0.45
+  min_cross_node_accesses: 4
+  state_cooldown_seconds: 300
+  demotion_confirm_cycles: 3
+  cold_timeout_seconds: 3600
+
+budget:
+  global_duplicate_budget_bytes: 134217728
+  global_duplicate_ratio: 0.20
+  node_duplicate_budget_bytes: 67108864
+  node_duplicate_ratio: 0.25
+
+lease:
+  default_seconds: 600
+  min_seconds: 60
+  max_seconds: 3600
+
+slo:
+  target_foreground_read_p99_ms: 10
+  background_pause_ratio: 0.95
+  background_resume_ratio: 0.80
+
+controller:
+  interval_seconds: 10
+  max_actions_per_cycle: 32
+  max_migration_bytes_per_cycle: 1073741824
+
+shadow_price:
+  eta_capacity: 0.10
+  eta_duplicate: 0.10
+  eta_background_bw: 0.10
+  eta_slo: 0.10
+
+simulator:
+  seed: 7
+  nodes: 2
+  gpus_per_node: 2
+  local_capacity_mib: 96
+  remote_read_p50_ms: 1.2
+  remote_read_p99_ms: 8.0
+  local_read_p50_ms: 0.08
+  peer_read_p99_ms: 4.0
+  duplicate_budget_mib: 128
+  node_duplicate_budget_mib: 64
+

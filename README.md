@@ -1,24 +1,38 @@
-# GPU-Aware TierFS / TokenFS
+# AURA-KV / GPU-Aware TierFS / TokenFS
 
 ```text
-面向多 GPU 大模型 KV Cache 的本地-远程自适应分层文件系统
+面向 NVMe-oF 分层存储的自适应 KV Cache 联合替换与共享副本管理系统
 ```
 
-TokenFS 是一个面向大模型 Prompt Token、Token Shard 和 KV Cache 数据的 GPU 感知分层文件系统原型。系统通过 FUSE 提供统一 POSIX 文件接口，让上层的 vLLM、SGLang 或测试程序像访问普通目录一样访问缓存数据；系统内部把 GPU 本地 SSD 当作高速热点缓存，把 NVMe-oF 远端 SSD 池当作共享主副本和容量层，根据数据价值和多 GPU 共享访问热度动态调整数据位置。
+AURA-KV 的全称暂定为：
+
+```text
+Adaptive Unified Replacement and Affinity-aware KV Cache Management
+```
+
+TokenFS 是底层可运行 FUSE 文件系统原型，AURA-KV 是在 TokenFS 之上新增的研究控制层和 trace-driven 实验框架。项目面向大模型 Prompt Token、Token Shard 和 KV Cache 数据，通过 FUSE 提供统一 POSIX 文件接口；系统内部把 GPU 本地 SSD 当作低延迟热点缓存，把 NVMe-oF 远端 SSD 池当作大容量权威层，根据替代来源、缓存价值、共享拓扑和副本预算动态调整数据位置。
 
 这个项目当前的定位不是普通网盘，也不是完整替代 ext4/XFS 的底层文件系统，而是：
 
 ```text
-面向多 GPU 大模型缓存场景的“本地 SSD + NVMe-oF 远端 SSD”自适应分层文件系统原型。
+面向多 GPU 大模型 KV Cache 场景的“本地 SSD + NVMe-oF 远端 SSD”自适应分层文件系统与研究原型。
 ```
 
 当前没有真实 SSD Target IP 也可以继续开发和验证：远端层先用普通目录或双 VM NVMe/TCP 模拟；拿到真实 IP、NQN、设备名后，只需要替换配置并运行 NVMe-oF 连接脚本。
+
+谨慎说明：
+
+```text
+本项目以 CCF B 类系统论文投稿潜力为研究目标，但不得声称一定能中稿；
+当前新颖性主张仍需系统性论文、专利和开源项目检索；
+当前模拟结果不得伪装成真实 NVMe-oF/GPU 硬件实验结果。
+```
 
 ---
 
 ## 1. 当前项目进度
 
-当前已经完成的是“可运行的软件原型 + 策略框架 + 测试框架 + NVMe-oF 接入脚本”。真实 NVMe-oF 物理环境到位后，需要做的是替换配置、连接设备、重新跑真实性能实验。
+当前已经完成的是“可运行的软件原型 + AURA-KV 研究策略框架 + trace 模拟器 + 测试框架 + NVMe-oF 接入脚本”。真实 NVMe-oF 物理环境到位后，需要做的是替换配置、连接设备、重新跑真实性能实验。
 
 | 模块 | 当前状态 | 说明 |
 |---|---|---|
@@ -33,6 +47,12 @@ TokenFS 是一个面向大模型 Prompt Token、Token Shard 和 KV Cache 数据�
 | AI 价值感知本地缓存管理 | 已完成原型 | 管理本地写入、热点提升和低价值淘汰 |
 | 多 GPU 共享热点复制 | 已深化 | 面向前缀共享和 KV Cache 共享，按需创建和命中本地副本 |
 | QoS 工程观测 | 已完成基础版 | 记录前台读写和后台迁移/预取/淘汰开销，不作为当前论文创新点 |
+| AURA-KV CacheIdentity | 已完成原型 | 建模 sharing_domain、模型版本、token 前缀和 tenant 隔离 |
+| AURA-KV EWMA 预测器 | 已完成原型 | 无需训练的解析式预测器，作为 AI 策略安全回退 |
+| 替代来源感知 | 已完成原型 | 区分本节点、其他节点、远端 NVMe-oF、重算和不可删除 |
+| 共享拓扑分类 | 已完成原型 | 使用主导比例、共享熵和跨节点访问判断私有/共享状态 |
+| 预算化副本放置 | 已完成原型 | 使用全局/节点重复副本预算和影子价格控制副本数量 |
+| Trace-driven simulator | 已完成基础版 | 无真实 IP 时可跑 8 个场景、9 个 baseline |
 | 热点提升 | 已完成 | 远端热点数据可复制成本地缓存 |
 | 顺序预取 | 已完成 | 连续 shard 可提前拉到本地 |
 | 缓存 GC | 已完成 | 可删除远端已有主副本的本地缓存 |
@@ -44,7 +64,7 @@ TokenFS 是一个面向大模型 Prompt Token、Token Shard 和 KV Cache 数据�
 一句话总结当前阶段：
 
 ```text
-功能框架已经基本成型；当前测试能证明系统逻辑正确，但还不能证明真实 NVMe-oF 环境下的最终性能。
+功能框架已经基本成型；当前测试和模拟能证明系统逻辑可运行，但还不能证明真实 NVMe-oF/GPU 环境下的最终性能。
 ```
 
 ---
@@ -54,9 +74,9 @@ TokenFS 是一个面向大模型 Prompt Token、Token Shard 和 KV Cache 数据�
 仓库按三大板块理解：
 
 ```text
-代码：src/、scripts/、config/
-说明文档：README.md
-实验结果：reports/latest/final-report.md
+代码：src/、aura_kv/、scripts/、config/
+说明文档：README.md、docs/
+实验结果：reports/latest/
 ```
 
 核心文件：
@@ -64,7 +84,14 @@ TokenFS 是一个面向大模型 Prompt Token、Token Shard 和 KV Cache 数据�
 | 路径 | 作用 |
 |---|---|
 | `src/main.cpp` | TokenFS FUSE 主程序，文件系统核心逻辑都在这里 |
+| `aura_kv/core.py` | AURA-KV 缓存身份、替代来源、动作、副本和节点状态 |
+| `aura_kv/prediction.py` | EWMA、LastAccess、MovingAverage 等访问预测器 |
+| `aura_kv/policies.py` | baseline、共享分类、替代来源、资源价格和 AURA-KV 联合策略 |
+| `aura_kv/simulator.py` | trace-driven simulator 和实验结果导出 |
 | `config/tokenfs.dev.yaml` | 开发环境配置，包括 GPU、本地目录、远端后端、策略开关 |
+| `config/aura_kv.example.yaml` | AURA-KV 研究控制层配置模板 |
+| `scripts/aura_kv_sim.py` | 运行 AURA-KV 模拟实验 |
+| `scripts/aura_kv_test.sh` | AURA-KV 单元测试和模拟器 smoke test |
 | `scripts/tokenfsctl.py` | 管理工具，用来查看状态、元数据、副本、指标、一致性 |
 | `scripts/start_tokenfs.sh` | 启动 TokenFS 并挂载到 `/mnt/tokenfs` |
 | `scripts/stop_tokenfs.sh` | 停止 TokenFS 并卸载挂载点 |
@@ -73,8 +100,41 @@ TokenFS 是一个面向大模型 Prompt Token、Token Shard 和 KV Cache 数据�
 | `scripts/setup_nvme_target.sh` | 在第二台 VM 上搭建 NVMe-oF Target |
 | `scripts/nvmeof_two_vm_test.sh` | 双 VM NVMe-oF 连通性测试 |
 | `reports/latest/final-report.md` | 当前统一实验报告 |
+| `reports/latest/aura-kv-sim/aura_sim_report.md` | AURA-KV 模拟实验报告，明确标注 SIMULATED RESULT |
+| `docs/aura_kv_overview.md` | AURA-KV 研究原型总览 |
+| `docs/innovation1_replacement.md` | 候选创新一设计 |
+| `docs/innovation2_sharing_replication.md` | 候选创新二设计 |
+| `docs/paper_outline.md` | 论文大纲草案 |
 
 当前 GitHub 上主要保留这些清晰入口。某些测试生成的 CSV/JSON/HTML 结果默认不作为主文档入口，避免仓库看起来太乱。
+
+### 2.1 AURA-KV 快速运行
+
+只运行 AURA-KV 新增测试：
+
+```bash
+./scripts/aura_kv_test.sh
+```
+
+运行完整模拟矩阵：
+
+```bash
+python3 scripts/aura_kv_sim.py --output reports/latest/aura-kv-sim
+```
+
+查看模拟报告：
+
+```bash
+less reports/latest/aura-kv-sim/aura_sim_report.md
+```
+
+报告中的结果会明确标注：
+
+```text
+SIMULATED RESULT
+```
+
+它用于验证策略逻辑和 baseline 框架，不代表真实 NVMe-oF 硬件性能。
 
 ---
 

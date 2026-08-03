@@ -1,18 +1,27 @@
-# TokenFS 统一实验报告
+# AURA-KV / TokenFS 统一实验报告
 
 项目名称：
 
 ```text
-面向多 GPU 大模型 KV Cache 的本地-远程自适应分层文件系统
+面向 NVMe-oF 分层存储的自适应 KV Cache 联合替换与共享副本管理系统
 ```
 
-本文件是当前仓库唯一保留的数据结果入口，整合功能验证、策略实验、指标观测和真实环境复测计划。
+本文件是当前仓库统一数据结果入口，整合 TokenFS 功能验证、AURA-KV 策略模拟、指标观测和真实环境复测计划。
 
 当前结论定位：
 
 ```text
 当前结果用于验证系统功能、策略逻辑、可观测指标和实验框架；
 不作为真实 NVMe-oF SSD 环境下的最终性能结论。
+```
+
+谨慎说明：
+
+```text
+AURA-KV 当前属于候选研究原型；
+不得声称一定能够中稿；
+不得未经系统性论文、专利和开源系统检索就声称全球首次；
+模拟实验必须标注 SIMULATED RESULT。
 ```
 
 ## 1. 实验环境
@@ -158,7 +167,129 @@ affinity_updated_at
 
 这个机制不是默认假设所有 GPU 都共享数据；没有共享访问时，它自然退化为“谁产生谁管理”。只有在前缀共享、KV Cache 共享或任务迁移导致的跨 GPU 高频访问出现时，才触发副本创建。
 
-GPU 亲和分类当前使用：
+## 5. AURA-KV 研究实验层
+
+为满足论文级原型要求，当前仓库新增了独立的 AURA-KV 实验层：
+
+```text
+aura_kv/core.py
+aura_kv/prediction.py
+aura_kv/policies.py
+aura_kv/simulator.py
+scripts/aura_kv_sim.py
+tests/aura_kv_unit_test.py
+```
+
+它不替代当前 FUSE 主程序，而是用于在无真实 IP、无真实 GPU/NVMe-oF 环境时，先验证两个候选创新的联合策略逻辑。
+
+### 5.1 已实现 baseline
+
+当前 trace simulator 已支持 9 个策略：
+
+```text
+RemoteOnly
+ProducerLocal
+NodeLRU
+NodeLFU
+StaticNReplica
+AffinityOnly
+AIReplacementOnly
+AlternativeAwareNoLearning
+AURA-KV
+```
+
+这避免了“只和 LRU 比”的问题。
+
+### 5.2 已实现场景
+
+当前模拟器支持 8 个场景：
+
+```text
+private
+node_shared
+cluster_shared
+hotspot_shift
+high_recompute
+remote_congestion
+prediction_error
+tenant_isolation
+```
+
+覆盖私有缓存、同节点共享、跨节点共享、热点迁移、高重算成本、远端拥塞、预测误差和租户隔离。
+
+### 5.3 模拟实验结果入口
+
+运行：
+
+```bash
+python3 scripts/aura_kv_sim.py --output reports/latest/aura-kv-sim
+```
+
+输出：
+
+```text
+reports/latest/aura-kv-sim/aura_sim_report.md
+reports/latest/aura-kv-sim/aura_sim_results.csv
+reports/latest/aura-kv-sim/aura_sim_results.json
+```
+
+当前已生成完整矩阵：
+
+```text
+8 个场景 × 9 个策略 = 72 组模拟结果
+```
+
+报告第一行明确标注：
+
+```text
+SIMULATED RESULT
+```
+
+因此这些数据只能说明策略逻辑是否工作，不能作为真实 NVMe-oF 性能结论。
+
+### 5.4 当前 AURA-KV 指标
+
+```text
+local_cache_hit_rate
+remote_read_bytes
+peer_read_bytes
+recomputed_ms
+duplicate_bytes
+replica_count
+replica_churn
+migration_bytes
+ttft_p50_ms
+ttft_p95_ms
+ttft_p99_ms
+slo_violation_rate
+decision_count
+```
+
+### 5.5 当前测试结果
+
+已通过：
+
+```text
+python3 -m unittest tests.aura_kv_unit_test
+./scripts/aura_kv_test.sh
+python3 scripts/aura_kv_sim.py --output reports/latest/aura-kv-sim
+```
+
+含义：
+
+```text
+CacheIdentity 能阻止跨 sharing_domain 共享
+EWMA 预测器能低置信度回退
+共享状态分类具备最小样本限制
+模拟器能运行 9 个 baseline
+AURA-KV 能跑核心共享/迁移场景
+```
+
+### 5.6 TokenFS 主路径中的亲和分类
+
+TokenFS FUSE 主路径当前仍保留较工程化的 GPU 亲和分类，用于真实挂载读写时快速决策；AURA-KV 研究层则在模拟器中进一步抽象为共享拓扑分类和预算化副本放置。
+
+TokenFS 主路径当前使用：
 
 | 状态 | 含义 | 策略含义 |
 |---|---|---|
