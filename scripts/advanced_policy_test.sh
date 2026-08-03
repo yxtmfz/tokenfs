@@ -180,7 +180,7 @@ PY
 "$project_root/scripts/reset_dev_state.sh" "$mount_point" >/dev/null
 "$project_root/scripts/start_tokenfs.sh" "$qos_config" "$mount_point" >/dev/null
 
-echo "advanced: QoS limiter records per-GPU delay"
+echo "advanced: QoS engineering metrics record per-GPU delay"
 mkdir -p "$mount_point/gpu0/qos"
 printf "qos\n" >"$mount_point/gpu0/qos/tiny.tokens"
 cat "$mount_point/gpu0/qos/tiny.tokens" >/dev/null

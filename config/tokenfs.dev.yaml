@@ -38,7 +38,7 @@ policy:
   # 默认不开自适应迁移，避免影响 baseline；真实环境或专项实验中打开。
   adaptive_migration: false
   adaptive_remote_promote_us: 10000
-  # 0 表示不限制。需要做 QoS 公平性实验时设置为具体 IOPS。
+  # 0 表示不限制。需要做工程压力或干扰观测时设置为具体 IOPS。
   qos_read_iops_per_gpu: 0
   qos_write_iops_per_gpu: 0
   # 后台迁移/预取/淘汰的 QoS，默认不限速；专项实验中打开。

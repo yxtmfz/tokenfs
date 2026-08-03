@@ -120,15 +120,14 @@ affinity_updated_at
 ./scripts/tokenfsctl.py check
 ```
 
-## 4. 三个研究重点
+## 4. 两个研究重点
 
-当前研究重点围绕同一条数据路径展开：本地 SSD 负责低延迟热点缓存，远端 NVMe-oF SSD 负责共享主副本和容量扩展，系统根据缓存价值、GPU 热点和 QoS 约束动态调整数据位置。
+当前研究重点围绕同一条数据路径展开：本地 SSD 负责低延迟热点缓存，远端 NVMe-oF SSD 负责共享主副本和容量扩展，系统根据缓存价值和多 GPU 共享访问热度动态调整数据位置。
 
 | 研究点 | 当前工程落地 | 可观测方式 |
 |---|---|---|
 | AI 价值感知的本地缓存管理 | 管理新写入、本地溢写、热点提升和本地淘汰，让高价值缓存尽量留在本地 | `files`、`metrics`、`eviction_test.sh` |
-| GPU 热点亲和复制 | 观察哪个 GPU 正在高频读取哪份远端数据，并把远端主副本复制到热点 GPU 的本地 SSD | `affinity`、`replicas`、`advanced_policy_test.sh` |
-| 多 GPU QoS | 已区分前台读写与后台迁移/预取/淘汰，并记录每 GPU QoS 指标 | `metrics`、`advanced_policy_test.sh` |
+| 多 GPU 共享热点复制 | 观察哪个 GPU 正在高频读取共享前缀或共享 KV Cache，并把远端主副本复制到热点 GPU 的本地 SSD | `affinity`、`replicas`、`advanced_policy_test.sh` |
 
 当前价值公式：
 
@@ -146,7 +145,7 @@ affinity_updated_at
 
 当前代码中 `remote_access_cost` 以归一化权重参与评分，避免默认配置下把低热度冷数据也误判为高价值。
 
-GPU 热点亲和复制的核心机制：
+多 GPU 共享热点复制的核心机制：
 
 ```text
 1. 通过 TOKENFS_GPU_ID / CUDA_VISIBLE_DEVICES 识别调用方 GPU
@@ -156,6 +155,8 @@ GPU 热点亲和复制的核心机制：
 5. 后续同一 GPU 再读时优先命中本地副本
 6. 使用副本上限、冷却时间和最短驻留时间避免复制抖动
 ```
+
+这个机制不是默认假设所有 GPU 都共享数据；没有共享访问时，它自然退化为“谁产生谁管理”。只有在前缀共享、KV Cache 共享或任务迁移导致的跨 GPU 高频访问出现时，才触发副本创建。
 
 GPU 亲和分类当前使用：
 
@@ -179,14 +180,14 @@ GPU 亲和分类当前使用：
 目标本地副本数：把亲和分类转化为副本策略建议
 ```
 
-QoS 当前分为两类：
+QoS 当前作为工程观测能力保留，不作为论文创新点。它分为两类：
 
 ```text
 前台 QoS：用户 read/write 路径，直接影响上层推理或训练等待时间
 后台 QoS：promote、prefetch、evict 等迁移任务，不能抢占太多前台资源
 ```
 
-这使第三个创新点不只是“限速”，而是开始具备研究多 GPU 公平性的基础：后续可以在真实环境中加入带权公平调度、延迟敏感任务优先级和 Jain 公平性指数。
+这些指标用于解释前台读写、后台迁移和预取是否互相干扰；后续如果老师要求再扩展公平性，可以作为附加工程实验。
 
 ## 5. Token Workload 样例结果
 
@@ -288,8 +289,8 @@ full       █████████████████████░░
 - 顺序预取：连续 shard 的下一片提前生成本地缓存。
 - 缓存 GC：只删除本地缓存，不删除远端主副本。
 - 价值感知淘汰：低价值数据优先迁远端或删本地缓存。
-- GPU 亲和统计：识别调用方 GPU，记录跨 GPU 访问，计算短窗口热度、亲和趋势、多级状态和目标副本数。
-- 多 GPU QoS：记录并限制每 GPU 前台读写 IOPS，同时观测后台迁移/预取/淘汰开销。
+- 多 GPU 共享热点复制：识别调用方 GPU，记录跨 GPU 访问，计算短窗口热度、亲和趋势、多级状态和目标副本数。
+- QoS 工程观测：记录并限制每 GPU 前台读写 IOPS，同时观测后台迁移/预取/淘汰开销。
 - 故障恢复：临时文件和未完成迁移状态可恢复。
 
 ## 8. 当前能证明什么
@@ -303,7 +304,7 @@ GPU namespace 和本地配额隔离可用
 远端主副本 + 本地热缓存的副本生命周期可运行
 SQLite 元数据、checksum、提交状态和一致性检查可用
 跨层迁移已经具备可恢复状态机
-GPU 亲和、价值感知放置和 QoS 限速已有可运行原型
+价值感知本地缓存管理和多 GPU 共享热点复制已有可运行原型
 调用方 GPU、累计 dominant GPU、短窗口 dominant GPU、亲和趋势、共享热状态和目标副本数已经进入元数据和管理工具
 前台 I/O 与后台迁移/预取/淘汰已经分开观测
 策略矩阵实验可作为论文消融实验模板
@@ -347,12 +348,12 @@ sudo ./scripts/connect_nvme.sh --config config/tokenfs.dev.yaml --backend remote
 直接 NVMe-oF SSD baseline
 TokenFS baseline
 TokenFS + AI 价值感知本地缓存管理
-TokenFS + GPU 热点亲和复制
-TokenFS + 多 GPU QoS
+TokenFS + 多 GPU 共享热点复制
 TokenFS full
 P50/P95/P99 延迟
 多 GPU 并发读取
 GPU 等待数据时间
-Jain 公平性指数
-SLO 违反率
+共享缓存命中率
+跨 GPU 副本创建次数
+远端读取减少比例
 ```
