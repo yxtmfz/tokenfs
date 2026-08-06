@@ -127,9 +127,11 @@ class MetricsAggregator:
             "canceled_task_count": 0,
             "retry_count": 0,
             "controller_cycle_duration": 0,
+            "demand_update_count": 0,
             "candidate_count": 0,
             "accepted_candidate_count": 0,
             "rejected_candidate_count": 0,
+            "action_plan_count": 0,
             "eviction_loss_ms": 0,
             "replica_gain_ms": 0,
             "robust_benefit_ms": 0,
@@ -160,6 +162,8 @@ class MetricsAggregator:
         elif event.event_type == "RECOMPUTE":
             metric["recompute_count"] += 1
             metric["recompute_tokens"] += float(event.extra.get("token_count", 0))
+        elif event.event_type == "DEMAND_UPDATED":
+            metric["demand_update_count"] += 1
         elif event.event_type == "CANDIDATE_CREATED":
             metric["candidate_count"] += 1
             metric["eviction_loss_ms"] += event.eviction_loss_ms
@@ -169,6 +173,8 @@ class MetricsAggregator:
             metric["accepted_candidate_count"] += 1
         elif event.event_type == "CANDIDATE_REJECTED":
             metric["rejected_candidate_count"] += 1
+        elif event.event_type == "ACTION_PLAN_CREATED":
+            metric["action_plan_count"] += 1
         elif event.event_type == "CONTROLLER_CYCLE_COMPLETED":
             metric["controller_cycle_duration"] = event.latency_ms
         elif event.event_type == "TASK_CREATED":

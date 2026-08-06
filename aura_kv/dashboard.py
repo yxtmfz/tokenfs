@@ -135,16 +135,16 @@ DASHBOARD_HTML = r"""
       metric('Remote Bytes', mib(m.remote_bytes)),
       metric('Duplicate Bytes', mib(m.duplicate_bytes)),
       metric('Migration Bytes', mib(m.migration_bytes)),
-      metric('Tasks', `${m.task_queue_length||0}/${m.running_task_count||0}/${m.committed_task_count||0}`),
+      metric('Tasks', `等待${m.task_queue_length||0} / 运行${m.running_task_count||0} / 完成${m.committed_task_count||0}`),
       metric('Candidates', `${m.accepted_candidate_count||0}/${m.rejected_candidate_count||0}`),
       metric('ReplicaGain', Number(m.replica_gain_ms || 0).toFixed(2)),
       metric('EvictionLoss', Number(m.eviction_loss_ms || 0).toFixed(2))
     ].join('');
     const flow = [
-      ['REQUEST', m.request_count], ['ACCESS EVENT', countEvents(state, 'ACCESS_EVENT_RECORDED')],
-      ['DEMAND', countEvents(state, 'DEMAND_UPDATED')], ['CANDIDATE', m.candidate_count],
+      ['REQUEST', m.request_count], ['ACCESS EVENT', m.completed_request_count || countEvents(state, 'ACCESS_EVENT_RECORDED')],
+      ['DEMAND', m.demand_update_count || countEvents(state, 'DEMAND_UPDATED')], ['CANDIDATE', m.candidate_count],
       ['DECISION', (m.accepted_candidate_count||0) + (m.rejected_candidate_count||0)],
-      ['ACTION PLAN', countEvents(state, 'ACTION_PLAN_CREATED')], ['TASK', countEvents(state, 'TASK_CREATED')],
+      ['ACTION PLAN', m.action_plan_count || countEvents(state, 'ACTION_PLAN_CREATED')], ['TASK', (m.task_queue_length||0) + (m.running_task_count||0) + (m.verifying_task_count||0) + (m.committed_task_count||0) + (m.failed_task_count||0) + (m.canceled_task_count||0)],
       ['EXECUTION', (m.running_task_count||0) + (m.verifying_task_count||0)],
       ['COMMIT', m.committed_task_count], ['NEW LAYOUT', m.current_layout_version]
     ];
