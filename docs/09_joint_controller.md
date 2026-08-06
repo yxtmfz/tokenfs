@@ -34,13 +34,61 @@ flowchart TD
     Cost --> Candidates["生成 ADD / REMOVE / SWAP 候选"]
     Candidates --> Benefit["计算 RobustBenefit"]
     Benefit --> Constraints["检查容量、带宽、SLO、共享安全"]
-    Constraints -->|通过| Execute["执行后台动作"]
+    Constraints -->|通过| Queue["写入持久化后台任务队列"]
+    Queue --> Execute["后台执行复制、预取、淘汰或 SWAP"]
     Constraints -->|拒绝| Observe["继续观测"]
     Execute --> Metadata["更新元数据和指标"]
     Metadata --> Events
 ```
 
-## 4. 为什么要联合
+这条链路里，前台请求不直接做重复制和删除。它只产生访问事件，并触发控制器生成任务计划；真正的数据搬迁由后台任务执行器完成。
+
+## 4. 后台任务状态机
+
+AURA-KV 现在把布局动作变成持久化任务，任务和副本状态分开管理。
+
+任务类型：
+
+| 任务 | 含义 |
+|---|---|
+| PROMOTE | 前台读到热点后，把远端副本提升到请求节点本地 |
+| PREFETCH | 根据连续访问或预测，把未来可能访问的块提前拉到本地 |
+| REPLICATE | 创建一个指定节点的本地副本 |
+| EVICT | 删除一个本地 READY 副本 |
+| SWAP | “新增高收益副本 + 删除低收益副本”的组合动作 |
+
+任务状态：
+
+```mermaid
+stateDiagram-v2
+    [*] --> PENDING
+    PENDING --> RUNNING
+    PENDING --> CANCELED
+    RUNNING --> VERIFYING
+    RUNNING --> FAILED
+    RUNNING --> CANCELED
+    VERIFYING --> COMMITTED
+    VERIFYING --> FAILED
+    VERIFYING --> CANCELED
+    FAILED --> PENDING: retry
+    FAILED --> CANCELED
+```
+
+每个任务记录：
+
+```text
+task_id、任务类型、cache_key、source、target、layout_version、
+状态、重试次数、创建/开始/结束时间、预留空间、预期收益、
+错误码、错误信息、校验和、依赖任务
+```
+
+这样做的目的有三个：
+
+- 系统崩溃后，未完成的迁移不会凭空消失，可以从 SQLite 队列表恢复。
+- 前台访问和后台迁移解耦，避免一次读请求被大文件复制拖慢。
+- SWAP 不再是“先删旧再复制新”，而是必须先创建并校验新副本，再允许删除旧副本。
+
+## 5. 为什么要联合
 
 如果替换和复制分开做，会出现：
 
@@ -58,7 +106,29 @@ flowchart TD
 
 只有整体收益超过阈值才执行。
 
-## 5. 安全门控
+## 6. SWAP 安全流程
+
+SWAP 是最容易出错的动作，因为它同时涉及“新增”和“删除”。当前实现采用依赖任务方式：
+
+```mermaid
+flowchart TD
+    Start["决定用 new 替换 old"] --> Rep["REPLICATE new 到目标节点"]
+    Rep --> Verify["校验 new 副本"]
+    Verify --> Ready["new 副本 READY"]
+    Ready --> Evict["EVICT old 本地副本"]
+    Evict --> Swap["SWAP 任务 COMMITTED"]
+    Rep -->|失败| KeepOld["old 保留不动"]
+    Verify -->|失败| KeepOld
+```
+
+关键规则：
+
+- 新副本没有进入 READY 前，旧副本不能删除。
+- 复制失败、校验失败、布局版本过期时，旧副本保持可用。
+- 任务携带 `layout_version`，如果执行时发现布局已经变化，任务会被取消，避免用旧判断修改新布局。
+- `REPLICATE`、`EVICT` 和 `SWAP` 三个任务通过依赖关系串起来，崩溃恢复时仍能判断做到哪一步。
+
+## 7. 安全门控
 
 即使收益为正，也必须满足：
 
@@ -70,7 +140,7 @@ flowchart TD
 - 删除后仍有远端、peer 或可重算来源。
 - 目标文件没有处于未完成迁移状态。
 
-## 6. 当前状态
+## 8. 当前状态
 
 Implemented：
 
@@ -78,15 +148,18 @@ Implemented：
 - 容量、重复预算、后台带宽、并发、SLO 和共享安全约束。
 - 多个 baseline 与 `AuraKVPolicy` 模拟。
 - TokenFS 主路径具备 promote、prefetch、evict、cache-gc 工程动作。
+- `aura_kv.tasks` 提供 SQLite 持久化后台任务队列和任务状态机。
+- `aura_kv.executor` 提供目录后端执行器，可模拟 NVMe-oF 挂载目录上的复制、校验、提交、淘汰。
+- `aura_kv.controller` 能把前台访问事件转换为 PROMOTE / PREFETCH / REPLICATE / EVICT / SWAP 任务计划。
+- 单元测试覆盖任务持久化、非法状态跳转、布局版本取消、复制校验和 SWAP 失败保旧。
 
 Partial：
 
-- 完整 SWAP 候选布局尚未实现为一个事务化动作。
-- Python 控制器还没有直接驱动 TokenFS 后台任务队列。
-- 真实 metrics 尚未回灌到 AURA-KV 策略层。
+- Python 执行器当前使用目录后端；真实环境下远端目录应挂载在 NVMe-oF Namespace 上。
+- TokenFS C++ 前台路径已有工程动作，但尚未直接复用 Python AURA-KV 任务队列表。
+- 真实 metrics 尚未在线回灌到 AURA-KV Python 控制器。
 
 Planned：
 
-- 统一后台执行器。
 - 将 TokenFS metrics 转换为 AURA-KV trace。
 - 真实环境下根据 P95/P99 和远端队列动态调节阈值。

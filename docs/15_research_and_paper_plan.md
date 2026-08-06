@@ -78,15 +78,16 @@ GPU-Aware TierFS: 基于 NVMe-oF 的多 GPU KV Cache 自适应分层文件系统
 至少比较：
 
 - RemoteOnly
-- ProducerLocal
-- NodeLRU
-- NodeLFU
+- LocalFirst
+- LRU-Local
+- LFU-Local
 - SizeAwareLRU
+- DualWindowReplacement
 - StaticNReplica
 - AffinityOnly
 - SourceAwareReplacement
-- IndependentControllers
-- AURA-KV
+- WA-Affinity-Independent
+- AURA-Joint
 - OracleDemand
 
 ### 5.2 场景

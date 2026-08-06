@@ -13,7 +13,7 @@ from .core import (
     SharedState,
 )
 from .cost_model import SourceCostModel
-from .demand import DemandEstimator, EWMADemandEstimator, GammaPoissonDemandEstimator, OracleDemandEstimator
+from .demand import DualWindowDemandEstimator, DemandEstimator, EWMADemandEstimator, GammaPoissonDemandEstimator, OracleDemandEstimator
 from .layout import LayoutCostEvaluator
 from .optimization import LayoutConstraints
 
@@ -263,6 +263,12 @@ class EWMAReplacementPolicy(SimulationPolicy):
 
     def after_access(self, sim: "TraceSimulator", event: AccessEvent) -> None:
         self.estimator.observe(event)
+
+
+@dataclass
+class DualWindowReplacementPolicy(EWMAReplacementPolicy):
+    estimator: DemandEstimator = field(default_factory=DualWindowDemandEstimator)
+    name: str = "DualWindowReplacement"
 
 
 class PrefixSourceAwareReplacementPolicy(SourceAwareReplacementPolicy):

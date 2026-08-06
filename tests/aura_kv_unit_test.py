@@ -3,19 +3,23 @@ from __future__ import annotations
 
 import itertools
 import sys
+import tempfile
 import unittest
 from pathlib import Path
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
+from aura_kv.controller import AuraController
 from aura_kv.core import AccessEvent, CacheIdentity, NodeState, Replica, ReplicaStatus
 from aura_kv.cost_model import SourceCostModel, transfer_time_ms
-from aura_kv.demand import EWMADemandEstimator, GammaPoissonDemandEstimator
+from aura_kv.demand import DualWindowDemandEstimator, EWMADemandEstimator, GammaPoissonDemandEstimator
+from aura_kv.executor import DirectoryReplicaExecutor, file_checksum
 from aura_kv.layout import LayoutCostEvaluator
 from aura_kv.optimization import LayoutConstraints
 from aura_kv.policies import SharednessClassifier
 from aura_kv.simulator import MIB, POLICIES, SCENARIOS, SimulationConfig, generate_trace, make_cache, run_matrix
+from aura_kv.tasks import BackgroundTask, DurableTaskQueue, TaskState, TaskTransitionError, TaskType
 
 
 class AuraKVUnitTest(unittest.TestCase):
@@ -44,6 +48,22 @@ class AuraKVUnitTest(unittest.TestCase):
         self.assertGreater(hot.mean, cold.mean)
         self.assertLessEqual(hot.lower, hot.mean)
         self.assertGreaterEqual(hot.upper, hot.mean)
+
+    def test_dual_window_detects_burst_and_reports_prediction_metrics(self) -> None:
+        estimator = DualWindowDemandEstimator(short_window_seconds=10.0, long_window_seconds=600.0, burst_ratio_threshold=2.0)
+        for i in range(8):
+            estimator.observe(AccessEvent(100.0 + i, f"burst{i}", "t", "k", "", "node0", 0, "read", 1024, 1, True, 1.0))
+        demand = estimator.estimate("k", "node0", 110.0, 60.0)
+        self.assertEqual(demand.estimator, "DualWindowDemand")
+        self.assertEqual(demand.breakdown["mode"], "burst")
+        self.assertGreater(demand.upper, demand.mean)
+
+        estimator.record_prediction(demand, actual_count=7.0)
+        metrics = estimator.prediction_metrics()
+        self.assertIn("mae", metrics)
+        self.assertIn("interval_coverage", metrics)
+        self.assertIn("underestimate_rate", metrics)
+        self.assertIn("overestimate_rate", metrics)
 
     def test_prefix_demand_deduplicates_request_id(self) -> None:
         estimator = GammaPoissonDemandEstimator(a0=0.0, b0=60.0, tau_seconds=60.0)
@@ -200,6 +220,128 @@ class AuraKVUnitTest(unittest.TestCase):
             layouts.append(j)
         self.assertGreater(len(layouts), 0)
         self.assertEqual(min(layouts), sorted(layouts)[0])
+
+    def test_background_task_queue_persists_and_enforces_transitions(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            db = Path(tmp) / "tasks.db"
+            queue = DurableTaskQueue(db)
+            task = queue.enqueue(BackgroundTask(TaskType.REPLICATE, "k", "remote", "node0", layout_version=1))
+            queue.close()
+
+            reopened = DurableTaskQueue(db)
+            loaded = reopened.get(task.task_id)
+            self.assertIsNotNone(loaded)
+            self.assertEqual(loaded.state, TaskState.PENDING)
+            with self.assertRaises(TaskTransitionError):
+                reopened.transition(task.task_id, TaskState.COMMITTED)
+            reopened.transition(task.task_id, TaskState.RUNNING)
+            reopened.transition(task.task_id, TaskState.VERIFYING)
+            committed = reopened.transition(task.task_id, TaskState.COMMITTED)
+            self.assertEqual(committed.state, TaskState.COMMITTED)
+            reopened.close()
+
+    def test_directory_executor_replicates_and_updates_ready_metadata(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            cache = make_cache("k", "node0", 0, 1, 10)
+            nodes = {"node0": NodeState("node0", 4 * MIB)}
+            queue = DurableTaskQueue(root / "tasks.db")
+            executor = DirectoryReplicaExecutor(queue, root / "remote", root / "local", nodes, {"k": cache})
+            checksum = executor.write_remote("k", b"x" * 4096)
+            task = queue.enqueue(
+                BackgroundTask(TaskType.REPLICATE, "k", "remote", "node0", layout_version=3, checksum=checksum, reserved_bytes=cache.size_bytes)
+            )
+
+            stats = executor.execute_pending(current_layout_version=3)
+            self.assertEqual(stats.committed, 1)
+            self.assertTrue(nodes["node0"].has_replica("k"))
+            self.assertTrue((root / "local" / "node0" / "k").exists())
+            self.assertEqual(file_checksum(root / "local" / "node0" / "k"), checksum)
+            self.assertEqual(queue.get(task.task_id).state, TaskState.COMMITTED)
+            queue.close()
+
+    def test_stale_layout_task_is_canceled_without_copying(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            cache = make_cache("k", "node0", 0, 1, 10)
+            nodes = {"node0": NodeState("node0", 4 * MIB)}
+            queue = DurableTaskQueue(root / "tasks.db")
+            executor = DirectoryReplicaExecutor(queue, root / "remote", root / "local", nodes, {"k": cache})
+            executor.write_remote("k", b"payload")
+            task = queue.enqueue(BackgroundTask(TaskType.REPLICATE, "k", "remote", "node0", layout_version=1))
+
+            stats = executor.execute_pending(current_layout_version=2)
+            self.assertEqual(stats.canceled, 1)
+            self.assertFalse(nodes["node0"].has_replica("k"))
+            self.assertEqual(queue.get(task.task_id).state, TaskState.CANCELED)
+            queue.close()
+
+    def test_controller_foreground_access_creates_promote_task_and_executor_commits_feedback(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            cache = make_cache("hot", "node0", 0, 1, 50)
+            nodes = {"node0": NodeState("node0", 4 * MIB), "node1": NodeState("node1", 4 * MIB)}
+            estimator = EWMADemandEstimator(tau_seconds=120.0, horizon_seconds=600.0)
+            evaluator = LayoutCostEvaluator(SourceCostModel(remote_fixed_latency_ms=5.0), estimator, minimum_layout_improvement_ms=0.1)
+            constraints = LayoutConstraints(global_duplicate_budget_bytes=8 * MIB, node_duplicate_budget_bytes=8 * MIB)
+            controller = AuraController(evaluator, constraints, horizon_seconds=120.0)
+            events = [
+                AccessEvent(float(i), f"r{i}", "t", "hot", "", "node0", 0, "read", 1024, 1, True, 10.0)
+                for i in range(30)
+            ]
+
+            plan = controller.plan_from_accesses(events, {"hot": cache}, nodes, True, layout_version=7, now=30.0)
+            self.assertTrue(any(task.action_type == TaskType.PROMOTE for task in plan.tasks))
+
+            queue = DurableTaskQueue(root / "tasks.db")
+            executor = DirectoryReplicaExecutor(queue, root / "remote", root / "local", nodes, {"hot": cache})
+            executor.write_remote("hot", b"hot-data")
+            for task in plan.tasks:
+                queue.enqueue(task)
+            stats = executor.execute_pending(current_layout_version=7)
+            self.assertGreaterEqual(stats.committed, 1)
+            self.assertTrue(nodes["node0"].has_replica("hot"))
+            queue.close()
+
+    def test_swap_safety_keeps_old_replica_when_new_copy_fails(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            root = Path(tmp)
+            old = make_cache("old", "node0", 0, 1, 10)
+            new = make_cache("new", "node1", 0, 1, 50)
+            nodes = {"node0": NodeState("node0", 2 * MIB)}
+            nodes["node0"].add_replica(Replica("old", "node0", size_bytes=old.size_bytes, last_hit_at=-1000.0))
+            queue = DurableTaskQueue(root / "tasks.db")
+            executor = DirectoryReplicaExecutor(queue, root / "remote", root / "local", nodes, {"old": old, "new": new})
+            old_path = executor.local_path("node0", "old")
+            old_path.write_bytes(b"old")
+            replicate = queue.enqueue(BackgroundTask(TaskType.REPLICATE, "new", "remote", "node0", layout_version=9, max_retries=0))
+            evict = queue.enqueue(
+                BackgroundTask(
+                    TaskType.EVICT,
+                    "old",
+                    "node:node0",
+                    "node0",
+                    layout_version=9,
+                    dependency_task_ids=[replicate.task_id],
+                )
+            )
+            queue.enqueue(
+                BackgroundTask(
+                    TaskType.SWAP,
+                    "new<->old",
+                    replicate.task_id,
+                    evict.task_id,
+                    layout_version=9,
+                    dependency_task_ids=[replicate.task_id, evict.task_id],
+                )
+            )
+
+            stats = executor.execute_pending(current_layout_version=9)
+            self.assertEqual(stats.failed, 1)
+            self.assertTrue(nodes["node0"].has_replica("old"))
+            self.assertTrue(old_path.exists())
+            self.assertEqual(queue.get(evict.task_id).state, TaskState.PENDING)
+            queue.close()
 
 
 if __name__ == "__main__":

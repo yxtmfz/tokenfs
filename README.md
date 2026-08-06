@@ -49,13 +49,14 @@ flowchart TD
     Controller --> Gain["ReplicaGain 副本收益"]
     Controller --> Robust["RobustBenefit 布局差分收益"]
     Controller --> Budget["容量/重复预算/后台带宽约束"]
-    Budget --> Exec["后台复制、预取、淘汰、恢复"]
+    Budget --> Queue["持久化后台任务队列"]
+    Queue --> Exec["后台复制、预取、淘汰、SWAP、恢复"]
     Exec --> Local
     Exec --> Remote
     Controller --> Log["指标与决策日志"]
 ```
 
-前台数据路径负责当前请求，发现本地未命中时立即选择本地、Peer、远端或重计算来源，不等待后台控制器。后台控制路径根据访问统计和代价模型决定后续布局，例如创建本地副本、删除低价值副本或预取连续 shard。
+前台数据路径负责当前请求，发现本地未命中时立即选择本地、Peer、远端或重计算来源，不等待后台控制器。后台控制路径根据访问统计和代价模型决定后续布局，例如创建本地副本、删除低价值副本或预取连续 shard。布局动作不会直接修改数据，而是先进入持久化后台任务队列，再由执行器复制、校验、提交或取消。
 
 ## 3. 核心设计概览
 
@@ -79,6 +80,34 @@ ReplicaGain = 副本 READY 后的未来需求下界 * 新副本带来的来源�
 
 新增副本使用需求下界，原因是复制是消耗本地空间和后台带宽的动作，只有保守估计仍然划算才执行。同一物理节点上的多个 GPU 共用一份物理本地副本，避免无意义重复。
 
+### 3.3 前台访问与后台执行解耦
+
+一次前台访问只做两件事：
+
+```text
+1. 尽快返回当前请求需要的数据；
+2. 记录访问事件，供后台控制器判断后续布局。
+```
+
+后台控制器会把动作写成任务：
+
+| 任务 | 作用 |
+|---|---|
+| PROMOTE | 当前 GPU 节点频繁访问远端缓存时，把副本提升到本地 |
+| PREFETCH | 根据连续访问或预测提前拉取下一批缓存 |
+| REPLICATE | 在指定节点创建本地副本 |
+| EVICT | 删除低价值本地副本 |
+| SWAP | 先复制高价值副本，再删除低价值副本 |
+
+任务状态是：
+
+```text
+PENDING -> RUNNING -> VERIFYING -> COMMITTED
+                 \-> FAILED / CANCELED
+```
+
+SWAP 使用依赖任务保证安全：新副本没有复制并校验成功之前，旧副本不会删除。任务还带有 `layout_version`，如果执行时布局已经变化，就取消旧任务，避免用过期判断修改当前布局。
+
 ## 4. 当前实现状态
 
 | 模块 | 状态 | 说明 |
@@ -88,15 +117,18 @@ ReplicaGain = 副本 READY 后的未来需求下界 * 新副本带来的来源�
 | 本地优先与远端溢写 | Implemented | 本地配额不足时写入 remote 后端目录 |
 | 远端主副本 + 本地热缓存 | Partial | 目录后端可运行，真实 NVMe-oF 需外部挂载 |
 | GPU 访问统计与跨 GPU 本地副本 | Implemented | `TOKENFS_GPU_ID`、访问窗口、亲和状态、本地副本表 |
-| 需求估计 | Implemented | `GammaPoissonDemandEstimator`、`EWMADemandEstimator`、模拟用 `OracleDemandEstimator` |
+| 需求估计 | Implemented | `GammaPoissonDemandEstimator`、`EWMADemandEstimator`、`DualWindowDemandEstimator`、模拟用 `OracleDemandEstimator` |
 | 来源代价模型 | Implemented | 本地、Peer、远端、重计算代价分解 |
 | EvictionLoss / ReplicaGain | Implemented | `aura_kv/layout.py` |
-| RobustBenefit | Partial | ADD/REMOVE 原型已实现，完整 SWAP 事务仍是设计 |
+| RobustBenefit | Implemented / Partial | ADD/REMOVE 已实现；SWAP 已有任务依赖安全原型，真实多进程恢复待硬件验证 |
 | 容量与重复预算约束 | Implemented | `LayoutConstraints` |
 | 后台带宽和 SLO 门控 | Partial | 字段和检查存在，真实 metrics 尚未接入 |
-| 迁移执行和崩溃恢复 | Partial | TokenFS 有临时文件/状态恢复，AURA-KV 后台执行器未完整持久化 |
+| 持久化后台任务队列 | Implemented | `aura_kv/tasks.py`，SQLite 记录任务、状态、依赖、重试、校验和布局版本 |
+| 后台执行器 | Implemented / Partial | `aura_kv/executor.py`，目录后端可执行复制、校验、淘汰和 SWAP 依赖；真实远端由 NVMe-oF 挂载目录替换 |
+| 联合控制器 | Implemented / Partial | `aura_kv/controller.py`，前台访问可生成 PROMOTE/PREFETCH/REPLICATE/EVICT/SWAP 任务计划 |
+| 迁移执行和崩溃恢复 | Implemented / Partial | TokenFS 有临时文件/状态恢复；AURA-KV Python 层有持久化任务队列和目录执行器 |
 | NVMe-oF 接入 | Partial | 脚本支持 connect/dry-run/two-VM；真实环境未验证 |
-| Trace simulator | Implemented | 8 个场景、15 个策略或 baseline |
+| Trace simulator | Implemented | 8 个场景、16 个策略或 baseline，支持论文友好策略命名和旧名兼容 |
 | 真实 GPU/vLLM/SGLang 集成 | Planned | 需要真实集群环境 |
 
 更细的模块清单见 [docs/14_implementation_status.md](docs/14_implementation_status.md)。
@@ -236,8 +268,8 @@ SIMULATED RESULT
 ## 11. 当前限制
 
 - 真实 NVMe-oF SSD、真实 GPU、vLLM/SGLang 尚未接入当前测试结果。
-- AURA-KV 的 Python 策略层目前是 trace-driven simulator，不直接驱动 TokenFS 后台执行器。
-- `RobustBenefit` 已有 ADD/REMOVE 原型，完整 SWAP 候选布局事务仍为 Partial。
+- AURA-KV 的 Python 控制器、任务队列和目录执行器已经闭环，但还没有直接嵌入 TokenFS C++ 主进程。
+- `RobustBenefit` 已有 ADD/REMOVE 与 SWAP 任务依赖原型；真实 NVMe-oF、多进程崩溃和硬件断电仍需要真实环境验证。
 - TokenFS 使用 FUSE 和目录后端，适合作为原型和实验入口，不代表最终生产数据路径。
 - 当前报告中的 P99、命中率和远端流量均为模拟或开发环境结果，不能作为论文真实性能结论。
 

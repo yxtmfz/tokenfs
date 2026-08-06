@@ -52,18 +52,19 @@ tenant_isolation
 
 ```text
 RemoteOnly
-ProducerLocal
-NodeLRU
-NodeLFU
+LocalFirst
+LRU-Local
+LFU-Local
 SizeAwareLRU
 WeightedScoreBaseline
 EWMAReplacement
+DualWindowReplacement
 SourceAwareReplacement
 PrefixSourceAwareReplacement
 StaticNReplica
 AffinityOnly
-IndependentControllers
-AURA-KV
+WA-Affinity-Independent
+AURA-Joint
 OracleDemand
 ExhaustiveOptimal
 ```

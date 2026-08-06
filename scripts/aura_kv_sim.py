@@ -9,14 +9,14 @@ from pathlib import Path
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from aura_kv.simulator import POLICIES, SCENARIOS, SimulationConfig, run_matrix, write_results
+from aura_kv.simulator import ALL_POLICY_NAMES, POLICIES, SCENARIOS, SimulationConfig, run_matrix, write_results
 
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run AURA-KV trace-driven simulator.")
     parser.add_argument("--output", default=str(PROJECT_ROOT / "reports/latest/aura-kv-sim"))
     parser.add_argument("--scenario", action="append", choices=SCENARIOS)
-    parser.add_argument("--policy", action="append", choices=POLICIES)
+    parser.add_argument("--policy", action="append", choices=ALL_POLICY_NAMES)
     parser.add_argument("--seed", type=int, default=7)
     parser.add_argument("--nodes", type=int, default=2)
     parser.add_argument("--gpus-per-node", type=int, default=2)

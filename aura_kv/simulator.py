@@ -11,6 +11,7 @@ from .core import AccessEvent, CacheIdentity, CacheObject, NodeState, Replica
 from .policies import (
     AffinityOnlyPolicy,
     AuraKVPolicy,
+    DualWindowReplacementPolicy,
     EWMAReplacementPolicy,
     ExhaustiveOptimalPolicy,
     IndependentControllersPolicy,
@@ -248,14 +249,20 @@ class TraceSimulator:
 def make_policy(name: str, config: SimulationConfig) -> SimulationPolicy:
     if name == "RemoteOnly":
         return RemoteOnlyPolicy()
-    if name == "ProducerLocal":
-        return ProducerLocalPolicy()
-    if name == "NodeLRU":
-        return NodeLRUPolicy()
+    if name in {"ProducerLocal", "LocalFirst"}:
+        policy = ProducerLocalPolicy()
+        policy.name = name
+        return policy
+    if name in {"NodeLRU", "LRU-Local"}:
+        policy = NodeLRUPolicy()
+        policy.name = name
+        return policy
     if name == "SizeAwareLRU":
         return SizeAwareLRUPolicy()
-    if name == "NodeLFU":
-        return NodeLFUPolicy()
+    if name in {"NodeLFU", "LFU-Local"}:
+        policy = NodeLFUPolicy()
+        policy.name = name
+        return policy
     if name == "StaticNReplica":
         return StaticNReplicaPolicy(n=2)
     if name == "AffinityOnly":
@@ -264,41 +271,58 @@ def make_policy(name: str, config: SimulationConfig) -> SimulationPolicy:
         return WeightedScoreBaselinePolicy()
     if name == "EWMAReplacement":
         return EWMAReplacementPolicy()
+    if name == "DualWindowReplacement":
+        return DualWindowReplacementPolicy()
     if name == "SourceAwareReplacement":
         return SourceAwareReplacementPolicy()
     if name == "PrefixSourceAwareReplacement":
         return PrefixSourceAwareReplacementPolicy()
-    if name == "IndependentControllers":
-        return IndependentControllersPolicy()
+    if name in {"IndependentControllers", "WA-Affinity-Independent"}:
+        policy = IndependentControllersPolicy()
+        policy.name = name
+        return policy
     if name == "OracleDemand":
         return OracleDemandPolicy()
     if name == "ExhaustiveOptimal":
         return ExhaustiveOptimalPolicy()
-    if name == "AURA-KV":
-        return AuraKVPolicy(
+    if name in {"AURA-KV", "AURA-Joint"}:
+        policy = AuraKVPolicy(
             duplicate_budget_bytes=config.duplicate_budget_mib * MIB,
             node_duplicate_budget_bytes=config.node_duplicate_budget_mib * MIB,
         )
+        policy.name = name
+        return policy
     raise ValueError(f"unknown policy: {name}")
 
 
 POLICIES = [
     "RemoteOnly",
-    "ProducerLocal",
-    "NodeLRU",
-    "NodeLFU",
+    "LocalFirst",
+    "LRU-Local",
+    "LFU-Local",
     "SizeAwareLRU",
     "WeightedScoreBaseline",
     "EWMAReplacement",
+    "DualWindowReplacement",
     "SourceAwareReplacement",
     "PrefixSourceAwareReplacement",
     "StaticNReplica",
     "AffinityOnly",
-    "IndependentControllers",
-    "AURA-KV",
+    "WA-Affinity-Independent",
+    "AURA-Joint",
     "OracleDemand",
     "ExhaustiveOptimal",
 ]
+
+LEGACY_POLICY_NAMES = [
+    "ProducerLocal",
+    "NodeLRU",
+    "NodeLFU",
+    "IndependentControllers",
+    "AURA-KV",
+]
+
+ALL_POLICY_NAMES = list(dict.fromkeys(POLICIES + LEGACY_POLICY_NAMES))
 
 
 def make_cache(

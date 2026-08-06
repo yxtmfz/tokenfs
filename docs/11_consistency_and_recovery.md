@@ -51,7 +51,7 @@ LOCAL
   -> CLEAN
 ```
 
-当前 TokenFS 实现了临时文件、校验、rename、元数据状态和启动恢复的工程路径。AURA-KV Python 控制层尚未拥有完整持久化后台执行器。
+当前 TokenFS 实现了临时文件、校验、rename、元数据状态和启动恢复的工程路径。AURA-KV Python 控制层也已经有 SQLite 持久化后台任务队列和目录执行器，可验证复制、校验、布局版本取消、依赖任务和 SWAP 失败保旧语义。两条路径尚未合并为同一个线上执行器。
 
 ## 4. 远端主副本与本地缓存
 
@@ -97,7 +97,7 @@ Implemented：
 
 Partial：
 
-- AURA-KV 后台复制动作没有完整持久化执行日志。
+- AURA-KV Python 后台复制动作已有持久化任务日志；TokenFS C++ 主路径尚未复用同一张任务表。
 - 真实断电、真实 NVMe-oF Target 重启、真实网络断开需要硬件环境验证。
 
 Planned：

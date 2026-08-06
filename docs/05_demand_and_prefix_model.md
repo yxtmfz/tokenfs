@@ -8,6 +8,7 @@
 
 - `GammaPoissonDemandEstimator`：带不确定性上下界的默认估计器；
 - `EWMADemandEstimator`：指数衰减基线；
+- `DualWindowDemandEstimator`：短窗口识别突发热点，长窗口识别稳定趋势，并在突发或冷却时调整不确定区间；
 - `OracleDemandEstimator`：只在模拟器中使用未来 trace，不能用于真实系统。
 
 这些都是在线统计估计器，不依赖训练集、模型文件或机器学习框架。
@@ -50,6 +51,7 @@ aura_kv/demand.py
   EffectivePrefixDemandTracker
   GammaPoissonDemandEstimator
   EWMADemandEstimator
+  DualWindowDemandEstimator
   OracleDemandEstimator
 ```
 
@@ -59,6 +61,7 @@ aura_kv/demand.py
 tests/aura_kv_unit_test.py
   test_prefix_demand_deduplicates_request_id
   test_gamma_poisson_detects_node_demand_and_uncertainty_bounds
+  test_dual_window_detects_burst_and_reports_prediction_metrics
 ```
 
 ## 4. 与 GPU 亲和统计的关系
@@ -74,4 +77,3 @@ affinity_state
 ```
 
 这些统计用于真实 FUSE 原型中的跨 GPU 本地副本；AURA-KV Python 层使用 `AccessEvent.node_id` 和 `gpu_id` 做模拟。两者概念一致，但当前尚未完全接成同一套后台控制器。
-
