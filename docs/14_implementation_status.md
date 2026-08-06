@@ -36,7 +36,9 @@
 | NVMe-oF | Partial | `scripts/connect_nvme.sh`、`scripts/setup_nvme_target.sh` | `scripts/nvmeof_two_vm_test.sh`、`scripts/nvmeof_perf_test.sh` | 配置化 connect、Target、dry-run 和测试脚本 | 当前仓库没有真实 SSD Target 结果 |
 | 模拟器 | Implemented | `aura_kv/simulator.py`、`scripts/aura_kv_sim.py` | `scripts/aura_kv_test.sh` | 8 个场景、15 个策略或 baseline | 模拟结果不是硬件性能 |
 | 实验基线 | Implemented | `aura_kv/policies.py`、`aura_kv/simulator.py` | `scripts/aura_kv_test.sh` | RemoteOnly、LocalFirst、LRU/LFU、SizeAwareLRU、DualWindow、StaticNReplica、AffinityOnly、WA-Affinity-Independent、AURA-Joint 等 | SIEVE-StaticN 尚未单独实现；需要真实 workload 进一步校准 |
-| 指标导出 | Implemented / Partial | `scripts/tokenfsctl.py`、`aura_kv/simulator.py` | `scripts/strategy_matrix_test.sh` | status、files、replicas、affinity、metrics、CSV/JSON 模拟结果 | Prometheus 等外部监控未接入 |
+| 统一事件流 | Implemented / Partial | `aura_kv/monitoring.py`、`aura_kv/simulator.py` | `tests/aura_kv_unit_test.py` | 前台请求、缓存查询、控制器周期、候选动作、后台任务、布局变化统一写入 `events.jsonl` | TokenFS C++ 主进程尚未直接输出同一套事件 |
+| 指标导出 | Implemented / Partial | `scripts/tokenfsctl.py`、`aura_kv/monitoring.py`、`scripts/aura_kv_monitor.py` | `tests/aura_kv_unit_test.py`、`scripts/strategy_matrix_test.sh` | TokenFS status/files/replicas/affinity/metrics；AURA-KV `metrics.jsonl`、`layout_snapshots.jsonl`、`results.json/csv`、`state.json` | Prometheus 等外部监控未接入；真实 GPU/NVMe-oF metrics 未接入 |
+| 动态 Dashboard | Implemented / Partial | `aura_kv/dashboard.py`、`scripts/aura_kv_monitor.py` | `tests/aura_kv_unit_test.py` | 本地 HTTP Dashboard，展示状态、指标卡、请求流、控制器候选、任务队列、Node x Cache 布局矩阵、时间序列和 trace 搜索 | 当前展示的是 AURA-KV Python 模拟/代理指标，不是生产监控系统 |
 
 ## 2. 当前可运行能力
 
@@ -47,11 +49,13 @@
 - 记录 SQLite 元数据和指标。
 - 查看文件、指标、亲和和副本状态。
 - 运行 AURA-KV 单元测试和 trace simulator。
+- 运行 AURA-KV workload 监控，生成 `events.jsonl`、`metrics.jsonl`、`layout_snapshots.jsonl` 和本地 Dashboard。
 - 使用 NVMe-oF 脚本准备真实接入。
 
 ## 3. Partial 重点
 
 - AURA-KV Python 控制器、任务队列和目录执行器已经形成闭环，但 TokenFS C++ 主路径尚未直接调用这套 Python 队列。
+- 动态 Dashboard 已经能跟随 Python workload 执行实时刷新；真实 TokenFS C++ 前台请求和真实 NVMe-oF 指标还需要接入同一套事件模型。
 - SWAP 已具备“先复制校验新副本，再删除旧副本”的任务依赖原型；真实 NVMe-oF 和多进程恢复仍需硬件环境验证。
 - 租约是副本安全字段和删除门控，不是独立分布式租约系统。
 - NVMe-oF 已配置化，但真实硬件尚未验证。

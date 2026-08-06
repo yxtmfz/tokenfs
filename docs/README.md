@@ -15,7 +15,7 @@
 1. [03_system_architecture.md](03_system_architecture.md)：了解 TokenFS 和 AURA-KV 的模块分层。
 2. [04_data_model_and_lifecycle.md](04_data_model_and_lifecycle.md)：理解核心数据结构、SQLite 表和副本状态。
 3. [12_configuration.md](12_configuration.md)：查看配置项、脚本入口和 NVMe-oF 占位字段。
-4. [13_testing_and_experiments.md](13_testing_and_experiments.md)：运行单元测试、FUSE 测试和模拟实验。
+4. [13_testing_and_experiments.md](13_testing_and_experiments.md)：运行单元测试、FUSE 测试、模拟实验和动态监控。
 5. [14_implementation_status.md](14_implementation_status.md)：按模块查代码位置、测试位置和限制。
 
 ## 3. 准备论文或研究汇报
@@ -25,7 +25,7 @@
 3. [07_replacement_policy.md](07_replacement_policy.md)：候选研究方向一，代价驱动替换策略。
 4. [08_replica_placement.md](08_replica_placement.md)：候选研究方向二，共享感知副本放置。
 5. [09_joint_controller.md](09_joint_controller.md)：ADD、REMOVE、SWAP 的联合控制逻辑。
-6. [13_testing_and_experiments.md](13_testing_and_experiments.md)：baseline、模拟场景、指标和真实硬件实验计划。
+6. [13_testing_and_experiments.md](13_testing_and_experiments.md)：baseline、模拟场景、统一指标、动态 Dashboard 和真实硬件实验计划。
 7. [15_research_and_paper_plan.md](15_research_and_paper_plan.md)：论文结构、可验证主张和后续路线。
 8. [model_assumptions.md](model_assumptions.md)、[model_limitations.md](model_limitations.md)：模型假设和局限性。
 
@@ -45,9 +45,8 @@
 | [10_storage_and_nvmeof.md](10_storage_and_nvmeof.md) | 目录后端和真实 NVMe-oF 如何接入 |
 | [11_consistency_and_recovery.md](11_consistency_and_recovery.md) | 迁移、校验、租约和崩溃恢复如何保证安全 |
 | [12_configuration.md](12_configuration.md) | 配置文件和命令入口 |
-| [13_testing_and_experiments.md](13_testing_and_experiments.md) | 如何运行测试和模拟实验 |
+| [13_testing_and_experiments.md](13_testing_and_experiments.md) | 如何运行测试、模拟实验、统一指标输出和动态监控 |
 | [14_implementation_status.md](14_implementation_status.md) | Implemented、Partial、Planned 能力清单 |
 | [15_research_and_paper_plan.md](15_research_and_paper_plan.md) | 论文计划和后续真实实验 |
 | [model_assumptions.md](model_assumptions.md) | 模型成立需要哪些假设 |
 | [model_limitations.md](model_limitations.md) | 哪些结论目前不能过度解释 |
-

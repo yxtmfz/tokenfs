@@ -4,8 +4,10 @@ import csv
 import json
 import random
 import statistics
+import time
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
+from typing import Any
 
 from .core import AccessEvent, CacheIdentity, CacheObject, NodeState, Replica
 from .policies import (
@@ -86,12 +88,16 @@ class TraceSimulator:
         trace: list[AccessEvent],
         policy: SimulationPolicy,
         scenario: str,
+        monitor: Any | None = None,
+        run_id: str = "",
     ) -> None:
         self.config = config
         self.caches = caches
         self.trace = trace
         self.policy = policy
         self.scenario = scenario
+        self.monitor = monitor
+        self.run_id = run_id
         self.rng = random.Random(config.seed)
         self.nodes = {
             f"node{i}": NodeState(f"node{i}", config.local_capacity_mib * MIB)
@@ -111,6 +117,10 @@ class TraceSimulator:
         self.migration_bytes = 0
         self.decisions: list[dict] = []
         self.last_replica_change: dict[tuple[str, str], float] = {}
+        self.layout_version = 1
+        self.controller_cycle = 0
+        self.task_sequence = 0
+        self.action_sequence = 0
 
     @property
     def duplicate_bytes(self) -> int:
@@ -121,6 +131,71 @@ class TraceSimulator:
 
     def remote_has(self, cache_key: str) -> bool:
         return cache_key in self.remote_objects
+
+    def workload_phase(self, event: AccessEvent) -> str:
+        if self.scenario == "hotspot_shift":
+            return "node0-hot" if event.timestamp < 32.0 else "node1-hot"
+        if self.scenario == "remote_congestion":
+            return "remote-congested"
+        if self.scenario == "demand_estimation_error":
+            return "bursty"
+        if self.scenario == "private":
+            return "private"
+        if self.scenario == "cluster_shared":
+            return "shared-prefix"
+        return self.scenario
+
+    def emit(self, event_type: str, component: str, **kwargs: Any) -> None:
+        if self.monitor is None:
+            return
+        kwargs.setdefault("layout_version", self.layout_version)
+        self.monitor.emit(event_type, component, **kwargs)
+
+    def emit_layout_snapshot(self) -> None:
+        if self.monitor is None:
+            return
+        replicas = []
+        for node_id, node in self.nodes.items():
+            for replica in node.replicas.values():
+                replicas.append(
+                    {
+                        "cache_key": replica.cache_key,
+                        "node_id": node_id,
+                        "state": replica.status.value,
+                        "object_bytes": replica.size_bytes,
+                        "lease": replica.lease_expire_at,
+                        "action_id": "",
+                        "task_id": "",
+                        "capacity_used": node.local_used_bytes,
+                        "reserved_bytes": 0,
+                        "duplicate_bytes": self.duplicate_bytes,
+                        "layout_version": self.layout_version,
+                    }
+                )
+        for cache_key in self.remote_objects:
+            cache = self.caches.get(cache_key)
+            replicas.append(
+                {
+                    "cache_key": cache_key,
+                    "node_id": "remote",
+                    "state": "CANONICAL",
+                    "object_bytes": cache.size_bytes if cache else 0,
+                    "lease": 0,
+                    "action_id": "",
+                    "task_id": "",
+                    "capacity_used": 0,
+                    "reserved_bytes": 0,
+                    "duplicate_bytes": self.duplicate_bytes,
+                    "layout_version": self.layout_version,
+                }
+            )
+        self.monitor.append_layout(
+            {
+                "layout_version": self.layout_version,
+                "duplicate_bytes": self.duplicate_bytes,
+                "replicas": replicas,
+            }
+        )
 
     def prefix_dependency_benefit(self, cache: CacheObject) -> float:
         if not cache.parent_cache_key:
@@ -146,9 +221,67 @@ class TraceSimulator:
             victim = self.choose_victim(node, evict)
             if victim is None:
                 return False
+            victim_cache = self.caches[victim]
+            evict_task = self.next_task_id("evict")
+            self.emit_task_transition(
+                evict_task,
+                "EVICT",
+                victim,
+                f"node:{node_id}",
+                node_id,
+                ["CREATED", "RUNNING"],
+                bytes_value=victim_cache.size_bytes,
+                reason=f"capacity pressure before adding {cache.identity.cache_key}",
+            )
+            self.emit(
+                "REPLICA_DELETING",
+                "layout",
+                cache_key=victim,
+                node_id=node_id,
+                target=node_id,
+                task_id=evict_task,
+                bytes=victim_cache.size_bytes,
+                state_before="READY",
+                state_after="DELETING",
+                reason="evict victim for new replica",
+            )
             node.remove_replica(victim)
             self.replica_churn += 1
             self.last_replica_change[(victim, node_id)] = cache.last_access_at
+            self.layout_version += 1
+            self.emit(
+                "REPLICA_REMOVED",
+                "layout",
+                cache_key=victim,
+                node_id=node_id,
+                target=node_id,
+                task_id=evict_task,
+                bytes=victim_cache.size_bytes,
+                state_before="DELETING",
+                state_after="ABSENT",
+                reason="local replica removed",
+                extra={"duplicate_bytes": self.duplicate_bytes},
+            )
+            self.emit_task_transition(
+                evict_task,
+                "EVICT",
+                victim,
+                f"node:{node_id}",
+                node_id,
+                ["VERIFYING", "COMMITTED"],
+                bytes_value=victim_cache.size_bytes,
+                reason="eviction committed",
+            )
+            self.emit(
+                "LAYOUT_VERSION_CHANGED",
+                "layout",
+                cache_key=victim,
+                node_id=node_id,
+                task_id=evict_task,
+                layout_version=self.layout_version,
+                reason="eviction changed layout",
+                extra={"duplicate_bytes": self.duplicate_bytes},
+            )
         replica = Replica(
             cache_key=cache.identity.cache_key,
             node_id=node_id,
@@ -156,10 +289,95 @@ class TraceSimulator:
             lease_expire_at=cache.last_access_at + 600,
             utility_at_creation=1.0,
         )
+        task_id = self.next_task_id("replicate")
+        self.emit_task_transition(
+            task_id,
+            "REPLICATE",
+            cache.identity.cache_key,
+            "remote",
+            node_id,
+            ["CREATED", "PENDING", "RUNNING"],
+            bytes_value=cache.size_bytes,
+            reason=reason,
+        )
+        self.emit(
+            "REPLICA_COPYING",
+            "layout",
+            cache_key=cache.identity.cache_key,
+            node_id=node_id,
+            source="remote",
+            target=node_id,
+            task_id=task_id,
+            bytes=cache.size_bytes,
+            state_before="ABSENT",
+            state_after="COPYING",
+            reason=reason,
+            extra={"duplicate_bytes": self.duplicate_bytes},
+        )
+        self.emit_task_transition(
+            task_id,
+            "REPLICATE",
+            cache.identity.cache_key,
+            "remote",
+            node_id,
+            ["VERIFYING"],
+            bytes_value=cache.size_bytes,
+            reason="stage progress, not real byte progress",
+        )
+        self.emit(
+            "REPLICA_VERIFYING",
+            "layout",
+            cache_key=cache.identity.cache_key,
+            node_id=node_id,
+            source="remote",
+            target=node_id,
+            task_id=task_id,
+            bytes=cache.size_bytes,
+            state_before="COPYING",
+            state_after="VERIFYING",
+            reason="stage progress, not real byte progress",
+            extra={"duplicate_bytes": self.duplicate_bytes},
+        )
         if node.add_replica(replica):
             self.replica_churn += 1
             self.migration_bytes += cache.size_bytes
             self.last_replica_change[(cache.identity.cache_key, node_id)] = cache.last_access_at
+            self.layout_version += 1
+            self.emit(
+                "REPLICA_READY",
+                "layout",
+                cache_key=cache.identity.cache_key,
+                node_id=node_id,
+                source="remote",
+                target=node_id,
+                task_id=task_id,
+                bytes=cache.size_bytes,
+                state_before="VERIFYING",
+                state_after="READY",
+                reason=reason,
+                extra={"duplicate_bytes": self.duplicate_bytes},
+            )
+            self.emit_task_transition(
+                task_id,
+                "REPLICATE",
+                cache.identity.cache_key,
+                "remote",
+                node_id,
+                ["COMMITTED"],
+                bytes_value=cache.size_bytes,
+                reason="replica ready",
+            )
+            self.emit(
+                "LAYOUT_VERSION_CHANGED",
+                "layout",
+                cache_key=cache.identity.cache_key,
+                node_id=node_id,
+                task_id=task_id,
+                layout_version=self.layout_version,
+                reason="replica add changed layout",
+                extra={"duplicate_bytes": self.duplicate_bytes},
+            )
+            self.emit_layout_snapshot()
             self.decisions.append(
                 {
                     "cache_key": cache.identity.cache_key,
@@ -170,7 +388,74 @@ class TraceSimulator:
                 }
             )
             return True
+        self.emit_task_transition(
+            task_id,
+            "REPLICATE",
+            cache.identity.cache_key,
+            "remote",
+            node_id,
+            ["FAILED"],
+            bytes_value=cache.size_bytes,
+            reason="node rejected replica",
+            error_code="NO_LOCAL_CAPACITY",
+            error_message="target node cannot fit replica",
+        )
         return False
+
+    def next_task_id(self, prefix: str) -> str:
+        self.task_sequence += 1
+        return f"{prefix}-{self.task_sequence}"
+
+    def next_action_id(self) -> str:
+        self.action_sequence += 1
+        return f"action-{self.action_sequence}"
+
+    def emit_task_transition(
+        self,
+        task_id: str,
+        action_type: str,
+        cache_key: str,
+        source: str,
+        target: str,
+        states: list[str],
+        *,
+        bytes_value: int,
+        reason: str,
+        error_code: str = "",
+        error_message: str = "",
+    ) -> None:
+        previous = ""
+        for state in states:
+            event_type = f"TASK_{state}"
+            self.emit(
+                event_type,
+                "executor",
+                task_id=task_id,
+                cache_key=cache_key,
+                source=source,
+                target=target,
+                state_before=previous,
+                state_after=state,
+                bytes=bytes_value,
+                decision=action_type,
+                reason=reason,
+                error_code=error_code if state == "FAILED" else "",
+                error_message=error_message if state == "FAILED" else "",
+                extra={"action_type": action_type, "stage_progress": self.stage_progress(state)},
+            )
+            previous = state
+
+    @staticmethod
+    def stage_progress(state: str) -> int:
+        return {
+            "CREATED": 0,
+            "PENDING": 0,
+            "RUNNING": 40,
+            "VERIFYING": 85,
+            "COMMITTED": 100,
+            "FAILED": 100,
+            "CANCELED": 100,
+        }.get(state, 0)
 
     def choose_victim(self, node: NodeState, evict: str) -> str | None:
         if not node.replicas:
@@ -206,22 +491,176 @@ class TraceSimulator:
         tail = self.config.remote_read_p99_ms if self.rng.random() > 0.94 else self.config.remote_read_p50_ms
         return tail * (0.65 + self.rng.random() * 0.7)
 
-    def run(self) -> SimulationResult:
+    def run(self, event_delay_seconds: float = 0.0) -> SimulationResult:
+        self.emit_layout_snapshot()
         for event in self.trace:
             cache = self.caches[event.cache_key]
             cache.last_access_at = event.timestamp
+            phase = self.workload_phase(event)
+            self.emit(
+                "REQUEST_ARRIVED",
+                "foreground",
+                timestamp=time.time(),
+                request_id=event.request_id,
+                request_class=event.sharing_domain,
+                prefix_path=event.parent_cache_key,
+                cache_key=event.cache_key,
+                node_id=event.node_id,
+                bytes=event.bytes,
+                workload_phase=phase,
+                extra={"token_count": event.token_count},
+            )
+            self.emit(
+                "CACHE_LOOKUP",
+                "foreground",
+                request_id=event.request_id,
+                cache_key=event.cache_key,
+                node_id=event.node_id,
+                bytes=event.bytes,
+                workload_phase=phase,
+                reason="lookup local, peer, remote or recompute sources",
+            )
             counts = self.access_graph.setdefault(event.cache_key, {})
             counts[event.node_id] = counts.get(event.node_id, 0.0) + 1.0
+            self.controller_cycle += 1
+            cycle_id = f"cycle-{self.controller_cycle}"
+            cycle_start = time.time()
+            self.emit(
+                "CONTROLLER_CYCLE_STARTED",
+                "controller",
+                controller_cycle_id=cycle_id,
+                request_id=event.request_id,
+                cache_key=event.cache_key,
+                node_id=event.node_id,
+                workload_phase=phase,
+                reason="simulated control cycle starts after foreground event",
+            )
+            self.emit(
+                "DEMAND_UPDATED",
+                "controller",
+                controller_cycle_id=cycle_id,
+                request_id=event.request_id,
+                cache_key=event.cache_key,
+                node_id=event.node_id,
+                workload_phase=phase,
+                reason="access event updates demand estimator",
+            )
             source, decisions = self.policy.on_access(self, event)
             for decision in decisions:
+                candidate_id = f"cand-{self.controller_cycle}-{len(self.decisions) + 1}"
+                action_id = self.next_action_id()
+                event_type = "CANDIDATE_REJECTED" if decision.action.value in {"DEFER"} else "CANDIDATE_ACCEPTED"
+                self.emit(
+                    "CANDIDATE_CREATED",
+                    "controller",
+                    controller_cycle_id=cycle_id,
+                    candidate_id=candidate_id,
+                    action_id=action_id,
+                    request_id=event.request_id,
+                    cache_key=decision.cache_key,
+                    node_id=decision.node_id,
+                    source=decision.alternative_source.value,
+                    target=decision.node_id,
+                    bytes=event.bytes,
+                    replica_gain_ms=decision.benefit,
+                    robust_benefit_ms=decision.benefit - decision.cost,
+                    decision=decision.action.value,
+                    reason=decision.reason,
+                    workload_phase=phase,
+                )
+                self.emit(
+                    event_type,
+                    "controller",
+                    controller_cycle_id=cycle_id,
+                    candidate_id=candidate_id,
+                    action_id=action_id,
+                    request_id=event.request_id,
+                    cache_key=decision.cache_key,
+                    node_id=decision.node_id,
+                    source=decision.alternative_source.value,
+                    target=decision.node_id,
+                    bytes=event.bytes,
+                    replica_gain_ms=decision.benefit,
+                    robust_benefit_ms=decision.benefit - decision.cost,
+                    decision=decision.action.value,
+                    reason=decision.reason,
+                    workload_phase=phase,
+                )
                 self.decisions.append(asdict(decision))
+            if decisions:
+                self.emit(
+                    "ACTION_PLAN_CREATED",
+                    "controller",
+                    controller_cycle_id=cycle_id,
+                    request_id=event.request_id,
+                    cache_key=event.cache_key,
+                    node_id=event.node_id,
+                    reason=f"{len(decisions)} candidate decisions emitted",
+                    workload_phase=phase,
+                )
+            self.emit(
+                "CONTROLLER_CYCLE_COMPLETED",
+                "controller",
+                controller_cycle_id=cycle_id,
+                request_id=event.request_id,
+                cache_key=event.cache_key,
+                node_id=event.node_id,
+                latency_ms=(time.time() - cycle_start) * 1000.0,
+                workload_phase=phase,
+                reason="simulated control cycle completed",
+            )
             latency = self.latency_for_source(source, event)
             self.latencies_ms.append(latency)
+            hit_event = {
+                "local": "LOCAL_HIT",
+                "remote": "REMOTE_HIT",
+                "recompute": "RECOMPUTE",
+            }.get(source, "PEER_HIT" if "peer" in source else "REMOTE_HIT")
+            self.emit(
+                hit_event,
+                "foreground",
+                request_id=event.request_id,
+                request_class=event.sharing_domain,
+                prefix_path=event.parent_cache_key,
+                cache_key=event.cache_key,
+                node_id=event.node_id,
+                source=source.upper(),
+                bytes=event.bytes,
+                latency_ms=latency,
+                workload_phase=phase,
+                extra={"token_count": event.token_count},
+            )
+            self.emit(
+                "REQUEST_COMPLETED",
+                "foreground",
+                request_id=event.request_id,
+                request_class=event.sharing_domain,
+                prefix_path=event.parent_cache_key,
+                cache_key=event.cache_key,
+                node_id=event.node_id,
+                source=source.upper(),
+                bytes=event.bytes,
+                latency_ms=latency,
+                workload_phase=phase,
+                reason="latency is a SIMULATED proxy, not real TTFT",
+            )
+            self.emit(
+                "ACCESS_EVENT_RECORDED",
+                "foreground",
+                request_id=event.request_id,
+                cache_key=event.cache_key,
+                node_id=event.node_id,
+                bytes=event.bytes,
+                workload_phase=phase,
+                reason="foreground event persisted for later control cycles",
+            )
             if event.node_id in self.nodes:
                 node = self.nodes[event.node_id]
                 node.lru_clock[event.cache_key] = event.timestamp
                 node.lfu_count[event.cache_key] = node.lfu_count.get(event.cache_key, 0) + 1
             self.policy.after_access(self, event)
+            if event_delay_seconds > 0:
+                time.sleep(event_delay_seconds)
 
         requests = len(self.trace)
         violations = sum(1 for latency in self.latencies_ms if latency > self.config.foreground_slo_ms)

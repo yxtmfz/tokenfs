@@ -16,6 +16,7 @@ from aura_kv.cost_model import SourceCostModel, transfer_time_ms
 from aura_kv.demand import DualWindowDemandEstimator, EWMADemandEstimator, GammaPoissonDemandEstimator
 from aura_kv.executor import DirectoryReplicaExecutor, file_checksum
 from aura_kv.layout import LayoutCostEvaluator
+from aura_kv.monitoring import AuraEvent, JsonlRunStore, build_state_snapshot, read_jsonl
 from aura_kv.optimization import LayoutConstraints
 from aura_kv.policies import SharednessClassifier
 from aura_kv.simulator import MIB, POLICIES, SCENARIOS, SimulationConfig, generate_trace, make_cache, run_matrix
@@ -220,6 +221,83 @@ class AuraKVUnitTest(unittest.TestCase):
             layouts.append(j)
         self.assertGreater(len(layouts), 0)
         self.assertEqual(min(layouts), sorted(layouts)[0])
+
+    def test_monitoring_event_has_required_fields_and_jsonl_round_trip(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            store = JsonlRunStore(Path(tmp), "run-test", simulated=True, policy="AURA-Joint", workload="hotspot-migration")
+            event = store.emit(
+                "REQUEST_COMPLETED",
+                "foreground",
+                request_id="req-1",
+                cache_key="k",
+                node_id="node0",
+                source="REMOTE",
+                bytes=4096,
+                latency_ms=3.5,
+                reason="Latency Proxy",
+            )
+            data = event.to_dict()
+            for field in [
+                "timestamp",
+                "run_id",
+                "component",
+                "event_type",
+                "request_id",
+                "cache_key",
+                "node_id",
+                "task_id",
+                "layout_version",
+                "latency_ms",
+                "simulated",
+            ]:
+                self.assertIn(field, data)
+            rows = read_jsonl(Path(tmp) / "events.jsonl")
+            self.assertEqual(rows[0]["request_id"], "req-1")
+            state = build_state_snapshot(Path(tmp))
+            self.assertTrue(state["manifest"]["simulated"])
+            self.assertEqual(state["latest_metrics"]["completed_request_count"], 1)
+
+    def test_monitoring_metrics_links_request_action_and_task(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            store = JsonlRunStore(Path(tmp), "run-links")
+            store.emit("REQUEST_ARRIVED", "foreground", request_id="req-9", cache_key="hot", node_id="node0")
+            store.emit(
+                "CANDIDATE_ACCEPTED",
+                "controller",
+                request_id="req-9",
+                candidate_id="cand-1",
+                action_id="action-1",
+                cache_key="hot",
+                node_id="node0",
+                decision="REPLICATE",
+            )
+            store.emit(
+                "TASK_CREATED",
+                "executor",
+                request_id="req-9",
+                action_id="action-1",
+                task_id="task-1",
+                cache_key="hot",
+                target="node0",
+                decision="REPLICATE",
+            )
+            state = build_state_snapshot(Path(tmp))
+            trace = state["request_traces"]["req-9"]
+            self.assertEqual(len(trace), 3)
+            self.assertEqual(state["latest_metrics"]["accepted_candidate_count"], 1)
+            self.assertEqual(state["tasks"][0]["task_id"], "task-1")
+
+    def test_dashboard_state_builder_returns_empty_and_live_state(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            empty = build_state_snapshot(Path(tmp))
+            self.assertEqual(empty["manifest"]["status"], "STOPPED")
+            self.assertEqual(empty["events"], [])
+
+            store = JsonlRunStore(Path(tmp), "run-api")
+            store.emit("REQUEST_ARRIVED", "foreground", request_id="req-api", cache_key="k", node_id="node0")
+            live = build_state_snapshot(Path(tmp))
+            self.assertEqual(live["manifest"]["run_id"], "run-api")
+            self.assertEqual(live["events"][0]["event_type"], "REQUEST_ARRIVED")
 
     def test_background_task_queue_persists_and_enforces_transitions(self) -> None:
         with tempfile.TemporaryDirectory() as tmp:

@@ -128,6 +128,7 @@ SWAP 使用依赖任务保证安全：新副本没有复制并校验成功之前
 | 联合控制器 | Implemented / Partial | `aura_kv/controller.py`，前台访问可生成 PROMOTE/PREFETCH/REPLICATE/EVICT/SWAP 任务计划 |
 | 迁移执行和崩溃恢复 | Implemented / Partial | TokenFS 有临时文件/状态恢复；AURA-KV Python 层有持久化任务队列和目录执行器 |
 | NVMe-oF 接入 | Partial | 脚本支持 connect/dry-run/two-VM；真实环境未验证 |
+| 统一指标与动态监控 | Implemented / Partial | `aura_kv/monitoring.py`、`aura_kv/dashboard.py`、`scripts/aura_kv_monitor.py`，支持 JSONL 事件、指标快照、布局快照和本地 Dashboard |
 | Trace simulator | Implemented | 8 个场景、16 个策略或 baseline，支持论文友好策略命名和旧名兼容 |
 | 真实 GPU/vLLM/SGLang 集成 | Planned | 需要真实集群环境 |
 
@@ -252,7 +253,101 @@ SIMULATED RESULT
 
 它们只能证明策略逻辑和趋势，不代表真实 NVMe-oF 或真实 GPU 集群性能。
 
-## 10. 文档入口
+## 10. 动态监控与统一指标
+
+除了离线模拟报告，AURA-KV 现在也可以在 workload 运行时持续输出结构化事件和轻量级 Dashboard。它的作用不是制造一个固定演示，而是让正常 workload 的每一步都可观察：
+
+```text
+前台请求到达
+  -> 缓存查询
+  -> 控制器候选动作
+  -> 后台任务状态变化
+  -> 布局版本变化
+  -> 指标快照更新
+```
+
+### 10.1 启动 workload 并打开 Dashboard
+
+```bash
+python3 scripts/aura_kv_monitor.py run \
+  --workload hotspot-migration \
+  --policy AURA-Joint \
+  --dashboard
+```
+
+启动后终端会打印：
+
+```text
+AURA-KV is running
+Mode: SIMULATED
+Dashboard: http://127.0.0.1:8765
+Logs: reports/latest/aura-kv-live/<run-id>
+Latency: PROXY / SIMULATED, not real TTFT
+```
+
+在浏览器打开 Dashboard 地址，可以看到：
+
+- 当前运行状态、事件数、运行目录和最新更新时间。
+- 本地命中、Peer 命中、远端读取、重计算、迁移字节数、重复副本字节数。
+- 前台请求流：每个请求命中了本地、Peer、远端还是重计算。
+- 控制器周期：每轮候选动作、接受或拒绝原因、估计收益和损失。
+- 后台任务队列：复制、预取、淘汰、SWAP 的状态变化。
+- Node x Cache 布局矩阵：每个缓存在哪些节点有本地副本。
+- 时间序列：请求量、本地命中率、远端流量和后台迁移变化。
+- Trace 搜索：按 request、cache、task、action 或 error 过滤事件。
+
+### 10.2 不打开 Dashboard，只生成结果
+
+```bash
+python3 scripts/aura_kv_monitor.py run \
+  --workload shared-prefix \
+  --policy AURA-Joint \
+  --no-wait
+```
+
+每次运行会生成一个独立目录：
+
+```text
+reports/latest/aura-kv-live/<run-id>/
+├── manifest.json              # 本次运行的配置、模式和状态
+├── events.jsonl               # 统一事件流，每行一个事件
+├── metrics.jsonl              # 每个事件后的累计指标快照
+├── layout_snapshots.jsonl     # 布局矩阵快照
+├── results.json               # 本次 workload 汇总结果
+├── results.csv                # 表格版结果
+└── state.json                 # Dashboard 可直接读取的聚合状态
+```
+
+### 10.3 查看历史运行
+
+如果 workload 已经结束，也可以单独打开历史 Dashboard：
+
+```bash
+python3 scripts/aura_kv_monitor.py dashboard \
+  --run-dir reports/latest/aura-kv-live/<run-id> \
+  --port 8765
+```
+
+也可以只导出聚合状态：
+
+```bash
+python3 scripts/aura_kv_monitor.py export \
+  --run-dir reports/latest/aura-kv-live/<run-id>
+```
+
+### 10.4 当前支持的 workload
+
+| workload 名称 | 用途 |
+|---|---|
+| `shared-prefix` | 多请求共享公共前缀，观察共享缓存是否值得放本地 |
+| `hotspot-migration` | 热点从一个节点迁移到另一个节点，观察副本布局调整 |
+| `local-capacity-pressure` | 本地容量紧张，观察淘汰和远端回退 |
+| `remote-congestion-change` | 远端访问代价升高，观察本地副本收益变化 |
+| `mixed-object-size` | 大小混合缓存，观察收益密度和容量利用 |
+
+注意：当前 Dashboard 中的延迟、P99 和 TTFT 仍是模拟器代理指标。它们可以用来检查策略链路是否闭环、候选动作是否合理、结果是否可解释，但不能直接写成真实硬件性能结论。拿到真实 NVMe-oF 和 GPU 环境后，需要用同一套事件模型接入真实测量值重新采集。
+
+## 11. 文档入口
 
 从 [docs/README.md](docs/README.md) 开始阅读。常用入口：
 
@@ -265,15 +360,16 @@ SIMULATED RESULT
 - 联合控制器：[docs/09_joint_controller.md](docs/09_joint_controller.md)
 - 实现状态：[docs/14_implementation_status.md](docs/14_implementation_status.md)
 
-## 11. 当前限制
+## 12. 当前限制
 
 - 真实 NVMe-oF SSD、真实 GPU、vLLM/SGLang 尚未接入当前测试结果。
 - AURA-KV 的 Python 控制器、任务队列和目录执行器已经闭环，但还没有直接嵌入 TokenFS C++ 主进程。
+- 动态 Dashboard 已能展示 AURA-KV Python 模拟和控制事件，TokenFS C++ 主进程尚未直接输出同一套 `AuraEvent` JSONL。
 - `RobustBenefit` 已有 ADD/REMOVE 与 SWAP 任务依赖原型；真实 NVMe-oF、多进程崩溃和硬件断电仍需要真实环境验证。
 - TokenFS 使用 FUSE 和目录后端，适合作为原型和实验入口，不代表最终生产数据路径。
 - 当前报告中的 P99、命中率和远端流量均为模拟或开发环境结果，不能作为论文真实性能结论。
 
-## 12. 真实 NVMe-oF 接入路线
+## 13. 真实 NVMe-oF 接入路线
 
 1. 获得 SSD Target IP、端口、Subsystem NQN、Host NQN/ACL、Namespace 是否独占、设备路径和挂载点。
 2. 在配置文件中填写真实值。
