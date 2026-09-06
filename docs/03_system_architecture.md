@@ -69,7 +69,7 @@ TokenFS 真实前台路径在 `src/main.cpp`，支持 `getattr`、`readdir`、`c
 | 数据面 | FUSE 读写、本地目录、远端挂载目录、文件复制、fsync、checksum |
 | 控制面 | 需求估计、来源代价、候选动作、约束检查、指标、决策日志 |
 
-当前 TokenFS 数据面可以真实运行；AURA-KV Python 控制面已经具备“访问事件 -> ActionPlan -> 持久化后台任务 -> 目录执行器 -> 副本状态反馈”的原型闭环。真实 TokenFS C++ 主进程仍未直接调用 Python 控制器，真实 NVMe-oF 远端需要外部挂载后再验证。
+当前 TokenFS 数据面可以真实运行；AURA-KV Python 控制面已经具备“访问事件 -> ActionPlan -> 持久化后台任务 -> 目录执行器 -> 副本状态反馈”的原型闭环。真实 TokenFS C++ 主进程仍未直接调用 Python 控制器。NVMe-oF 远端已经在双 VM Linux NVMe/TCP 环境中验证，物理 SSD/GPU 集群仍需后续复测。
 
 ## 5. 当前请求本地未命中如何处理
 

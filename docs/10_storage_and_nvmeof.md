@@ -1,6 +1,6 @@
 # 10 存储后端与 NVMe-oF 接入
 
-TokenFS 当前支持两类远端后端：目录模拟后端和真实 NVMe-oF 挂载后端。
+TokenFS 当前支持两类远端后端：目录模拟后端和真实 NVMe-oF 挂载后端。当前仓库已经在双 Ubuntu VM 中跑通 Linux NVMe/TCP Host/Target 链路；真实物理 SSD Target 仍需后续硬件环境复测。
 
 ## 1. 当前开发模式
 
@@ -53,6 +53,15 @@ flowchart TD
     Net --> Target["NVMe-oF Target"]
     Target --> SSD["Remote SSD"]
 ```
+
+当前已经验证的双 VM 拓扑：
+
+```text
+tokenfs-dev     192.168.64.2  NVMe/TCP Host + TokenFS
+tokenfs-target  192.168.64.3  Linux nvmet Target
+```
+
+这条路径是真实 NVMe/TCP 协议，不是目录模拟；但 Target 后端使用 VM loop/虚拟磁盘，因此性能只代表当前开发环境，不代表真实 SSD 集群。
 
 ## 3. 配置字段
 
@@ -113,13 +122,14 @@ Implemented：
 - 目录后端。
 - NVMe-oF 配置占位。
 - NVMe-oF 连接、断开、Target 配置和双 VM 测试脚本。
+- 双 VM Linux NVMe/TCP Host/Target 功能测试和性能基线。
 
 Partial：
 
-- 真实 SSD Target 未验证。
+- 真实物理 SSD Target 未验证。
 - TokenFS 目前依赖外部脚本先完成 NVMe-oF 挂载。
 
 Planned：
 
-- 真实 IP/NQN 到位后完成端到端复测。
+- 真实物理 IP/NQN 到位后完成端到端复测。
 - 采集本地 SSD、远端 NVMe-oF、TokenFS 叠加开销和多 GPU 并发数据。

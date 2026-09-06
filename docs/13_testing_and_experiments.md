@@ -176,14 +176,50 @@ mixed-object-size
 
 当前不能证明：
 
-- 真实 NVMe-oF 延迟和带宽。
+- 真实物理 SSD/物理网络下的 NVMe-oF 延迟和带宽。
 - 真实 GPU 推理收益。
 - 真实网络拥塞下的 P99。
 - 多 GPU 真实并发读写上限。
 
-## 7. 真实环境复测计划
+## 7. 当前双 VM NVMe-oF 实验
 
-拿到真实环境后需要补齐：
+当前已经验证：
+
+```text
+tokenfs-dev     192.168.64.2  TokenFS / Linux nvme-tcp Host
+tokenfs-target  192.168.64.3  Linux nvmet Target
+Target port:    4420
+Subsystem NQN:  nqn.2026-07.local.tokenfs:remote0
+Client device:  /dev/nvme0n1
+Remote mount:   /srv/tokenfs/remote0
+```
+
+复现命令：
+
+```bash
+# target VM
+cd ~/projects/tokenfs
+sudo ./scripts/setup_nvme_target.sh --target-ip 0.0.0.0 --size 20G
+
+# client VM
+cd ~/projects/tokenfs
+./scripts/nvmeof_two_vm_test.sh 192.168.64.3
+./scripts/nvmeof_perf_test.sh 192.168.64.3
+```
+
+最新结果：
+
+```text
+reports/latest/final-report.md
+reports/latest/report.md
+reports/latest/summary.csv
+```
+
+该结果能证明真实 NVMe/TCP 协议路径、TokenFS 远端溢写和 FUSE 叠加开销；不能证明真实物理 SSD/GPU 集群性能。
+
+## 8. 真实物理环境复测计划
+
+若后续接入真实物理环境，需要补齐：
 
 ```text
 SSD Target IP
@@ -214,7 +250,7 @@ sudo ./scripts/connect_nvme.sh --config config/tokenfs.dev.yaml --backend remote
 - TokenFS + 共享副本放置。
 - AURA-KV full。
 
-## 8. 结果入口
+## 9. 结果入口
 
 统一结果文件：
 

@@ -36,9 +36,9 @@ AURA-KV / TokenFS 是一个面向多 GPU 大模型推理缓存的分层存储原
 
 - FUSE 文件系统原型可构建、挂载和读写。
 - 开发环境远端层可以用普通目录模拟。
+- 双 VM 环境已经跑通 Linux NVMe/TCP Host/Target，TokenFS 可把远端层挂载到 NVMe-oF Namespace。
 - TokenFS 能记录 SQLite 元数据、checksum、指标、GPU 访问统计和本地副本。
-- AURA-KV simulator 能跑 8 个场景和 15 个策略/baseline。
-- 真实 NVMe-oF 已有连接脚本和 dry-run，但真实性能需要实验室提供 IP、NQN 和设备。
+- AURA-KV simulator 能跑 8 个场景和 16 个策略/baseline。
+- 当前双 VM NVMe-oF 结果可验证协议接入和系统链路；真实物理 SSD、真实高速网络和真实 GPU 推理收益仍需要后续硬件环境复测。
 
 完整状态见 [14_implementation_status.md](14_implementation_status.md)。
-

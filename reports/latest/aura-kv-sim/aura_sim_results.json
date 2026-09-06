@@ -21,7 +21,7 @@
       "decision_count": 120
     },
     {
-      "policy": "ProducerLocal",
+      "policy": "LocalFirst",
       "scenario": "private",
       "simulated_result": true,
       "requests": 120,
@@ -40,7 +40,7 @@
       "decision_count": 4
     },
     {
-      "policy": "NodeLRU",
+      "policy": "LRU-Local",
       "scenario": "private",
       "simulated_result": true,
       "requests": 120,
@@ -59,7 +59,7 @@
       "decision_count": 4
     },
     {
-      "policy": "NodeLFU",
+      "policy": "LFU-Local",
       "scenario": "private",
       "simulated_result": true,
       "requests": 120,
@@ -131,6 +131,25 @@
       "ttft_p50_ms": 0.1087,
       "ttft_p95_ms": 1.2062,
       "ttft_p99_ms": 1.5761,
+      "slo_violation_rate": 0.0,
+      "decision_count": 4
+    },
+    {
+      "policy": "DualWindowReplacement",
+      "scenario": "private",
+      "simulated_result": true,
+      "requests": 120,
+      "local_cache_hit_rate": 0.9666666666666667,
+      "remote_read_bytes": 50331648,
+      "peer_read_bytes": 0,
+      "recomputed_ms": 0.0,
+      "duplicate_bytes": 50331648,
+      "replica_count": 4,
+      "replica_churn": 4,
+      "migration_bytes": 50331648,
+      "ttft_p50_ms": 0.1044,
+      "ttft_p95_ms": 0.1288,
+      "ttft_p99_ms": 1.0872,
       "slo_violation_rate": 0.0,
       "decision_count": 4
     },
@@ -211,7 +230,7 @@
       "decision_count": 4
     },
     {
-      "policy": "IndependentControllers",
+      "policy": "WA-Affinity-Independent",
       "scenario": "private",
       "simulated_result": true,
       "requests": 120,
@@ -230,7 +249,7 @@
       "decision_count": 4
     },
     {
-      "policy": "AURA-KV",
+      "policy": "AURA-Joint",
       "scenario": "private",
       "simulated_result": true,
       "requests": 120,
@@ -306,7 +325,7 @@
       "decision_count": 120
     },
     {
-      "policy": "ProducerLocal",
+      "policy": "LocalFirst",
       "scenario": "node_shared",
       "simulated_result": true,
       "requests": 120,
@@ -325,7 +344,7 @@
       "decision_count": 2
     },
     {
-      "policy": "NodeLRU",
+      "policy": "LRU-Local",
       "scenario": "node_shared",
       "simulated_result": true,
       "requests": 120,
@@ -344,7 +363,7 @@
       "decision_count": 2
     },
     {
-      "policy": "NodeLFU",
+      "policy": "LFU-Local",
       "scenario": "node_shared",
       "simulated_result": true,
       "requests": 120,
@@ -416,6 +435,25 @@
       "ttft_p50_ms": 0.1063,
       "ttft_p95_ms": 0.9675,
       "ttft_p99_ms": 1.4746,
+      "slo_violation_rate": 0.0,
+      "decision_count": 2
+    },
+    {
+      "policy": "DualWindowReplacement",
+      "scenario": "node_shared",
+      "simulated_result": true,
+      "requests": 120,
+      "local_cache_hit_rate": 0.9833333333333333,
+      "remote_read_bytes": 37748736,
+      "peer_read_bytes": 0,
+      "recomputed_ms": 0.0,
+      "duplicate_bytes": 37748736,
+      "replica_count": 2,
+      "replica_churn": 2,
+      "migration_bytes": 37748736,
+      "ttft_p50_ms": 0.1042,
+      "ttft_p95_ms": 0.1277,
+      "ttft_p99_ms": 0.8408,
       "slo_violation_rate": 0.0,
       "decision_count": 2
     },
@@ -496,7 +534,7 @@
       "decision_count": 2
     },
     {
-      "policy": "IndependentControllers",
+      "policy": "WA-Affinity-Independent",
       "scenario": "node_shared",
       "simulated_result": true,
       "requests": 120,
@@ -515,7 +553,7 @@
       "decision_count": 2
     },
     {
-      "policy": "AURA-KV",
+      "policy": "AURA-Joint",
       "scenario": "node_shared",
       "simulated_result": true,
       "requests": 120,
@@ -591,7 +629,7 @@
       "decision_count": 160
     },
     {
-      "policy": "ProducerLocal",
+      "policy": "LocalFirst",
       "scenario": "cluster_shared",
       "simulated_result": true,
       "requests": 160,
@@ -610,7 +648,7 @@
       "decision_count": 1
     },
     {
-      "policy": "NodeLRU",
+      "policy": "LRU-Local",
       "scenario": "cluster_shared",
       "simulated_result": true,
       "requests": 160,
@@ -629,7 +667,7 @@
       "decision_count": 2
     },
     {
-      "policy": "NodeLFU",
+      "policy": "LFU-Local",
       "scenario": "cluster_shared",
       "simulated_result": true,
       "requests": 160,
@@ -701,6 +739,25 @@
       "ttft_p50_ms": 0.1037,
       "ttft_p95_ms": 0.8562,
       "ttft_p99_ms": 1.2062,
+      "slo_violation_rate": 0.0,
+      "decision_count": 2
+    },
+    {
+      "policy": "DualWindowReplacement",
+      "scenario": "cluster_shared",
+      "simulated_result": true,
+      "requests": 160,
+      "local_cache_hit_rate": 0.9875,
+      "remote_read_bytes": 50331648,
+      "peer_read_bytes": 0,
+      "recomputed_ms": 0.0,
+      "duplicate_bytes": 50331648,
+      "replica_count": 2,
+      "replica_churn": 2,
+      "migration_bytes": 50331648,
+      "ttft_p50_ms": 0.1025,
+      "ttft_p95_ms": 0.1277,
+      "ttft_p99_ms": 0.1297,
       "slo_violation_rate": 0.0,
       "decision_count": 2
     },
@@ -781,7 +838,7 @@
       "decision_count": 2
     },
     {
-      "policy": "IndependentControllers",
+      "policy": "WA-Affinity-Independent",
       "scenario": "cluster_shared",
       "simulated_result": true,
       "requests": 160,
@@ -800,7 +857,7 @@
       "decision_count": 2
     },
     {
-      "policy": "AURA-KV",
+      "policy": "AURA-Joint",
       "scenario": "cluster_shared",
       "simulated_result": true,
       "requests": 160,
@@ -876,7 +933,7 @@
       "decision_count": 160
     },
     {
-      "policy": "ProducerLocal",
+      "policy": "LocalFirst",
       "scenario": "hotspot_shift",
       "simulated_result": true,
       "requests": 160,
@@ -895,7 +952,7 @@
       "decision_count": 1
     },
     {
-      "policy": "NodeLRU",
+      "policy": "LRU-Local",
       "scenario": "hotspot_shift",
       "simulated_result": true,
       "requests": 160,
@@ -914,7 +971,7 @@
       "decision_count": 2
     },
     {
-      "policy": "NodeLFU",
+      "policy": "LFU-Local",
       "scenario": "hotspot_shift",
       "simulated_result": true,
       "requests": 160,
@@ -986,6 +1043,25 @@
       "ttft_p50_ms": 0.1033,
       "ttft_p95_ms": 0.8477,
       "ttft_p99_ms": 1.2062,
+      "slo_violation_rate": 0.0,
+      "decision_count": 2
+    },
+    {
+      "policy": "DualWindowReplacement",
+      "scenario": "hotspot_shift",
+      "simulated_result": true,
+      "requests": 160,
+      "local_cache_hit_rate": 0.9875,
+      "remote_read_bytes": 50331648,
+      "peer_read_bytes": 0,
+      "recomputed_ms": 0.0,
+      "duplicate_bytes": 50331648,
+      "replica_count": 2,
+      "replica_churn": 2,
+      "migration_bytes": 50331648,
+      "ttft_p50_ms": 0.1027,
+      "ttft_p95_ms": 0.1277,
+      "ttft_p99_ms": 0.1297,
       "slo_violation_rate": 0.0,
       "decision_count": 2
     },
@@ -1066,7 +1142,7 @@
       "decision_count": 2
     },
     {
-      "policy": "IndependentControllers",
+      "policy": "WA-Affinity-Independent",
       "scenario": "hotspot_shift",
       "simulated_result": true,
       "requests": 160,
@@ -1085,7 +1161,7 @@
       "decision_count": 2
     },
     {
-      "policy": "AURA-KV",
+      "policy": "AURA-Joint",
       "scenario": "hotspot_shift",
       "simulated_result": true,
       "requests": 160,
@@ -1161,7 +1237,7 @@
       "decision_count": 120
     },
     {
-      "policy": "ProducerLocal",
+      "policy": "LocalFirst",
       "scenario": "high_recompute",
       "simulated_result": true,
       "requests": 120,
@@ -1180,7 +1256,7 @@
       "decision_count": 2
     },
     {
-      "policy": "NodeLRU",
+      "policy": "LRU-Local",
       "scenario": "high_recompute",
       "simulated_result": true,
       "requests": 120,
@@ -1199,7 +1275,7 @@
       "decision_count": 4
     },
     {
-      "policy": "NodeLFU",
+      "policy": "LFU-Local",
       "scenario": "high_recompute",
       "simulated_result": true,
       "requests": 120,
@@ -1275,6 +1351,25 @@
       "decision_count": 4
     },
     {
+      "policy": "DualWindowReplacement",
+      "scenario": "high_recompute",
+      "simulated_result": true,
+      "requests": 120,
+      "local_cache_hit_rate": 0.9666666666666667,
+      "remote_read_bytes": 134217728,
+      "peer_read_bytes": 0,
+      "recomputed_ms": 0.0,
+      "duplicate_bytes": 134217728,
+      "replica_count": 4,
+      "replica_churn": 4,
+      "migration_bytes": 134217728,
+      "ttft_p50_ms": 0.1044,
+      "ttft_p95_ms": 0.1288,
+      "ttft_p99_ms": 1.0872,
+      "slo_violation_rate": 0.0,
+      "decision_count": 4
+    },
+    {
       "policy": "SourceAwareReplacement",
       "scenario": "high_recompute",
       "simulated_result": true,
@@ -1351,7 +1446,7 @@
       "decision_count": 4
     },
     {
-      "policy": "IndependentControllers",
+      "policy": "WA-Affinity-Independent",
       "scenario": "high_recompute",
       "simulated_result": true,
       "requests": 120,
@@ -1370,7 +1465,7 @@
       "decision_count": 4
     },
     {
-      "policy": "AURA-KV",
+      "policy": "AURA-Joint",
       "scenario": "high_recompute",
       "simulated_result": true,
       "requests": 120,
@@ -1446,7 +1541,7 @@
       "decision_count": 150
     },
     {
-      "policy": "ProducerLocal",
+      "policy": "LocalFirst",
       "scenario": "remote_congestion",
       "simulated_result": true,
       "requests": 150,
@@ -1465,7 +1560,7 @@
       "decision_count": 1
     },
     {
-      "policy": "NodeLRU",
+      "policy": "LRU-Local",
       "scenario": "remote_congestion",
       "simulated_result": true,
       "requests": 150,
@@ -1484,7 +1579,7 @@
       "decision_count": 2
     },
     {
-      "policy": "NodeLFU",
+      "policy": "LFU-Local",
       "scenario": "remote_congestion",
       "simulated_result": true,
       "requests": 150,
@@ -1556,6 +1651,25 @@
       "ttft_p50_ms": 0.1033,
       "ttft_p95_ms": 0.9067,
       "ttft_p99_ms": 1.4746,
+      "slo_violation_rate": 0.0,
+      "decision_count": 2
+    },
+    {
+      "policy": "DualWindowReplacement",
+      "scenario": "remote_congestion",
+      "simulated_result": true,
+      "requests": 150,
+      "local_cache_hit_rate": 0.9866666666666667,
+      "remote_read_bytes": 50331648,
+      "peer_read_bytes": 0,
+      "recomputed_ms": 0.0,
+      "duplicate_bytes": 50331648,
+      "replica_count": 2,
+      "replica_churn": 2,
+      "migration_bytes": 50331648,
+      "ttft_p50_ms": 0.1012,
+      "ttft_p95_ms": 0.1277,
+      "ttft_p99_ms": 0.8408,
       "slo_violation_rate": 0.0,
       "decision_count": 2
     },
@@ -1636,7 +1750,7 @@
       "decision_count": 2
     },
     {
-      "policy": "IndependentControllers",
+      "policy": "WA-Affinity-Independent",
       "scenario": "remote_congestion",
       "simulated_result": true,
       "requests": 150,
@@ -1655,7 +1769,7 @@
       "decision_count": 2
     },
     {
-      "policy": "AURA-KV",
+      "policy": "AURA-Joint",
       "scenario": "remote_congestion",
       "simulated_result": true,
       "requests": 150,
@@ -1731,7 +1845,7 @@
       "decision_count": 150
     },
     {
-      "policy": "ProducerLocal",
+      "policy": "LocalFirst",
       "scenario": "demand_estimation_error",
       "simulated_result": true,
       "requests": 150,
@@ -1750,7 +1864,7 @@
       "decision_count": 1
     },
     {
-      "policy": "NodeLRU",
+      "policy": "LRU-Local",
       "scenario": "demand_estimation_error",
       "simulated_result": true,
       "requests": 150,
@@ -1769,7 +1883,7 @@
       "decision_count": 2
     },
     {
-      "policy": "NodeLFU",
+      "policy": "LFU-Local",
       "scenario": "demand_estimation_error",
       "simulated_result": true,
       "requests": 150,
@@ -1841,6 +1955,25 @@
       "ttft_p50_ms": 0.1042,
       "ttft_p95_ms": 0.9067,
       "ttft_p99_ms": 1.4655,
+      "slo_violation_rate": 0.0,
+      "decision_count": 2
+    },
+    {
+      "policy": "DualWindowReplacement",
+      "scenario": "demand_estimation_error",
+      "simulated_result": true,
+      "requests": 150,
+      "local_cache_hit_rate": 0.9866666666666667,
+      "remote_read_bytes": 41943040,
+      "peer_read_bytes": 0,
+      "recomputed_ms": 0.0,
+      "duplicate_bytes": 41943040,
+      "replica_count": 2,
+      "replica_churn": 2,
+      "migration_bytes": 41943040,
+      "ttft_p50_ms": 0.1012,
+      "ttft_p95_ms": 0.1277,
+      "ttft_p99_ms": 0.8408,
       "slo_violation_rate": 0.0,
       "decision_count": 2
     },
@@ -1921,7 +2054,7 @@
       "decision_count": 1
     },
     {
-      "policy": "IndependentControllers",
+      "policy": "WA-Affinity-Independent",
       "scenario": "demand_estimation_error",
       "simulated_result": true,
       "requests": 150,
@@ -1940,7 +2073,7 @@
       "decision_count": 2
     },
     {
-      "policy": "AURA-KV",
+      "policy": "AURA-Joint",
       "scenario": "demand_estimation_error",
       "simulated_result": true,
       "requests": 150,
@@ -2016,7 +2149,7 @@
       "decision_count": 120
     },
     {
-      "policy": "ProducerLocal",
+      "policy": "LocalFirst",
       "scenario": "tenant_isolation",
       "simulated_result": true,
       "requests": 120,
@@ -2035,7 +2168,7 @@
       "decision_count": 2
     },
     {
-      "policy": "NodeLRU",
+      "policy": "LRU-Local",
       "scenario": "tenant_isolation",
       "simulated_result": true,
       "requests": 120,
@@ -2054,7 +2187,7 @@
       "decision_count": 2
     },
     {
-      "policy": "NodeLFU",
+      "policy": "LFU-Local",
       "scenario": "tenant_isolation",
       "simulated_result": true,
       "requests": 120,
@@ -2126,6 +2259,25 @@
       "ttft_p50_ms": 0.1063,
       "ttft_p95_ms": 0.9675,
       "ttft_p99_ms": 1.4746,
+      "slo_violation_rate": 0.0,
+      "decision_count": 2
+    },
+    {
+      "policy": "DualWindowReplacement",
+      "scenario": "tenant_isolation",
+      "simulated_result": true,
+      "requests": 120,
+      "local_cache_hit_rate": 0.9833333333333333,
+      "remote_read_bytes": 33554432,
+      "peer_read_bytes": 0,
+      "recomputed_ms": 0.0,
+      "duplicate_bytes": 33554432,
+      "replica_count": 2,
+      "replica_churn": 2,
+      "migration_bytes": 33554432,
+      "ttft_p50_ms": 0.1042,
+      "ttft_p95_ms": 0.1277,
+      "ttft_p99_ms": 0.8408,
       "slo_violation_rate": 0.0,
       "decision_count": 2
     },
@@ -2206,7 +2358,7 @@
       "decision_count": 2
     },
     {
-      "policy": "IndependentControllers",
+      "policy": "WA-Affinity-Independent",
       "scenario": "tenant_isolation",
       "simulated_result": true,
       "requests": 120,
@@ -2225,7 +2377,7 @@
       "decision_count": 2
     },
     {
-      "policy": "AURA-KV",
+      "policy": "AURA-Joint",
       "scenario": "tenant_isolation",
       "simulated_result": true,
       "requests": 120,

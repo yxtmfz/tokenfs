@@ -6,7 +6,12 @@
 
 AURA-KV 是研究控制层，TokenFS 是可挂载的 FUSE 文件系统原型。项目面向大模型推理中的 Prompt Token、Token Shard 和 KV Cache 数据，把计算节点本地 SSD 作为低延迟缓存层，把 NVMe-oF 远端 SSD 作为大容量权威层，在容量、延迟、共享和可靠性之间做在线取舍。
 
-当前仓库可以在没有真实 SSD Target IP 的情况下运行：TokenFS 使用目录模拟远端层，AURA-KV 使用 trace-driven simulator 验证策略逻辑。真实 NVMe-oF 环境到位后，替换配置中的 IP、NQN 和设备路径，再运行连接脚本即可进入真实硬件测试阶段。
+当前仓库已经形成两类可复现实验环境：
+
+- 目录模拟环境：用于开发 FUSE、SQLite 元数据、本地配额、远端溢写、缓存替换和副本放置策略。
+- 双 VM NVMe-oF 环境：使用两台 Ubuntu VM 跑通真实 Linux NVMe/TCP Host/Target 协议链路，TokenFS 的远端层挂载到真实 NVMe-oF Namespace 上。
+
+需要明确的是，双 VM 环境验证的是 NVMe-oF 协议接入和 TokenFS 端到端路径，底层仍是虚拟机网络和 loop/虚拟磁盘；它可以作为论文前期系统验证和方法论实验，不应直接宣称为真实物理 SSD/GPU 集群性能。
 
 ## 1. 项目解决的问题
 
@@ -115,7 +120,7 @@ SWAP 使用依赖任务保证安全：新副本没有复制并校验成功之前
 | TokenFS FUSE 文件系统 | Implemented | `src/main.cpp`，支持常见文件操作和目录后端 |
 | SQLite 元数据 | Implemented | `files`、`metrics`、`gpu_access`、`local_replicas` 等表 |
 | 本地优先与远端溢写 | Implemented | 本地配额不足时写入 remote 后端目录 |
-| 远端主副本 + 本地热缓存 | Partial | 目录后端可运行，真实 NVMe-oF 需外部挂载 |
+| 远端主副本 + 本地热缓存 | Implemented / Partial | 目录后端和双 VM NVMe-oF 均已跑通；真实物理 SSD/GPU 集群尚未验证 |
 | GPU 访问统计与跨 GPU 本地副本 | Implemented | `TOKENFS_GPU_ID`、访问窗口、亲和状态、本地副本表 |
 | 需求估计 | Implemented | `GammaPoissonDemandEstimator`、`EWMADemandEstimator`、`DualWindowDemandEstimator`、模拟用 `OracleDemandEstimator` |
 | 来源代价模型 | Implemented | 本地、Peer、远端、重计算代价分解 |
@@ -127,7 +132,7 @@ SWAP 使用依赖任务保证安全：新副本没有复制并校验成功之前
 | 后台执行器 | Implemented / Partial | `aura_kv/executor.py`，目录后端可执行复制、校验、淘汰和 SWAP 依赖；真实远端由 NVMe-oF 挂载目录替换 |
 | 联合控制器 | Implemented / Partial | `aura_kv/controller.py`，前台访问可生成 PROMOTE/PREFETCH/REPLICATE/EVICT/SWAP 任务计划 |
 | 迁移执行和崩溃恢复 | Implemented / Partial | TokenFS 有临时文件/状态恢复；AURA-KV Python 层有持久化任务队列和目录执行器 |
-| NVMe-oF 接入 | Partial | 脚本支持 connect/dry-run/two-VM；真实环境未验证 |
+| NVMe-oF 接入 | Implemented / Partial | 脚本支持 connect/dry-run/two-VM；双 VM Linux NVMe/TCP 已验证，真实物理 SSD Target 尚未验证 |
 | 统一指标与动态监控 | Implemented / Partial | `aura_kv/monitoring.py`、`aura_kv/dashboard.py`、`scripts/aura_kv_monitor.py`，支持 JSONL 事件、指标快照、布局快照和本地 Dashboard |
 | Trace simulator | Implemented | 8 个场景、16 个策略或 baseline，支持论文友好策略命名和旧名兼容 |
 | 真实 GPU/vLLM/SGLang 集成 | Planned | 需要真实集群环境 |
@@ -251,7 +256,7 @@ reports/latest/aura-kv-sim/aura_sim_results.json
 SIMULATED RESULT
 ```
 
-它们只能证明策略逻辑和趋势，不代表真实 NVMe-oF 或真实 GPU 集群性能。
+它们只能证明策略逻辑和趋势，不代表真实 NVMe-oF 或真实 GPU 集群性能。真实协议链路结果请看 `reports/latest/final-report.md` 和 `reports/latest/report.md`。
 
 ## 10. 动态监控与统一指标
 
@@ -345,7 +350,7 @@ python3 scripts/aura_kv_monitor.py export \
 | `remote-congestion-change` | 远端访问代价升高，观察本地副本收益变化 |
 | `mixed-object-size` | 大小混合缓存，观察收益密度和容量利用 |
 
-注意：当前 Dashboard 中的延迟、P99 和 TTFT 仍是模拟器代理指标。它们可以用来检查策略链路是否闭环、候选动作是否合理、结果是否可解释，但不能直接写成真实硬件性能结论。拿到真实 NVMe-oF 和 GPU 环境后，需要用同一套事件模型接入真实测量值重新采集。
+注意：当前 Dashboard 中的延迟、P99 和 TTFT 仍是模拟器代理指标。它们可以用来检查策略链路是否闭环、候选动作是否合理、结果是否可解释，但不能直接写成真实 GPU 推理收益。双 VM NVMe-oF 性能结果属于真实协议链路结果，但底层不是物理 SSD 集群。
 
 ## 11. 文档入口
 
@@ -362,14 +367,47 @@ python3 scripts/aura_kv_monitor.py export \
 
 ## 12. 当前限制
 
-- 真实 NVMe-oF SSD、真实 GPU、vLLM/SGLang 尚未接入当前测试结果。
+- 双 VM NVMe/TCP Host/Target 已经接入并完成性能基线；真实物理 NVMe-oF SSD、真实 GPU、vLLM/SGLang 尚未接入当前测试结果。
 - AURA-KV 的 Python 控制器、任务队列和目录执行器已经闭环，但还没有直接嵌入 TokenFS C++ 主进程。
 - 动态 Dashboard 已能展示 AURA-KV Python 模拟和控制事件，TokenFS C++ 主进程尚未直接输出同一套 `AuraEvent` JSONL。
 - `RobustBenefit` 已有 ADD/REMOVE 与 SWAP 任务依赖原型；真实 NVMe-oF、多进程崩溃和硬件断电仍需要真实环境验证。
 - TokenFS 使用 FUSE 和目录后端，适合作为原型和实验入口，不代表最终生产数据路径。
-- 当前报告中的 P99、命中率和远端流量均为模拟或开发环境结果，不能作为论文真实性能结论。
+- 当前报告分为两类：双 VM NVMe-oF 的 FIO/TokenFS 指标是真实协议链路测量；AURA-KV 策略对比、Dashboard TTFT 和命中率仍为模拟或代理结果。
 
-## 13. 真实 NVMe-oF 接入路线
+## 13. 双 VM NVMe-oF 复现实验
+
+当前已验证的本地双 VM 拓扑：
+
+```text
+tokenfs-dev     192.168.64.2  TokenFS / NVMe-oF Host
+tokenfs-target  192.168.64.3  Linux nvmet / NVMe-oF Target
+```
+
+Target 端：
+
+```bash
+cd ~/projects/tokenfs
+sudo ./scripts/setup_nvme_target.sh --target-ip 0.0.0.0 --size 20G
+```
+
+Client 端：
+
+```bash
+cd ~/projects/tokenfs
+./scripts/nvmeof_two_vm_test.sh 192.168.64.3
+./scripts/nvmeof_perf_test.sh 192.168.64.3
+```
+
+最新统一结果入口：
+
+```text
+reports/latest/final-report.md
+reports/latest/report.md
+reports/latest/summary.csv
+reports/latest/strategy-matrix/strategy_summary.csv
+```
+
+## 14. 真实物理集群接入路线
 
 1. 获得 SSD Target IP、端口、Subsystem NQN、Host NQN/ACL、Namespace 是否独占、设备路径和挂载点。
 2. 在配置文件中填写真实值。

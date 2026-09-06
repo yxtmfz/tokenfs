@@ -66,7 +66,7 @@ GPU-Aware TierFS: 基于 NVMe-oF 的多 GPU KV Cache 自适应分层文件系统
 - 可挂载 FUSE 原型。
 - 本地/远端分层目录后端。
 - SQLite 元数据和恢复检查。
-- NVMe-oF 接入脚本。
+- NVMe-oF 接入脚本和双 VM Linux NVMe/TCP 实测链路。
 - AURA-KV 策略模拟器。
 - 多 baseline 和多场景模拟。
 - 统一文档和结果入口。
@@ -115,17 +115,27 @@ GPU-Aware TierFS: 基于 NVMe-oF 的多 GPU KV Cache 自适应分层文件系统
 - TTFT P50/P95/P99。
 - SLO 违反率。
 
-## 6. 真实环境阶段
+## 6. 当前双 VM 实验阶段
 
-真实 IP/NQN 到位后：
+当前已经可以在两台本地 Ubuntu VM 中完成：
 
 ```text
 1. 跑通 NVMe/TCP 连接
 2. 测直接本地 SSD 和直接 NVMe-oF SSD
 3. 跑 TokenFS baseline
 4. 跑 AURA-KV 策略开关组合
-5. 采集真实 P50/P95/P99 和带宽
-6. 接入 vLLM/SGLang trace
+5. 采集双 VM 环境下的 P50/P95/P99 和带宽
+6. 生成统一报告和 CSV/JSON 结果
+```
+
+这组实验适合作为论文前期系统原型实验。若后续接入物理 SSD/GPU 集群，应继续复测：
+
+```text
+真实本地 SSD
+真实 NVMe-oF SSD
+真实高速网络
+真实 vLLM/SGLang trace
+真实 GPU 推理等待时间
 ```
 
 ## 7. 谨慎边界
@@ -140,4 +150,5 @@ GPU-Aware TierFS: 基于 NVMe-oF 的多 GPU KV Cache 自适应分层文件系统
 
 - 已实现可运行原型。
 - 已把本地淘汰和共享副本放置统一到代价模型。
-- 已具备无真实 IP 条件下的模拟验证和有真实 IP 条件下的接入路径。
+- 已在双 VM 中跑通真实 Linux NVMe/TCP 协议链路。
+- 已具备从当前双 VM 原型迁移到物理 NVMe-oF/GPU 集群的接入路径。

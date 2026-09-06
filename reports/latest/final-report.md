@@ -1,4 +1,4 @@
-# AURA-KV / TokenFS 最新结果报告
+# AURA-KV / TokenFS 最新统一结果报告
 
 项目名称：
 
@@ -6,153 +6,182 @@
 面向多 GPU 大模型 KV Cache 的本地与 NVMe-oF 远端自适应分层缓存系统
 ```
 
-本文件是当前仓库统一结果入口。机器可读模拟数据保留在 `reports/latest/aura-kv-sim/`，人工阅读优先看本文。
+本文是当前仓库的统一结果入口。人工阅读优先看本文；机器可读数据保留在 `reports/latest/` 下的 CSV、JSON 和 JSONL 文件中。
 
-## 1. 结果定位
+## 1. 当前结论先说清楚
 
-当前结果用于验证：
+当前项目已经完成两类验证：
 
-- TokenFS 文件系统功能。
-- 本地 SSD 与远端层分层语义。
-- SQLite 元数据和一致性检查。
-- 代价驱动本地缓存管理。
-- 多 GPU 共享热点副本放置。
-- AURA-KV 模拟器和 baseline 对比框架。
+| 类型 | 是否真实 | 能证明什么 | 不能证明什么 |
+|---|---|---|---|
+| 双 VM NVMe-oF 性能基线 | 真实 Linux NVMe/TCP 协议链路 | NVMe-oF Host/Target 接入、TokenFS 远端挂载、FUSE 叠加读写路径 | 真实物理 SSD、真实高速网卡、真实 GPU 集群性能 |
+| AURA-KV 策略模拟 | 模拟/代理结果 | 缓存替换、副本放置、联合控制器相对趋势和可解释性 | 真实 GPU 推理 TTFT、真实 P99、真实业务收益 |
 
-当前结果不能作为真实 NVMe-oF 或真实 GPU 集群的最终性能结论。所有模拟结果都应标注：
+因此，当前可以用于论文前期汇报的表述是：
 
 ```text
-SIMULATED RESULT
+系统原型已经在两台 Ubuntu VM 上跑通真实 NVMe/TCP Host/Target 链路，
+并完成 TokenFS 远端溢写和性能基线测试；
+AURA-KV 的缓存替换与共享副本放置策略已通过 trace-driven simulator 完成多场景对比。
 ```
 
-## 2. 当前开发环境
+不要写成：
 
 ```text
-Client VM: Ubuntu 24.04 ARM64
-FUSE:      FUSE3
-元数据:    SQLite WAL
-本地层:    /var/lib/tokenfs/local/gpu0, /var/lib/tokenfs/local/gpu1
-远端层:    /var/lib/tokenfs/remote-sim
-挂载点:    /mnt/tokenfs
-checksum:  fnv1a64
+已经完成真实 GPU 集群和真实物理 NVMe SSD 论文实验。
 ```
 
-说明：
-
-- `remote-sim` 是目录模拟远端层，不代表真实网络性能。
-- NVMe-oF 接入脚本已经具备配置化入口。
-- 真实 SSD Target IP、NQN、设备名到位后，需要重新采集真实硬件结果。
-
-## 3. 当前系统语义
-
-TokenFS 当前采用：
+## 2. 当前双 VM 实验环境
 
 ```text
-远端共享主副本 + GPU 本地热缓存副本
+Client VM:  tokenfs-dev
+Client IP:  192.168.64.2
+角色:       TokenFS / Linux nvme-tcp Host
+
+Target VM:  tokenfs-target
+Target IP:  192.168.64.3
+角色:       Linux nvmet Target
+
+Target Port:   4420
+Subsystem NQN: nqn.2026-07.local.tokenfs:remote0
+Client Device: /dev/nvme0n1
+Remote Mount:  /srv/tokenfs/remote0
+TokenFS Mount: /mnt/tokenfs
 ```
 
-常见状态：
+这不是普通目录模拟。客户端通过 `nvme discover` 和 `nvme connect` 发现并连接远端 NVMe/TCP Target，随后把 `/dev/nvme0n1` 挂载成 TokenFS 的远端层。
 
-| 状态 | 含义 |
-|---|---|
-| `LOCAL_ONLY` | 文件当前只在本地层，常见于新写入或未迁移数据 |
-| `REMOTE_ONLY` | 文件当前只在远端层，常见于冷数据或本地空间不足数据 |
-| `REMOTE_WITH_LOCAL_CACHE` | 远端保留主副本，本地保留某 GPU 的热点缓存副本 |
+限制也要写清楚：Target 后端使用 VM 中的 loop/虚拟磁盘，网络是本机 UTM 虚拟网络，所以性能趋势可用于开发阶段验证，不能等同于真实服务器 SSD 与高速网络。
 
-关键语义：
+## 3. 双 VM NVMe-oF 功能验证
 
-- 热点提升和顺序预取不删除远端主副本。
-- 缓存 GC 只删除有远端主副本的本地缓存。
-- 跨机器共享通过远端主副本完成，不直接把另一个 GPU 节点的本地 SSD 当作共享块设备使用。
+功能测试命令：
 
-## 4. 研究重点
+```bash
+./scripts/nvmeof_two_vm_test.sh 192.168.64.3
+```
 
-当前保留两个研究重点。
-
-### 4.1 代价驱动型本地缓存管理
-
-目标：
+结果：
 
 ```text
-本地空间有限时，让未来价值高的数据留在本地；
-低价值、冷数据或有安全替代来源的数据离开本地。
+TokenFS NVMe-oF two-VM test passed.
 ```
 
-当前实现：
+元数据结果：
 
-- 本地优先写入。
-- 本地不足远端溢写。
-- 热点提升。
-- 顺序预取。
-- 本地缓存 GC。
-- 价值感知淘汰。
-- `EvictionLoss` 模型和 AURA-KV baseline 对比。
+| 逻辑路径 | GPU | tier | 物理路径 | 大小 |
+|---|---:|---|---|---:|
+| `/gpu0/nvmeof-demo/local.tokens` | 0 | local | `/var/lib/tokenfs/local/gpu0/nvmeof-demo/local.tokens` | 37 B |
+| `/gpu0/nvmeof-demo/remote-spill.tokens` | 0 | remote | `/srv/tokenfs/remote0/gpu0/nvmeof-demo/remote-spill.tokens` | 96 MiB |
 
-核心含义：
+这说明：
+
+- 小文件保留在 GPU0 本地层。
+- 大文件超过本地 64 MiB 配额后写入远端层。
+- 远端层不是 `remote-sim`，而是 `/dev/nvme0n1` 挂载出来的 NVMe-oF 目录。
+
+## 4. 双 VM NVMe-oF 性能基线
+
+性能测试命令：
+
+```bash
+./scripts/nvmeof_perf_test.sh 192.168.64.3
+```
+
+原始结果文件：
 
 ```text
-删除一个本地副本之前，先估计它被删除后未来访问会多付出多少代价。
+reports/latest/report.md
+reports/latest/report.html
+reports/latest/summary.csv
+reports/latest/fio-json/
 ```
 
-### 4.2 多 GPU 共享热点副本放置
+核心结果：
 
-目标：
+| 用例 | 操作 | 数据量 | 带宽 | 平均延迟 | P99 |
+|---|---|---:|---:|---:|---:|
+| direct-local-read | read | 32 MiB | 2461.54 MiB/s | 305.39 us | 1044.48 us |
+| direct-local-write | write | 32 MiB | 1000.00 MiB/s | 976.65 us | 5865.47 us |
+| direct-remote-read | read | 32 MiB | 359.55 MiB/s | 2691.22 us | 8093.70 us |
+| direct-remote-write | write | 32 MiB | 2909.09 MiB/s | 328.77 us | 569.34 us |
+| tokenfs-local-read | read | 32 MiB | 46.51 MiB/s | 21089.33 us | 53215.23 us |
+| tokenfs-local-write | write | 32 MiB | 106.67 MiB/s | 9265.55 us | 12517.38 us |
+| tokenfs-remote-read | read | 96 MiB | 115.66 MiB/s | 6631.07 us | 8585.22 us |
+| tokenfs-remote-spill-write | write | 96 MiB | 271.19 MiB/s | 3669.19 us | 56360.96 us |
+
+当前可以得出的工程结论：
+
+- 直接远端读取比直接本地读取慢，平均延迟约为 8.8 倍，说明网络路径和 Target 处理会带来额外等待。
+- TokenFS 路径明显慢于直接目录读写，主要来自 FUSE 用户态转发、元数据维护、checksum 和策略逻辑。
+- TokenFS 远端读取慢于直接远端读取，说明热点提升、预取和本地缓存管理有存在价值。
+- 远端写入看起来可能高于本地写入，这是 VM 页缓存、顺序 1 MiB 块和虚拟磁盘共同造成的开发环境现象，不能说明远端物理 SSD 一定比本地快。
+
+## 5. 策略矩阵测试
+
+策略矩阵命令：
+
+```bash
+./scripts/strategy_matrix_test.sh
+```
+
+原始结果：
 
 ```text
-当远端主副本被某个 GPU 或某组 GPU 高频访问时，
-判断是否值得把它复制到对应 GPU 节点本地。
+reports/latest/strategy-matrix/strategy_summary.csv
+reports/latest/strategy-matrix/strategy_report.md
 ```
 
-当前实现：
+摘要：
 
-- 识别调用方 GPU。
-- 记录累计访问次数。
-- 记录短窗口访问事件。
-- 判断长期 dominant GPU、最近 dominant GPU 和趋势变化。
-- 支持多级亲和状态。
-- 支持目标本地副本数量。
-- 支持本地副本冷却时间、最短驻留时间和副本上限。
-- 支持隐藏本地副本表和管理工具展示。
+| 策略 | 本地读命中率 | 本地写命中率 | 远端打开读 | 本地打开读 | 平均读耗时 |
+|---|---:|---:|---:|---:|---:|
+| baseline | 20.00% | 41.67% | 4 | 2 | 2728.33 us |
+| promote | 20.00% | 41.67% | 4 | 2 | 2499.12 us |
+| prefetch | 20.00% | 41.67% | 4 | 2 | 2568.05 us |
+| full | 20.00% | 41.67% | 4 | 2 | 2506.28 us |
 
-这个机制不假设所有 GPU 都共享数据。若每个 GPU 工作完全独立，它会自然退化为“谁产生、谁访问、谁本地缓存”。只有前缀共享、KV Cache 共享或任务迁移带来跨 GPU 高频访问时，副本放置才产生意义。
+这组矩阵是开发环境工程测试，主要证明功能开关、指标采集和报告生成链路正常。由于 workload 较小，本地命中率差异不明显；论文实验应进一步扩大数据规模、访问轮次和容量压力。
 
-## 5. AURA-KV 模拟层
+## 6. AURA-KV 策略模拟
 
-代码入口：
+模拟命令：
+
+```bash
+python3 scripts/aura_kv_sim.py --output reports/latest/aura-kv-sim
+```
+
+原始结果：
 
 ```text
-aura_kv/core.py
-aura_kv/demand.py
-aura_kv/cost_model.py
-aura_kv/layout.py
-aura_kv/optimization.py
-aura_kv/policies.py
-aura_kv/simulator.py
-scripts/aura_kv_sim.py
-tests/aura_kv_unit_test.py
+reports/latest/aura-kv-sim/aura_sim_report.md
+reports/latest/aura-kv-sim/aura_sim_results.csv
+reports/latest/aura-kv-sim/aura_sim_results.json
 ```
 
-当前支持 15 个策略或 baseline：
+模拟层用于比较当前代码中的 16 个策略或基线：
 
 ```text
 RemoteOnly
+LocalFirst
 ProducerLocal
-NodeLRU
-NodeLFU
+LRU-Local
+LFU-Local
 SizeAwareLRU
 WeightedScoreBaseline
 EWMAReplacement
+DualWindowReplacement
 SourceAwareReplacement
 PrefixSourceAwareReplacement
 StaticNReplica
 AffinityOnly
-IndependentControllers
-AURA-KV
+WA-Affinity-Independent
+AURA-Joint
 OracleDemand
 ExhaustiveOptimal
 ```
 
-当前支持 8 个场景：
+覆盖场景：
 
 ```text
 private
@@ -165,117 +194,81 @@ demand_estimation_error
 tenant_isolation
 ```
 
-运行：
-
-```bash
-python3 scripts/aura_kv_sim.py --output reports/latest/aura-kv-sim
-```
-
-输出：
+这部分结果必须标注：
 
 ```text
-reports/latest/aura-kv-sim/aura_sim_report.md
-reports/latest/aura-kv-sim/aura_sim_results.csv
-reports/latest/aura-kv-sim/aura_sim_results.json
+SIMULATED RESULT
 ```
 
-## 6. 当前指标
+它证明的是算法逻辑和相对趋势，不是真实硬件速度。
 
-TokenFS 可观测：
+## 7. 当前系统机制是否闭环
+
+当前已经闭环的路径：
 
 ```text
-文件逻辑路径、物理路径、tier、size、checksum、state
-本地/远端读写次数和字节数
-平均读写耗时和最大耗时
-本地溢写、热点提升、预取、淘汰次数
-GPU 访问统计、亲和状态、最近热点 GPU
-本地副本创建、删除、GC 和迁移状态
+FUSE 前台请求
+  -> 本地配额判断
+  -> 本地或远端放置
+  -> SQLite 元数据提交
+  -> checksum 和状态记录
+  -> tokenfsctl 指标查看
 ```
 
-AURA-KV 模拟指标：
+双 VM NVMe-oF 路径：
 
 ```text
-local_cache_hit_rate
-remote_read_bytes
-peer_read_bytes
-recomputed_ms
-duplicate_bytes
-replica_count
-replica_churn
-migration_bytes
-ttft_p50_ms
-ttft_p95_ms
-ttft_p99_ms
-slo_violation_rate
-decision_count
+TokenFS remote tier
+  -> /srv/tokenfs/remote0
+  -> ext4
+  -> /dev/nvme0n1
+  -> Linux nvme-tcp Host
+  -> UTM 虚拟网络
+  -> Linux nvmet Target
+  -> loop/虚拟磁盘
 ```
 
-查看 TokenFS 状态：
-
-```bash
-./scripts/tokenfsctl.py status
-./scripts/tokenfsctl.py files
-./scripts/tokenfsctl.py replicas
-./scripts/tokenfsctl.py affinity
-./scripts/tokenfsctl.py metrics
-./scripts/tokenfsctl.py check
-```
-
-## 7. 当前可证明结论
-
-当前能够证明：
-
-- FUSE 统一命名空间可挂载和读写。
-- GPU 逻辑目录和本地配额隔离可用。
-- 本地优先和远端溢写路径可用。
-- 元数据、checksum 和提交状态可观测。
-- 远端主副本与本地缓存副本的生命周期可运行。
-- 代价驱动替换和共享副本放置已有可运行原型。
-- AURA-KV 可以在 8 个模拟场景下对比 15 个策略或 baseline。
-- 文档、测试和模拟结果已经按统一入口组织。
-
-当前不能证明：
-
-- 真实 NVMe-oF SSD 的最终带宽。
-- 真实网络下 P50/P95/P99 延迟。
-- 真实 GPU 推理任务的数据等待时间下降比例。
-- 多 GPU 并发访问远端 SSD 时的系统上限。
-
-## 8. 真实环境复测计划
-
-真实环境到位后需要获得：
+AURA-KV 策略路径：
 
 ```text
-SSD Target IP
-NVMe/TCP 端口
-Subsystem NQN
-Host NQN / ACL
-/dev/nvmeXnY 设备名
-Namespace 是否独占
-远端挂载目录
-GPU 服务器数量和 GPU 拓扑
+访问事件
+  -> 需求预测
+  -> 代价模型
+  -> EvictionLoss / ReplicaGain
+  -> 候选动作
+  -> 后台任务队列
+  -> 执行器
+  -> 布局和指标反馈
 ```
 
-推荐复测：
+## 8. 当前适合写进论文的内容
 
-```bash
-./scripts/check_environment.sh
-sudo ./scripts/connect_nvme.sh --config config/tokenfs.dev.yaml --backend remote0 --chown-current
-./scripts/nvmeof_two_vm_test.sh
-./scripts/nvmeof_perf_test.sh
-./scripts/strategy_matrix_test.sh
-python3 scripts/aura_kv_sim.py --output reports/latest/aura-kv-sim
-```
+可以写：
 
-论文最终应补充：
+- 设计并实现了一个 FUSE 分层缓存文件系统原型 TokenFS。
+- 实现了本地 SSD 配额隔离、远端溢写、SQLite 元数据、checksum 和状态恢复。
+- 实现了 Linux NVMe/TCP 双 VM 实验环境，验证了远端 NVMe-oF 作为 TokenFS 后端的可行性。
+- 提出了面向 KV Cache 的价值感知缓存替换模型，用未来访问代价衡量本地副本是否值得保留。
+- 提出了面向多 GPU 共享热点的副本放置模型，用访问分布、收益密度和容量预算决定复制到哪些节点。
+- 构建了 trace-driven simulator，对比 RemoteOnly、LocalFirst、LRU/LFU、SizeAwareLRU、StaticNReplica、AffinityOnly、AURA-Joint 和 OracleDemand 等策略。
 
-- 直接本地 SSD baseline。
-- 直接 NVMe-oF SSD baseline。
-- TokenFS baseline。
-- TokenFS + 代价驱动型本地缓存管理。
-- TokenFS + 多 GPU 共享热点副本放置。
-- AURA-KV full。
-- P50/P95/P99 延迟。
-- 远端读取减少比例。
-- 本地命中率提升。
-- 副本抖动和空间开销。
+不建议现在写：
+
+- 已在真实 GPU 集群中显著降低 TTFT。
+- 已验证真实 NVMe SSD 和 100GbE/RDMA 网络性能。
+- 已完成生产级分布式文件系统。
+
+## 9. 下一步论文实验增强
+
+如果继续在当前双 VM 环境上增强实验，优先做：
+
+1. 增大 workload：把 32/96 MiB 扩展到 512 MiB、1 GiB，降低页缓存偶然性。
+2. 增加随机小块读：加入 4 KiB、16 KiB、64 KiB，观察 IOPS 和尾延迟。
+3. 增加冷/热两轮测试：第一轮远端读取，第二轮本地缓存命中。
+4. 增加容量压力：让本地配额明显小于工作集，逼出真实淘汰差异。
+5. 增加 Target 重启、断连、重连和恢复测试。
+6. 增加 Dashboard 运行截图，用事件流解释一次策略决策。
+
+## 10. 一句话总结
+
+当前项目已经不是停留在纯理论或纯目录模拟阶段：TokenFS 已经接入双 VM 真实 NVMe/TCP 协议路径，并拿到了可复现的功能和性能基线；AURA-KV 的核心策略仍通过模拟器验证，适合作为论文方法和前期系统实验基础。
