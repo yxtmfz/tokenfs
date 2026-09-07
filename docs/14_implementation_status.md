@@ -33,7 +33,7 @@
 | 迁移 | Implemented / Partial | `src/main.cpp`、`aura_kv/tasks.py`、`aura_kv/executor.py` | `scripts/promote_test.sh`、`scripts/prefetch_test.sh`、`scripts/consistency_test.sh`、`tests/aura_kv_unit_test.py` | 临时文件、fsync、rename、状态切换、缓存提升；Python AURA-KV 层已有持久化后台任务日志 | C++ 与 Python 两条路径尚未合并为同一个线上任务表 |
 | 恢复 | Partial | `src/main.cpp`、`scripts/tokenfsctl.py` | `scripts/consistency_test.sh`、`scripts/fault_injection_test.sh` | 启动恢复扫描、一致性检查、临时状态处理 | 真实断电和 Target 重启需要硬件验证 |
 | FUSE | Implemented | `src/main.cpp` | `scripts/smoke_test.sh`、`scripts/integration_test.sh` | 常见 POSIX 文件操作 | 不支持完整生产级 POSIX 语义，如复杂锁和 mmap |
-| NVMe-oF | Implemented / Partial | `scripts/connect_nvme.sh`、`scripts/setup_nvme_target.sh` | `scripts/nvmeof_two_vm_test.sh`、`scripts/nvmeof_perf_test.sh` | 配置化 connect、Target、dry-run、双 VM Linux NVMe/TCP 功能测试和性能基线 | 当前仓库没有真实物理 SSD Target 结果 |
+| NVMe-oF | Implemented / Partial | `scripts/connect_nvme.sh`、`scripts/setup_nvme_target.sh`、`scripts/setup_cn13_nvmeof_target.sh` | `scripts/nvmeof_two_vm_test.sh`、`scripts/nvmeof_perf_test.sh` | 配置化 connect、Target、dry-run、双 VM Linux NVMe/TCP 功能测试和性能基线；cn13 远端 backing file 已非破坏性准备 | 当前本地 VM 无法直连 cn13:4420，真实物理 SSD Target 结果需内网客户端复测 |
 | 模拟器 | Implemented | `aura_kv/simulator.py`、`scripts/aura_kv_sim.py` | `scripts/aura_kv_test.sh` | 8 个场景、16 个策略或 baseline | 模拟结果不是硬件性能 |
 | 实验基线 | Implemented | `aura_kv/policies.py`、`aura_kv/simulator.py` | `scripts/aura_kv_test.sh` | RemoteOnly、LocalFirst、LRU/LFU、SizeAwareLRU、DualWindow、StaticNReplica、AffinityOnly、WA-Affinity-Independent、AURA-Joint 等 | SIEVE-StaticN 尚未单独实现；需要真实 workload 进一步校准 |
 | 统一事件流 | Implemented / Partial | `aura_kv/monitoring.py`、`aura_kv/simulator.py` | `tests/aura_kv_unit_test.py` | 前台请求、缓存查询、控制器周期、候选动作、后台任务、布局变化统一写入 `events.jsonl` | TokenFS C++ 主进程尚未直接输出同一套事件 |
@@ -58,11 +58,11 @@
 - 动态 Dashboard 已经能跟随 Python workload 执行实时刷新；真实 TokenFS C++ 前台请求和真实 NVMe-oF 指标还需要接入同一套事件模型。
 - SWAP 已具备“先复制校验新副本，再删除旧副本”的任务依赖原型；真实 NVMe-oF 和多进程恢复仍需硬件环境验证。
 - 租约是副本安全字段和删除门控，不是独立分布式租约系统。
-- NVMe-oF 已配置化，双 VM 协议链路已验证；真实物理 SSD/GPU 集群尚未验证。
+- NVMe-oF 已配置化，双 VM 协议链路已验证；cn13 已创建 64GiB backing file，但尚未开放 Target；真实物理 SSD/GPU 集群仍需内网客户端验证。
 
 ## 4. Planned 重点
 
 - 接入真实 vLLM/SGLang KV Cache trace。
 - 接入真实 GPU 节点拓扑。
-- 接入真实 NVMe-oF 远端 SSD 指标。
+- 接入能直连 `cn13:4420` 的内网客户端，完成真实 NVMe-oF 远端 SSD 指标采集。
 - 完成论文级硬件实验。
