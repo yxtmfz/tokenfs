@@ -10,7 +10,7 @@ AURA-KV 是研究控制层，TokenFS 是可挂载的 FUSE 文件系统原型。�
 
 - 目录模拟环境：用于开发 FUSE、SQLite 元数据、本地配额、远端溢写、缓存替换和副本放置策略。
 - 双 VM NVMe-oF 环境：使用两台 Ubuntu VM 跑通真实 Linux NVMe/TCP Host/Target 协议链路，TokenFS 的远端层挂载到真实 NVMe-oF Namespace 上。
-- 实验室远端准备环境：已在 `cn13` 上创建 64GiB backing file，作为后续真实 NVMe/TCP Target 的文件后端；尚未开放 4420，等待内网客户端直连。
+- 实验室远端准备环境：已在 `cn13` 上创建 64GiB backing file，并已通过 Linux `nvmet` 导出为 NVMe/TCP Target；跳板内网到 `cn13:4420` 已通，本地 UTM VM 到该地址仍不通。
 
 需要明确的是，双 VM 环境验证的是 NVMe-oF 协议接入和 TokenFS 端到端路径，底层仍是虚拟机网络和 loop/虚拟磁盘；它可以作为论文前期系统验证和方法论实验，不应直接宣称为真实物理 SSD/GPU 集群性能。
 
@@ -27,11 +27,14 @@ AURA-KV 是研究控制层，TokenFS 是可挂载的 FUSE 文件系统原型。�
   远端 IP: 28.10.10.13
   backing file: /home/wjxt/aura-kv-nvmeof/aura-remote0.img
   size: 64 GiB
+  Target NQN: nqn.2026-09.local.aura-kv:remote0
+  listen: 28.10.10.13:4420
+  backend block device: /dev/loop0
 
 尚未完成:
   本地 VM 目前不能直连 cn13:4420
-  cn13 尚未导出 NVMe/TCP Target
-  真实性能测试需要放到能访问 cn13:4420 的内网客户端
+  本地 VM 上执行 nvme discover 会超时
+  真实性能测试仍需要放到能直接访问 cn13:4420 的内网客户端
 ```
 
 ## 1. 项目解决的问题

@@ -72,11 +72,14 @@ tokenfs-target  192.168.64.3  Linux nvmet Target
 远端 IP: 28.10.10.13
 远端 backing file: /home/wjxt/aura-kv-nvmeof/aura-remote0.img
 文件大小: 64 GiB
-用途: 后续作为 NVMe/TCP Target Namespace 的后端文件
-安全边界: 未格式化真实 NVMe 盘，未清空 /dev/nvme0n1，未开放 4420
+Target NQN: nqn.2026-09.local.aura-kv:remote0
+监听端口: 28.10.10.13:4420
+后端块设备: /dev/loop0
+用途: 作为 NVMe/TCP Target Namespace 的安全实验后端
+安全边界: 未格式化真实 NVMe 盘，未清空 /dev/nvme0n1
 ```
 
-当前本地两台 UTM VM 仍无法直连 `28.10.10.13:4420`，因此不能用本地 VM 直接对 `cn13` 做真实 NVMe-oF 性能测试。老师建议客户端放在内网后，真实测试拓扑应改为：
+当前 `cn13` 已经监听 4420，跳板内网到 `cn13:4420` 可达；但本地两台 UTM VM 仍无法直连 `28.10.10.13:4420`，在本地 VM 上执行 `nvme discover` 会超时。因此不能用本地 VM 直接对 `cn13` 做真实 NVMe-oF 性能测试。老师建议客户端放在内网后，真实测试拓扑应改为：
 
 ```text
 内网客户端 1  ->  cn13:4420
@@ -149,17 +152,17 @@ Implemented：
 
 Partial：
 
-- 真实物理 SSD Target 未验证。
+- cn13 Target 已使用 backing file 导出，真实物理 SSD 直连性能尚未验证。
 - TokenFS 目前依赖外部脚本先完成 NVMe-oF 挂载。
 
 Planned：
 
-- 内网客户端到位并确认 Host NQN 后，使用 `scripts/setup_cn13_nvmeof_target.sh` 打开 `cn13` 的 NVMe/TCP Target。
+- 内网客户端到位并确认 Host NQN 后，使用 `scripts/connect_nvme.sh` 连接 `cn13` 的 NVMe/TCP Target。
 - 采集本地 SSD、远端 NVMe-oF、TokenFS 叠加开销和多 GPU 并发数据。
 
 ## 7. cn13 后续 Target 启用步骤
 
-当前已经创建了 backing file，但尚未导出为 NVMe/TCP Namespace。确认内网客户端和 Host NQN 后，在 `cn13` 上执行：
+当前已经创建了 backing file，并已验证可导出为 NVMe/TCP Namespace。若 cn13 重启或 Target 配置丢失，可在 `cn13` 上执行：
 
 ```bash
 ./scripts/setup_cn13_nvmeof_target.sh
@@ -170,6 +173,14 @@ Planned：
 ```bash
 AURA_APPLY=1 \
 AURA_CN13_ALLOWED_HOST_NQN="<client-host-nqn>" \
+./scripts/setup_cn13_nvmeof_target.sh
+```
+
+多个客户端可以写成：
+
+```bash
+AURA_APPLY=1 \
+AURA_CN13_ALLOWED_HOST_NQNS="<client-1-host-nqn>,<client-2-host-nqn>" \
 ./scripts/setup_cn13_nvmeof_target.sh
 ```
 
