@@ -21,7 +21,7 @@
 python3 scripts/paper_experiments.py
 ```
 
-输出：
+通过 NVMe-oF 检查后输出：
 
 ```text
 reports/latest/paper-experiments/
@@ -47,7 +47,7 @@ reports/latest/paper-experiments/
 真实 TokenFS workload 速度实验需要 Linux/FUSE 环境，单独运行：
 
 ```bash
-./scripts/real_speed_benchmark.sh
+TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/real_speed_benchmark.sh
 ```
 
 输出：
@@ -69,7 +69,7 @@ reports/latest/paper-experiments/06_real_speed_benchmark/
 | `avg_read_us` / `avg_write_us` | TokenFS 记录的平均读写耗时 |
 | `remote_read_open` | 读取时打开远端文件的次数，越少通常越好 |
 
-如果远端目录已经配置为 NVMe-oF 挂载点，例如 `/srv/tokenfs/remote0`，该实验就是真实 TokenFS + NVMe-oF 端到端速度测试；如果仍然使用 `/var/lib/tokenfs/remote-sim`，它只能衡量软件层策略开销。
+该脚本默认强制检查 NVMe-oF 挂载：配置里的远端后端必须是 `type: nvmeof`，`root` 必须指向 `/srv/tokenfs/remote0` 这类挂载目录，并且该目录的实际挂载源必须是 `/dev/nvme...`。如果仍然使用 `/var/lib/tokenfs/remote-sim`，脚本会直接停止，避免把目录模拟结果误写成真实 NVMe-oF 端到端速度。
 
 ## 3. 当前主要结果
 

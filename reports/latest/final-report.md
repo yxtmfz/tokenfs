@@ -121,27 +121,15 @@ reports/latest/paper-experiments/06_real_speed_benchmark/
 └── figures/
 ```
 
-当前仓库已有样例结果如下。它来自 TokenFS workload 真实执行记录，但环境标签是开发样例；如果远端后端替换为 NVMe-oF 挂载目录，再运行同一脚本即可得到真实 NVMe-oF 端到端速度。
-
-| 策略 | 总数据 MiB | 总耗时 s | 有效吞吐 MiB/s | 相对 baseline 加速 | 平均读 us | 本地读命中率 | 远端打开读取 | 后台动作 |
-|---|---:|---:|---:|---:|---:|---:|---:|---|
-| `baseline` | 176.0 | 2.9234 | 60.2 | 1.0x | 2728.33 | 20.0% | 4 | promote=0, prefetch=0, evict=0 |
-| `promote` | 176.0 | 2.7416 | 64.2 | 1.0663x | 2499.12 | 20.0% | 4 | promote=0, prefetch=0, evict=0 |
-| `prefetch` | 176.0 | 2.8129 | 62.57 | 1.0393x | 2568.05 | 20.0% | 4 | promote=0, prefetch=0, evict=0 |
-| `full` | 176.0 | 3.0414 | 57.87 | 0.9612x | 2506.28 | 20.0% | 4 | promote=0, prefetch=0, evict=0 |
-
-![真实总耗时](paper-experiments/06_real_speed_benchmark/figures/real_wall_time.svg)
-
-![真实相对加速比](paper-experiments/06_real_speed_benchmark/figures/real_speedup_vs_baseline.svg)
-
-![真实有效吞吐](paper-experiments/06_real_speed_benchmark/figures/real_effective_throughput.svg)
-
-这组结果的关键价值不是“硬说 AURA 一定更快”，而是暴露真实系统开销：当前样例 workload 下 `promote` 最快，`full` 反而略慢，说明完整策略的后台判断成本尚未被命中收益抵消。论文中应把它作为真实性能证据，并继续用实验室 NVMe-oF 挂载目录复测。
+旧的目录模拟速度样例已经从最终报告中撤下。真实 TokenFS workload 速度实验必须在 NVMe-oF 挂载目录上重新运行：脚本会检查远端后端是否为 `type: nvmeof`、远端根目录是否已挂载、挂载源是否为 `/dev/nvme...`。检查不通过时不会生成论文级速度报告。
 
 运行方式：
 
 ```bash
-./scripts/real_speed_benchmark.sh
+cp config/tokenfs.nvmeof.example.yaml config/tokenfs.nvmeof.yaml
+# 填入真实 target_ip、subnqn、device
+sudo ./scripts/connect_nvme.sh --config config/tokenfs.nvmeof.yaml --backend remote0 --chown-current
+TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/real_speed_benchmark.sh
 ```
 
 ## 5. 参数敏感性摘要

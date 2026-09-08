@@ -203,7 +203,7 @@ def write_report(rows: list[dict[str, object]], output: Path, environment: str) 
         "",
         "本报告只使用真实程序运行产生的 wall-clock 时间、读写吞吐和 TokenFS 指标，不使用成本模型权重。它回答的是：在同一组 token shard workload 下，开启热点提升、顺序预取和联合策略后，系统端到端是否真的更快。",
         "",
-        "注意：如果远端后端配置为 `/srv/tokenfs/remote0` 且该目录来自 NVMe-oF 挂载，本报告就是 TokenFS + 真实 NVMe-oF 路径的结果；如果远端后端仍是 `remote-sim` 目录，它只能说明软件策略开销，不能代表真实网络 SSD 性能。",
+        "注意：`scripts/real_speed_benchmark.sh` 默认会强制检查远端后端已经通过 NVMe-oF 挂载。只有 `backends[].type = nvmeof`、远端根目录已挂载，并且挂载源为 `/dev/nvme...` 时，才会生成可用于论文的真实 NVMe-oF 端到端速度结果。若显式设置 `TOKENFS_REQUIRE_NVMEOF=0` 绕过检查，结果只能作为开发自测，不能写成真实 NVMe-oF 性能。",
         "",
         "## 结果表",
         "",

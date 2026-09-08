@@ -485,10 +485,10 @@ def write_report(
             "成本模型解释控制器为什么做某个选择，但不能单独证明系统真的更快。因此仓库额外提供真实 TokenFS workload 测速入口：",
             "",
             "```bash",
-            "./scripts/real_speed_benchmark.sh",
+            "TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/real_speed_benchmark.sh",
             "```",
             "",
-            "该实验读取 FUSE/TokenFS 实际运行产生的 wall-clock 时间、有效吞吐和平均读写延迟，不使用成本模型权重。如果远端目录已经替换为 NVMe-oF 挂载点，它就是 TokenFS + 真实 NVMe-oF 的端到端速度实验。",
+            "该实验读取 FUSE/TokenFS 实际运行产生的 wall-clock 时间、有效吞吐和平均读写延迟，不使用成本模型权重。脚本默认强制检查远端后端已经通过 NVMe-oF 挂载，避免把 `remote-sim` 开发目录误写成真实网络 SSD 结果。",
             "",
             "| 策略 | 总数据 MiB | 总耗时 s | 有效吞吐 MiB/s | 相对 baseline 加速 | 平均读 us | 本地读命中率 | 远端打开读取 | 后台动作 |",
             "|---|---:|---:|---:|---:|---:|---:|---:|---|",
@@ -509,7 +509,7 @@ def write_report(
             )
     else:
         lines.append(
-            "| pending | 0 | 0 | 0 | 0x | 0 | 0% | 0 | 需要在 Linux/FUSE 环境运行 `./scripts/real_speed_benchmark.sh` |"
+            "| pending | 0 | 0 | 0 | 0x | 0 | 0% | 0 | 需要在 Linux/FUSE 环境把远端配置为 NVMe-oF 挂载目录后运行 `TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/real_speed_benchmark.sh` |"
         )
 
     lines.extend(

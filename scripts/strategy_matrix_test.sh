@@ -3,7 +3,7 @@ set -euo pipefail
 
 project_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 result_root="${1:-$project_root/reports/latest/strategy-matrix}"
-base_config="$project_root/config/tokenfs.dev.yaml"
+base_config="${TOKENFS_CONFIG:-$project_root/config/tokenfs.dev.yaml}"
 
 tmp_dir="$(mktemp -d /tmp/tokenfs-strategy-matrix.XXXXXX)"
 

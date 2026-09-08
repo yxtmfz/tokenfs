@@ -82,17 +82,14 @@
 成本模型解释控制器为什么做某个选择，但不能单独证明系统真的更快。因此仓库额外提供真实 TokenFS workload 测速入口：
 
 ```bash
-./scripts/real_speed_benchmark.sh
+TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/real_speed_benchmark.sh
 ```
 
-该实验读取 FUSE/TokenFS 实际运行产生的 wall-clock 时间、有效吞吐和平均读写延迟，不使用成本模型权重。如果远端目录已经替换为 NVMe-oF 挂载点，它就是 TokenFS + 真实 NVMe-oF 的端到端速度实验。
+该实验读取 FUSE/TokenFS 实际运行产生的 wall-clock 时间、有效吞吐和平均读写延迟，不使用成本模型权重。脚本默认强制检查远端后端已经通过 NVMe-oF 挂载，避免把 `remote-sim` 开发目录误写成真实网络 SSD 结果。
 
 | 策略 | 总数据 MiB | 总耗时 s | 有效吞吐 MiB/s | 相对 baseline 加速 | 平均读 us | 本地读命中率 | 远端打开读取 | 后台动作 |
 |---|---:|---:|---:|---:|---:|---:|---:|---|
-| `baseline` | 176.0 | 2.9234 | 60.2 | 1.0x | 2728.33 | 20.0% | 4 | promote=0, prefetch=0, evict=0 |
-| `promote` | 176.0 | 2.7416 | 64.2 | 1.0663x | 2499.12 | 20.0% | 4 | promote=0, prefetch=0, evict=0 |
-| `prefetch` | 176.0 | 2.8129 | 62.57 | 1.0393x | 2568.05 | 20.0% | 4 | promote=0, prefetch=0, evict=0 |
-| `full` | 176.0 | 3.0414 | 57.87 | 0.9612x | 2506.28 | 20.0% | 4 | promote=0, prefetch=0, evict=0 |
+| pending | 0 | 0 | 0 | 0x | 0 | 0% | 0 | 需要在 Linux/FUSE 环境把远端配置为 NVMe-oF 挂载目录后运行 `TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/real_speed_benchmark.sh` |
 
 ## 2. 端到端延迟代理实验
 

@@ -132,7 +132,7 @@ python3 scripts/paper_experiments.py
 | 端到端延迟代理 | `reports/latest/paper-experiments/02_e2e_latency/` | 比较本地、Peer、远端和后台动作共同造成的请求代价 | 代理结果 |
 | 参数敏感性 | `reports/latest/paper-experiments/03_sensitivity/` | 扫描本地容量、远端 P99、副本预算，验证策略稳定性 | 模拟结果 |
 | NVMe-oF baseline | `reports/latest/paper-experiments/04_nvmeof_baseline/` | 汇总已有真实 NVMe/TCP 基线 | 真实链路摘要 |
-| 真实 TokenFS 速度 | `reports/latest/paper-experiments/06_real_speed_benchmark/` | 比较同一 workload 下不同策略的真实总耗时和吞吐 | 真实程序耗时 |
+| 真实 TokenFS 速度 | `reports/latest/paper-experiments/06_real_speed_benchmark/` | 在 NVMe-oF 挂载目录上比较同一 workload 的真实总耗时和吞吐 | 待真实挂载后生成 |
 
 统一报告：
 
@@ -152,10 +152,10 @@ reports/latest/paper-experiments/paper_experiments_report.md
 
 `AURA-Joint` 不追求单项指标永远第一，而是降低综合服务代价：前台访问延迟、远端读取、Peer 读取、后台迁移、重复副本空间和副本创建/删除抖动。
 
-成本模型的结果不能单独证明系统更快，所以当前仓库还提供真实速度入口：
+成本模型的结果不能单独证明系统更快，所以当前仓库还提供真实速度入口。这个入口默认只接受 NVMe-oF 挂载目录：
 
 ```bash
-./scripts/real_speed_benchmark.sh
+TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/real_speed_benchmark.sh
 ```
 
 它实际启动 TokenFS，运行同一组 token shard workload，再输出：
@@ -165,7 +165,18 @@ reports/latest/paper-experiments/06_real_speed_benchmark/real_speed_report.md
 reports/latest/paper-experiments/06_real_speed_benchmark/real_speed_summary.csv
 ```
 
-这部分直接看 `wall_time_s`、`effective_mib_s`、`avg_read_us` 和 `speedup_vs_baseline`。如果远端后端目录已经是 NVMe-oF 挂载点，它就是 TokenFS + 真实 NVMe-oF 的端到端速度；如果远端还是 `remote-sim`，它只能验证软件策略开销。
+这部分直接看 `wall_time_s`、`effective_mib_s`、`avg_read_us` 和 `speedup_vs_baseline`。只有远端后端目录已经是 NVMe-oF 挂载点时，它才会生成 TokenFS + 真实 NVMe-oF 的端到端速度结果。
+
+为避免误用，`real_speed_benchmark.sh` 现在默认强制检查 NVMe-oF：
+
+```bash
+cp config/tokenfs.nvmeof.example.yaml config/tokenfs.nvmeof.yaml
+# 填入真实 target_ip、subnqn、device 后连接并挂载
+sudo ./scripts/connect_nvme.sh --config config/tokenfs.nvmeof.yaml --backend remote0 --chown-current
+TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/real_speed_benchmark.sh
+```
+
+如果远端仍是 `/var/lib/tokenfs/remote-sim`，脚本会直接停止，不生成论文级真实速度报告。开发时可显式设置 `TOKENFS_REQUIRE_NVMEOF=0` 绕过，但该结果只能用于排查软件逻辑。
 
 ## 7. 常用测试
 
@@ -177,7 +188,7 @@ reports/latest/paper-experiments/06_real_speed_benchmark/real_speed_summary.csv
 python3 scripts/paper_experiments.py
 
 # 真实 TokenFS workload 速度实验，需 Linux/FUSE
-./scripts/real_speed_benchmark.sh
+TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/real_speed_benchmark.sh
 
 # TokenFS 基础功能，需 Linux/FUSE
 ./scripts/smoke_test.sh
@@ -195,11 +206,12 @@ macOS 主机上主要运行 Python 策略测试；FUSE 和 NVMe-oF 脚本应在 
 远端接入脚本已经配置化：
 
 ```bash
-./scripts/connect_nvme.sh --config config/tokenfs.dev.yaml --dry-run
-sudo ./scripts/connect_nvme.sh --config config/tokenfs.dev.yaml --backend remote0 --chown-current
+cp config/tokenfs.nvmeof.example.yaml config/tokenfs.nvmeof.yaml
+./scripts/connect_nvme.sh --config config/tokenfs.nvmeof.yaml --dry-run
+sudo ./scripts/connect_nvme.sh --config config/tokenfs.nvmeof.yaml --backend remote0 --chown-current
 ```
 
-真实环境需要在 `config/tokenfs.dev.yaml` 中填写：
+真实环境需要在 `config/tokenfs.nvmeof.yaml` 中填写：
 
 ```yaml
 type: nvmeof
