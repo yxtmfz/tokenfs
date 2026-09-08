@@ -50,6 +50,33 @@
 - 相比 `LRU-Local` 降低 `68.5%`，相比 `LFU-Local` 降低 `65.7%`。
 - AURA 的优势不只是命中率，而是同时控制远端读取、迁移量和副本抖动。
 
+## 1.1 总性能指标
+
+`综合代价/请求` 是越低越好的主指标。为了更直观展示“快了多少”，本报告进一步定义：
+
+```text
+等效性能指数 = LRU-Local 综合代价 / 当前策略综合代价
+```
+
+因此 `LRU-Local = 1.00x`，数值越大，表示在同一组 trace 下单位综合代价能服务更多请求。
+
+![等效性能提升柱状图](figures/effective_performance_index.svg)
+
+| 策略 | 综合代价/请求 | 等效性能指数 | 相对 RemoteOnly | AURA 相比该策略降低代价 |
+|---|---:|---:|---:|---:|
+| `RemoteOnly` | 3.1889 | 0.5358x | 1.0x | 83.14% |
+| `LocalFirst` | 1.888 | 0.9049x | 1.689x | 71.53% |
+| `LRU-Local` | 1.7085 | 1.0x | 1.8665x | 68.53% |
+| `LFU-Local` | 1.5691 | 1.0888x | 2.0323x | 65.74% |
+| `DualWindowReplacement` | 0.7717 | 2.2139x | 4.1323x | 30.34% |
+| `SourceAwareReplacement` | 0.9318 | 1.8335x | 3.4223x | 42.31% |
+| `AffinityOnly` | 1.6883 | 1.012x | 1.8888x | 68.16% |
+| `WA-Affinity-Independent` | 0.9922 | 1.7219x | 3.214x | 45.82% |
+| `AURA-Joint` | 0.5376 | 3.178x | 5.9317x | 0.00% |
+| `OracleDemand` | 0.8994 | 1.8996x | 3.5456x | 40.23% |
+
+![AURA 相对基线的综合代价降低](figures/aura_improvement_vs_baselines.svg)
+
 ## 2. 端到端延迟代理实验
 
 这里的端到端延迟是 simulator 中一次 KV 获取的代理延迟，不等同于真实 TTFT。它用于比较策略是否减少远端访问和高尾延迟路径。
@@ -112,5 +139,8 @@
 02_e2e_latency/latency_detail.csv
 03_sensitivity/sensitivity_summary.csv
 04_nvmeof_baseline/real_nvmeof_summary.csv
+05_performance_summary/performance_summary.csv
+figures/effective_performance_index.svg
+figures/aura_improvement_vs_baselines.svg
 paper_experiments_report.md
 ```

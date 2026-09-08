@@ -9,6 +9,7 @@ import sys
 from dataclasses import asdict
 from pathlib import Path
 from typing import Iterable
+from xml.sax.saxutils import escape
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PROJECT_ROOT))
@@ -144,6 +145,124 @@ def summarize_by_policy(rows: list[dict[str, object]]) -> list[dict[str, object]
     return summaries
 
 
+def compute_performance_summary(trace_summary: list[dict[str, object]]) -> list[dict[str, object]]:
+    by_policy = {str(row["policy"]): row for row in trace_summary}
+    lru_cost = float(by_policy["LRU-Local"]["avg_objective_cost_per_request"])
+    remote_cost = float(by_policy["RemoteOnly"]["avg_objective_cost_per_request"])
+    aura_cost = float(by_policy["AURA-Joint"]["avg_objective_cost_per_request"])
+
+    rows: list[dict[str, object]] = []
+    for row in trace_summary:
+        policy = str(row["policy"])
+        cost = float(row["avg_objective_cost_per_request"])
+        if cost <= 0:
+            performance_index = 0.0
+            normalized_to_lru = 0.0
+            normalized_to_remote = 0.0
+        else:
+            performance_index = 1.0 / cost
+            normalized_to_lru = lru_cost / cost
+            normalized_to_remote = remote_cost / cost
+        rows.append(
+            {
+                "policy": policy,
+                "objective_cost_per_request": round(cost, 4),
+                "performance_index": round(performance_index, 4),
+                "normalized_to_lru": round(normalized_to_lru, 4),
+                "normalized_to_remote": round(normalized_to_remote, 4),
+                "aura_reduction_over_this_policy": round((cost - aura_cost) / max(1e-9, cost), 4)
+                if policy != "AURA-Joint"
+                else 0.0,
+            }
+        )
+    return rows
+
+
+def write_svg_bar_chart(
+    path: Path,
+    title: str,
+    rows: list[dict[str, object]],
+    value_key: str,
+    unit: str,
+    width: int = 1180,
+) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    left = 245
+    right = 150
+    top = 82
+    row_h = 44
+    bar_h = 24
+    max_bar_w = width - left - right
+    height = top + len(rows) * row_h + 42
+    values = [float(row[value_key]) for row in rows]
+    max_value = max(values) if values else 1.0
+
+    parts = [
+        f"<svg xmlns='http://www.w3.org/2000/svg' width='{width}' height='{height}' viewBox='0 0 {width} {height}'>",
+        "<rect width='100%' height='100%' fill='#ffffff'/>",
+        f"<text x='24' y='42' font-family='Arial, Helvetica, sans-serif' font-size='26' font-weight='700' fill='#20242b'>{escape(title)}</text>",
+        f"<line x1='24' y1='62' x2='{width - 24}' y2='62' stroke='#d8dee8'/>",
+    ]
+    for index, row in enumerate(rows):
+        y = top + index * row_h
+        label = str(row["policy"])
+        value = float(row[value_key])
+        bar_w = 0 if max_value <= 0 else int(max_bar_w * value / max_value)
+        color = "#2563eb" if label == "AURA-Joint" else "#64748b"
+        parts.extend(
+            [
+                f"<text x='24' y='{y + 19}' font-family='Menlo, Consolas, monospace' font-size='18' fill='#20242b'>{escape(label)}</text>",
+                f"<rect x='{left}' y='{y}' width='{max_bar_w}' height='{bar_h}' rx='5' fill='#eef2f7'/>",
+                f"<rect x='{left}' y='{y}' width='{bar_w}' height='{bar_h}' rx='5' fill='{color}'/>",
+                f"<text x='{left + max_bar_w + 18}' y='{y + 19}' font-family='Arial, Helvetica, sans-serif' font-size='18' fill='#20242b'>{value:.2f}{escape(unit)}</text>",
+            ]
+        )
+    parts.append("</svg>\n")
+    path.write_text("\n".join(parts), encoding="utf-8")
+
+
+def write_performance_outputs(output: Path, trace_summary: list[dict[str, object]]) -> list[dict[str, object]]:
+    perf_rows = compute_performance_summary(trace_summary)
+    perf_dir = output / "05_performance_summary"
+    write_csv(perf_dir / "performance_summary.csv", perf_rows)
+
+    selected = [
+        row
+        for row in perf_rows
+        if row["policy"]
+        in {
+            "RemoteOnly",
+            "LocalFirst",
+            "LRU-Local",
+            "LFU-Local",
+            "DualWindowReplacement",
+            "SourceAwareReplacement",
+            "WA-Affinity-Independent",
+            "AURA-Joint",
+        }
+    ]
+    write_svg_bar_chart(
+        output / "figures/effective_performance_index.svg",
+        "Effective performance normalized to LRU-Local",
+        selected,
+        "normalized_to_lru",
+        "x",
+    )
+    improvement_rows = [row for row in selected if row["policy"] != "AURA-Joint"]
+    improvement_rows = [
+        {**row, "aura_improvement_percent": round(float(row["aura_reduction_over_this_policy"]) * 100, 2)}
+        for row in improvement_rows
+    ]
+    write_svg_bar_chart(
+        output / "figures/aura_improvement_vs_baselines.svg",
+        "AURA-Joint objective cost reduction over baselines",
+        improvement_rows,
+        "aura_improvement_percent",
+        "%",
+    )
+    return perf_rows
+
+
 def run_trace_replay(config: SimulationConfig, output: Path) -> tuple[list[dict[str, object]], list[dict[str, object]]]:
     results = run_matrix(config, SCENARIOS, CORE_POLICIES)
     rows = result_rows(results)
@@ -272,6 +391,7 @@ def write_report(
     latency_summary: list[dict[str, object]],
     sensitivity_rows: list[dict[str, object]],
     nvme_rows: list[dict[str, object]],
+    performance_rows: list[dict[str, object]],
 ) -> None:
     report = output / "paper_experiments_report.md"
     aura = next(row for row in trace_summary if row["policy"] == "AURA-Joint")
@@ -331,6 +451,33 @@ def write_report(
             f"- `AURA-Joint` 平均综合代价为 `{float(aura['avg_objective_cost_per_request']):.4f}/request`。",
             f"- 相比 `LRU-Local` 降低 `{lru_improvement:.1%}`，相比 `LFU-Local` 降低 `{lfu_improvement:.1%}`。",
             "- AURA 的优势不只是命中率，而是同时控制远端读取、迁移量和副本抖动。",
+            "",
+            "## 1.1 总性能指标",
+            "",
+            "`综合代价/请求` 是越低越好的主指标。为了更直观展示“快了多少”，本报告进一步定义：",
+            "",
+            "```text",
+            "等效性能指数 = LRU-Local 综合代价 / 当前策略综合代价",
+            "```",
+            "",
+            "因此 `LRU-Local = 1.00x`，数值越大，表示在同一组 trace 下单位综合代价能服务更多请求。",
+            "",
+            "![等效性能提升柱状图](figures/effective_performance_index.svg)",
+            "",
+            "| 策略 | 综合代价/请求 | 等效性能指数 | 相对 RemoteOnly | AURA 相比该策略降低代价 |",
+            "|---|---:|---:|---:|---:|",
+        ]
+    )
+    for row in performance_rows:
+        lines.append(
+            f"| `{row['policy']}` | {row['objective_cost_per_request']} | "
+            f"{row['normalized_to_lru']}x | {row['normalized_to_remote']}x | "
+            f"{float(row['aura_reduction_over_this_policy']) * 100:.2f}% |"
+        )
+    lines.extend(
+        [
+            "",
+            "![AURA 相对基线的综合代价降低](figures/aura_improvement_vs_baselines.svg)",
             "",
             "## 2. 端到端延迟代理实验",
             "",
@@ -408,6 +555,9 @@ def write_report(
             "02_e2e_latency/latency_detail.csv",
             "03_sensitivity/sensitivity_summary.csv",
             "04_nvmeof_baseline/real_nvmeof_summary.csv",
+            "05_performance_summary/performance_summary.csv",
+            "figures/effective_performance_index.svg",
+            "figures/aura_improvement_vs_baselines.svg",
             "paper_experiments_report.md",
             "```",
         ]
@@ -424,7 +574,8 @@ def main() -> int:
     latency_summary = run_e2e_latency(config, output)
     sensitivity_rows = run_sensitivity(output, args)
     nvme_rows = summarize_nvmeof(output)
-    write_report(output, config, trace_summary, latency_summary, sensitivity_rows, nvme_rows)
+    performance_rows = write_performance_outputs(output, trace_summary)
+    write_report(output, config, trace_summary, latency_summary, sensitivity_rows, nvme_rows, performance_rows)
     print("AURA-KV paper experiments completed.")
     print("SIMULATED RESULT for strategy experiments; NVMe-oF section uses existing baseline CSV if present.")
     print(f"trace_rows={len(trace_rows)}")

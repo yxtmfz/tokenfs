@@ -43,7 +43,9 @@ reports/latest/paper-experiments/
 ├── 01_trace_replay/trace_summary.csv
 ├── 02_e2e_latency/latency_summary.csv
 ├── 03_sensitivity/sensitivity_summary.csv
-└── 04_nvmeof_baseline/real_nvmeof_summary.csv
+├── 04_nvmeof_baseline/real_nvmeof_summary.csv
+├── 05_performance_summary/performance_summary.csv
+└── figures/
 ```
 
 四项实验：
@@ -78,6 +80,32 @@ reports/latest/paper-experiments/
 - 相比 LRU-Local 的 `1.7085/request`，综合代价降低约 `68.5%`。
 - 相比 LFU-Local 的 `1.5691/request`，综合代价降低约 `65.7%`。
 - AURA-Joint 的优势不是单项命中率永远最高，而是同时控制远端读取、迁移量、重复副本和布局抖动。
+
+### 3.1 更直观的总性能指标
+
+为了回答“模型到底有没有更快”，当前报告把综合代价转换成等效性能指数：
+
+```text
+等效性能指数 = LRU-Local 综合代价 / 当前策略综合代价
+```
+
+因此 `LRU-Local = 1.00x`，数值越大越好。它不是 fio 的物理吞吐量，而是结合前台延迟、远端读取、Peer 读取、后台迁移、重复副本空间和副本抖动后的策略级总性能指标。
+
+![等效性能提升柱状图](paper-experiments/figures/effective_performance_index.svg)
+
+| 策略 | 综合代价/请求 | 等效性能指数 | 相对 RemoteOnly | AURA 相比该策略降低代价 |
+|---|---:|---:|---:|---:|
+| RemoteOnly | 3.1889 | 0.5358x | 1.0000x | 83.14% |
+| LocalFirst | 1.8880 | 0.9049x | 1.6890x | 71.53% |
+| LRU-Local | 1.7085 | 1.0000x | 1.8665x | 68.53% |
+| LFU-Local | 1.5691 | 1.0888x | 2.0323x | 65.74% |
+| DualWindowReplacement | 0.7717 | 2.2139x | 4.1323x | 30.34% |
+| SourceAwareReplacement | 0.9318 | 1.8335x | 3.4223x | 42.31% |
+| AffinityOnly | 1.6883 | 1.0120x | 1.8888x | 68.16% |
+| WA-Affinity-Independent | 0.9922 | 1.7219x | 3.2140x | 45.82% |
+| AURA-Joint | 0.5376 | 3.1780x | 5.9317x | 0.00% |
+
+![AURA 相对基线的综合代价降低](paper-experiments/figures/aura_improvement_vs_baselines.svg)
 
 ## 4. 参数敏感性摘要
 

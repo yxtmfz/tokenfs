@@ -28,7 +28,9 @@ reports/latest/paper-experiments/
 ├── 01_trace_replay/trace_summary.csv
 ├── 02_e2e_latency/latency_summary.csv
 ├── 03_sensitivity/sensitivity_summary.csv
-└── 04_nvmeof_baseline/real_nvmeof_summary.csv
+├── 04_nvmeof_baseline/real_nvmeof_summary.csv
+├── 05_performance_summary/performance_summary.csv
+└── figures/
 ```
 
 四项实验：
@@ -107,6 +109,7 @@ expensive_vs_cheap_mix
 | replica churn | 副本创建和删除抖动 |
 | P50/P95/P99 proxy latency | 模拟器中的访问代价分位数 |
 | objective_cost_per_request | 综合服务代价，论文主对比指标 |
+| normalized_to_lru | 等效性能指数，`LRU-Local = 1.00x`，越高越好 |
 | IOPS | 每秒 I/O 次数，小块随机读写时尤其重要 |
 
 `objective_cost_per_request` 包含：
@@ -121,6 +124,14 @@ expensive_vs_cheap_mix
 ```
 
 它不是一个真实延迟，而是策略比较用的综合代理目标。
+
+为了让结果更直观，论文实验还输出：
+
+```text
+normalized_to_lru = LRU-Local 综合代价 / 当前策略综合代价
+```
+
+这个值可以粗略理解成“在同一组 trace 和同一套代价模型下，相对 LRU 的等效服务能力”。例如 `AURA-Joint = 3.178x` 表示它的综合代价约为 LRU 的 `1 / 3.178`。
 
 ## 6. 真实 NVMe-oF baseline
 
