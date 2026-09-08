@@ -10,6 +10,7 @@
 | FUSE 功能测试 | 真实文件系统路径 | 验证 TokenFS 基础文件操作 |
 | 双 VM NVMe-oF | 真实 Linux NVMe/TCP 协议 | 验证 Host/Target 和远端挂载 |
 | 实验室 NVMe-oF baseline | 真实内网协议链路 | 测量本地 NVMe 与远端 NVMe-oF 差距 |
+| 真实 TokenFS workload | 真实 FUSE 程序耗时 | 直接比较不同策略是否降低总耗时、提高吞吐 |
 | trace-driven simulator | 模拟/代理 | 比较不同策略和消融组合 |
 
 ## 2. 统一论文实验
@@ -30,6 +31,7 @@ reports/latest/paper-experiments/
 ├── 03_sensitivity/sensitivity_summary.csv
 ├── 04_nvmeof_baseline/real_nvmeof_summary.csv
 ├── 05_performance_summary/performance_summary.csv
+├── 06_real_speed_benchmark/real_speed_summary.csv
 └── figures/
 ```
 
@@ -41,6 +43,33 @@ reports/latest/paper-experiments/
 | 端到端延迟代理 | 比较请求访问代价分布 | 代理结果 |
 | 参数敏感性 | 检查容量、远端 P99、预算变化下是否稳定 | 模拟结果 |
 | NVMe-oF baseline | 汇总真实 NVMe/TCP fio 数据 | 真实链路摘要 |
+
+真实 TokenFS workload 速度实验需要 Linux/FUSE 环境，单独运行：
+
+```bash
+./scripts/real_speed_benchmark.sh
+```
+
+输出：
+
+```text
+reports/latest/paper-experiments/06_real_speed_benchmark/
+├── real_speed_report.md
+├── real_speed_summary.csv
+└── figures/
+```
+
+这项实验不使用成本模型权重，直接记录实际运行时间：
+
+| 指标 | 含义 |
+|---|---|
+| `wall_time_s` | 整个 token shard workload 实际花费的秒数，越低越好 |
+| `effective_mib_s` | workload 总读写数据量除以总耗时，越高越好 |
+| `speedup_vs_baseline` | 相对 baseline 的实际加速比，大于 1 表示真的更快 |
+| `avg_read_us` / `avg_write_us` | TokenFS 记录的平均读写耗时 |
+| `remote_read_open` | 读取时打开远端文件的次数，越少通常越好 |
+
+如果远端目录已经配置为 NVMe-oF 挂载点，例如 `/srv/tokenfs/remote0`，该实验就是真实 TokenFS + NVMe-oF 端到端速度测试；如果仍然使用 `/var/lib/tokenfs/remote-sim`，它只能衡量软件层策略开销。
 
 ## 3. 当前主要结果
 
@@ -110,6 +139,8 @@ expensive_vs_cheap_mix
 | P50/P95/P99 proxy latency | 模拟器中的访问代价分位数 |
 | objective_cost_per_request | 综合服务代价，论文主对比指标 |
 | normalized_to_lru | 等效性能指数，`LRU-Local = 1.00x`，越高越好 |
+| wall_time_s | 真实 workload 总耗时，越低越好 |
+| speedup_vs_baseline | 真实 workload 相对 baseline 加速比，越高越好 |
 | IOPS | 每秒 I/O 次数，小块随机读写时尤其重要 |
 
 `objective_cost_per_request` 包含：
@@ -124,6 +155,15 @@ expensive_vs_cheap_mix
 ```
 
 它不是一个真实延迟，而是策略比较用的综合代理目标。
+
+因此论文里要分开写：
+
+```text
+成本模型指标：解释策略为什么可能更优。
+真实速度指标：验证策略在当前系统和 workload 下到底有没有跑得更快。
+```
+
+如果两者结论不一致，应优先相信真实速度实验，再调整 workload、阈值或成本权重。
 
 为了让结果更直观，论文实验还输出：
 

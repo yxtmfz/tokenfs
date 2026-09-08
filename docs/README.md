@@ -12,3 +12,8 @@
 | 6 | [../reports/latest/final-report.md](../reports/latest/final-report.md) | 最新统一实验结果 |
 
 仓库不再保留大量 `01_xxx.md` 到 `15_xxx.md` 的分散文档；对应内容已经合并到上面四份核心文档里。之后继续优化时，也优先更新这些文件。
+
+当前结果分两类读：
+
+- 策略模型结果：看 `reports/latest/paper-experiments/01_trace_replay/` 和 `05_performance_summary/`，用于解释 AURA-KV 相比 LRU/LFU 为什么降低综合代价。
+- 真实速度结果：看 `reports/latest/paper-experiments/06_real_speed_benchmark/`，用于直接回答同一组 TokenFS workload 是否真的更快。

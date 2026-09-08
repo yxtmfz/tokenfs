@@ -392,6 +392,7 @@ def write_report(
     sensitivity_rows: list[dict[str, object]],
     nvme_rows: list[dict[str, object]],
     performance_rows: list[dict[str, object]],
+    real_speed_rows: list[dict[str, str]],
 ) -> None:
     report = output / "paper_experiments_report.md"
     aura = next(row for row in trace_summary if row["policy"] == "AURA-Joint")
@@ -479,6 +480,41 @@ def write_report(
             "",
             "![AURA 相对基线的综合代价降低](figures/aura_improvement_vs_baselines.svg)",
             "",
+            "## 1.2 真实 TokenFS Workload 速度实验",
+            "",
+            "成本模型解释控制器为什么做某个选择，但不能单独证明系统真的更快。因此仓库额外提供真实 TokenFS workload 测速入口：",
+            "",
+            "```bash",
+            "./scripts/real_speed_benchmark.sh",
+            "```",
+            "",
+            "该实验读取 FUSE/TokenFS 实际运行产生的 wall-clock 时间、有效吞吐和平均读写延迟，不使用成本模型权重。如果远端目录已经替换为 NVMe-oF 挂载点，它就是 TokenFS + 真实 NVMe-oF 的端到端速度实验。",
+            "",
+            "| 策略 | 总数据 MiB | 总耗时 s | 有效吞吐 MiB/s | 相对 baseline 加速 | 平均读 us | 本地读命中率 | 远端打开读取 | 后台动作 |",
+            "|---|---:|---:|---:|---:|---:|---:|---:|---|",
+        ]
+    )
+    if real_speed_rows:
+        for row in real_speed_rows:
+            actions = (
+                f"promote={row.get('promote_count', '')}, "
+                f"prefetch={row.get('prefetch_count', '')}, "
+                f"evict={row.get('evict_count', '')}"
+            )
+            lines.append(
+                f"| `{row.get('case', '')}` | {row.get('total_mib', '')} | {row.get('wall_time_s', '')} | "
+                f"{row.get('effective_mib_s', '')} | {row.get('speedup_vs_baseline', '')}x | "
+                f"{row.get('avg_read_us', '')} | {row.get('local_read_hit_rate_pct', '')}% | "
+                f"{row.get('remote_read_open', '')} | {actions} |"
+            )
+    else:
+        lines.append(
+            "| pending | 0 | 0 | 0 | 0x | 0 | 0% | 0 | 需要在 Linux/FUSE 环境运行 `./scripts/real_speed_benchmark.sh` |"
+        )
+
+    lines.extend(
+        [
+            "",
             "## 2. 端到端延迟代理实验",
             "",
             "这里的端到端延迟是 simulator 中一次 KV 获取的代理延迟，不等同于真实 TTFT。它用于比较策略是否减少远端访问和高尾延迟路径。",
@@ -556,6 +592,9 @@ def write_report(
             "03_sensitivity/sensitivity_summary.csv",
             "04_nvmeof_baseline/real_nvmeof_summary.csv",
             "05_performance_summary/performance_summary.csv",
+            "06_real_speed_benchmark/real_speed_summary.csv",
+            "06_real_speed_benchmark/real_speed_report.md",
+            "06_real_speed_benchmark/figures/",
             "figures/effective_performance_index.svg",
             "figures/aura_improvement_vs_baselines.svg",
             "paper_experiments_report.md",
@@ -575,7 +614,17 @@ def main() -> int:
     sensitivity_rows = run_sensitivity(output, args)
     nvme_rows = summarize_nvmeof(output)
     performance_rows = write_performance_outputs(output, trace_summary)
-    write_report(output, config, trace_summary, latency_summary, sensitivity_rows, nvme_rows, performance_rows)
+    real_speed_rows = read_csv(output / "06_real_speed_benchmark/real_speed_summary.csv")
+    write_report(
+        output,
+        config,
+        trace_summary,
+        latency_summary,
+        sensitivity_rows,
+        nvme_rows,
+        performance_rows,
+        real_speed_rows,
+    )
     print("AURA-KV paper experiments completed.")
     print("SIMULATED RESULT for strategy experiments; NVMe-oF section uses existing baseline CSV if present.")
     print(f"trace_rows={len(trace_rows)}")

@@ -45,6 +45,7 @@ reports/latest/paper-experiments/
 ├── 03_sensitivity/sensitivity_summary.csv
 ├── 04_nvmeof_baseline/real_nvmeof_summary.csv
 ├── 05_performance_summary/performance_summary.csv
+├── 06_real_speed_benchmark/real_speed_summary.csv
 └── figures/
 ```
 
@@ -107,7 +108,43 @@ reports/latest/paper-experiments/
 
 ![AURA 相对基线的综合代价降低](paper-experiments/figures/aura_improvement_vs_baselines.svg)
 
-## 4. 参数敏感性摘要
+## 4. 真实 TokenFS Workload 速度实验
+
+前面的 `综合代价/请求` 是策略模型指标，依赖代价权重；它能解释控制器为什么选择某个布局，但不能单独证明系统真实变快。因此当前报告新增真实速度实验，只看 TokenFS 实际运行的 wall-clock 时间、有效吞吐和平均读写延迟。
+
+输出位置：
+
+```text
+reports/latest/paper-experiments/06_real_speed_benchmark/
+├── real_speed_report.md
+├── real_speed_summary.csv
+└── figures/
+```
+
+当前仓库已有样例结果如下。它来自 TokenFS workload 真实执行记录，但环境标签是开发样例；如果远端后端替换为 NVMe-oF 挂载目录，再运行同一脚本即可得到真实 NVMe-oF 端到端速度。
+
+| 策略 | 总数据 MiB | 总耗时 s | 有效吞吐 MiB/s | 相对 baseline 加速 | 平均读 us | 本地读命中率 | 远端打开读取 | 后台动作 |
+|---|---:|---:|---:|---:|---:|---:|---:|---|
+| `baseline` | 176.0 | 2.9234 | 60.2 | 1.0x | 2728.33 | 20.0% | 4 | promote=0, prefetch=0, evict=0 |
+| `promote` | 176.0 | 2.7416 | 64.2 | 1.0663x | 2499.12 | 20.0% | 4 | promote=0, prefetch=0, evict=0 |
+| `prefetch` | 176.0 | 2.8129 | 62.57 | 1.0393x | 2568.05 | 20.0% | 4 | promote=0, prefetch=0, evict=0 |
+| `full` | 176.0 | 3.0414 | 57.87 | 0.9612x | 2506.28 | 20.0% | 4 | promote=0, prefetch=0, evict=0 |
+
+![真实总耗时](paper-experiments/06_real_speed_benchmark/figures/real_wall_time.svg)
+
+![真实相对加速比](paper-experiments/06_real_speed_benchmark/figures/real_speedup_vs_baseline.svg)
+
+![真实有效吞吐](paper-experiments/06_real_speed_benchmark/figures/real_effective_throughput.svg)
+
+这组结果的关键价值不是“硬说 AURA 一定更快”，而是暴露真实系统开销：当前样例 workload 下 `promote` 最快，`full` 反而略慢，说明完整策略的后台判断成本尚未被命中收益抵消。论文中应把它作为真实性能证据，并继续用实验室 NVMe-oF 挂载目录复测。
+
+运行方式：
+
+```bash
+./scripts/real_speed_benchmark.sh
+```
+
+## 5. 参数敏感性摘要
 
 当前参数敏感性已经扫描：
 
@@ -123,7 +160,7 @@ reports/latest/paper-experiments/
 - 远端 P99 更高时，本地副本更有价值，AURA-Joint 的相对收益更明显。
 - 副本预算过小时，所有策略都会受限；预算达到一定程度后，AURA-Joint 不会盲目复制，而是继续受收益和防抖动门控约束。
 
-## 5. 真实 NVMe-oF baseline
+## 6. 真实 NVMe-oF baseline
 
 当前真实单客户端结果：
 
@@ -137,7 +174,7 @@ reports/latest/paper-experiments/
 
 这组数据支撑系统动机：远端 NVMe-oF 可以作为容量层和权威层，但本地 NVMe 更适合热点缓存。
 
-## 6. 当前可写进论文的内容
+## 7. 当前可写进论文的内容
 
 可以写：
 
@@ -155,7 +192,7 @@ reports/latest/paper-experiments/
 - 真实 vLLM/SGLang TTFT 已经降低。
 - 生产级一致性和多客户端并发已经完成。
 
-## 7. 最新仓库阅读方式
+## 8. 最新仓库阅读方式
 
 ```text
 README.md                         项目总入口
@@ -165,5 +202,5 @@ docs/model-and-controller.md      模型与控制器
 docs/experiments.md               实验和结果解释
 docs/deployment.md                部署和 NVMe-oF 接入
 reports/latest/final-report.md    最新结果汇总
-reports/latest/paper-experiments/ 机器可读实验数据
+reports/latest/paper-experiments/ 机器可读实验数据、图表和真实速度报告
 ```

@@ -63,6 +63,7 @@ flowchart TD
 | 共享副本放置 | 已实现/部分真实 | 模拟层支持跨 GPU/节点副本放置；真实跨机器实验仍需要更多内网计算节点 |
 | 后台任务队列 | 已实现 | SQLite 持久化任务，支持复制、预取、淘汰、SWAP、重试和布局版本检查 |
 | 动态监控 | 已实现 | 支持事件流、指标快照、布局快照和本地 Dashboard |
+| 真实 TokenFS 速度实验 | 已补充 | 使用实际 FUSE workload 的 wall-clock 时间、吞吐和平均读写延迟验证策略是否真的变快 |
 | 双 VM NVMe-oF | 已验证 | 两台 Ubuntu VM 跑通过 Linux NVMe/TCP Host/Target |
 | 实验室 NVMe-oF 基线 | 已验证 | 一台内网计算节点已连接实验室远端 NVMe/TCP Target 并完成 fio 基线 |
 | 真实 vLLM/SGLang 集成 | 未完成 | 当前结果还不是真实模型 TTFT 结果 |
@@ -131,6 +132,7 @@ python3 scripts/paper_experiments.py
 | 端到端延迟代理 | `reports/latest/paper-experiments/02_e2e_latency/` | 比较本地、Peer、远端和后台动作共同造成的请求代价 | 代理结果 |
 | 参数敏感性 | `reports/latest/paper-experiments/03_sensitivity/` | 扫描本地容量、远端 P99、副本预算，验证策略稳定性 | 模拟结果 |
 | NVMe-oF baseline | `reports/latest/paper-experiments/04_nvmeof_baseline/` | 汇总已有真实 NVMe/TCP 基线 | 真实链路摘要 |
+| 真实 TokenFS 速度 | `reports/latest/paper-experiments/06_real_speed_benchmark/` | 比较同一 workload 下不同策略的真实总耗时和吞吐 | 真实程序耗时 |
 
 统一报告：
 
@@ -150,6 +152,21 @@ reports/latest/paper-experiments/paper_experiments_report.md
 
 `AURA-Joint` 不追求单项指标永远第一，而是降低综合服务代价：前台访问延迟、远端读取、Peer 读取、后台迁移、重复副本空间和副本创建/删除抖动。
 
+成本模型的结果不能单独证明系统更快，所以当前仓库还提供真实速度入口：
+
+```bash
+./scripts/real_speed_benchmark.sh
+```
+
+它实际启动 TokenFS，运行同一组 token shard workload，再输出：
+
+```text
+reports/latest/paper-experiments/06_real_speed_benchmark/real_speed_report.md
+reports/latest/paper-experiments/06_real_speed_benchmark/real_speed_summary.csv
+```
+
+这部分直接看 `wall_time_s`、`effective_mib_s`、`avg_read_us` 和 `speedup_vs_baseline`。如果远端后端目录已经是 NVMe-oF 挂载点，它就是 TokenFS + 真实 NVMe-oF 的端到端速度；如果远端还是 `remote-sim`，它只能验证软件策略开销。
+
 ## 7. 常用测试
 
 ```bash
@@ -158,6 +175,9 @@ reports/latest/paper-experiments/paper_experiments_report.md
 
 # 论文前四项实验
 python3 scripts/paper_experiments.py
+
+# 真实 TokenFS workload 速度实验，需 Linux/FUSE
+./scripts/real_speed_benchmark.sh
 
 # TokenFS 基础功能，需 Linux/FUSE
 ./scripts/smoke_test.sh
