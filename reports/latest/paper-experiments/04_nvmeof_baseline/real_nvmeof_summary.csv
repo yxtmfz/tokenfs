@@ -1,0 +1,9 @@
+case,operation,bandwidth_mib_s,iops,p50_ms,p95_ms,p99_ms,notes
+local_nvme_randread_4k,read,959.91,245737.55,0.102,0.196,0.224,lab compute local NVMe read-only baseline
+local_nvme_seq_read,read,2856.99,2856.99,5.276,6.390,6.586,lab compute local NVMe read-only baseline
+local_home_randread_4k,read,3.02,772.24,21.889,145.752,270.533,lab compute home file baseline; not local NVMe cache
+local_home_seq_read,read,167.48,167.48,91.750,96.993,200.278,lab compute home file baseline; not local NVMe cache
+local_home_seq_write,write,166.47,166.47,91.750,108.528,212.861,lab compute home file baseline; not local NVMe cache
+remote_nvmeof_randread_4k,read,110.16,28201.84,1.122,1.171,1.188,lab compute to lab storage Linux NVMe/TCP target
+remote_nvmeof_seq_read,read,112.21,112.21,141.558,141.558,141.558,lab compute to lab storage Linux NVMe/TCP target
+remote_nvmeof_seq_write,write,112.16,112.16,141.558,143.655,166.724,lab compute to lab storage Linux NVMe/TCP target; writes only to test backing file

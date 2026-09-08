@@ -29,7 +29,14 @@ class LayoutConstraints:
     def node_duplicate_bytes(self, node: NodeState) -> int:
         return sum(replica.size_bytes for replica in node.replicas.values())
 
-    def can_add(self, cache: CacheObject, node: NodeState, nodes: dict[str, NodeState]) -> ConstraintResult:
+    def can_add(
+        self,
+        cache: CacheObject,
+        node: NodeState,
+        nodes: dict[str, NodeState],
+        *,
+        require_sharing_allowed: bool = True,
+    ) -> ConstraintResult:
         checks = {
             "node_capacity": node.local_used_bytes + cache.size_bytes <= node.local_capacity_bytes,
             "global_duplicate_budget": self.duplicate_bytes(nodes) + cache.size_bytes <= self.global_duplicate_budget_bytes,
@@ -37,7 +44,7 @@ class LayoutConstraints:
             "background_bandwidth": self.migration_bytes_this_cycle + cache.size_bytes <= self.background_bandwidth_budget_bytes_per_cycle,
             "copy_concurrency": self.active_copy_tasks < self.max_concurrent_copy_tasks,
             "foreground_slo_gate": not self.foreground_slo_gate,
-            "sharing_allowed": cache.sharing_allowed,
+            "sharing_allowed": cache.sharing_allowed or not require_sharing_allowed,
         }
         allowed = all(checks.values())
         return ConstraintResult(allowed, checks, "" if allowed else "add violates hard constraints")

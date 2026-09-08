@@ -64,6 +64,7 @@ class SourceCostModel:
     deserialize_cost_per_mib_ms: float = 0.0
     format_conversion_cost_per_mib_ms: float = 0.0
     metrics_version: int = 1
+    allow_recompute_with_stored_source: bool = False
     _cache: dict[tuple[str, str, int, tuple[tuple[str, tuple[str, ...]], ...]], BestSourceResult] = field(default_factory=dict)
 
     def _common_costs(self, cache: CacheObject, fixed_ms: float, queue_ms: float, bandwidth: float) -> tuple[float, float, float, float]:
@@ -166,7 +167,8 @@ class SourceCostModel:
         if has_remote:
             sources.append(self.remote_source(cache))
         recompute = self.recompute_source(cache, request_node_id)
-        if recompute.reachable:
+        has_stored_source = any(src.reachable and src.compatible and src.source != SourceKind.RECOMPUTE for src in sources)
+        if recompute.reachable and (self.allow_recompute_with_stored_source or not has_stored_source):
             sources.append(recompute)
         return sources
 

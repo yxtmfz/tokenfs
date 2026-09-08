@@ -70,6 +70,8 @@ class SimulationResult:
     ttft_p99_ms: float
     slo_violation_rate: float
     decision_count: int
+    objective_cost: float = 0.0
+    objective_cost_per_request: float = 0.0
 
 
 def percentile(values: list[float], pct: float) -> float:
@@ -217,71 +219,21 @@ class TraceSimulator:
         node = self.nodes[node_id]
         if node.has_replica(cache.identity.cache_key):
             return True
-        while not node.can_fit(cache.size_bytes):
+        node_budget = min(node.local_capacity_bytes, self.config.node_duplicate_budget_mib * MIB)
+        if cache.size_bytes > node_budget or cache.size_bytes > self.config.duplicate_budget_mib * MIB:
+            return False
+        while node.local_used_bytes + cache.size_bytes > node_budget:
             victim = self.choose_victim(node, evict)
             if victim is None:
                 return False
             victim_cache = self.caches[victim]
-            evict_task = self.next_task_id("evict")
-            self.emit_task_transition(
-                evict_task,
-                "EVICT",
-                victim,
-                f"node:{node_id}",
-                node_id,
-                ["CREATED", "RUNNING"],
-                bytes_value=victim_cache.size_bytes,
-                reason=f"capacity pressure before adding {cache.identity.cache_key}",
-            )
-            self.emit(
-                "REPLICA_DELETING",
-                "layout",
-                cache_key=victim,
-                node_id=node_id,
-                target=node_id,
-                task_id=evict_task,
-                bytes=victim_cache.size_bytes,
-                state_before="READY",
-                state_after="DELETING",
-                reason="evict victim for new replica",
-            )
-            node.remove_replica(victim)
-            self.replica_churn += 1
-            self.last_replica_change[(victim, node_id)] = cache.last_access_at
-            self.layout_version += 1
-            self.emit(
-                "REPLICA_REMOVED",
-                "layout",
-                cache_key=victim,
-                node_id=node_id,
-                target=node_id,
-                task_id=evict_task,
-                bytes=victim_cache.size_bytes,
-                state_before="DELETING",
-                state_after="ABSENT",
-                reason="local replica removed",
-                extra={"duplicate_bytes": self.duplicate_bytes},
-            )
-            self.emit_task_transition(
-                evict_task,
-                "EVICT",
-                victim,
-                f"node:{node_id}",
-                node_id,
-                ["VERIFYING", "COMMITTED"],
-                bytes_value=victim_cache.size_bytes,
-                reason="eviction committed",
-            )
-            self.emit(
-                "LAYOUT_VERSION_CHANGED",
-                "layout",
-                cache_key=victim,
-                node_id=node_id,
-                task_id=evict_task,
-                layout_version=self.layout_version,
-                reason="eviction changed layout",
-                extra={"duplicate_bytes": self.duplicate_bytes},
-            )
+            self.remove_replica_for_space(node_id, victim, f"node capacity pressure before adding {cache.identity.cache_key}")
+        while self.duplicate_bytes + cache.size_bytes > self.config.duplicate_budget_mib * MIB:
+            victim = self.choose_global_victim(evict)
+            if victim is None:
+                return False
+            victim_node, victim_key = victim
+            self.remove_replica_for_space(victim_node, victim_key, f"global duplicate budget before adding {cache.identity.cache_key}")
         replica = Replica(
             cache_key=cache.identity.cache_key,
             node_id=node_id,
@@ -401,6 +353,90 @@ class TraceSimulator:
             error_message="target node cannot fit replica",
         )
         return False
+
+    def remove_replica_for_space(self, node_id: str, cache_key: str, reason: str) -> None:
+        node = self.nodes[node_id]
+        victim_cache = self.caches[cache_key]
+        evict_task = self.next_task_id("evict")
+        self.emit_task_transition(
+            evict_task,
+            "EVICT",
+            cache_key,
+            f"node:{node_id}",
+            node_id,
+            ["CREATED", "RUNNING"],
+            bytes_value=victim_cache.size_bytes,
+            reason=reason,
+        )
+        self.emit(
+            "REPLICA_DELETING",
+            "layout",
+            cache_key=cache_key,
+            node_id=node_id,
+            target=node_id,
+            task_id=evict_task,
+            bytes=victim_cache.size_bytes,
+            state_before="READY",
+            state_after="DELETING",
+            reason="evict victim for new replica",
+        )
+        node.remove_replica(cache_key)
+        self.replica_churn += 1
+        self.last_replica_change[(cache_key, node_id)] = victim_cache.last_access_at
+        self.layout_version += 1
+        self.emit(
+            "REPLICA_REMOVED",
+            "layout",
+            cache_key=cache_key,
+            node_id=node_id,
+            target=node_id,
+            task_id=evict_task,
+            bytes=victim_cache.size_bytes,
+            state_before="DELETING",
+            state_after="ABSENT",
+            reason="local replica removed",
+            extra={"duplicate_bytes": self.duplicate_bytes},
+        )
+        self.emit_task_transition(
+            evict_task,
+            "EVICT",
+            cache_key,
+            f"node:{node_id}",
+            node_id,
+            ["VERIFYING", "COMMITTED"],
+            bytes_value=victim_cache.size_bytes,
+            reason="eviction committed",
+        )
+        self.emit(
+            "LAYOUT_VERSION_CHANGED",
+            "layout",
+            cache_key=cache_key,
+            node_id=node_id,
+            task_id=evict_task,
+            layout_version=self.layout_version,
+            reason="eviction changed layout",
+            extra={"duplicate_bytes": self.duplicate_bytes},
+        )
+
+    def choose_global_victim(self, evict: str) -> tuple[str, str] | None:
+        candidates = [node for node in self.nodes.values() if node.replicas]
+        if not candidates:
+            return None
+        if evict == "lfu":
+            node = min(candidates, key=lambda item: min(item.lfu_count.get(key, 0) for key in item.replicas))
+            key = min(node.replicas, key=lambda item: node.lfu_count.get(item, 0))
+            return node.node_id, key
+        if evict == "value":
+            def replica_value(item: tuple[NodeState, str]) -> float:
+                node, key = item
+                cache = self.caches[key]
+                reads = self.access_graph.get(key, {}).get(node.node_id, 0.0)
+                return reads * max(1.0, cache.recompute_cost_ms) / max(1.0, cache.size_bytes / MIB)
+            node, key = min(((node, key) for node in candidates for key in node.replicas), key=replica_value)
+            return node.node_id, key
+        node = min(candidates, key=lambda item: min(item.lru_clock.get(key, 0.0) for key in item.replicas))
+        key = min(node.replicas, key=lambda item: node.lru_clock.get(item, 0.0))
+        return node.node_id, key
 
     def next_task_id(self, prefix: str) -> str:
         self.task_sequence += 1
@@ -664,6 +700,21 @@ class TraceSimulator:
 
         requests = len(self.trace)
         violations = sum(1 for latency in self.latencies_ms if latency > self.config.foreground_slo_ms)
+        remote_mib = self.remote_read_bytes / MIB
+        peer_mib = self.peer_read_bytes / MIB
+        migration_mib = self.migration_bytes / MIB
+        duplicate_mib = self.duplicate_bytes / MIB
+        # A paper-friendly proxy objective. It is not a real TTFT value; it
+        # combines foreground latency with traffic and layout maintenance cost
+        # so conservative policies are not judged by hit rate alone.
+        objective_cost = (
+            sum(self.latencies_ms)
+            + 0.08 * remote_mib
+            + 0.04 * peer_mib
+            + 0.03 * migration_mib
+            + 0.01 * duplicate_mib
+            + 1.50 * self.replica_churn
+        )
         return SimulationResult(
             policy=self.policy.name,
             scenario=self.scenario,
@@ -682,6 +733,8 @@ class TraceSimulator:
             ttft_p99_ms=round(percentile(self.latencies_ms, 99), 4),
             slo_violation_rate=violations / requests if requests else 0.0,
             decision_count=len(self.decisions),
+            objective_cost=round(objective_cost, 4),
+            objective_cost_per_request=round(objective_cost / requests, 4) if requests else 0.0,
         )
 
 
@@ -867,6 +920,94 @@ def generate_trace(scenario: str, config: SimulationConfig) -> tuple[dict[str, C
         caches["congested-prefix"] = make_cache("congested-prefix", "node0", 0, 24, 65)
         for i in range(150):
             add_event(i, "congested-prefix", f"node{i % config.nodes}", i % config.gpus_per_node, i * 0.35)
+    elif scenario == "scan_pollution":
+        caches["steady-hot"] = make_cache("steady-hot", "node0", 0, 24, 160)
+        for scan_i in range(24):
+            caches[f"scan-once-{scan_i:02d}"] = make_cache(f"scan-once-{scan_i:02d}", "node0", 0, 16, 5)
+        i = 0
+        for _ in range(8):
+            add_event(i, "steady-hot", "node0", 0, i * 0.25)
+            i += 1
+        for round_i in range(6):
+            for scan_i in range(round_i * 4, round_i * 4 + 4):
+                add_event(i, f"scan-once-{scan_i:02d}", "node0", 0, i * 0.25)
+                i += 1
+            for _ in range(5):
+                add_event(i, "steady-hot", "node0", 0, i * 0.25)
+                i += 1
+    elif scenario == "large_object_pollution":
+        for hot_i in range(6):
+            caches[f"small-hot-{hot_i}"] = make_cache(f"small-hot-{hot_i}", "node0", 0, 6, 90)
+        for big_i in range(8):
+            caches[f"large-cold-{big_i}"] = make_cache(f"large-cold-{big_i}", "node0", 0, 42, 8)
+        i = 0
+        for _ in range(4):
+            for hot_i in range(6):
+                add_event(i, f"small-hot-{hot_i}", "node0", 0, i * 0.3)
+                i += 1
+        for big_i in range(8):
+            add_event(i, f"large-cold-{big_i}", "node0", 0, i * 0.3)
+            i += 1
+            for hot_i in range(6):
+                add_event(i, f"small-hot-{hot_i}", "node0", 0, i * 0.3)
+                i += 1
+    elif scenario == "multi_gpu_shared_burst":
+        caches["shared-kv"] = make_cache("shared-kv", "node0", 0, 18, 120)
+        caches["node0-private"] = make_cache("node0-private", "node0", 0, 18, 80, shared=False)
+        caches["node1-private"] = make_cache("node1-private", "node1", 0, 18, 80, shared=False)
+        i = 0
+        for _ in range(25):
+            add_event(i, "shared-kv", "node0", 0, i * 0.25)
+            i += 1
+            if config.nodes > 1:
+                add_event(i, "shared-kv", "node1", 0, i * 0.25)
+                i += 1
+        for _ in range(20):
+            add_event(i, "node0-private", "node0", 0, i * 0.25)
+            i += 1
+            if config.nodes > 1:
+                add_event(i, "node1-private", "node1", 0, i * 0.25)
+                i += 1
+        for _ in range(25):
+            node_i = i % min(config.nodes, 4)
+            add_event(i, "shared-kv", f"node{node_i}", 0, i * 0.25)
+            i += 1
+    elif scenario == "tight_capacity_thrash":
+        for hot_i in range(5):
+            caches[f"thrash-hot-{hot_i}"] = make_cache(f"thrash-hot-{hot_i}", "node0", 0, 12, 110)
+        for cold_i in range(12):
+            caches[f"thrash-cold-{cold_i}"] = make_cache(f"thrash-cold-{cold_i}", "node0", 0, 12, 6)
+        i = 0
+        for _ in range(4):
+            for hot_i in range(5):
+                add_event(i, f"thrash-hot-{hot_i}", "node0", 0, i * 0.2)
+                i += 1
+        for cold_i in range(12):
+            add_event(i, f"thrash-cold-{cold_i}", "node0", 0, i * 0.2)
+            i += 1
+            add_event(i, f"thrash-hot-{cold_i % 5}", "node0", 0, i * 0.2)
+            i += 1
+        for _ in range(4):
+            for hot_i in range(5):
+                add_event(i, f"thrash-hot-{hot_i}", "node0", 0, i * 0.2)
+                i += 1
+    elif scenario == "expensive_vs_cheap_mix":
+        caches["expensive-kv"] = make_cache("expensive-kv", "node0", 0, 20, 220)
+        for cheap_i in range(10):
+            caches[f"cheap-kv-{cheap_i}"] = make_cache(f"cheap-kv-{cheap_i}", "node0", 0, 10, 4)
+        i = 0
+        for _ in range(10):
+            add_event(i, "expensive-kv", "node0", 0, i * 0.25)
+            i += 1
+        for cheap_i in range(10):
+            add_event(i, f"cheap-kv-{cheap_i}", "node0", 0, i * 0.25)
+            i += 1
+            if cheap_i % 2 == 0:
+                add_event(i, "expensive-kv", "node0", 0, i * 0.25)
+                i += 1
+        for _ in range(12):
+            add_event(i, "expensive-kv", "node0", 0, i * 0.25)
+            i += 1
     else:
         raise ValueError(f"unknown scenario: {scenario}")
     return caches, events
@@ -881,6 +1022,11 @@ SCENARIOS = [
     "remote_congestion",
     "demand_estimation_error",
     "tenant_isolation",
+    "scan_pollution",
+    "large_object_pollution",
+    "multi_gpu_shared_burst",
+    "tight_capacity_thrash",
+    "expensive_vs_cheap_mix",
 ]
 
 

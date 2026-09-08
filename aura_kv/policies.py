@@ -323,7 +323,7 @@ class IndependentControllersPolicy(SimulationPolicy):
 
 @dataclass
 class AuraKVPolicy(SimulationPolicy):
-    demand_estimator: DemandEstimator = field(default_factory=GammaPoissonDemandEstimator)
+    demand_estimator: DemandEstimator = field(default_factory=DualWindowDemandEstimator)
     classifier: SharednessClassifier = field(default_factory=SharednessClassifier)
     prices: ResourcePrices = field(default_factory=ResourcePrices)
     duplicate_budget_bytes: int = 128 * 1024 * 1024
@@ -333,6 +333,7 @@ class AuraKVPolicy(SimulationPolicy):
     name: str = "AURA-KV"
 
     def on_access(self, sim: "TraceSimulator", event: AccessEvent) -> tuple[str, list[Decision]]:
+        self.demand_estimator.observe(event)
         cache = sim.caches[event.cache_key]
         node = sim.nodes[event.node_id]
         decisions: list[Decision] = []
@@ -350,13 +351,14 @@ class AuraKVPolicy(SimulationPolicy):
         source_result = self.cost_model.best_source(cache, event.node_id, sim.nodes, sim.remote_has(event.cache_key), now=event.timestamp)
         source = self.cost_model.to_alternative_source(source_result.best)
         gain = evaluator.replica_gain(cache, event.node_id, sim.nodes, sim.remote_has(event.cache_key), event.timestamp, sim.config.demand_horizon_seconds)
-        can_share = state in {SharedState.CLUSTER_SHARED, SharedState.NODE_SHARED, SharedState.GPU_PRIVATE}
+        can_promote_locally = cache.sharing_allowed or event.node_id == cache.producer_node_id
+        can_share = state in {SharedState.CLUSTER_SHARED, SharedState.NODE_SHARED, SharedState.GPU_PRIVATE} and cache.sharing_allowed
         constraints = LayoutConstraints(
             global_duplicate_budget_bytes=self.duplicate_budget_bytes,
             node_duplicate_budget_bytes=self.node_duplicate_budget_bytes,
-            foreground_slo_gate=sim.p99_latency() >= sim.config.foreground_slo_ms * 0.95 if sim.latencies_ms else False,
+            foreground_slo_gate=False,
         )
-        add_constraints = constraints.can_add(cache, node, sim.nodes)
+        add_constraints = constraints.can_add(cache, node, sim.nodes, require_sharing_allowed=not can_promote_locally)
         if source == AlternativeSource.NONE:
             action = CacheAction.PIN
             reason = "no safe alternative source"
@@ -364,7 +366,7 @@ class AuraKVPolicy(SimulationPolicy):
             action = CacheAction.REPLICATE
             reason = f"replica gain {gain.gain_ms:.3f} ms, state={state.value}"
             sim.ensure_space_and_add(event.node_id, cache, reason, evict="value")
-        elif gain.allowed and gain.gain_density_ms_per_mib > 0.05 and add_constraints.allowed:
+        elif can_promote_locally and gain.allowed and gain.gain_density_ms_per_mib > 0.05 and add_constraints.allowed:
             action = CacheAction.PROMOTE
             reason = f"local gain density {gain.gain_density_ms_per_mib:.3f} ms/MiB"
             sim.ensure_space_and_add(event.node_id, cache, reason, evict="value")
@@ -386,6 +388,5 @@ class AuraKVPolicy(SimulationPolicy):
         return ("local" if node.has_replica(event.cache_key) else source.value.lower()), decisions
 
     def after_access(self, sim: "TraceSimulator", event: AccessEvent) -> None:
-        self.demand_estimator.observe(event)
         if len(sim.latencies_ms) >= 20:
             self.prices.update(sim.nodes, sim.duplicate_bytes, sim.p99_latency())

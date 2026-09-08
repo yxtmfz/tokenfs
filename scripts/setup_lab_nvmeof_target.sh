@@ -1,26 +1,26 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-target_ip="${AURA_CN13_TARGET_IP:-28.10.10.13}"
-target_port="${AURA_CN13_TARGET_PORT:-4420}"
-subnqn="${AURA_CN13_SUBNQN:-nqn.2026-09.local.aura-kv:remote0}"
-image="${AURA_CN13_BACKING_FILE:-/home/wjxt/aura-kv-nvmeof/aura-remote0.img}"
-port_id="${AURA_CN13_PORT_ID:-1}"
-nsid="${AURA_CN13_NSID:-1}"
-serial="${AURA_CN13_SERIAL:-AURAKV0001}"
-allowed_host_nqn="${AURA_CN13_ALLOWED_HOST_NQN:-}"
-allowed_host_nqns="${AURA_CN13_ALLOWED_HOST_NQNS:-}"
-allow_any_host="${AURA_CN13_ALLOW_ANY_HOST:-0}"
+target_ip="${AURA_LAB_TARGET_IP:-}"
+target_port="${AURA_LAB_TARGET_PORT:-4420}"
+subnqn="${AURA_LAB_TARGET_SUBNQN:-nqn.2026-09.local.aura-kv:remote0}"
+image="${AURA_LAB_BACKING_FILE:-}"
+port_id="${AURA_LAB_PORT_ID:-1}"
+nsid="${AURA_LAB_NSID:-1}"
+serial="${AURA_LAB_SERIAL:-AURAKV0001}"
+allowed_host_nqn="${AURA_LAB_ALLOWED_HOST_NQN:-}"
+allowed_host_nqns="${AURA_LAB_ALLOWED_HOST_NQNS:-}"
+allow_any_host="${AURA_LAB_ALLOW_ANY_HOST:-0}"
 apply="${AURA_APPLY:-0}"
 
 usage() {
   cat <<EOF
 Usage:
-  AURA_APPLY=1 AURA_CN13_ALLOWED_HOST_NQN=<client-host-nqn> $0
-  AURA_APPLY=1 AURA_CN13_ALLOWED_HOST_NQNS="<nqn1>,<nqn2>" $0
+  AURA_APPLY=1 AURA_LAB_ALLOWED_HOST_NQN=<client-host-nqn> $0
+  AURA_APPLY=1 AURA_LAB_ALLOWED_HOST_NQNS="<nqn1>,<nqn2>" $0
 
 Purpose:
-  Configure cn13 as an NVMe/TCP Target backed by an existing file.
+  Configure a lab server as an NVMe/TCP Target backed by an existing file.
   The file is attached to a loop device first, so nvmet sees a block device.
 
 Defaults:
@@ -33,8 +33,8 @@ Safety:
   - This script does not format any disk.
   - This script does not create the backing file.
   - This script refuses to apply unless AURA_APPLY=1 is set.
-  - By default it requires AURA_CN13_ALLOWED_HOST_NQN or AURA_CN13_ALLOWED_HOST_NQNS.
-  - To intentionally allow any host, set AURA_CN13_ALLOW_ANY_HOST=1.
+  - By default it requires AURA_LAB_ALLOWED_HOST_NQN or AURA_LAB_ALLOWED_HOST_NQNS.
+  - To intentionally allow any host, set AURA_LAB_ALLOW_ANY_HOST=1.
 EOF
 }
 
@@ -43,9 +43,21 @@ if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
   exit 0
 fi
 
+if [[ -z "$target_ip" || -z "$image" ]]; then
+  cat >&2 <<'EOF'
+AURA_LAB_TARGET_IP and AURA_LAB_BACKING_FILE are required.
+
+Example:
+  AURA_LAB_TARGET_IP=<LAB_STORAGE_PRIVATE_IP> \
+  AURA_LAB_BACKING_FILE=/path/to/aura-remote0.img \
+  ./scripts/setup_lab_nvmeof_target.sh
+EOF
+  exit 2
+fi
+
 cat <<EOF
-cn13 NVMe/TCP Target plan
--------------------------
+Lab NVMe/TCP Target plan
+------------------------
 listen:       $target_ip:$target_port
 subnqn:       $subnqn
 namespace:    $nsid
@@ -69,7 +81,7 @@ if [[ ! -f "$image" ]]; then
 fi
 
 if [[ "$allow_any_host" != "1" && -z "$allowed_host_nqn" && -z "$allowed_host_nqns" ]]; then
-  echo "AURA_CN13_ALLOWED_HOST_NQN or AURA_CN13_ALLOWED_HOST_NQNS is required unless AURA_CN13_ALLOW_ANY_HOST=1." >&2
+  echo "AURA_LAB_ALLOWED_HOST_NQN or AURA_LAB_ALLOWED_HOST_NQNS is required unless AURA_LAB_ALLOW_ANY_HOST=1." >&2
   exit 1
 fi
 

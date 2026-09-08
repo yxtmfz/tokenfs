@@ -14,7 +14,7 @@ from aura_kv.simulator import ALL_POLICY_NAMES, POLICIES, SCENARIOS, SimulationC
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Run AURA-KV trace-driven simulator.")
-    parser.add_argument("--output", default=str(PROJECT_ROOT / "reports/latest/aura-kv-sim"))
+    parser.add_argument("--output", default=str(PROJECT_ROOT / "reports/tmp/aura-kv-sim"))
     parser.add_argument("--scenario", action="append", choices=SCENARIOS)
     parser.add_argument("--policy", action="append", choices=ALL_POLICY_NAMES)
     parser.add_argument("--seed", type=int, default=7)

@@ -12,7 +12,7 @@ sys.path.insert(0, str(PROJECT_ROOT))
 
 from aura_kv.controller import AuraController
 from aura_kv.core import AccessEvent, CacheIdentity, NodeState, Replica, ReplicaStatus
-from aura_kv.cost_model import SourceCostModel, transfer_time_ms
+from aura_kv.cost_model import SourceCostModel, SourceKind, transfer_time_ms
 from aura_kv.demand import DualWindowDemandEstimator, EWMADemandEstimator, GammaPoissonDemandEstimator
 from aura_kv.executor import DirectoryReplicaExecutor, file_checksum
 from aura_kv.layout import LayoutCostEvaluator
@@ -87,6 +87,24 @@ class AuraKVUnitTest(unittest.TestCase):
         self.assertIsNotNone(result.best)
         self.assertLessEqual(result.best.total_ms, min(src.total_ms for src in result.all_sources if src.reachable))
 
+    def test_remote_canonical_source_is_preferred_over_recompute_by_default(self) -> None:
+        cache = make_cache("k", "node0", 0, 12, 1)
+        nodes = {"node0": NodeState("node0", 64 * MIB)}
+        model = SourceCostModel(remote_fixed_latency_ms=5.0, remote_bandwidth_bytes_per_s=100 * MIB)
+
+        result = model.best_source(cache, "node0", nodes, has_remote=True)
+        self.assertIsNotNone(result.best)
+        self.assertEqual(result.best.source, SourceKind.REMOTE_NVME_OF)
+        self.assertFalse(any(src.source == SourceKind.RECOMPUTE for src in result.all_sources))
+
+    def test_recompute_is_used_when_no_stored_source_exists(self) -> None:
+        cache = make_cache("k", "node0", 0, 12, 1)
+        nodes = {"node0": NodeState("node0", 64 * MIB)}
+        result = SourceCostModel().best_source(cache, "node0", nodes, has_remote=False)
+
+        self.assertIsNotNone(result.best)
+        self.assertEqual(result.best.source, SourceKind.RECOMPUTE)
+
     def test_add_ready_source_does_not_increase_best_cost(self) -> None:
         cache = make_cache("k", "node0", 0, 8, 50)
         nodes = {f"node{i}": NodeState(f"node{i}", 64 * MIB) for i in range(2)}
@@ -157,6 +175,18 @@ class AuraKVUnitTest(unittest.TestCase):
         self.assertFalse(result.allowed)
         self.assertFalse(result.checks["global_duplicate_budget"])
         self.assertFalse(result.checks["node_duplicate_budget"])
+
+    def test_private_cache_can_stay_on_producer_but_not_cross_node(self) -> None:
+        cache = make_cache("private-k", "node0", 0, 8, 20, shared=False)
+        nodes = {"node0": NodeState("node0", 32 * MIB), "node1": NodeState("node1", 32 * MIB)}
+        constraints = LayoutConstraints(global_duplicate_budget_bytes=64 * MIB, node_duplicate_budget_bytes=32 * MIB)
+
+        local_result = constraints.can_add(cache, nodes["node0"], nodes, require_sharing_allowed=False)
+        remote_result = constraints.can_add(cache, nodes["node1"], nodes)
+
+        self.assertTrue(local_result.allowed)
+        self.assertFalse(remote_result.allowed)
+        self.assertFalse(remote_result.checks["sharing_allowed"])
 
     def test_lease_expiry_does_not_mean_unconditional_delete(self) -> None:
         node_state = NodeState("node0", 64 * MIB)
