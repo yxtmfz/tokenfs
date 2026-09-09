@@ -1,0 +1,5 @@
+case,case_name,read_mib,write_mib,total_mib,wall_time_s,effective_mib_s,speedup_vs_baseline,throughput_vs_baseline,avg_read_us,read_latency_reduction_pct,avg_write_us,local_read_hit_rate_pct,remote_read_open,remote_open_reduction_pct,promote_count,prefetch_count,evict_count,spill_count
+baseline,baseline：只做本地优先和远端溢写,80.0,96.0,176.0,3.2346,54.41,1.0,1.0,2705.2,0.0,4634.64,20.0,4,0.0,0,0,0,0
+promote,promote：加入热点提升,80.0,96.0,176.0,2.8673,61.38,1.1281,1.1281,2402.12,11.2,4344.84,20.0,4,0.0,0,0,0,0
+prefetch,prefetch：加入顺序预取,80.0,96.0,176.0,2.8368,62.04,1.1402,1.1402,2400.4,11.27,4423.3,20.0,4,0.0,0,0,0,0
+full,full：热点提升、顺序预取和淘汰门控联合开启,80.0,96.0,176.0,2.7165,64.79,1.1907,1.1907,2386.05,11.8,4409.66,20.0,4,0.0,0,0,0,0

@@ -1,0 +1,15 @@
+operation,group,gpu_id,path,size_mib,preallocate,seconds,mib_per_sec
+write,normal-local-fill,0,/mnt/tokenfs/gpu0/dataset-a/shard-000000.tokens,8,1,0.195194,40.98
+write,normal-local-fill,0,/mnt/tokenfs/gpu0/dataset-a/shard-000001.tokens,8,1,0.144235,55.47
+write,normal-local-fill,0,/mnt/tokenfs/gpu0/dataset-a/shard-000002.tokens,8,1,0.136536,58.59
+write,normal-local-fill,0,/mnt/tokenfs/gpu0/dataset-a/shard-000003.tokens,8,1,0.144005,55.55
+write,overflow-sequential,0,/mnt/tokenfs/gpu0/dataset-a/shard-000100.tokens,8,1,0.200893,39.82
+write,overflow-sequential,0,/mnt/tokenfs/gpu0/dataset-a/shard-000101.tokens,8,1,0.169513,47.19
+write,large-remote-spill,0,/mnt/tokenfs/gpu0/dataset-a/shard-900000.tokens,40,1,0.719484,55.60
+write,gpu1-isolation,1,/mnt/tokenfs/gpu1/dataset-a/shard-000000.tokens,8,1,0.281675,28.40
+read,local-hot-read,0,/mnt/tokenfs/gpu0/dataset-a/shard-000000.tokens,8.00,,0.162422,49.25
+read,remote-first-read,0,/mnt/tokenfs/gpu0/dataset-a/shard-000100.tokens,8.00,,0.125495,63.75
+read,remote-second-read,0,/mnt/tokenfs/gpu0/dataset-a/shard-000100.tokens,8.00,,0.131028,61.06
+read,sequential-next-read,0,/mnt/tokenfs/gpu0/dataset-a/shard-000101.tokens,8.00,,0.147711,54.16
+read,large-remote-spill-read,0,/mnt/tokenfs/gpu0/dataset-a/shard-900000.tokens,40.00,,0.568969,70.30
+read,gpu1-isolation-read,1,/mnt/tokenfs/gpu1/dataset-a/shard-000000.tokens,8.00,,0.107417,74.48
