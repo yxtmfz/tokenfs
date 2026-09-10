@@ -16,4 +16,4 @@
 当前结果分两类读：
 
 - 策略模型结果：看 `reports/latest/paper-experiments/01_trace_replay/` 和 `05_performance_summary/`，用于解释 AURA-KV 相比 LRU/LFU 为什么降低综合代价。
-- 真实速度结果：看 `reports/latest/paper-experiments/06_real_speed_benchmark/`，用于直接回答同一组 TokenFS workload 是否真的更快。
+- 真实速度结果：看 `reports/latest/paper-experiments/06_real_speed_benchmark/`，用于按 `RemoteOnly`、`LocalFirst`、`LRU-Local`、`LFU-Local`、`AURA-Joint` 消融分类，直接回答同一组 TokenFS workload 是否真的更快。该结果默认要求 NVMe-oF 直连挂载；SSH tunnel 只能作为功能验证。

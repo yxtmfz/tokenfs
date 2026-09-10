@@ -1973,31 +1973,62 @@ class TokenFS {
     if (used + required_size <= gpu.local_quota_bytes) {
       return true;
     }
-    if (config_.local_eviction_policy != "cost_aware" &&
-        config_.local_eviction_policy != "value_aware") {
+    const std::string policy = config_.local_eviction_policy;
+    if (policy != "cost_aware" && policy != "value_aware" &&
+        policy != "lru" && policy != "lfu") {
       return false;
     }
 
     auto candidates =
         metadata_.LocalEvictionCandidates(gpu.gpu_id, protected_logical_path);
     const uint64_t now = UnixNowSeconds();
-    std::sort(candidates.begin(), candidates.end(),
-              [now](const EvictionCandidate& lhs,
-                    const EvictionCandidate& rhs) {
-                const auto lhs_score = ValueAwareEvictionScore(lhs, now);
-                const auto rhs_score = ValueAwareEvictionScore(rhs, now);
-                if (lhs_score != rhs_score) {
-                  return lhs_score > rhs_score;
-                }
-                return lhs.meta.size_bytes > rhs.meta.size_bytes;
-              });
+    if (policy == "lru") {
+      metadata_.AddMetric("evict_policy_lru", 1);
+      std::sort(candidates.begin(), candidates.end(),
+                [](const EvictionCandidate& lhs,
+                   const EvictionCandidate& rhs) {
+                  if (lhs.last_access_at != rhs.last_access_at) {
+                    return lhs.last_access_at < rhs.last_access_at;
+                  }
+                  if (lhs.meta.read_count != rhs.meta.read_count) {
+                    return lhs.meta.read_count < rhs.meta.read_count;
+                  }
+                  return lhs.meta.size_bytes > rhs.meta.size_bytes;
+                });
+    } else if (policy == "lfu") {
+      metadata_.AddMetric("evict_policy_lfu", 1);
+      std::sort(candidates.begin(), candidates.end(),
+                [](const EvictionCandidate& lhs,
+                   const EvictionCandidate& rhs) {
+                  if (lhs.meta.read_count != rhs.meta.read_count) {
+                    return lhs.meta.read_count < rhs.meta.read_count;
+                  }
+                  if (lhs.last_access_at != rhs.last_access_at) {
+                    return lhs.last_access_at < rhs.last_access_at;
+                  }
+                  return lhs.meta.size_bytes > rhs.meta.size_bytes;
+                });
+    } else {
+      metadata_.AddMetric("evict_policy_value_aware", 1);
+      std::sort(candidates.begin(), candidates.end(),
+                [now](const EvictionCandidate& lhs,
+                      const EvictionCandidate& rhs) {
+                  const auto lhs_score = ValueAwareEvictionScore(lhs, now);
+                  const auto rhs_score = ValueAwareEvictionScore(rhs, now);
+                  if (lhs_score != rhs_score) {
+                    return lhs_score > rhs_score;
+                  }
+                  return lhs.meta.size_bytes > rhs.meta.size_bytes;
+                });
+    }
 
     for (auto candidate : candidates) {
       if (IsOpenLogicalPath(candidate.meta.logical_path)) {
         metadata_.AddMetric("evict_skip_open", 1);
         continue;
       }
-      if (ValueAwareEvictionScore(candidate, now) < 0) {
+      if ((policy == "cost_aware" || policy == "value_aware") &&
+          ValueAwareEvictionScore(candidate, now) < 0) {
         metadata_.AddMetric("evict_skip_hot", 1);
         continue;
       }

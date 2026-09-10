@@ -3,10 +3,11 @@ set -euo pipefail
 
 project_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 result_root="${1:-$project_root/reports/latest/paper-experiments/06_real_speed_benchmark}"
-matrix_dir="$result_root/strategy-matrix"
+ablation_dir="$result_root/real-speed-ablation"
 config="${TOKENFS_CONFIG:-$project_root/config/tokenfs.dev.yaml}"
 backend_id="${TOKENFS_BACKEND_ID:-remote0}"
 require_nvmeof="${TOKENFS_REQUIRE_NVMEOF:-1}"
+path_mode="${TOKENFS_NVMEOF_PATH_MODE:-direct}"
 environment="${TOKENFS_REAL_SPEED_ENV:-}"
 
 read_backend_value() {
@@ -74,6 +75,23 @@ EOF
   exit 2
 }
 
+fail_direct_path_check() {
+  cat >&2 <<EOF
+真实速度实验已停止：当前配置不是 NVMe-oF 直连路径。
+
+论文级真实速度实验默认要求：
+  1. TokenFS 客户端直接连接 NVMe-oF Target 的 4420 端口
+  2. 配置中的 nvme_target_ip 必须是真实 Target IP，不能是 127.0.0.1 或 localhost
+  3. 不经过 SSH tunnel / 端口转发 / ProxyJump 数据通道
+
+如果只是为了验证功能链路，可显式标注隧道模式：
+  TOKENFS_NVMEOF_PATH_MODE=tunnel TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/real_speed_benchmark.sh
+
+隧道模式结果可以写成“功能验证”，但不应写成直连 NVMe-oF 性能。
+EOF
+  exit 3
+}
+
 write_mount_evidence() {
   local evidence="$result_root/nvmeof_mount_evidence.txt"
   mkdir -p "$result_root"
@@ -101,11 +119,12 @@ write_mount_evidence() {
 }
 
 verify_nvmeof_mount() {
-  local backend_type root nvme_mount device source fstype
+  local backend_type root nvme_mount device target_ip source fstype
   backend_type="$(read_backend_value type)"
   root="$(read_backend_value root)"
   nvme_mount="$(read_backend_value nvme_mount)"
   device="${TOKENFS_NVME_DEVICE:-$(read_backend_value nvme_device)}"
+  target_ip="$(read_backend_value nvme_target_ip)"
   verified_root="${TOKENFS_REMOTE_ROOT:-${root:-$nvme_mount}}"
   verified_mount="${TOKENFS_NVME_MOUNT:-${nvme_mount:-$verified_root}}"
 
@@ -115,6 +134,14 @@ verify_nvmeof_mount() {
   fi
 
   [[ "$backend_type" == "nvmeof" ]] || fail_nvmeof_check
+  if [[ "$path_mode" == "direct" ]]; then
+    [[ -n "$target_ip" ]] || fail_direct_path_check
+    [[ "$target_ip" != "__SSD_TARGET_IP__" ]] || fail_direct_path_check
+    [[ "$target_ip" != "localhost" && "$target_ip" != 127.* ]] || fail_direct_path_check
+  elif [[ "$path_mode" != "tunnel" ]]; then
+    echo "TOKENFS_NVMEOF_PATH_MODE 只能是 direct 或 tunnel，当前是：$path_mode" >&2
+    exit 3
+  fi
   [[ -n "$verified_root" && -n "$verified_mount" ]] || fail_nvmeof_check
   [[ "$verified_root" == "$verified_mount" ]] || fail_nvmeof_check
   command -v findmnt >/dev/null 2>&1 || fail_nvmeof_check
@@ -128,19 +155,19 @@ verify_nvmeof_mount() {
     fail_nvmeof_check
   fi
 
-  environment="${environment:-TokenFS FUSE workload with verified NVMe-oF mount: $source -> $verified_root ($fstype)}"
+  environment="${environment:-TokenFS FUSE workload with verified NVMe-oF $path_mode path: target=$target_ip, $source -> $verified_root ($fstype)}"
   write_mount_evidence
-  echo "NVMe-oF mount verified: $source -> $verified_root ($fstype)"
+  echo "NVMe-oF mount verified: mode=$path_mode target=$target_ip $source -> $verified_root ($fstype)"
 }
 
 verify_nvmeof_mount
 
 TOKENFS_CONFIG="$config" \
 TOKENFS_BACKEND_ID="$backend_id" \
-  "$project_root/scripts/strategy_matrix_test.sh" "$matrix_dir"
+  "$project_root/scripts/real_speed_ablation_test.sh" "$ablation_dir"
 
 python3 "$project_root/scripts/real_speed_report.py" \
-  "$matrix_dir" \
+  "$ablation_dir" \
   "$result_root" \
   --environment "$environment"
 

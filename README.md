@@ -132,7 +132,7 @@ python3 scripts/paper_experiments.py
 | 端到端延迟代理 | `reports/latest/paper-experiments/02_e2e_latency/` | 比较本地、Peer、远端和后台动作共同造成的请求代价 | 代理结果 |
 | 参数敏感性 | `reports/latest/paper-experiments/03_sensitivity/` | 扫描本地容量、远端 P99、副本预算，验证策略稳定性 | 模拟结果 |
 | NVMe-oF baseline | `reports/latest/paper-experiments/04_nvmeof_baseline/` | 汇总已有真实 NVMe/TCP 基线 | 真实链路摘要 |
-| 真实 TokenFS 速度 | `reports/latest/paper-experiments/06_real_speed_benchmark/` | 在 NVMe-oF 挂载目录上比较同一 workload 的真实总耗时和吞吐 | 待真实挂载后生成 |
+| 真实 TokenFS 速度 | `reports/latest/paper-experiments/06_real_speed_benchmark/` | 在 NVMe-oF 挂载目录上按消融分类比较真实总耗时、复用阶段吞吐和后台动作 | 真实运行结果 |
 
 统一报告：
 
@@ -152,7 +152,15 @@ reports/latest/paper-experiments/paper_experiments_report.md
 
 `AURA-Joint` 不追求单项指标永远第一，而是降低综合服务代价：前台访问延迟、远端读取、Peer 读取、后台迁移、重复副本空间和副本创建/删除抖动。
 
-成本模型的结果不能单独证明系统更快，所以当前仓库还提供真实速度入口。这个入口默认只接受 NVMe-oF 挂载目录：
+成本模型的结果不能单独证明系统更快，所以当前仓库还提供真实速度入口。这个入口默认只接受 NVMe-oF 直连挂载目录，并使用和论文消融一致的策略分类：
+
+| 真实速度对照 | 含义 |
+|---|---|
+| `RemoteOnly` | 不使用本地缓存，全部从远端容量层读取 |
+| `LocalFirst` | 本地够用优先，本地不足溢写远端，不主动淘汰 |
+| `LRU-Local` | 本地不足时淘汰最久未访问数据 |
+| `LFU-Local` | 本地不足时淘汰访问次数最少数据 |
+| `AURA-Joint` | 价值感知、GPU 亲和、容量约束和后台动作联合决策 |
 
 ```bash
 TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/real_speed_benchmark.sh
@@ -165,7 +173,16 @@ reports/latest/paper-experiments/06_real_speed_benchmark/real_speed_report.md
 reports/latest/paper-experiments/06_real_speed_benchmark/real_speed_summary.csv
 ```
 
-这部分直接看 `wall_time_s`、`effective_mib_s`、`avg_read_us` 和 `speedup_vs_baseline`。只有远端后端目录已经是 NVMe-oF 挂载点时，它才会生成 TokenFS + 真实 NVMe-oF 的端到端速度结果。
+这部分直接看 `wall_time_s`、`effective_mib_s`、`avg_read_us` 和 `speedup_vs_baseline`。其中 `speedup_vs_baseline` 的 baseline 是 `RemoteOnly`。同时还要看 `steady_reuse_mib_s` 和 `steady_reuse_vs_baseline`，它们只统计热点提升、顺序预取和跨 GPU 副本生效之后的复用读取阶段，用来判断后台策略完成后是否真的减少后续读取代价。`promote_count`、`prefetch_count`、`evict_count`、`cross_gpu_local_replica_hit` 是内部动作统计，用来解释 AURA-Joint 做了什么，不再作为论文主对照组名称。
+
+当前真实 workload 会使用每轮独立的实验命名空间，避免旧的远端文件影响结果，也不会清理已有远端数据。它显式构造：
+
+- 远端 canonical KV Cache：模拟远端容量层已有可共享缓存；
+- 本地冷缓存填满：让后续策略必须面对本地容量约束；
+- 扩展已有本地文件：触发 LRU/LFU/AURA 的淘汰路径；
+- 热点重复读取：触发 AURA 的热点提升；
+- 连续 shard 读取：触发顺序预取；
+- 跨 GPU 共享读取：触发 GPU 亲和本地副本。
 
 为避免误用，`real_speed_benchmark.sh` 现在默认强制检查 NVMe-oF：
 
@@ -176,7 +193,7 @@ sudo ./scripts/connect_nvme.sh --config config/tokenfs.nvmeof.yaml --backend rem
 TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/real_speed_benchmark.sh
 ```
 
-如果远端仍是 `/var/lib/tokenfs/remote-sim`，脚本会直接停止，不生成论文级真实速度报告。开发时可显式设置 `TOKENFS_REQUIRE_NVMEOF=0` 绕过，但该结果只能用于排查软件逻辑。
+如果远端仍是 `/var/lib/tokenfs/remote-sim`，脚本会直接停止，不生成论文级真实速度报告。如果 `nvme_target_ip` 是 `127.0.0.1` 或 `localhost`，脚本也会停止，因为这代表数据路径经过 SSH tunnel 或端口转发。开发时可显式设置 `TOKENFS_REQUIRE_NVMEOF=0` 绕过挂载检查，或设置 `TOKENFS_NVMEOF_PATH_MODE=tunnel` 做功能验证；这两类结果只能用于排查软件逻辑，不能写成直连 NVMe-oF 性能。
 
 ## 7. 常用测试
 

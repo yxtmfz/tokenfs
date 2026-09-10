@@ -1,5 +1,6 @@
-case,case_name,read_mib,write_mib,total_mib,wall_time_s,effective_mib_s,speedup_vs_baseline,throughput_vs_baseline,avg_read_us,read_latency_reduction_pct,avg_write_us,local_read_hit_rate_pct,remote_read_open,remote_open_reduction_pct,promote_count,prefetch_count,evict_count,spill_count
-baseline,baseline：只做本地优先和远端溢写,80.0,96.0,176.0,3.2346,54.41,1.0,1.0,2705.2,0.0,4634.64,20.0,4,0.0,0,0,0,0
-promote,promote：加入热点提升,80.0,96.0,176.0,2.8673,61.38,1.1281,1.1281,2402.12,11.2,4344.84,20.0,4,0.0,0,0,0,0
-prefetch,prefetch：加入顺序预取,80.0,96.0,176.0,2.8368,62.04,1.1402,1.1402,2400.4,11.27,4423.3,20.0,4,0.0,0,0,0,0
-full,full：热点提升、顺序预取和淘汰门控联合开启,80.0,96.0,176.0,2.7165,64.79,1.1907,1.1907,2386.05,11.8,4409.66,20.0,4,0.0,0,0,0,0
+case,case_name,read_mib,write_mib,total_mib,wall_time_s,effective_mib_s,speedup_vs_baseline,throughput_vs_baseline,steady_reuse_read_mib,steady_reuse_time_s,steady_reuse_mib_s,steady_reuse_vs_baseline,avg_read_us,read_latency_reduction_pct,avg_write_us,local_read_hit_rate_pct,remote_read_open,remote_open_reduction_pct,promote_count,prefetch_request_count,prefetch_count,evict_count,evict_skip_hot,spill_count,cross_gpu_replica_create_count,cross_gpu_local_replica_hit,local_cache_create_count,local_cache_delete_count
+RemoteOnly,RemoteOnly：全部从远端容量层读取,512.0,40.0,552.0,9.6369,57.28,1.0,1.0,488.0,8.1443,59.92,1.0,2718.29,0.0,4217.07,0.0,64,0.0,0,0,0,0,0,0,0,0,0,0
+LocalFirst,LocalFirst：本地够用优先，本地不足溢写远端,512.0,40.0,552.0,9.062,60.91,1.0634,1.0634,488.0,7.662,63.69,1.063,2576.61,5.21,4560.93,1.56,63,1.56,0,0,0,0,0,1,0,0,0,0
+LRU-Local,LRU-Local：按最近访问时间淘汰,512.0,40.0,552.0,9.3226,59.21,1.0337,1.0337,488.0,7.7422,63.03,1.0519,2607.8,4.06,5831.68,1.56,63,1.56,0,0,0,1,0,0,0,0,0,0
+LFU-Local,LFU-Local：按累计访问次数淘汰,512.0,40.0,552.0,9.655,57.17,0.9981,0.9981,488.0,8.3446,58.48,0.976,2763.16,-1.65,4811.8,1.56,63,1.56,0,0,0,1,0,0,0,0,0,0
+AURA-Joint,AURA-Joint：价值感知、GPU 亲和和后台动作联合决策,512.0,40.0,552.0,9.7904,56.38,0.9843,0.9843,488.0,7.9182,61.63,1.0285,2714.6,0.14,5510.9,96.88,3,95.31,1,1,1,3,0,0,1,15,2,0

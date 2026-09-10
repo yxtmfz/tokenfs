@@ -85,11 +85,15 @@
 TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/real_speed_benchmark.sh
 ```
 
-该实验读取 FUSE/TokenFS 实际运行产生的 wall-clock 时间、有效吞吐和平均读写延迟，不使用成本模型权重。脚本默认强制检查远端后端已经通过 NVMe-oF 挂载，避免把 `remote-sim` 开发目录误写成真实网络 SSD 结果。
+该实验读取 FUSE/TokenFS 实际运行产生的 wall-clock 时间、有效吞吐和平均读写延迟，不使用成本模型权重。脚本默认强制检查远端后端已经通过 NVMe-oF 直连挂载，避免把 `remote-sim` 开发目录或 SSH tunnel 数据路径误写成直连网络 SSD 结果。workload 会使用独立实验命名空间，构造远端 canonical KV、本地冷缓存、容量压力、热点复用、顺序预取和跨 GPU 共享访问；因此可以同时观察总耗时和策略生效后的复用阶段收益。
 
-| 策略 | 总数据 MiB | 总耗时 s | 有效吞吐 MiB/s | 相对 baseline 加速 | 平均读 us | 本地读命中率 | 远端打开读取 | 后台动作 |
-|---|---:|---:|---:|---:|---:|---:|---:|---|
-| pending | 0 | 0 | 0 | 0x | 0 | 0% | 0 | 需要在 Linux/FUSE 环境把远端配置为 NVMe-oF 挂载目录后运行 `TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/real_speed_benchmark.sh` |
+| 策略 | 总数据 MiB | 总耗时 s | 有效吞吐 MiB/s | 相对 RemoteOnly 加速 | 复用阶段吞吐 MiB/s | 复用阶段相对吞吐 | 平均读 us | 本地读命中率 | 远端打开读取 | 后台动作 |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|
+| `RemoteOnly` | 552.0 | 9.6369 | 57.28 | 1.0x | 59.92 | 1.0x | 2718.29 | 0.0% | 64 | promote=0, prefetch=0/0, evict=0, xgpu=0/0 |
+| `LocalFirst` | 552.0 | 9.062 | 60.91 | 1.0634x | 63.69 | 1.063x | 2576.61 | 1.56% | 63 | promote=0, prefetch=0/0, evict=0, xgpu=0/0 |
+| `LRU-Local` | 552.0 | 9.3226 | 59.21 | 1.0337x | 63.03 | 1.0519x | 2607.8 | 1.56% | 63 | promote=0, prefetch=0/0, evict=1, xgpu=0/0 |
+| `LFU-Local` | 552.0 | 9.655 | 57.17 | 0.9981x | 58.48 | 0.976x | 2763.16 | 1.56% | 63 | promote=0, prefetch=0/0, evict=1, xgpu=0/0 |
+| `AURA-Joint` | 552.0 | 9.7904 | 56.38 | 0.9843x | 61.63 | 1.0285x | 2714.6 | 96.88% | 3 | promote=1, prefetch=1/1, evict=3, xgpu=1/15 |
 
 ## 2. 端到端延迟代理实验
 

@@ -7,11 +7,13 @@ metadata_db="${TOKENFS_DB:-/var/lib/tokenfs/metadata/tokenfs.db}"
 result_root="${1:-$project_root/reports/latest}"
 config_file="${TOKENFS_CONFIG:-$project_root/config/tokenfs.dev.yaml}"
 
-shard_mib="${TOKENFS_SHARD_MIB:-16}"
-large_shard_mib="${TOKENFS_LARGE_SHARD_MIB:-96}"
-normal_shards="${TOKENFS_NORMAL_SHARDS:-4}"
-overflow_shards="${TOKENFS_OVERFLOW_SHARDS:-2}"
-overflow_start="${TOKENFS_OVERFLOW_START:-100}"
+shard_mib="${TOKENFS_SHARD_MIB:-8}"
+remote_hot_shards="${TOKENFS_REMOTE_HOT_SHARDS:-2}"
+cold_fill_shards="${TOKENFS_COLD_FILL_SHARDS:-4}"
+cross_gpu_reads="${TOKENFS_CROSS_GPU_READS:-16}"
+pressure_shard_mib="${TOKENFS_PRESSURE_SHARD_MIB:-8}"
+hot_rehit_reads="${TOKENFS_HOT_REHIT_READS:-32}"
+sequential_rehit_reads="${TOKENFS_SEQUENTIAL_REHIT_READS:-12}"
 chunk_mib="${TOKENFS_CHUNK_MIB:-1}"
 
 cleanup() {
@@ -27,117 +29,325 @@ cmake --build "$project_root/build" >/dev/null
 rm -rf "$result_root"
 mkdir -p "$result_root"
 
-python3 - "$mount_point" "$result_root" "$shard_mib" "$large_shard_mib" \
-  "$normal_shards" "$overflow_shards" "$overflow_start" "$chunk_mib" <<'PY'
+python3 - "$project_root" "$mount_point" "$metadata_db" "$config_file" "$result_root" \
+  "$shard_mib" "$remote_hot_shards" "$cold_fill_shards" "$cross_gpu_reads" \
+  "$pressure_shard_mib" "$hot_rehit_reads" "$sequential_rehit_reads" "$chunk_mib" <<'PY'
 import csv
 import os
 import sqlite3
+import subprocess
 import sys
 import time
 from pathlib import Path
 
-mount = Path(sys.argv[1])
-result = Path(sys.argv[2])
-shard_mib = int(sys.argv[3])
-large_shard_mib = int(sys.argv[4])
-normal_shards = int(sys.argv[5])
-overflow_shards = int(sys.argv[6])
-overflow_start = int(sys.argv[7])
-chunk_mib = int(sys.argv[8])
-chunk_bytes = chunk_mib * 1024 * 1024
+project_root = Path(sys.argv[1])
+mount = Path(sys.argv[2])
+metadata_db = Path(sys.argv[3])
+config_file = Path(sys.argv[4])
+result = Path(sys.argv[5])
+shard_mib = int(sys.argv[6])
+remote_hot_shards = int(sys.argv[7])
+cold_fill_shards = int(sys.argv[8])
+cross_gpu_reads = int(sys.argv[9])
+pressure_shard_mib = int(sys.argv[10])
+hot_rehit_reads = int(sys.argv[11])
+sequential_rehit_reads = int(sys.argv[12])
+chunk_mib = int(sys.argv[13])
 
-rows = []
+sys.path.insert(0, str(project_root / "scripts"))
+from tokenfsctl import parse_config  # noqa: E402
 
-def token_chunk(gpu_id: int, shard_id: int, chunk_id: int, size: int) -> bytes:
-    header = f"gpu={gpu_id};shard={shard_id};chunk={chunk_id};".encode()
-    pattern = (header + b"tokenfs-sequential-token-data\n")
+MIB = 1024 * 1024
+chunk_bytes = chunk_mib * MIB
+config = parse_config(config_file)
+backends = config.backends
+gpus_by_id = {gpu.gpu_id: gpu for gpu in config.gpus}
+
+rows: list[dict[str, object]] = []
+run_id = os.environ.get("TOKENFS_RUN_ID")
+if not run_id:
+    run_id = f"run-{int(time.time())}-{os.getpid()}"
+run_id = "".join(ch if ch.isalnum() or ch in "-_" else "-" for ch in run_id)
+dataset_dir = f"{run_id}/dataset-a"
+shared_dir = f"{run_id}/shared"
+
+
+def remote_root(gpu_id: int) -> Path:
+    backend_id = gpus_by_id[gpu_id].remote_backend
+    return backends[backend_id].root
+
+
+def token_chunk(owner_gpu: int, shard_id: int, chunk_id: int, size: int) -> bytes:
+    header = f"gpu={owner_gpu};shard={shard_id};chunk={chunk_id};".encode()
+    pattern = header + b"aura-kv-sequential-token-data\n"
     return (pattern * ((size // len(pattern)) + 1))[:size]
 
-def write_shard(gpu_id: int, shard_id: int, size_mib: int, preallocate: bool, group: str) -> Path:
-    path = mount / f"gpu{gpu_id}" / "dataset-a" / f"shard-{shard_id:06d}.tokens"
+
+def write_pattern_file(path: Path, owner_gpu: int, shard_id: int, size_mib: int) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
-    size = size_mib * 1024 * 1024
-    start = time.perf_counter()
+    total = size_mib * MIB
     with path.open("wb", buffering=0) as f:
-        if preallocate:
-            os.posix_fallocate(f.fileno(), 0, size)
+        try:
+            os.posix_fallocate(f.fileno(), 0, total)
+        except OSError:
+            pass
         written = 0
         chunk_id = 0
-        while written < size:
-            n = min(chunk_bytes, size - written)
-            f.write(token_chunk(gpu_id, shard_id, chunk_id, n))
+        while written < total:
+            n = min(chunk_bytes, total - written)
+            f.write(token_chunk(owner_gpu, shard_id, chunk_id, n))
+            written += n
+            chunk_id += 1
+        os.fsync(f.fileno())
+
+
+def upsert_remote_meta(logical_path: str, owner_gpu: int, physical: Path, size_mib: int,
+                       recompute_cost: int = 80, remote_access_cost: int = 80) -> None:
+    now = int(time.time())
+    backend_id = gpus_by_id[owner_gpu].remote_backend
+    with sqlite3.connect(metadata_db) as conn:
+        conn.execute(
+            """
+            insert into files(
+              logical_path,gpu_id,tier,backend_id,physical_path,size_bytes,
+              checksum,state,created_at,updated_at,last_access_at,read_count,
+              recompute_cost,remote_access_cost,producer_gpu,share_count,
+              primary_tier,has_remote_copy,local_cache_owner_gpu,replica_state,
+              cache_generation,last_promoted_at,last_demoted_at,
+              dominant_gpu_id,dominant_gpu_read_share_x100,
+              recent_dominant_gpu_id,recent_dominant_gpu_read_share_x100,
+              recent_read_count,affinity_trend,target_local_replica_count,
+              affinity_state,affinity_updated_at
+            )
+            values(?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)
+            on conflict(logical_path) do update set
+              gpu_id=excluded.gpu_id,
+              tier=excluded.tier,
+              backend_id=excluded.backend_id,
+              physical_path=excluded.physical_path,
+              size_bytes=excluded.size_bytes,
+              state=excluded.state,
+              read_count=0,
+              recompute_cost=excluded.recompute_cost,
+              remote_access_cost=excluded.remote_access_cost,
+              producer_gpu=excluded.producer_gpu,
+              share_count=excluded.share_count,
+              primary_tier=excluded.primary_tier,
+              has_remote_copy=excluded.has_remote_copy,
+              local_cache_owner_gpu=excluded.local_cache_owner_gpu,
+              replica_state=excluded.replica_state,
+              updated_at=excluded.updated_at
+            """,
+            (
+                logical_path,
+                owner_gpu,
+                "remote",
+                backend_id,
+                str(physical),
+                size_mib * MIB,
+                "",
+                "COMMITTED",
+                now,
+                now,
+                now,
+                0,
+                recompute_cost,
+                remote_access_cost,
+                owner_gpu,
+                1,
+                "remote",
+                1,
+                -1,
+                "REMOTE_ONLY",
+                0,
+                0,
+                0,
+                -1,
+                0,
+                -1,
+                0,
+                0,
+                "STABLE",
+                0,
+                "REMOTE_ONLY",
+                now,
+            ),
+        )
+        conn.commit()
+
+
+def mark_cold(logical_prefix: str) -> None:
+    with sqlite3.connect(metadata_db) as conn:
+        conn.execute(
+            """
+            update files set
+              recompute_cost=1,
+              remote_access_cost=1,
+              read_count=0,
+              last_access_at=1,
+              producer_gpu=gpu_id,
+              share_count=1,
+              affinity_state='REMOTE_COLD',
+              affinity_trend='STABLE',
+              target_local_replica_count=0
+            where logical_path like ?
+            """,
+            (logical_prefix + "%",),
+        )
+        conn.commit()
+
+
+def record(operation: str, group: str, owner_gpu: int, caller_gpu: int, path: Path,
+           size_mib: float, seconds: float, note: str = "") -> None:
+    rows.append(
+        {
+            "operation": operation,
+            "group": group,
+            "owner_gpu": owner_gpu,
+            "caller_gpu": caller_gpu,
+            "path": str(path),
+            "size_mib": f"{size_mib:.2f}",
+            "seconds": f"{seconds:.6f}",
+            "mib_per_sec": f"{(size_mib / seconds) if seconds else 0:.2f}",
+            "note": note,
+        }
+    )
+
+
+def write_via_fuse(owner_gpu: int, shard_id: int, size_mib: int, group: str) -> Path:
+    path = mount / f"gpu{owner_gpu}" / dataset_dir / f"shard-{shard_id:06d}.tokens"
+    start = time.perf_counter()
+    write_pattern_file(path, owner_gpu, shard_id, size_mib)
+    elapsed = time.perf_counter() - start
+    record("write", group, owner_gpu, owner_gpu, path, size_mib, elapsed)
+    return path
+
+
+def append_via_fuse(owner_gpu: int, shard_id: int, append_mib: int, group: str) -> Path:
+    path = mount / f"gpu{owner_gpu}" / dataset_dir / f"shard-{shard_id:06d}.tokens"
+    start_size = path.stat().st_size
+    append_bytes = append_mib * MIB
+    start = time.perf_counter()
+    with path.open("ab", buffering=0) as f:
+        written = 0
+        chunk_id = start_size // chunk_bytes
+        while written < append_bytes:
+            n = min(chunk_bytes, append_bytes - written)
+            f.write(token_chunk(owner_gpu, shard_id, chunk_id, n))
             written += n
             chunk_id += 1
         os.fsync(f.fileno())
     elapsed = time.perf_counter() - start
-    rows.append({
-        "operation": "write",
-        "group": group,
-        "gpu_id": gpu_id,
-        "path": str(path),
-        "size_mib": size_mib,
-        "preallocate": int(preallocate),
-        "seconds": f"{elapsed:.6f}",
-        "mib_per_sec": f"{(size_mib / elapsed) if elapsed else 0:.2f}",
-    })
+    record("write", group, owner_gpu, owner_gpu, path, append_mib, elapsed, "append existing local cache to force eviction")
     return path
 
-def read_shard(path: Path, gpu_id: int, shard_id: int, group: str) -> None:
-    size_mib = path.stat().st_size / 1024 / 1024
+
+def read_via_fuse(owner_gpu: int, caller_gpu: int, shard_id: int, group: str,
+                  subdir: str | None = None) -> Path:
+    if subdir is None:
+        subdir = dataset_dir
+    path = mount / f"gpu{owner_gpu}" / subdir / f"shard-{shard_id:06d}.tokens"
+    code = r"""
+import sys
+from pathlib import Path
+p = Path(sys.argv[1])
+owner = int(sys.argv[2])
+shard = int(sys.argv[3])
+chunk = int(sys.argv[4])
+first = b""
+total = 0
+with p.open("rb", buffering=0) as f:
+    while True:
+        data = f.read(chunk)
+        if not data:
+            break
+        if not first:
+            first = data[:128]
+        total += len(data)
+expected = f"gpu={owner};shard={shard};chunk=0;".encode()
+if expected not in first:
+    raise SystemExit(f"unexpected content in {p}")
+print(total)
+"""
+    env = os.environ.copy()
+    env["TOKENFS_GPU_ID"] = str(caller_gpu)
     start = time.perf_counter()
-    total = 0
-    first = b""
-    with path.open("rb", buffering=0) as f:
-        while True:
-            data = f.read(chunk_bytes)
-            if not data:
-                break
-            if not first:
-                first = data[:128]
-            total += len(data)
+    proc = subprocess.run(
+        [sys.executable, "-c", code, str(path), str(owner_gpu), str(shard_id), str(chunk_bytes)],
+        env=env,
+        check=True,
+        text=True,
+        capture_output=True,
+    )
     elapsed = time.perf_counter() - start
-    expected = f"gpu={gpu_id};shard={shard_id};chunk=0;".encode()
-    if expected not in first:
-        raise RuntimeError(f"unexpected shard content in {path}")
-    rows.append({
-        "operation": "read",
-        "group": group,
-        "gpu_id": gpu_id,
-        "path": str(path),
-        "size_mib": f"{size_mib:.2f}",
-        "preallocate": "",
-        "seconds": f"{elapsed:.6f}",
-        "mib_per_sec": f"{(size_mib / elapsed) if elapsed else 0:.2f}",
-    })
+    size_mib = int(proc.stdout.strip()) / MIB
+    record("read", group, owner_gpu, caller_gpu, path, size_mib, elapsed)
+    return path
 
-paths = []
-for i in range(normal_shards):
-    paths.append((write_shard(0, i, shard_mib, True, "normal-local-fill"), 0, i, "normal-local-fill"))
-overflow_paths = []
-for i in range(overflow_shards):
-    shard_id = overflow_start + i
-    overflow_paths.append((write_shard(0, shard_id, shard_mib, True, "overflow-sequential"), 0, shard_id, "overflow-sequential"))
-paths.extend(overflow_paths)
-paths.append((write_shard(0, 900000, large_shard_mib, True, "large-remote-spill"), 0, 900000, "large-remote-spill"))
-paths.append((write_shard(1, 0, shard_mib, True, "gpu1-isolation"), 1, 0, "gpu1-isolation"))
 
-if paths:
-    read_shard(paths[0][0], paths[0][1], paths[0][2], "local-hot-read")
+def seed_remote_shard(owner_gpu: int, shard_id: int, size_mib: int, group: str,
+                      subdir: str | None = None) -> Path:
+    if subdir is None:
+        subdir = dataset_dir
+    physical = remote_root(owner_gpu) / f"gpu{owner_gpu}" / subdir / f"shard-{shard_id:06d}.tokens"
+    write_pattern_file(physical, owner_gpu, shard_id, size_mib)
+    logical = f"/gpu{owner_gpu}/{subdir}/shard-{shard_id:06d}.tokens"
+    upsert_remote_meta(logical, owner_gpu, physical, size_mib)
+    record("seed_remote", group, owner_gpu, owner_gpu, physical, size_mib, 0.0, "pre-existing remote canonical cache")
+    return physical
 
-if overflow_paths:
-    read_shard(overflow_paths[0][0], overflow_paths[0][1], overflow_paths[0][2], "remote-first-read")
-    read_shard(overflow_paths[0][0], overflow_paths[0][1], overflow_paths[0][2], "remote-second-read")
-    time.sleep(0.5)
-    if len(overflow_paths) > 1:
-        read_shard(overflow_paths[1][0], overflow_paths[1][1], overflow_paths[1][2], "sequential-next-read")
 
-for path, gpu_id, shard_id, group in paths[normal_shards + overflow_shards:]:
-    read_shard(path, gpu_id, shard_id, f"{group}-read")
+# 1. 远端先存在权威 KV Cache，模拟真实场景里远端 canonical cache 已经准备好。
+for i in range(remote_hot_shards):
+    seed_remote_shard(0, 100 + i, shard_mib, "remote-canonical-hot")
+seed_remote_shard(0, 200, shard_mib, "remote-canonical-cross-gpu", shared_dir)
+
+# 2. 本地缓存先被低价值旧 shard 占满，后续热点提升/预取必须与淘汰协同。
+for i in range(cold_fill_shards):
+    write_via_fuse(0, i, shard_mib, "cold-local-cache-fill")
+mark_cold(f"/gpu0/{dataset_dir}/shard-00000")
+
+# 3. 访问一个本地冷文件，提供本地直接命中的对照。
+read_via_fuse(0, 0, 0, "cold-local-read")
+
+# 4. 扩展已有本地文件制造容量压力，LRU/LFU/AURA 会被迫执行淘汰。
+append_via_fuse(0, 0, pressure_shard_mib, "capacity-pressure-append-existing")
+
+# 5. 重复访问远端热点 shard，第二次以后 AURA 可以触发热点提升。
+read_via_fuse(0, 0, 100, "remote-hot-first-read")
+read_via_fuse(0, 0, 100, "remote-hot-second-read-promote")
+time.sleep(1.0)
+for _ in range(hot_rehit_reads):
+    read_via_fuse(0, 0, 100, "hot-rehit-after-promote")
+
+# 6. 连续访问下一片 shard；开启预取时，这里应尽量变成本地读取。
+if remote_hot_shards > 1:
+    time.sleep(1.0)
+    read_via_fuse(0, 0, 101, "sequential-next-read-after-prefetch")
+    for _ in range(sequential_rehit_reads):
+        read_via_fuse(0, 0, 101, "sequential-rehit-after-prefetch")
+
+# 7. GPU1 多次访问 GPU0 的共享 KV Cache，触发跨 GPU 本地副本与后续命中。
+for idx in range(cross_gpu_reads):
+    group = "cross-gpu-shared-read"
+    if idx == cross_gpu_reads - 1:
+        group = "cross-gpu-rehit-after-replica"
+    read_via_fuse(0, 1, 200, group, shared_dir)
 
 with (result / "summary.csv").open("w", newline="", encoding="utf-8") as f:
     writer = csv.DictWriter(
         f,
-        fieldnames=["operation", "group", "gpu_id", "path", "size_mib", "preallocate", "seconds", "mib_per_sec"],
+        fieldnames=[
+            "operation",
+            "group",
+            "owner_gpu",
+            "caller_gpu",
+            "path",
+            "size_mib",
+            "seconds",
+            "mib_per_sec",
+            "note",
+        ],
         lineterminator="\n",
     )
     writer.writeheader()
@@ -146,15 +356,15 @@ with (result / "summary.csv").open("w", newline="", encoding="utf-8") as f:
 lines = [
     "# TokenFS Token Workload 报告",
     "",
-    "该 workload 模拟机器学习 token shard：顺序预分配写入、GPU 本地配额填满、远端连续 shard 溢写、重复读取热点 shard，以及读取下一片连续 shard。",
+    f"实验命名空间：`{run_id}`。该 workload 不再只是端到端读写压测，而是显式构造 AURA-KV 论文场景：远端已有 canonical KV Cache，本地 GPU 缓存被冷数据占满，随后通过扩展已有本地文件、热点重复访问、连续 shard 访问和跨 GPU 共享访问触发淘汰、提升、预取与跨 GPU 副本。每次运行使用独立命名空间，避免旧远端文件污染结果，也不会删除已有远端数据。",
     "",
-    "| 操作 | 分组 | GPU | 数据量 MiB | 预分配 | 耗时 s | 带宽 MiB/s | 路径 |",
+    "| 操作 | 阶段 | 文件所属 GPU | 调用 GPU | 数据量 MiB | 耗时 s | 带宽 MiB/s | 说明 |",
     "|---|---|---:|---:|---:|---:|---:|---|",
 ]
 for row in rows:
     lines.append(
-        f"| {row['operation']} | {row['group']} | {row['gpu_id']} | {row['size_mib']} | "
-        f"{row['preallocate']} | {row['seconds']} | {row['mib_per_sec']} | `{row['path']}` |"
+        f"| {row['operation']} | {row['group']} | {row['owner_gpu']} | {row['caller_gpu']} | "
+        f"{row['size_mib']} | {row['seconds']} | {row['mib_per_sec']} | {row['note']} |"
     )
 (result / "report.md").write_text("\n".join(lines) + "\n", encoding="utf-8")
 PY
@@ -163,8 +373,11 @@ PY
 "$project_root/scripts/tokenfsctl.py" --config "$config_file" metrics-json > "$result_root/metrics.json"
 sqlite3 -header -csv "$metadata_db" "select name,value from metrics order by name;" > "$result_root/metrics.csv"
 sqlite3 -header -csv "$metadata_db" \
-  "select logical_path,gpu_id,tier,physical_path,size_bytes,checksum,state from files order by logical_path;" \
+  "select logical_path,gpu_id,tier,backend_id,physical_path,size_bytes,read_count,affinity_state,target_local_replica_count,state from files order by logical_path;" \
   > "$result_root/files.csv"
+sqlite3 -header -csv "$metadata_db" \
+  "select logical_path,gpu_id,physical_path,size_bytes,state from local_replicas order by logical_path,gpu_id;" \
+  > "$result_root/local_replicas.csv"
 
 echo "TokenFS token workload report generated:"
 echo "  $result_root/report.md"
@@ -173,3 +386,4 @@ echo "  $result_root/metrics.txt"
 echo "  $result_root/metrics.json"
 echo "  $result_root/metrics.csv"
 echo "  $result_root/files.csv"
+echo "  $result_root/local_replicas.csv"

@@ -65,11 +65,33 @@ reports/latest/paper-experiments/06_real_speed_benchmark/
 |---|---|
 | `wall_time_s` | 整个 token shard workload 实际花费的秒数，越低越好 |
 | `effective_mib_s` | workload 总读写数据量除以总耗时，越高越好 |
-| `speedup_vs_baseline` | 相对 baseline 的实际加速比，大于 1 表示真的更快 |
+| `speedup_vs_baseline` | 相对 `RemoteOnly` 的实际加速比，大于 1 表示真的更快 |
+| `steady_reuse_mib_s` | 策略生效后，热点/预取/跨 GPU 复用读取阶段的吞吐，越高越好 |
+| `steady_reuse_vs_baseline` | 复用阶段相对 `RemoteOnly` 的吞吐比，大于 1 表示后台动作开始产生读取收益 |
 | `avg_read_us` / `avg_write_us` | TokenFS 记录的平均读写耗时 |
 | `remote_read_open` | 读取时打开远端文件的次数，越少通常越好 |
 
-该脚本默认强制检查 NVMe-oF 挂载：配置里的远端后端必须是 `type: nvmeof`，`root` 必须指向 `/srv/tokenfs/remote0` 这类挂载目录，并且该目录的实际挂载源必须是 `/dev/nvme...`。如果仍然使用 `/var/lib/tokenfs/remote-sim`，脚本会直接停止，避免把目录模拟结果误写成真实 NVMe-oF 端到端速度。
+真实速度实验按论文消融分类运行：
+
+| 策略 | 验证点 |
+|---|---|
+| `RemoteOnly` | 不使用本地缓存时，远端容量层的下界表现 |
+| `LocalFirst` | 只有本地优先和远端溢写，没有主动替换 |
+| `LRU-Local` | 传统最近最少使用替换 |
+| `LFU-Local` | 传统最少访问次数替换 |
+| `AURA-Joint` | 价值感知、GPU 亲和和后台动作的联合策略 |
+
+`promote_count`、`prefetch_count`、`evict_count` 和 `cross_gpu_local_replica_hit` 只作为内部动作统计，用来解释 `AURA-Joint` 为什么快或为什么不快，不再作为主对照组名称。
+
+真实 workload 不是简单顺序读写压测。它会为每轮消融创建独立逻辑命名空间，先在远端 NVMe-oF 挂载目录准备 canonical KV shard，再填满本地冷缓存，然后制造容量压力、热点重复读取、连续 shard 读取和跨 GPU 共享读取。这样可以明确观察：
+
+- 本地淘汰是否真的发生；
+- 远端热点是否被提升到本地；
+- 顺序 shard 是否被预取；
+- 跨 GPU 访问是否产生本地副本；
+- 这些动作是否最终减少远端读取并改善后续复用阶段吞吐。
+
+该脚本默认强制检查 NVMe-oF 直连挂载：配置里的远端后端必须是 `type: nvmeof`，`nvme_target_ip` 必须是真实 Target IP，`root` 必须指向 `/srv/tokenfs/remote0` 这类挂载目录，并且该目录的实际挂载源必须是 `/dev/nvme...`。如果仍然使用 `/var/lib/tokenfs/remote-sim`，或 `nvme_target_ip` 是 `127.0.0.1` / `localhost`，脚本会直接停止，避免把目录模拟或 SSH tunnel 结果误写成直连 NVMe-oF 端到端速度。
 
 ## 3. 当前主要结果
 
@@ -140,7 +162,7 @@ expensive_vs_cheap_mix
 | objective_cost_per_request | 综合服务代价，论文主对比指标 |
 | normalized_to_lru | 等效性能指数，`LRU-Local = 1.00x`，越高越好 |
 | wall_time_s | 真实 workload 总耗时，越低越好 |
-| speedup_vs_baseline | 真实 workload 相对 baseline 加速比，越高越好 |
+| speedup_vs_baseline | 真实 workload 相对 `RemoteOnly` 加速比，越高越好 |
 | IOPS | 每秒 I/O 次数，小块随机读写时尤其重要 |
 
 `objective_cost_per_request` 包含：
