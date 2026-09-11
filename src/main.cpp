@@ -74,8 +74,14 @@ struct Config {
   bool cross_gpu_local_cache = false;
   bool physical_dedup = false;
   bool promote_on_read = false;
+  bool async_promote_on_read = false;
   uint64_t promote_read_threshold = 2;
+  uint64_t migration_min_reuse_reads = 6;
+  uint64_t migration_min_benefit_x100 = 150;
+  uint64_t migration_copy_cost_per_mib = 8;
+  bool speculative_copy_may_evict = false;
   bool prefetch_on_read = false;
+  bool async_cross_gpu_replica = false;
   std::unordered_map<std::string, BackendConfig> backends;
   std::vector<GpuConfig> gpus;
 };
@@ -1418,8 +1424,12 @@ class TokenFS {
                           1);
       if (meta.tier == "remote" &&
           ShouldPromoteOnRead(meta, read_count, caller_gpu_id)) {
-        if (int rc = PromoteToLocal(*gpu, rel, meta, "promote"); rc != 0) {
-          metadata_.AddMetric("promote_error_count", 1);
+        if (config_.async_promote_on_read) {
+          SchedulePromoteToLocal(*gpu, rel, path, "promote", true);
+        } else {
+          if (int rc = PromoteToLocal(*gpu, rel, meta, "promote"); rc != 0) {
+            metadata_.AddMetric("promote_error_count", 1);
+          }
         }
       }
       if (caller_gpu_id == gpu->gpu_id &&
@@ -1466,17 +1476,20 @@ class TokenFS {
     if (n < 0) {
       return -errno;
     }
-    metadata_.AddMetric("read_ops", 1);
-    metadata_.AddMetric("read_bytes", static_cast<uint64_t>(n));
-    metadata_.AddMetric("qos_gpu" + std::to_string(handle->caller_gpu_id) + "_read_ops",
-                        1);
-    metadata_.AddMetric("qos_gpu" + std::to_string(handle->caller_gpu_id) + "_read_bytes",
-                        static_cast<uint64_t>(n));
-    metadata_.AddMetric(handle->tier == "local" ? "read_local_ops" : "read_remote_ops",
-                        1);
-    metadata_.AddMetric(handle->tier == "local" ? "read_local_bytes"
-                                                : "read_remote_bytes",
-                        static_cast<uint64_t>(n));
+    AddBufferedMetric("read_ops", 1);
+    AddBufferedMetric("read_bytes", static_cast<uint64_t>(n));
+    AddBufferedMetric("qos_gpu" + std::to_string(handle->caller_gpu_id) +
+                          "_read_ops",
+                      1);
+    AddBufferedMetric("qos_gpu" + std::to_string(handle->caller_gpu_id) +
+                          "_read_bytes",
+                      static_cast<uint64_t>(n));
+    AddBufferedMetric(handle->tier == "local" ? "read_local_ops"
+                                               : "read_remote_ops",
+                      1);
+    AddBufferedMetric(handle->tier == "local" ? "read_local_bytes"
+                                               : "read_remote_bytes",
+                      static_cast<uint64_t>(n));
     const uint64_t latency_us = ElapsedMicros(start);
     RecordLatency("read", handle->tier, latency_us);
     if (n > 0) {
@@ -1503,18 +1516,20 @@ class TokenFS {
     }
     handle->state = "CREATING";
     UpdateHandleMeta(*handle, "CREATING");
-    metadata_.AddMetric("write_ops", 1);
-    metadata_.AddMetric("write_bytes", static_cast<uint64_t>(n));
-    metadata_.AddMetric("qos_gpu" + std::to_string(handle->caller_gpu_id) + "_write_ops",
-                        1);
-    metadata_.AddMetric("qos_gpu" + std::to_string(handle->caller_gpu_id) + "_write_bytes",
-                        static_cast<uint64_t>(n));
-    metadata_.AddMetric(handle->tier == "local" ? "write_local_ops"
-                                                : "write_remote_ops",
-                        1);
-    metadata_.AddMetric(handle->tier == "local" ? "write_local_bytes"
-                                                : "write_remote_bytes",
-                        static_cast<uint64_t>(n));
+    AddBufferedMetric("write_ops", 1);
+    AddBufferedMetric("write_bytes", static_cast<uint64_t>(n));
+    AddBufferedMetric("qos_gpu" + std::to_string(handle->caller_gpu_id) +
+                          "_write_ops",
+                      1);
+    AddBufferedMetric("qos_gpu" + std::to_string(handle->caller_gpu_id) +
+                          "_write_bytes",
+                      static_cast<uint64_t>(n));
+    AddBufferedMetric(handle->tier == "local" ? "write_local_ops"
+                                               : "write_remote_ops",
+                      1);
+    AddBufferedMetric(handle->tier == "local" ? "write_local_bytes"
+                                               : "write_remote_bytes",
+                      static_cast<uint64_t>(n));
     const uint64_t latency_us = ElapsedMicros(start);
     RecordLatency("write", handle->tier, latency_us);
     return static_cast<int>(n);
@@ -1524,6 +1539,7 @@ class TokenFS {
     std::lock_guard<std::mutex> lock(handles_mu_);
     auto it = handles_.find(fi->fh);
     if (it == handles_.end()) {
+      FlushBufferedMetrics();
       return 0;
     }
     bool should_dedup = false;
@@ -1533,6 +1549,7 @@ class TokenFS {
         if (rc != 0) {
           close(it->second.fd);
           handles_.erase(it);
+          FlushBufferedMetrics();
           return rc;
         }
       }
@@ -1544,6 +1561,7 @@ class TokenFS {
       ApplyPhysicalDedup(it->second);
     }
     handles_.erase(it);
+    FlushBufferedMetrics();
     return 0;
   }
 
@@ -1894,6 +1912,32 @@ class TokenFS {
     return affinity == 0 ? 40 : affinity;
   }
 
+  uint64_t EstimatedFutureReuseReads(const FileMeta& meta,
+                                     uint64_t read_count) const {
+    uint64_t expected = std::max(read_count, meta.recent_read_count);
+    if (meta.affinity_trend == "RISING") {
+      expected += config_.affinity_trend_min_reads;
+    } else if (meta.affinity_trend == "FALLING" && expected > 1) {
+      expected /= 2;
+    }
+    return std::min<uint64_t>(64, expected);
+  }
+
+  uint64_t MigrationBenefitX100(const FileMeta& meta, uint64_t read_count,
+                                int gpu_id) {
+    const uint64_t size_mib =
+        std::max<uint64_t>(1, (meta.size_bytes + 1024 * 1024 - 1) / 1024 / 1024);
+    const uint64_t future_reads = EstimatedFutureReuseReads(meta, read_count);
+    const uint64_t affinity_x100 = CurrentAffinityX100(meta, gpu_id);
+    const uint64_t saved_remote_cost =
+        future_reads * std::max<uint64_t>(1, meta.remote_access_cost) *
+        std::max<uint64_t>(1, affinity_x100);
+    const uint64_t copy_cost =
+        size_mib * std::max<uint64_t>(1, config_.migration_copy_cost_per_mib) *
+        100;
+    return copy_cost == 0 ? 0 : saved_remote_cost * 100 / copy_cost;
+  }
+
   static bool IsWritable(int flags) {
     const int mode = flags & O_ACCMODE;
     return mode == O_WRONLY || mode == O_RDWR || (flags & O_TRUNC) != 0;
@@ -2085,6 +2129,11 @@ class TokenFS {
       return false;
     }
     meta.read_count = read_count;
+    if (!config_.promote_on_read &&
+        !(config_.placement_policy == "value_aware" &&
+          config_.adaptive_migration)) {
+      return false;
+    }
     if (gpu_id != meta.gpu_id) {
       metadata_.AddMetric("affinity_cross_gpu_promote_skip", 1);
       return false;
@@ -2104,15 +2153,27 @@ class TokenFS {
       metadata_.AddMetric("affinity_non_dominant_promote_skip", 1);
       return false;
     }
-    if (config_.promote_on_read && read_count >= config_.promote_read_threshold) {
-      return true;
+    const uint64_t min_reads =
+        std::max(config_.promote_read_threshold,
+                 config_.migration_min_reuse_reads);
+    if (read_count < min_reads) {
+      metadata_.AddMetric("promote_skip_low_reuse", 1);
+      return false;
     }
-    if (config_.placement_policy == "value_aware" && config_.adaptive_migration) {
-      const uint64_t value =
-          DataValueScore(meta, CurrentAffinityX100(meta, gpu_id));
-      return value >= config_.value_promote_threshold;
+    const uint64_t value =
+        DataValueScore(meta, CurrentAffinityX100(meta, gpu_id));
+    if (value < config_.value_promote_threshold) {
+      metadata_.AddMetric("promote_skip_low_value", 1);
+      return false;
     }
-    return false;
+    const uint64_t benefit_x100 = MigrationBenefitX100(meta, read_count, gpu_id);
+    if (benefit_x100 < config_.migration_min_benefit_x100) {
+      metadata_.AddMetric("promote_skip_low_benefit", 1);
+      return false;
+    }
+    metadata_.AddMetric("promote_benefit_x100_total", benefit_x100);
+    metadata_.SetMetricMax("promote_benefit_x100_max", benefit_x100);
+    return true;
   }
 
   bool ShouldCreateCrossGpuReplica(const FileMeta& meta, int caller_gpu_id) {
@@ -2183,7 +2244,32 @@ class TokenFS {
         return;
       }
     }
+    if (config_.async_cross_gpu_replica) {
+      ScheduleCrossGpuReplica(*caller_gpu, *owner_gpu, rel, meta);
+      return;
+    }
     CreateCrossGpuReplica(*caller_gpu, *owner_gpu, rel, meta);
+  }
+
+  void ScheduleCrossGpuReplica(const GpuConfig& caller_gpu,
+                               const GpuConfig& owner_gpu, const fs::path& rel,
+                               const FileMeta& meta) {
+    const std::string key =
+        meta.logical_path + "|" + std::to_string(caller_gpu.gpu_id);
+    {
+      std::lock_guard<std::mutex> lock(cross_gpu_replica_mu_);
+      if (cross_gpu_replica_inflight_.count(key) != 0) {
+        metadata_.AddMetric("cross_gpu_replica_skip_inflight", 1);
+        return;
+      }
+      cross_gpu_replica_inflight_.insert(key);
+    }
+    metadata_.AddMetric("cross_gpu_replica_request_count", 1);
+    std::thread([this, caller_gpu, owner_gpu, rel, meta, key]() {
+      CreateCrossGpuReplica(caller_gpu, owner_gpu, rel, meta);
+      std::lock_guard<std::mutex> lock(cross_gpu_replica_mu_);
+      cross_gpu_replica_inflight_.erase(key);
+    }).detach();
   }
 
   void CreateCrossGpuReplica(const GpuConfig& caller_gpu,
@@ -2199,6 +2285,12 @@ class TokenFS {
     }
     const uint64_t size = FileSizeNoThrow(source);
     fs::path local = CrossGpuReplicaPath(caller_gpu, owner_gpu, rel);
+    if (!config_.speculative_copy_may_evict &&
+        !HasLocalCapacity(caller_gpu, size,
+                          fs::exists(local) ? &local : nullptr)) {
+      metadata_.AddMetric("cross_gpu_replica_skip_no_headroom", 1);
+      return;
+    }
     if (!EnsureLocalCapacity(caller_gpu, size, meta.logical_path,
                              fs::exists(local) ? &local : nullptr)) {
       metadata_.AddMetric("cross_gpu_replica_skip_no_space", 1);
@@ -2280,16 +2372,22 @@ class TokenFS {
   }
 
   int PromoteToLocal(const GpuConfig& gpu, const fs::path& rel, FileMeta& meta,
-                     const std::string& metric_prefix) {
+                     const std::string& metric_prefix,
+                     bool allow_eviction = true) {
     const uint64_t size = FileSizeNoThrow(meta.physical_path);
-    ApplyBackgroundQos(gpu.gpu_id, size, metric_prefix);
     fs::path local = gpu.local_root / rel;
     const fs::path source = meta.physical_path;
+    if (!allow_eviction &&
+        !HasLocalCapacity(gpu, size, fs::exists(local) ? &local : nullptr)) {
+      metadata_.AddMetric(metric_prefix + "_skip_no_headroom", 1);
+      return 0;
+    }
     if (!EnsureLocalCapacity(gpu, size, meta.logical_path,
                              fs::exists(local) ? &local : nullptr)) {
       metadata_.AddMetric(metric_prefix + "_skip_no_space", 1);
       return 0;
     }
+    ApplyBackgroundQos(gpu.gpu_id, size, metric_prefix);
 
     fs::create_directories(local.parent_path());
     fs::path tmp = local;
@@ -2348,6 +2446,36 @@ class TokenFS {
     metadata_.AddMetric(metric_prefix + "_count", 1);
     metadata_.AddMetric(metric_prefix + "_bytes", size);
     return 0;
+  }
+
+  void SchedulePromoteToLocal(const GpuConfig& gpu, const fs::path& rel,
+                              const std::string& logical_path,
+                              const std::string& metric_prefix,
+                              bool allow_eviction = true) {
+    {
+      std::lock_guard<std::mutex> lock(promote_mu_);
+      if (promote_inflight_.count(logical_path) != 0) {
+        metadata_.AddMetric(metric_prefix + "_skip_inflight", 1);
+        return;
+      }
+      promote_inflight_.insert(logical_path);
+    }
+    metadata_.AddMetric(metric_prefix + "_request_count", 1);
+    std::thread([this, gpu, rel, logical_path, metric_prefix, allow_eviction]() {
+      if (auto current = metadata_.Get(logical_path);
+          current && current->tier == "remote" && current->state == "COMMITTED") {
+        FileMeta meta = *current;
+        if (int rc = PromoteToLocal(gpu, rel, meta, metric_prefix,
+                                    allow_eviction);
+            rc != 0) {
+          metadata_.AddMetric(metric_prefix + "_error_count", 1);
+        }
+      } else {
+        metadata_.AddMetric(metric_prefix + "_skip_stale", 1);
+      }
+      std::lock_guard<std::mutex> lock(promote_mu_);
+      promote_inflight_.erase(logical_path);
+    }).detach();
   }
 
   void MaybeSchedulePrefetch(const GpuConfig& gpu, const fs::path& rel) {
@@ -2422,7 +2550,9 @@ class TokenFS {
       metadata_.AddMetric("prefetch_skip_missing", 1);
       return;
     }
-    if (int rc = PromoteToLocal(gpu, rel, meta, "prefetch"); rc != 0) {
+    if (int rc = PromoteToLocal(gpu, rel, meta, "prefetch",
+                                config_.speculative_copy_may_evict);
+        rc != 0) {
       metadata_.AddMetric("prefetch_error_count", 1);
     }
   }
@@ -2871,27 +3001,62 @@ class TokenFS {
 
   void RecordLatency(const std::string& op, const std::string& tier,
                      uint64_t latency_us) {
-    metadata_.AddMetric(op + "_latency_us_total", latency_us);
-    metadata_.AddMetric(op + "_" + tier + "_latency_us_total", latency_us);
-    metadata_.SetMetricMax(op + "_latency_us_max", latency_us);
-    metadata_.SetMetricMax(op + "_" + tier + "_latency_us_max", latency_us);
+    AddBufferedMetric(op + "_latency_us_total", latency_us);
+    AddBufferedMetric(op + "_" + tier + "_latency_us_total", latency_us);
+    SetBufferedMetricMax(op + "_latency_us_max", latency_us);
+    SetBufferedMetricMax(op + "_" + tier + "_latency_us_max", latency_us);
     const std::string bucket = LatencyBucket(latency_us);
-    metadata_.AddMetric(op + "_latency_bucket_" + bucket, 1);
-    metadata_.AddMetric(op + "_" + tier + "_latency_bucket_" + bucket, 1);
+    AddBufferedMetric(op + "_latency_bucket_" + bucket, 1);
+    AddBufferedMetric(op + "_" + tier + "_latency_bucket_" + bucket, 1);
+  }
+
+  void AddBufferedMetric(const std::string& name, uint64_t delta) {
+    if (delta == 0) {
+      return;
+    }
+    std::lock_guard<std::mutex> lock(buffered_metrics_mu_);
+    buffered_metrics_[name] += delta;
+  }
+
+  void SetBufferedMetricMax(const std::string& name, uint64_t value) {
+    std::lock_guard<std::mutex> lock(buffered_metrics_mu_);
+    auto [it, inserted] = buffered_metric_max_.emplace(name, value);
+    if (!inserted) {
+      it->second = std::max(it->second, value);
+    }
+  }
+
+  void FlushBufferedMetrics() {
+    std::unordered_map<std::string, uint64_t> pending;
+    std::unordered_map<std::string, uint64_t> pending_max;
+    {
+      std::lock_guard<std::mutex> lock(buffered_metrics_mu_);
+      if (buffered_metrics_.empty() && buffered_metric_max_.empty()) {
+        return;
+      }
+      pending.swap(buffered_metrics_);
+      pending_max.swap(buffered_metric_max_);
+    }
+    for (const auto& [name, delta] : pending) {
+      metadata_.AddMetric(name, delta);
+    }
+    for (const auto& [name, value] : pending_max) {
+      metadata_.SetMetricMax(name, value);
+    }
   }
 
   void ApplyQos(const Handle& handle, bool write, uint64_t bytes) {
     const uint64_t limit =
         write ? config_.qos_write_iops_per_gpu : config_.qos_read_iops_per_gpu;
     if (limit == 0) {
-      metadata_.AddMetric(write ? "qos_foreground_write_ops"
-                                : "qos_foreground_read_ops",
-                          1);
-      return;
-    }
-    metadata_.AddMetric(write ? "qos_foreground_write_ops"
+      AddBufferedMetric(write ? "qos_foreground_write_ops"
                               : "qos_foreground_read_ops",
                         1);
+      return;
+    }
+    AddBufferedMetric(write ? "qos_foreground_write_ops"
+                            : "qos_foreground_read_ops",
+                      1);
     const auto gap = std::chrono::microseconds(
         std::max<uint64_t>(1, 1000000ULL / std::max<uint64_t>(1, limit)));
     const std::string key =
@@ -2913,17 +3078,17 @@ class TokenFS {
     }
     const auto delay_us =
         std::chrono::duration_cast<std::chrono::microseconds>(delay).count();
-    metadata_.AddMetric("qos_delay_us_total", static_cast<uint64_t>(delay_us));
-    metadata_.AddMetric("qos_delay_ops", 1);
-    metadata_.AddMetric("qos_foreground_delay_ops", 1);
-    metadata_.AddMetric("qos_foreground_delay_us_total",
-                        static_cast<uint64_t>(delay_us));
-    metadata_.AddMetric("qos_gpu" + std::to_string(handle.caller_gpu_id) +
-                            "_delay_us_total",
-                        static_cast<uint64_t>(delay_us));
-    metadata_.AddMetric("qos_gpu" + std::to_string(handle.caller_gpu_id) +
-                            "_delayed_bytes",
-                        bytes);
+    AddBufferedMetric("qos_delay_us_total", static_cast<uint64_t>(delay_us));
+    AddBufferedMetric("qos_delay_ops", 1);
+    AddBufferedMetric("qos_foreground_delay_ops", 1);
+    AddBufferedMetric("qos_foreground_delay_us_total",
+                      static_cast<uint64_t>(delay_us));
+    AddBufferedMetric("qos_gpu" + std::to_string(handle.caller_gpu_id) +
+                          "_delay_us_total",
+                      static_cast<uint64_t>(delay_us));
+    AddBufferedMetric("qos_gpu" + std::to_string(handle.caller_gpu_id) +
+                          "_delayed_bytes",
+                      bytes);
     std::this_thread::sleep_for(delay);
   }
 
@@ -2988,10 +3153,19 @@ class TokenFS {
     if (!existing || existing->tier != "remote" || existing->state != "COMMITTED") {
       return;
     }
-    metadata_.AddMetric("adaptive_promote_trigger_count", 1);
     FileMeta meta = *existing;
-    if (int rc = PromoteToLocal(*gpu, rel, meta, "adaptive_promote"); rc != 0) {
-      metadata_.AddMetric("adaptive_promote_error_count", 1);
+    if (!ShouldPromoteOnRead(meta, meta.read_count, handle.caller_gpu_id)) {
+      metadata_.AddMetric("adaptive_promote_skip_unprofitable", 1);
+      return;
+    }
+    metadata_.AddMetric("adaptive_promote_trigger_count", 1);
+    if (config_.async_promote_on_read) {
+      SchedulePromoteToLocal(*gpu, rel, handle.logical_path, "adaptive_promote",
+                             true);
+    } else {
+      if (int rc = PromoteToLocal(*gpu, rel, meta, "adaptive_promote"); rc != 0) {
+        metadata_.AddMetric("adaptive_promote_error_count", 1);
+      }
     }
   }
 
@@ -3002,6 +3176,13 @@ class TokenFS {
   uint64_t next_handle_ = 1;
   std::mutex prefetch_mu_;
   std::set<std::string> prefetch_inflight_;
+  std::mutex promote_mu_;
+  std::set<std::string> promote_inflight_;
+  std::mutex cross_gpu_replica_mu_;
+  std::set<std::string> cross_gpu_replica_inflight_;
+  std::mutex buffered_metrics_mu_;
+  std::unordered_map<std::string, uint64_t> buffered_metrics_;
+  std::unordered_map<std::string, uint64_t> buffered_metric_max_;
   std::mutex qos_mu_;
   std::unordered_map<std::string, Clock::time_point> qos_next_;
 };
@@ -3158,12 +3339,36 @@ Config LoadConfig(const fs::path& path) {
   if (root["policy"] && root["policy"]["promote_on_read"]) {
     config.promote_on_read = root["policy"]["promote_on_read"].as<bool>(false);
   }
+  if (root["policy"] && root["policy"]["async_promote_on_read"]) {
+    config.async_promote_on_read =
+        root["policy"]["async_promote_on_read"].as<bool>(false);
+  }
   if (root["policy"] && root["policy"]["promote_read_threshold"]) {
     config.promote_read_threshold =
         root["policy"]["promote_read_threshold"].as<uint64_t>(2);
   }
+  if (root["policy"] && root["policy"]["migration_min_reuse_reads"]) {
+    config.migration_min_reuse_reads =
+        root["policy"]["migration_min_reuse_reads"].as<uint64_t>(6);
+  }
+  if (root["policy"] && root["policy"]["migration_min_benefit_x100"]) {
+    config.migration_min_benefit_x100 =
+        root["policy"]["migration_min_benefit_x100"].as<uint64_t>(150);
+  }
+  if (root["policy"] && root["policy"]["migration_copy_cost_per_mib"]) {
+    config.migration_copy_cost_per_mib =
+        root["policy"]["migration_copy_cost_per_mib"].as<uint64_t>(8);
+  }
+  if (root["policy"] && root["policy"]["speculative_copy_may_evict"]) {
+    config.speculative_copy_may_evict =
+        root["policy"]["speculative_copy_may_evict"].as<bool>(false);
+  }
   if (root["policy"] && root["policy"]["prefetch_on_read"]) {
     config.prefetch_on_read = root["policy"]["prefetch_on_read"].as<bool>(false);
+  }
+  if (root["policy"] && root["policy"]["async_cross_gpu_replica"]) {
+    config.async_cross_gpu_replica =
+        root["policy"]["async_cross_gpu_replica"].as<bool>(false);
   }
 
   for (const auto& item : root["backends"]) {

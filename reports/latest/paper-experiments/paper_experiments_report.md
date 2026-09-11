@@ -85,15 +85,15 @@
 TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/real_speed_benchmark.sh
 ```
 
-该实验读取 FUSE/TokenFS 实际运行产生的 wall-clock 时间、有效吞吐和平均读写延迟，不使用成本模型权重。脚本默认强制检查远端后端已经通过 NVMe-oF 直连挂载，避免把 `remote-sim` 开发目录或 SSH tunnel 数据路径误写成直连网络 SSD 结果。workload 会使用独立实验命名空间，构造远端 canonical KV、本地冷缓存、容量压力、热点复用、顺序预取和跨 GPU 共享访问；因此可以同时观察总耗时和策略生效后的复用阶段收益。
+该实验读取 FUSE/TokenFS 实际运行产生的 wall-clock 时间、读路径吞吐、有效吞吐和平均读写延迟，不使用成本模型权重。脚本默认强制检查远端后端已经通过 NVMe-oF 直连挂载，避免把 `remote-sim` 开发目录或 SSH tunnel 数据路径误写成直连网络 SSD 结果。workload 会使用独立实验命名空间，构造远端 canonical KV、本地冷缓存、容量压力、热点复用、顺序预取和跨 GPU 共享访问；重复读取在同一个 loader 进程内批量执行，并默认在关键阶段和每次逻辑读取计时前请求清理 Linux page cache。清缓存动作只作为 `cache_control` 证据记录，不计入读写耗时，用于避免 RemoteOnly 被 DRAM 页缓存伪加速。因此可以同时观察总耗时、读阶段吞吐和策略生效后的复用阶段收益。
 
-| 策略 | 总数据 MiB | 总耗时 s | 有效吞吐 MiB/s | 相对 RemoteOnly 加速 | 复用阶段吞吐 MiB/s | 复用阶段相对吞吐 | 平均读 us | 本地读命中率 | 远端打开读取 | 后台动作 |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|
-| `RemoteOnly` | 552.0 | 9.6369 | 57.28 | 1.0x | 59.92 | 1.0x | 2718.29 | 0.0% | 64 | promote=0, prefetch=0/0, evict=0, xgpu=0/0 |
-| `LocalFirst` | 552.0 | 9.062 | 60.91 | 1.0634x | 63.69 | 1.063x | 2576.61 | 1.56% | 63 | promote=0, prefetch=0/0, evict=0, xgpu=0/0 |
-| `LRU-Local` | 552.0 | 9.3226 | 59.21 | 1.0337x | 63.03 | 1.0519x | 2607.8 | 1.56% | 63 | promote=0, prefetch=0/0, evict=1, xgpu=0/0 |
-| `LFU-Local` | 552.0 | 9.655 | 57.17 | 0.9981x | 58.48 | 0.976x | 2763.16 | 1.56% | 63 | promote=0, prefetch=0/0, evict=1, xgpu=0/0 |
-| `AURA-Joint` | 552.0 | 9.7904 | 56.38 | 0.9843x | 61.63 | 1.0285x | 2714.6 | 96.88% | 3 | promote=1, prefetch=1/1, evict=3, xgpu=1/15 |
+| 策略 | 总数据 MiB | 总耗时 s | 总吞吐 MiB/s | 总吞吐相对 RemoteOnly | 读吞吐 MiB/s | 读吞吐相对 RemoteOnly | 复用阶段吞吐 MiB/s | 复用阶段相对吞吐 | 平均读 us | 本地读命中率 | 远端打开读取 | 后台动作 |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|
+| `RemoteOnly` | 2120.0 | 9.9846 | 212.33 | 1.0x | 222.6 | 1.0x | 223.07 | 1.0x | 614.38 | 0.0% | 260 | promote=0, prefetch=0/0, evict=0, xgpu=0/0 |
+| `LocalFirst` | 2120.0 | 9.8412 | 215.42 | 1.0146x | 220.89 | 0.9923x | 220.81 | 0.9899x | 616.77 | 0.38% | 259 | promote=0, prefetch=0/0, evict=0, xgpu=0/0 |
+| `LRU-Local` | 2120.0 | 10.2084 | 207.67 | 0.9781x | 215.31 | 0.9673x | 215.26 | 0.965x | 635.81 | 0.38% | 259 | promote=0, prefetch=0/0, evict=1, xgpu=0/0 |
+| `LFU-Local` | 2120.0 | 10.9568 | 193.49 | 0.9113x | 198.14 | 0.8901x | 197.59 | 0.8858x | 684.0 | 0.38% | 259 | promote=0, prefetch=0/0, evict=1, xgpu=0/0 |
+| `AURA-Joint` | 2120.0 | 3.8229 | 554.55 | 2.6118x | 620.21 | 2.7862x | 637.74 | 2.8589x | 87.5 | 96.54% | 9 | promote=1, prefetch=7/1, evict=2, xgpu=1/62 |
 
 ## 2. 端到端延迟代理实验
 

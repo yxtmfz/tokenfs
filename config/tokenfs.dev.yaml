@@ -46,9 +46,19 @@ policy:
   qos_background_mib_per_sec_per_gpu: 0
   # 热点提升默认关闭，便于和纯 local-first/remote-spill 策略做对照实验。
   promote_on_read: false
+  # 打开后，热点提升只进入后台队列，不阻塞当前前台读请求。
+  async_promote_on_read: false
   promote_read_threshold: 2
+  # 后台提升/复制必须能摊销复制成本，避免只为提高命中率而拖慢总耗时。
+  migration_min_reuse_reads: 6
+  migration_min_benefit_x100: 150
+  migration_copy_cost_per_mib: 8
+  # 预取/跨 GPU 副本属于推测动作；默认不能为了推测复制而驱逐已有本地缓存。
+  speculative_copy_may_evict: false
   # 顺序 shard 预取默认关闭；实验时开启，用于比较远端读取和提前回迁本地的收益。
   prefetch_on_read: false
+  # 打开后，跨 GPU 本地副本创建在后台执行，避免首次跨 GPU 读取被复制动作阻塞。
+  async_cross_gpu_replica: false
 
 gpus:
   - gpu_id: 0

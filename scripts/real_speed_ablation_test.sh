@@ -23,10 +23,11 @@ make_config() {
   local promote="$5"
   local prefetch="$6"
   local cross_gpu="$7"
+  local async_background="$8"
   local output="$tmp_dir/$name.yaml"
 
   python3 - "$base_config" "$output" "$quota_mib" "$eviction_policy" \
-    "$placement_policy" "$promote" "$prefetch" "$cross_gpu" <<'PY'
+    "$placement_policy" "$promote" "$prefetch" "$cross_gpu" "$async_background" <<'PY'
 import re
 import sys
 from pathlib import Path
@@ -39,20 +40,39 @@ placement_policy = sys.argv[5]
 promote = sys.argv[6]
 prefetch = sys.argv[7]
 cross_gpu = sys.argv[8]
+async_background = sys.argv[9]
 
 text = src.read_text(encoding="utf-8")
 
 def replace_scalar(key: str, value: str) -> None:
     global text
-    text = re.sub(rf"(^\s*{re.escape(key)}:\s*).*$", rf"\g<1>{value}", text, flags=re.M)
+    pattern = rf"(^\s*{re.escape(key)}:\s*).*$"
+    updated, count = re.subn(pattern, rf"\g<1>{value}", text, flags=re.M)
+    if count > 0:
+        text = updated
+        return
+    marker = "  promote_on_read:"
+    insert = f"  {key}: {value}\n"
+    idx = text.find(marker)
+    if idx >= 0:
+        text = text[:idx] + insert + text[idx:]
+    else:
+        text += "\npolicy:\n" + insert
 
 replace_scalar("local_eviction_policy", eviction_policy)
 replace_scalar("placement_policy", placement_policy)
 replace_scalar("promote_on_read", promote)
 replace_scalar("prefetch_on_read", prefetch)
 replace_scalar("cross_gpu_local_cache", cross_gpu)
-replace_scalar("value_promote_threshold", "1")
+replace_scalar("async_promote_on_read", async_background)
+replace_scalar("async_cross_gpu_replica", async_background)
+replace_scalar("value_promote_threshold", "100")
 replace_scalar("promote_read_threshold", "2")
+replace_scalar("migration_min_reuse_reads", "6")
+replace_scalar("migration_min_benefit_x100", "150")
+replace_scalar("migration_copy_cost_per_mib", "8")
+replace_scalar("speculative_copy_may_evict", "false")
+replace_scalar("qos_background_mib_per_sec_per_gpu", "256")
 text = re.sub(r"(^\s*local_quota_mib:\s*)\d+.*$", rf"\g<1>{quota_mib}", text, flags=re.M)
 dst.write_text(text, encoding="utf-8")
 PY
@@ -67,9 +87,10 @@ run_case() {
   local promote="$5"
   local prefetch="$6"
   local cross_gpu="$7"
+  local async_background="$8"
 
   local config
-  config="$(make_config "$name" "$quota_mib" "$eviction_policy" "$placement_policy" "$promote" "$prefetch" "$cross_gpu")"
+  config="$(make_config "$name" "$quota_mib" "$eviction_policy" "$placement_policy" "$promote" "$prefetch" "$cross_gpu" "$async_background")"
   local out="$result_root/$name"
   local run_id="real-${name}-$(date +%s)-$$"
   echo "real-speed ablation: $name"
@@ -78,19 +99,22 @@ run_case() {
   TOKENFS_SHARD_MIB="${TOKENFS_SHARD_MIB:-8}" \
   TOKENFS_REMOTE_HOT_SHARDS="${TOKENFS_REMOTE_HOT_SHARDS:-2}" \
   TOKENFS_COLD_FILL_SHARDS="${TOKENFS_COLD_FILL_SHARDS:-4}" \
-  TOKENFS_CROSS_GPU_READS="${TOKENFS_CROSS_GPU_READS:-16}" \
+  TOKENFS_CROSS_GPU_READS="${TOKENFS_CROSS_GPU_READS:-64}" \
   TOKENFS_PRESSURE_SHARD_MIB="${TOKENFS_PRESSURE_SHARD_MIB:-8}" \
-  TOKENFS_HOT_REHIT_READS="${TOKENFS_HOT_REHIT_READS:-32}" \
-  TOKENFS_SEQUENTIAL_REHIT_READS="${TOKENFS_SEQUENTIAL_REHIT_READS:-12}" \
+  TOKENFS_HOT_REHIT_READS="${TOKENFS_HOT_REHIT_READS:-128}" \
+  TOKENFS_SEQUENTIAL_REHIT_READS="${TOKENFS_SEQUENTIAL_REHIT_READS:-64}" \
   TOKENFS_CHUNK_MIB="${TOKENFS_CHUNK_MIB:-1}" \
+  TOKENFS_FADVISE_DONTNEED="${TOKENFS_FADVISE_DONTNEED:-1}" \
+  TOKENFS_DROP_OS_CACHES="${TOKENFS_DROP_OS_CACHES:-1}" \
+  TOKENFS_DROP_OS_CACHES_PER_READ="${TOKENFS_DROP_OS_CACHES_PER_READ:-1}" \
     "$project_root/scripts/token_workload_test.sh" "$out" >/dev/null
 }
 
-run_case RemoteOnly 0 none remote_only false false false
-run_case LocalFirst 32 none local_first false false false
-run_case LRU-Local 32 lru local_first false false false
-run_case LFU-Local 32 lfu local_first false false false
-run_case AURA-Joint 32 value_aware value_aware true true true
+run_case RemoteOnly 0 none remote_only false false false false
+run_case LocalFirst 32 none local_first false false false false
+run_case LRU-Local 32 lru local_first false false false false
+run_case LFU-Local 32 lfu local_first false false false false
+run_case AURA-Joint 32 value_aware value_aware true true true true
 
 python3 - "$result_root" <<'PY'
 import csv
@@ -108,6 +132,8 @@ def workload_seconds(path: Path) -> float:
     total = 0.0
     with path.open("r", encoding="utf-8") as f:
         for row in csv.DictReader(f):
+            if row["operation"] == "cache_control":
+                continue
             total += float(row["seconds"])
     return total
 

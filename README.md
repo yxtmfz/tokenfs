@@ -150,7 +150,14 @@ reports/latest/paper-experiments/paper_experiments_report.md
 | DualWindowReplacement | 0.8907 | 146.15 MiB | 1.4685 ms | 0.7717 |
 | AURA-Joint | 0.8822 | 228.31 MiB | 1.4749 ms | 0.5376 |
 
-`AURA-Joint` 不追求单项指标永远第一，而是降低综合服务代价：前台访问延迟、远端读取、Peer 读取、后台迁移、重复副本空间和副本创建/删除抖动。
+`AURA-Joint` 不追求单项指标永远第一，而是降低综合服务代价：前台访问延迟、远端读取、Peer 读取、后台迁移、重复副本空间和副本创建/删除抖动。真实速度实验中，如果 AURA 已经显著减少远端读取但总耗时没有提升，不能通过构造极端 workload 来证明策略，而要回到两个根因：
+
+1. **实现开销是否过大**：前台读写是否被 SQLite 指标写入、同步提升、同步副本复制或后台淘汰拖慢。
+2. **环境差距是否真实**：当前本地 SSD 与 NVMe-oF 远端 SSD 的读写差距是否足够大，是否被页缓存、虚拟化或同宿主机路径抹平。
+
+因此当前代码采用更保守的在线决策：远端对象不会因为“读过两次”就立刻搬到本地，而是同时满足复用次数、价值分数和迁移收益比之后才触发后台提升或复制。本地命中率不是唯一目标，最终仍以真实 `wall_time_s`、`effective_mib_s`、`read_mib_s` 和复用阶段吞吐判断策略是否真的变快。
+
+后台动作也被分成两类：热点提升是确认复用后的强动作，必要时可以通过价值感知淘汰腾空间；顺序预取和跨 GPU 副本是推测动作，默认只在本地有余量时执行，不为了预测性复制挤掉已有缓存。这样可以降低后台迁移造成的写放大和抖动。
 
 成本模型的结果不能单独证明系统更快，所以当前仓库还提供真实速度入口。这个入口默认只接受 NVMe-oF 直连挂载目录，并使用和论文消融一致的策略分类：
 
@@ -173,7 +180,32 @@ reports/latest/paper-experiments/06_real_speed_benchmark/real_speed_report.md
 reports/latest/paper-experiments/06_real_speed_benchmark/real_speed_summary.csv
 ```
 
-这部分直接看 `wall_time_s`、`effective_mib_s`、`avg_read_us` 和 `speedup_vs_baseline`。其中 `speedup_vs_baseline` 的 baseline 是 `RemoteOnly`。同时还要看 `steady_reuse_mib_s` 和 `steady_reuse_vs_baseline`，它们只统计热点提升、顺序预取和跨 GPU 副本生效之后的复用读取阶段，用来判断后台策略完成后是否真的减少后续读取代价。`promote_count`、`prefetch_count`、`evict_count`、`cross_gpu_local_replica_hit` 是内部动作统计，用来解释 AURA-Joint 做了什么，不再作为论文主对照组名称。
+这部分直接看 `wall_time_s`、`effective_mib_s`、`read_mib_s`、`avg_read_us` 和 `speedup_vs_baseline`。其中 `speedup_vs_baseline` 的 baseline 是 `RemoteOnly`，表示完整 workload 总耗时是否真的变快；`read_mib_s` 只看读路径吞吐，更接近 KV Cache 获取速度。同时还要看 `steady_reuse_mib_s` 和 `steady_reuse_vs_baseline`，它们只统计热点提升、顺序预取和跨 GPU 副本生效之后的复用读取阶段，用来判断后台策略完成后是否真的减少后续读取代价。`promote_count`、`prefetch_count`、`evict_count`、`cross_gpu_local_replica_hit` 是内部动作统计，用来解释 AURA-Joint 做了什么，不再作为论文主对照组名称。
+
+真实速度是否能明显提高，取决于两个条件同时成立：
+
+1. AURA 确实把后续读请求从远端转到本地，并且后台迁移不阻塞前台请求；
+2. 当前机器里“本地 SSD”和“NVMe-oF 远端 SSD”存在足够明显的物理访问差距。
+
+因此仓库同时提供环境差距诊断：
+
+```bash
+TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/nvmeof_gap_diagnostic.sh
+```
+
+输出：
+
+```text
+reports/latest/paper-experiments/06_real_speed_benchmark/environment-gap/storage_gap_report.md
+reports/latest/paper-experiments/06_real_speed_benchmark/environment-gap/storage_gap_summary.csv
+```
+
+如果诊断结果显示本地/远端读吞吐比接近 `1.0x`，说明当前双 VM 或共享宿主机环境过于理想化，策略虽然能减少远端访问，但不容易在总耗时上拉开差距。另一个常见干扰是 Linux page cache：当实验数据集小于内存时，RemoteOnly 的重复读取可能不再访问 NVMe-oF，而是直接命中内存，从而把远端路径伪装得接近本地路径。此时不能通过修改 workload 去“制造胜利”，而应当优先做下面两件事：
+
+- 优化 TokenFS 自身：减少前台路径指标写库、避免同步搬迁、限制后台复制对前台 I/O 的干扰，并用迁移收益门槛减少无效复制；
+- 校准实验环境：用真实 NVMe-oF 直连、真实网络 RTT/带宽、`fio` 基线和环境差距诊断证明远端代价确实存在。
+
+当前真实速度脚本会保留 workload 不变，只改变策略实现和配置门槛。这样得到的结果才是在改系统，而不是改题目。
 
 当前真实 workload 会使用每轮独立的实验命名空间，避免旧的远端文件影响结果，也不会清理已有远端数据。它显式构造：
 
@@ -183,6 +215,8 @@ reports/latest/paper-experiments/06_real_speed_benchmark/real_speed_summary.csv
 - 热点重复读取：触发 AURA 的热点提升；
 - 连续 shard 读取：触发顺序预取；
 - 跨 GPU 共享读取：触发 GPU 亲和本地副本。
+
+为了避免短流程把策略收益淹没，真实速度脚本默认把热点、连续 shard 和跨 GPU 共享读改成同一 loader 进程中的批量重复读取；同时在关键阶段和每次逻辑读计时前请求清理 Linux page cache，并把这些动作记录为 `cache_control` 行。清缓存动作不计入策略读写耗时，它的目的不是改变 workload，而是避免 RemoteOnly 被 DRAM 页缓存免费加速，确保比较对象仍是本地 SSD 路径和远端 NVMe-oF 路径。AURA-Joint 的热点提升和跨 GPU 副本创建默认使用后台异步执行：当前请求仍按现有路径完成，复制动作服务于后续请求，避免把迁移开销直接压到前台读延迟上。
 
 为避免误用，`real_speed_benchmark.sh` 现在默认强制检查 NVMe-oF：
 
@@ -206,6 +240,9 @@ python3 scripts/paper_experiments.py
 
 # 真实 TokenFS workload 速度实验，需 Linux/FUSE
 TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/real_speed_benchmark.sh
+
+# 检查当前环境本地/远端是否存在足够性能差距
+TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/nvmeof_gap_diagnostic.sh
 
 # TokenFS 基础功能，需 Linux/FUSE
 ./scripts/smoke_test.sh

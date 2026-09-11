@@ -15,6 +15,9 @@ pressure_shard_mib="${TOKENFS_PRESSURE_SHARD_MIB:-8}"
 hot_rehit_reads="${TOKENFS_HOT_REHIT_READS:-32}"
 sequential_rehit_reads="${TOKENFS_SEQUENTIAL_REHIT_READS:-12}"
 chunk_mib="${TOKENFS_CHUNK_MIB:-1}"
+fadvise_dontneed="${TOKENFS_FADVISE_DONTNEED:-0}"
+drop_os_caches="${TOKENFS_DROP_OS_CACHES:-0}"
+drop_os_caches_per_read="${TOKENFS_DROP_OS_CACHES_PER_READ:-0}"
 
 cleanup() {
   "$project_root/scripts/stop_tokenfs.sh" "$mount_point" >/dev/null 2>&1 || true
@@ -31,7 +34,8 @@ mkdir -p "$result_root"
 
 python3 - "$project_root" "$mount_point" "$metadata_db" "$config_file" "$result_root" \
   "$shard_mib" "$remote_hot_shards" "$cold_fill_shards" "$cross_gpu_reads" \
-  "$pressure_shard_mib" "$hot_rehit_reads" "$sequential_rehit_reads" "$chunk_mib" <<'PY'
+  "$pressure_shard_mib" "$hot_rehit_reads" "$sequential_rehit_reads" "$chunk_mib" \
+  "$fadvise_dontneed" "$drop_os_caches" "$drop_os_caches_per_read" <<'PY'
 import csv
 import os
 import sqlite3
@@ -53,6 +57,9 @@ pressure_shard_mib = int(sys.argv[10])
 hot_rehit_reads = int(sys.argv[11])
 sequential_rehit_reads = int(sys.argv[12])
 chunk_mib = int(sys.argv[13])
+fadvise_dontneed = sys.argv[14] == "1"
+drop_os_caches = sys.argv[15] == "1"
+drop_os_caches_per_read = sys.argv[16] == "1"
 
 sys.path.insert(0, str(project_root / "scripts"))
 from tokenfsctl import parse_config  # noqa: E402
@@ -214,6 +221,22 @@ def record(operation: str, group: str, owner_gpu: int, caller_gpu: int, path: Pa
     )
 
 
+def drop_page_cache(stage: str) -> None:
+    if not drop_os_caches:
+        return
+    start = time.perf_counter()
+    proc = subprocess.run(
+        ["sudo", "-n", "sh", "-c", "sync; echo 3 > /proc/sys/vm/drop_caches"],
+        text=True,
+        capture_output=True,
+    )
+    elapsed = time.perf_counter() - start
+    note = "Linux page cache dropped before storage-tier measurement"
+    if proc.returncode != 0:
+        note = "requested Linux page cache drop but sudo non-interactive permission was unavailable"
+    record("cache_control", stage, -1, -1, Path("/proc/sys/vm/drop_caches"), 0.0, elapsed, note)
+
+
 def write_via_fuse(owner_gpu: int, shard_id: int, size_mib: int, group: str) -> Path:
     path = mount / f"gpu{owner_gpu}" / dataset_dir / f"shard-{shard_id:06d}.tokens"
     start = time.perf_counter()
@@ -244,44 +267,86 @@ def append_via_fuse(owner_gpu: int, shard_id: int, append_mib: int, group: str) 
 
 def read_via_fuse(owner_gpu: int, caller_gpu: int, shard_id: int, group: str,
                   subdir: str | None = None) -> Path:
+    return read_many_via_fuse(owner_gpu, caller_gpu, shard_id, group, 1, subdir)
+
+
+def read_many_via_fuse(owner_gpu: int, caller_gpu: int, shard_id: int, group: str,
+                       repeats: int, subdir: str | None = None) -> Path:
     if subdir is None:
         subdir = dataset_dir
     path = mount / f"gpu{owner_gpu}" / subdir / f"shard-{shard_id:06d}.tokens"
     code = r"""
 import sys
+import os
+import subprocess
+import time
 from pathlib import Path
 p = Path(sys.argv[1])
 owner = int(sys.argv[2])
 shard = int(sys.argv[3])
 chunk = int(sys.argv[4])
-first = b""
+repeats = int(sys.argv[5])
+drop_cache = sys.argv[6] == "1"
+drop_os_cache_per_read = sys.argv[7] == "1"
 total = 0
-with p.open("rb", buffering=0) as f:
-    while True:
-        data = f.read(chunk)
-        if not data:
-            break
-        if not first:
-            first = data[:128]
-        total += len(data)
+elapsed = 0.0
+for _ in range(repeats):
+    first = b""
+    if drop_os_cache_per_read:
+        subprocess.run(
+            ["sudo", "-n", "sh", "-c", "sync; echo 3 > /proc/sys/vm/drop_caches"],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            check=False,
+        )
+    start = time.perf_counter()
+    with p.open("rb", buffering=0) as f:
+        while True:
+            data = f.read(chunk)
+            if not data:
+                break
+            if not first:
+                first = data[:128]
+            total += len(data)
+        if drop_cache and hasattr(os, "posix_fadvise"):
+            try:
+                os.posix_fadvise(f.fileno(), 0, 0, os.POSIX_FADV_DONTNEED)
+            except OSError:
+                pass
+    elapsed += time.perf_counter() - start
 expected = f"gpu={owner};shard={shard};chunk=0;".encode()
 if expected not in first:
     raise SystemExit(f"unexpected content in {p}")
 print(total)
+print(elapsed)
 """
     env = os.environ.copy()
     env["TOKENFS_GPU_ID"] = str(caller_gpu)
-    start = time.perf_counter()
     proc = subprocess.run(
-        [sys.executable, "-c", code, str(path), str(owner_gpu), str(shard_id), str(chunk_bytes)],
+        [
+            sys.executable,
+            "-c",
+            code,
+            str(path),
+            str(owner_gpu),
+            str(shard_id),
+            str(chunk_bytes),
+            str(repeats),
+            "1" if fadvise_dontneed else "0",
+            "1" if drop_os_caches_per_read else "0",
+        ],
         env=env,
         check=True,
         text=True,
         capture_output=True,
     )
-    elapsed = time.perf_counter() - start
-    size_mib = int(proc.stdout.strip()) / MIB
-    record("read", group, owner_gpu, caller_gpu, path, size_mib, elapsed)
+    stdout = proc.stdout.strip().splitlines()
+    size_mib = int(stdout[0]) / MIB
+    elapsed = float(stdout[1]) if len(stdout) > 1 else 0.0
+    note = "" if repeats == 1 else f"batched {repeats} repeated reads in one loader process"
+    if drop_os_caches_per_read:
+        note = (note + "; " if note else "") + "Linux page cache dropped before each logical read"
+    record("read", group, owner_gpu, caller_gpu, path, size_mib, elapsed, note)
     return path
 
 
@@ -308,31 +373,35 @@ for i in range(cold_fill_shards):
 mark_cold(f"/gpu0/{dataset_dir}/shard-00000")
 
 # 3. 访问一个本地冷文件，提供本地直接命中的对照。
+drop_page_cache("before-cold-local-read")
 read_via_fuse(0, 0, 0, "cold-local-read")
 
 # 4. 扩展已有本地文件制造容量压力，LRU/LFU/AURA 会被迫执行淘汰。
 append_via_fuse(0, 0, pressure_shard_mib, "capacity-pressure-append-existing")
 
 # 5. 重复访问远端热点 shard，第二次以后 AURA 可以触发热点提升。
+drop_page_cache("before-remote-hot-first-read")
 read_via_fuse(0, 0, 100, "remote-hot-first-read")
 read_via_fuse(0, 0, 100, "remote-hot-second-read-promote")
 time.sleep(1.0)
-for _ in range(hot_rehit_reads):
-    read_via_fuse(0, 0, 100, "hot-rehit-after-promote")
+drop_page_cache("before-hot-rehit-after-promote")
+read_many_via_fuse(0, 0, 100, "hot-rehit-after-promote", hot_rehit_reads)
 
 # 6. 连续访问下一片 shard；开启预取时，这里应尽量变成本地读取。
 if remote_hot_shards > 1:
     time.sleep(1.0)
+    drop_page_cache("before-sequential-next-read-after-prefetch")
     read_via_fuse(0, 0, 101, "sequential-next-read-after-prefetch")
-    for _ in range(sequential_rehit_reads):
-        read_via_fuse(0, 0, 101, "sequential-rehit-after-prefetch")
+    drop_page_cache("before-sequential-rehit-after-prefetch")
+    read_many_via_fuse(0, 0, 101, "sequential-rehit-after-prefetch", sequential_rehit_reads)
 
 # 7. GPU1 多次访问 GPU0 的共享 KV Cache，触发跨 GPU 本地副本与后续命中。
-for idx in range(cross_gpu_reads):
-    group = "cross-gpu-shared-read"
-    if idx == cross_gpu_reads - 1:
-        group = "cross-gpu-rehit-after-replica"
-    read_via_fuse(0, 1, 200, group, shared_dir)
+drop_page_cache("before-cross-gpu-first-read")
+read_via_fuse(0, 1, 200, "cross-gpu-first-read-create-replica", shared_dir)
+if cross_gpu_reads > 1:
+    time.sleep(1.0)
+    drop_page_cache("before-cross-gpu-rehit-after-replica")
+    read_many_via_fuse(0, 1, 200, "cross-gpu-rehit-after-replica", cross_gpu_reads - 1, shared_dir)
 
 with (result / "summary.csv").open("w", newline="", encoding="utf-8") as f:
     writer = csv.DictWriter(

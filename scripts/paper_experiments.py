@@ -488,10 +488,10 @@ def write_report(
             "TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/real_speed_benchmark.sh",
             "```",
             "",
-            "该实验读取 FUSE/TokenFS 实际运行产生的 wall-clock 时间、有效吞吐和平均读写延迟，不使用成本模型权重。脚本默认强制检查远端后端已经通过 NVMe-oF 直连挂载，避免把 `remote-sim` 开发目录或 SSH tunnel 数据路径误写成直连网络 SSD 结果。workload 会使用独立实验命名空间，构造远端 canonical KV、本地冷缓存、容量压力、热点复用、顺序预取和跨 GPU 共享访问；因此可以同时观察总耗时和策略生效后的复用阶段收益。",
+            "该实验读取 FUSE/TokenFS 实际运行产生的 wall-clock 时间、读路径吞吐、有效吞吐和平均读写延迟，不使用成本模型权重。脚本默认强制检查远端后端已经通过 NVMe-oF 直连挂载，避免把 `remote-sim` 开发目录或 SSH tunnel 数据路径误写成直连网络 SSD 结果。workload 会使用独立实验命名空间，构造远端 canonical KV、本地冷缓存、容量压力、热点复用、顺序预取和跨 GPU 共享访问；重复读取在同一个 loader 进程内批量执行，并默认在关键阶段和每次逻辑读取计时前请求清理 Linux page cache。清缓存动作只作为 `cache_control` 证据记录，不计入读写耗时，用于避免 RemoteOnly 被 DRAM 页缓存伪加速。因此可以同时观察总耗时、读阶段吞吐和策略生效后的复用阶段收益。",
             "",
-            "| 策略 | 总数据 MiB | 总耗时 s | 有效吞吐 MiB/s | 相对 RemoteOnly 加速 | 复用阶段吞吐 MiB/s | 复用阶段相对吞吐 | 平均读 us | 本地读命中率 | 远端打开读取 | 后台动作 |",
-            "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|",
+            "| 策略 | 总数据 MiB | 总耗时 s | 总吞吐 MiB/s | 总吞吐相对 RemoteOnly | 读吞吐 MiB/s | 读吞吐相对 RemoteOnly | 复用阶段吞吐 MiB/s | 复用阶段相对吞吐 | 平均读 us | 本地读命中率 | 远端打开读取 | 后台动作 |",
+            "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|",
         ]
     )
     if real_speed_rows:
@@ -504,14 +504,15 @@ def write_report(
             )
             lines.append(
                 f"| `{row.get('case', '')}` | {row.get('total_mib', '')} | {row.get('wall_time_s', '')} | "
-                f"{row.get('effective_mib_s', '')} | {row.get('speedup_vs_baseline', '')}x | "
+                f"{row.get('effective_mib_s', '')} | {row.get('throughput_vs_baseline', '')}x | "
+                f"{row.get('read_mib_s', '')} | {row.get('read_speedup_vs_baseline', '')}x | "
                 f"{row.get('steady_reuse_mib_s', '')} | {row.get('steady_reuse_vs_baseline', '')}x | "
                 f"{row.get('avg_read_us', '')} | {row.get('local_read_hit_rate_pct', '')}% | "
                 f"{row.get('remote_read_open', '')} | {actions} |"
             )
     else:
         lines.append(
-            "| pending | 0 | 0 | 0 | 0x | 0 | 0x | 0 | 0% | 0 | 需要在 Linux/FUSE 环境把远端配置为 NVMe-oF 挂载目录后运行 `TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/real_speed_benchmark.sh` |"
+            "| pending | 0 | 0 | 0 | 0x | 0 | 0x | 0 | 0x | 0 | 0% | 0 | 需要在 Linux/FUSE 环境把远端配置为 NVMe-oF 挂载目录后运行 `TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/real_speed_benchmark.sh` |"
         )
 
     lines.extend(

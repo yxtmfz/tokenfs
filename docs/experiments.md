@@ -50,6 +50,8 @@ reports/latest/paper-experiments/
 TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/real_speed_benchmark.sh
 ```
 
+默认情况下，该脚本会在关键阶段和每次逻辑读取计时前请求清理 Linux page cache。清缓存动作会写入 `summary.csv` 的 `cache_control` 行，但不会计入 `wall_time_s`、`effective_mib_s` 和 `read_mib_s`。这样做是为了避免实验数据集小于内存时，RemoteOnly 的重复读取被 DRAM 页缓存加速，导致远端 NVMe-oF 和本地 SSD 的真实差异被掩盖。
+
 输出：
 
 ```text
@@ -66,10 +68,16 @@ reports/latest/paper-experiments/06_real_speed_benchmark/
 | `wall_time_s` | 整个 token shard workload 实际花费的秒数，越低越好 |
 | `effective_mib_s` | workload 总读写数据量除以总耗时，越高越好 |
 | `speedup_vs_baseline` | 相对 `RemoteOnly` 的实际加速比，大于 1 表示真的更快 |
+| `read_mib_s` | 只统计读操作的数据量除以读耗时，更接近 KV Cache 获取速度 |
+| `read_speedup_vs_baseline` | 读路径相对 `RemoteOnly` 的吞吐提升 |
 | `steady_reuse_mib_s` | 策略生效后，热点/预取/跨 GPU 复用读取阶段的吞吐，越高越好 |
 | `steady_reuse_vs_baseline` | 复用阶段相对 `RemoteOnly` 的吞吐比，大于 1 表示后台动作开始产生读取收益 |
 | `avg_read_us` / `avg_write_us` | TokenFS 记录的平均读写耗时 |
 | `remote_read_open` | 读取时打开远端文件的次数，越少通常越好 |
+
+真实速度 workload 的默认参数已经从短流程验证改成更强调热点复用：热点 shard、连续 shard 和跨 GPU 共享 shard 会在同一个 loader 进程里批量重复读取，减少测试程序启动开销；同时默认使用 `posix_fadvise(DONTNEED)` 尽量降低 Linux 页缓存把远端 NVMe-oF 读取结果缓存到内存后造成的测量偏差。
+
+AURA-Joint 的策略动作分成前台和后台两类。前台只负责完成当前读写和记录访问信息；热点提升、顺序预取和跨 GPU 本地副本创建进入后台执行，服务于后续请求。这样可以避免“为了减少未来远端读取，却把当前请求卡在复制过程里”的实现问题。
 
 真实速度实验按论文消融分类运行：
 
@@ -92,6 +100,14 @@ reports/latest/paper-experiments/06_real_speed_benchmark/
 - 这些动作是否最终减少远端读取并改善后续复用阶段吞吐。
 
 该脚本默认强制检查 NVMe-oF 直连挂载：配置里的远端后端必须是 `type: nvmeof`，`nvme_target_ip` 必须是真实 Target IP，`root` 必须指向 `/srv/tokenfs/remote0` 这类挂载目录，并且该目录的实际挂载源必须是 `/dev/nvme...`。如果仍然使用 `/var/lib/tokenfs/remote-sim`，或 `nvme_target_ip` 是 `127.0.0.1` / `localhost`，脚本会直接停止，避免把目录模拟或 SSH tunnel 结果误写成直连 NVMe-oF 端到端速度。
+
+在解释真实速度前，应先运行环境差距诊断：
+
+```bash
+TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/nvmeof_gap_diagnostic.sh
+```
+
+它只测本地目录和 NVMe-oF 挂载目录的原始顺序读写吞吐，不涉及任何 AURA 策略。如果本地/远端读吞吐比接近 `1.0x`，说明当前环境中远端并不比本地慢多少，AURA 减少远端访问也很难转换成明显的总耗时收益。此时实验结论应写成：当前环境已经验证协议接入、后台动作、远端访问减少和系统机制，但速度收益需要在更真实的物理网络差距或可记录的网络校准条件下测量。
 
 ## 3. 当前主要结果
 
@@ -185,7 +201,28 @@ expensive_vs_cheap_mix
 真实速度指标：验证策略在当前系统和 workload 下到底有没有跑得更快。
 ```
 
-如果两者结论不一致，应优先相信真实速度实验，再调整 workload、阈值或成本权重。
+如果两者结论不一致，应优先相信真实速度实验，再调整系统实现、策略阈值或成本权重。
+
+但这里的“调整”不能理解成专门构造有利于 AURA 的极端访问序列。正确做法是：
+
+- 先用 `nvmeof_gap_diagnostic.sh` 证明当前本地/远端物理差距是否足够；
+- 再检查 AURA 的后台迁移是否阻塞前台请求；
+- 再降低前台路径的实现开销，例如减少每次 FUSE read/write 中的同步数据库写入；
+- 然后用迁移收益门槛约束热点提升和跨 GPU 复制，只在预计未来复用能覆盖复制成本时才搬；
+- 最后才根据真实 KV Cache trace 调整阈值和权重。
+
+如果环境本身没有远端代价，任何缓存系统都不应被期待产生大幅速度提升。
+
+当前 AURA 的后台动作不再只看命中率，而是经过三道门槛：
+
+| 门槛 | 配置项 | 含义 |
+|---|---|---|
+| 复用次数 | `migration_min_reuse_reads` | 至少观察到一定次数复用，避免一热就搬 |
+| 数据价值 | `value_promote_threshold` | 对象本身要足够有价值，低价值大对象不轻易进本地 |
+| 收益摊销 | `migration_min_benefit_x100`、`migration_copy_cost_per_mib` | 预计未来少走远端节省的代价，要能覆盖复制和淘汰成本 |
+| 推测动作余量 | `speculative_copy_may_evict` | 默认 `false`，预取/跨 GPU 副本不能为了自己驱逐已有本地缓存 |
+
+这些门槛的目标是让 AURA 少做无效后台迁移，减少“本地命中率提高但总耗时更差”的情况。
 
 为了让结果更直观，论文实验还输出：
 

@@ -35,8 +35,14 @@ policy:
   qos_background_iops_per_gpu: 0
   qos_background_mib_per_sec_per_gpu: 0
   promote_on_read: false
+  async_promote_on_read: false
   promote_read_threshold: 2
+  migration_min_reuse_reads: 6
+  migration_min_benefit_x100: 150
+  migration_copy_cost_per_mib: 8
+  speculative_copy_may_evict: false
   prefetch_on_read: false
+  async_cross_gpu_replica: false
 
 gpus:
   - gpu_id: 0

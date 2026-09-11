@@ -142,6 +142,8 @@ AURA_LOCAL_READ_DEVICE=/dev/nvme0n1 \
 | `scripts/setup_nvme_target.sh` | 双 VM Target 配置 |
 | `scripts/setup_lab_nvmeof_target.sh` | 实验室 Target 通用配置脚本 |
 | `scripts/real_nvmeof_baseline.sh` | 真实 NVMe-oF fio baseline |
+| `scripts/nvmeof_gap_diagnostic.sh` | 诊断本地目录与 NVMe-oF 挂载目录的原始性能差距 |
+| `scripts/nvmeof_net_profile.sh` | 在双 VM 环境中用 `tc` 设置可记录的 NVMe/TCP 网络校准档位 |
 | `scripts/paper_experiments.py` | 论文前四项实验总入口 |
 
 ## 7. 故障与边界

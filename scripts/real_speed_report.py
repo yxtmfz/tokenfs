@@ -17,9 +17,7 @@ CASE_NAMES = {
 }
 STEADY_REUSE_GROUPS = {
     "hot-rehit-after-promote",
-    "sequential-next-read-after-prefetch",
     "sequential-rehit-after-prefetch",
-    "cross-gpu-shared-read",
     "cross-gpu-rehit-after-replica",
 }
 
@@ -65,6 +63,17 @@ def workload_bytes(case_dir: Path) -> tuple[float, float, float]:
     return read_mib, write_mib, read_mib + write_mib
 
 
+def operation_time(case_dir: Path, operation: str) -> float:
+    summary = case_dir / "summary.csv"
+    if not summary.exists():
+        return 0.0
+    seconds = 0.0
+    for row in read_csv(summary):
+        if row.get("operation") == operation:
+            seconds += as_float(row.get("seconds"))
+    return seconds
+
+
 def steady_reuse_stats(case_dir: Path) -> tuple[float, float, float]:
     summary = case_dir / "summary.csv"
     if not summary.exists():
@@ -94,9 +103,13 @@ def load_rows(matrix_dir: Path) -> list[dict[str, object]]:
     baseline_seconds = as_float(baseline["workload_seconds"])
     baseline_remote_open = as_float(baseline["remote_read_open"])
     baseline_avg_read = as_float(baseline["avg_read_us"])
-    _, _, baseline_total_mib = workload_bytes(matrix_dir / baseline["case"])
+    baseline_read_mib, _, baseline_total_mib = workload_bytes(matrix_dir / baseline["case"])
+    baseline_read_seconds = operation_time(matrix_dir / baseline["case"], "read")
     _, _, baseline_steady_throughput = steady_reuse_stats(matrix_dir / baseline["case"])
     baseline_throughput = baseline_total_mib / baseline_seconds if baseline_seconds else 0.0
+    baseline_read_throughput = (
+        baseline_read_mib / baseline_read_seconds if baseline_read_seconds else 0.0
+    )
 
     output_rows: list[dict[str, object]] = []
     for row in ordered:
@@ -104,10 +117,17 @@ def load_rows(matrix_dir: Path) -> list[dict[str, object]]:
         case_dir = matrix_dir / case
         read_mib, write_mib, total_mib = workload_bytes(case_dir)
         seconds = as_float(row["workload_seconds"])
+        read_seconds = operation_time(case_dir, "read")
         throughput = total_mib / seconds if seconds else 0.0
+        read_throughput = read_mib / read_seconds if read_seconds else 0.0
         steady_read_mib, steady_seconds, steady_throughput = steady_reuse_stats(case_dir)
         speedup = baseline_seconds / seconds if seconds else 0.0
         throughput_ratio = throughput / baseline_throughput if baseline_throughput else 0.0
+        read_speedup = (
+            read_throughput / baseline_read_throughput
+            if baseline_read_throughput
+            else 0.0
+        )
         steady_speedup = (
             steady_throughput / baseline_steady_throughput
             if baseline_steady_throughput
@@ -136,6 +156,9 @@ def load_rows(matrix_dir: Path) -> list[dict[str, object]]:
                 "effective_mib_s": round(throughput, 2),
                 "speedup_vs_baseline": round(speedup, 4),
                 "throughput_vs_baseline": round(throughput_ratio, 4),
+                "read_time_s": round(read_seconds, 4),
+                "read_mib_s": round(read_throughput, 2),
+                "read_speedup_vs_baseline": round(read_speedup, 4),
                 "steady_reuse_read_mib": round(steady_read_mib, 2),
                 "steady_reuse_time_s": round(steady_seconds, 4),
                 "steady_reuse_mib_s": round(steady_throughput, 2),
@@ -180,6 +203,9 @@ def write_summary_csv(rows: list[dict[str, object]], path: Path) -> None:
         "effective_mib_s",
         "speedup_vs_baseline",
         "throughput_vs_baseline",
+        "read_time_s",
+        "read_mib_s",
+        "read_speedup_vs_baseline",
         "steady_reuse_read_mib",
         "steady_reuse_time_s",
         "steady_reuse_mib_s",
@@ -261,10 +287,12 @@ def write_report(rows: list[dict[str, object]], output: Path, environment: str) 
         "",
         "注意：`scripts/real_speed_benchmark.sh` 默认会强制检查远端后端已经通过 NVMe-oF 挂载，并要求 `TOKENFS_NVMEOF_PATH_MODE=direct`。只有 `backends[].type = nvmeof`、`nvme_target_ip` 是真实 Target IP、远端根目录已挂载、挂载源为 `/dev/nvme...` 时，才会生成可用于论文的直连 NVMe-oF 端到端速度结果。若显式设置 `TOKENFS_NVMEOF_PATH_MODE=tunnel`，结果只能作为功能验证，不能写成直连性能。",
         "",
+        "为避免 Linux 页缓存把远端 NVMe-oF 重复读取伪装成内存命中，真实速度脚本默认在关键阶段以及每次逻辑读取计时前请求清理 OS page cache；清理动作本身只作为 `cache_control` 证据记录，不计入策略读写耗时。这个控制条件不改变 workload 的访问分布，只用于让比较对象回到“本地 SSD 路径 vs 远端 NVMe-oF 路径”。",
+        "",
         "## 结果表",
         "",
-        "| 策略 | 总数据 MiB | 总耗时 s | 有效吞吐 MiB/s | 相对 RemoteOnly 加速 | 复用阶段吞吐 MiB/s | 复用阶段相对吞吐 | 平均读 us | 本地读命中率 | 远端打开读取 | 远端打开减少 | 后台动作证据 |",
-        "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|",
+        "| 策略 | 总数据 MiB | 总耗时 s | 总吞吐 MiB/s | 总吞吐相对 RemoteOnly | 读吞吐 MiB/s | 读吞吐相对 RemoteOnly | 复用阶段吞吐 MiB/s | 复用阶段相对吞吐 | 平均读 us | 本地读命中率 | 远端打开读取 | 远端打开减少 | 后台动作证据 |",
+        "|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|",
     ]
     for row in rows:
         actions = (
@@ -276,7 +304,8 @@ def write_report(rows: list[dict[str, object]], output: Path, environment: str) 
         )
         lines.append(
             f"| `{row['case']}` | {row['total_mib']} | {row['wall_time_s']} | "
-            f"{row['effective_mib_s']} | {row['speedup_vs_baseline']}x | "
+            f"{row['effective_mib_s']} | {row['throughput_vs_baseline']}x | "
+            f"{row['read_mib_s']} | {row['read_speedup_vs_baseline']}x | "
             f"{row['steady_reuse_mib_s']} | {row['steady_reuse_vs_baseline']}x | "
             f"{row['avg_read_us']} | {row['local_read_hit_rate_pct']}% | {row['remote_read_open']} | "
             f"{row['remote_open_reduction_pct']}% | {actions} |"
@@ -295,6 +324,8 @@ def write_report(rows: list[dict[str, object]], output: Path, environment: str) 
             "![真实相对加速比](figures/real_speedup_vs_baseline.svg)",
             "",
             "![真实有效吞吐](figures/real_effective_throughput.svg)",
+            "",
+            "![真实读吞吐](figures/real_read_throughput.svg)",
             "",
             "![策略生效后复用阶段吞吐](figures/real_steady_reuse_throughput.svg)",
             "",
@@ -332,7 +363,7 @@ def write_report(rows: list[dict[str, object]], output: Path, environment: str) 
             "",
             "- `objective_cost_per_request` 用来解释控制器的决策质量，是策略层指标。",
             "- `wall_time_s`、`effective_mib_s`、`avg_read_us` 用来回答系统实际快不快，是真实运行指标。",
-            "- 如果两者方向不一致，必须优先相信真实速度结果，并回头调整 workload、参数和成本权重。",
+            "- 如果两者方向不一致，必须优先相信真实速度结果，并回头检查实现开销、页缓存控制、后台迁移门槛和成本权重。",
         ]
     )
     report.write_text("\n".join(lines) + "\n", encoding="utf-8")
@@ -361,6 +392,14 @@ def main() -> int:
         "Real effective throughput",
         rows,
         "effective_mib_s",
+        "MiB/s",
+        True,
+    )
+    svg_bar_chart(
+        figures / "real_read_throughput.svg",
+        "Real read throughput",
+        rows,
+        "read_mib_s",
         "MiB/s",
         True,
     )
