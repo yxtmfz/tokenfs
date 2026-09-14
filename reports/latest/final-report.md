@@ -46,6 +46,7 @@ reports/latest/paper-experiments/
 ├── 04_nvmeof_baseline/real_nvmeof_summary.csv
 ├── 05_performance_summary/performance_summary.csv
 ├── 06_real_speed_benchmark/real_speed_summary.csv
+├── 07_real_speed_repeat/repeat_summary.csv
 └── figures/
 ```
 
@@ -57,6 +58,7 @@ reports/latest/paper-experiments/
 | 端到端延迟代理 | 比较本地、Peer、远端和后台动作共同造成的请求代价 | 代理结果 |
 | 参数敏感性 | 扫描本地容量、远端 P99、副本预算，验证稳定性 | 模拟结果 |
 | NVMe-oF baseline | 汇总已有真实 fio 数据，给远端访问代价提供依据 | 真实链路摘要 |
+| 真实 TokenFS 速度 | 在 NVMe-oF 挂载目录上重复运行真实 FUSE workload | 真实系统结果 |
 
 ## 3. 消融实验完整汇总
 
@@ -108,20 +110,21 @@ reports/latest/paper-experiments/
 
 ![AURA 相对基线的综合代价降低](paper-experiments/figures/aura_improvement_vs_baselines.svg)
 
-## 4. 真实 TokenFS Workload 速度实验
+## 4. 真实 TokenFS Workload 多轮速度实验
 
-前面的 `综合代价/请求` 是策略模型指标，依赖代价权重；它能解释控制器为什么选择某个布局，但不能单独证明系统真实变快。因此当前报告新增真实速度实验，只看 TokenFS 实际运行的 wall-clock 时间、有效吞吐和平均读写延迟。
+前面的 `综合代价/请求` 是策略模型指标，依赖代价权重；它能解释控制器为什么选择某个布局，但不能单独证明系统真实变快。因此当前报告把真实速度实验单独列出，只看 TokenFS/FUSE 在 NVMe-oF 挂载目录上的实际 wall-clock 时间、有效吞吐和平均读写延迟。
 
 输出位置：
 
 ```text
-reports/latest/paper-experiments/06_real_speed_benchmark/
-├── real_speed_report.md
-├── real_speed_summary.csv
+reports/latest/paper-experiments/07_real_speed_repeat/
+├── repeat_report.md
+├── repeat_summary.csv
+├── repeat_runs.csv
 └── figures/
 ```
 
-旧的目录模拟速度样例已经从最终报告中撤下。真实 TokenFS workload 速度实验必须在 NVMe-oF 挂载目录上重新运行：脚本会检查远端后端是否为 `type: nvmeof`、远端根目录是否已挂载、挂载源是否为 `/dev/nvme...`。检查不通过时不会生成论文级速度报告。
+本次实验按用户要求放大数据量并重复 3 次：默认使用 `32 MiB` shard、`160 MiB` 本地缓存配额，5 个策略每个策略每轮约 `8456 MiB` 逻辑读写量，3 轮合计约 `126.8 GiB` 逻辑 workload。它不是极端的“全热点”数据，而是混合了远端 canonical KV、本地冷缓存、容量压力、热点复用、连续 shard 访问和跨 GPU 共享读取；场景会适当覆盖 AURA-KV 的目标优势，但所有策略使用同一访问形状。
 
 运行方式：
 
@@ -130,7 +133,32 @@ cp config/tokenfs.nvmeof.example.yaml config/tokenfs.nvmeof.yaml
 # 填入真实 target_ip、subnqn、device
 sudo ./scripts/connect_nvme.sh --config config/tokenfs.nvmeof.yaml --backend remote0 --chown-current
 TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/real_speed_benchmark.sh
+TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/real_speed_repeat_benchmark.sh
 ```
+
+最新 3 轮均值和波动范围：
+
+| 策略 | 轮数 | 每轮数据量 | 平均总耗时 | 耗时范围 | 平均有效吞吐 | 相对 RemoteOnly | 本地读命中率 | 远端打开读取 | 后台动作 |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---|
+| RemoteOnly | 3 | 8456 MiB | 9.21 s | 8.98-9.65 s | 919.43 MiB/s | 1.000x | 0.00% | 260 | promote=0, prefetch=0, evict=0, xgpu_hit=0 |
+| LocalFirst | 3 | 8456 MiB | 8.52 s | 8.21-9.05 s | 994.03 MiB/s | 1.081x | 0.38% | 259 | promote=0, prefetch=0, evict=0, xgpu_hit=0 |
+| LRU-Local | 3 | 8456 MiB | 8.78 s | 7.86-9.70 s | 969.70 MiB/s | 1.053x | 0.38% | 259 | promote=0, prefetch=0, evict=0, xgpu_hit=0 |
+| LFU-Local | 3 | 8456 MiB | 8.54 s | 8.24-8.78 s | 990.57 MiB/s | 1.078x | 0.38% | 259 | promote=0, prefetch=0, evict=0, xgpu_hit=0 |
+| AURA-Joint | 3 | 8456 MiB | 9.12 s | 8.88-9.33 s | 927.98 MiB/s | 1.010x | 96.15% | 10 | promote=1, prefetch=1, evict=1, xgpu_hit=62 |
+
+这组结果需要诚实解释：
+
+- AURA-Joint 的机制已经真实触发：本地读命中率达到 `96.15%`，远端打开读取从 `260` 次降到 `10` 次，说明热点提升、预取、淘汰和跨 GPU 本地副本确实在工作。
+- 当前双 VM NVMe-oF 环境下，AURA-Joint 平均端到端速度只比 RemoteOnly 快 `1.010x`，并没有超过 LocalFirst、LRU 和 LFU。原因是该环境中本地与远端性能差距不够稳定，且 AURA 的元数据和后台副本管理开销会抵消一部分收益。
+- 因此论文中可以把这组数据作为“真实系统机制验证 + 真实速度边界”，但不能把它写成“AURA 在当前真实环境中显著快于所有 baseline”。
+
+图表：
+
+![多轮总耗时](paper-experiments/07_real_speed_repeat/figures/repeat_wall_time_mean.svg)
+
+![多轮有效吞吐](paper-experiments/07_real_speed_repeat/figures/repeat_effective_throughput_mean.svg)
+
+![多轮加速比](paper-experiments/07_real_speed_repeat/figures/repeat_speedup_mean.svg)
 
 ## 5. 参数敏感性摘要
 

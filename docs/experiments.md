@@ -32,6 +32,7 @@ reports/latest/paper-experiments/
 ├── 04_nvmeof_baseline/real_nvmeof_summary.csv
 ├── 05_performance_summary/performance_summary.csv
 ├── 06_real_speed_benchmark/real_speed_summary.csv
+├── 07_real_speed_repeat/repeat_summary.csv
 └── figures/
 ```
 
@@ -49,6 +50,26 @@ reports/latest/paper-experiments/
 ```bash
 TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/real_speed_benchmark.sh
 ```
+
+更适合论文主表的是多轮真实速度实验：
+
+```bash
+TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/real_speed_repeat_benchmark.sh
+```
+
+默认参数是 `32 MiB` shard、`160 MiB` 本地配额、重复 `3` 轮。相比单轮 `8 MiB` shard 的快速验证，它放大数据块和本地缓存容量，同时保留一个 shard 左右的替换缓冲，避免缓存一开始就处于完全无余量状态。每个策略每轮总读写量约 `8 GiB`，并输出均值、标准差、最小值和最大值：
+
+```text
+reports/latest/paper-experiments/07_real_speed_repeat/
+├── repeat_report.md
+├── repeat_summary.csv
+├── repeat_runs.csv
+└── figures/
+```
+
+这不是为了构造只适合 AURA-Joint 的极端数据，而是在保持同一访问形状的前提下扩大规模并重复采样。论文中应优先报告 `repeat_summary.csv`，因为它能说明性能提升是否稳定。
+
+主速度实验默认不启用后台复制限速。这样做是为了直接比较策略本身带来的端到端收益；后台 QoS 和限速属于干扰控制专项实验，可以通过 `TOKENFS_ABLATION_BACKGROUND_MIB_PER_SEC` 单独打开，不应混入主速度对比。
 
 默认情况下，该脚本会在关键阶段和每次逻辑读取计时前请求清理 Linux page cache。清缓存动作会写入 `summary.csv` 的 `cache_control` 行，但不会计入 `wall_time_s`、`effective_mib_s` 和 `read_mib_s`。这样做是为了避免实验数据集小于内存时，RemoteOnly 的重复读取被 DRAM 页缓存加速，导致远端 NVMe-oF 和本地 SSD 的真实差异被掩盖。
 

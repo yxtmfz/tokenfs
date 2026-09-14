@@ -77,7 +77,7 @@
 
 ![AURA 相对基线的综合代价降低](figures/aura_improvement_vs_baselines.svg)
 
-## 1.2 真实 TokenFS Workload 速度实验
+## 1.2 真实 TokenFS Workload 单轮速度验证
 
 成本模型解释控制器为什么做某个选择，但不能单独证明系统真的更快。因此仓库额外提供真实 TokenFS workload 测速入口：
 
@@ -94,6 +94,39 @@ TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/real_speed_benchmark.sh
 | `LRU-Local` | 2120.0 | 10.2084 | 207.67 | 0.9781x | 215.31 | 0.9673x | 215.26 | 0.965x | 635.81 | 0.38% | 259 | promote=0, prefetch=0/0, evict=1, xgpu=0/0 |
 | `LFU-Local` | 2120.0 | 10.9568 | 193.49 | 0.9113x | 198.14 | 0.8901x | 197.59 | 0.8858x | 684.0 | 0.38% | 259 | promote=0, prefetch=0/0, evict=1, xgpu=0/0 |
 | `AURA-Joint` | 2120.0 | 3.8229 | 554.55 | 2.6118x | 620.21 | 2.7862x | 637.74 | 2.8589x | 87.5 | 96.54% | 9 | promote=1, prefetch=7/1, evict=2, xgpu=1/62 |
+
+这张表是早期单轮快速验证结果，说明 AURA 的后台动作能够在真实 TokenFS 路径中触发，但单轮数据量较小，不能单独作为论文主结论。论文主速度结果应使用下面的多轮重复实验。
+
+## 1.3 真实 NVMe-oF 多轮速度实验
+
+多轮实验入口：
+
+```bash
+TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/real_speed_repeat_benchmark.sh
+```
+
+当前结果来自双 VM 真实 Linux NVMe/TCP 环境，远端目录是 `/dev/nvme0n1` 挂载后的 NVMe-oF 文件系统。实验默认使用 `32 MiB` shard、`160 MiB` 本地缓存配额，重复 `3` 轮。每个策略每轮约 `8456 MiB` 逻辑 workload，5 个策略 3 轮合计约 `126.8 GiB`。这组实验不再只看最好的一轮，而是报告均值、标准差和最小/最大范围。
+
+| 策略 | 轮数 | 每轮数据量 | 平均总耗时 | 耗时范围 | 平均有效吞吐 | 相对 RemoteOnly | 读吞吐均值 | 本地读命中率 | 远端打开读取 | 后台动作 |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|
+| `RemoteOnly` | 3 | 8456 MiB | 9.21 s | 8.98-9.65 s | 919.43 MiB/s | 1.000x | 1261.89 MiB/s | 0.00% | 260 | promote=0, prefetch=0, evict=0, xgpu_hit=0 |
+| `LocalFirst` | 3 | 8456 MiB | 8.52 s | 8.21-9.05 s | 994.03 MiB/s | 1.081x | 1269.05 MiB/s | 0.38% | 259 | promote=0, prefetch=0, evict=0, xgpu_hit=0 |
+| `LRU-Local` | 3 | 8456 MiB | 8.78 s | 7.86-9.70 s | 969.70 MiB/s | 1.053x | 1244.10 MiB/s | 0.38% | 259 | promote=0, prefetch=0, evict=0, xgpu_hit=0 |
+| `LFU-Local` | 3 | 8456 MiB | 8.54 s | 8.24-8.78 s | 990.57 MiB/s | 1.078x | 1248.69 MiB/s | 0.38% | 259 | promote=0, prefetch=0, evict=0, xgpu_hit=0 |
+| `AURA-Joint` | 3 | 8456 MiB | 9.12 s | 8.88-9.33 s | 927.98 MiB/s | 1.010x | 1187.30 MiB/s | 96.15% | 10 | promote=1, prefetch=1, evict=1, xgpu_hit=62 |
+
+多轮结论：
+
+- 数据量不再是很小的 toy case：每个策略 3 轮累计约 `25.4 GiB`，全策略累计约 `126.8 GiB`。
+- workload 不是极端全热点，而是混合远端 canonical KV、本地冷缓存、容量压力、热点复用、连续 shard 和跨 GPU 共享。它适当覆盖 AURA 的目标场景，但所有 baseline 面对完全相同的访问序列。
+- AURA-Joint 的系统机制已经验证：本地读命中率 `96.15%`，远端打开读取从 `260` 次降到 `10` 次。
+- 当前双 VM 环境中，本地和远端性能差距不够稳定，AURA-Joint 的平均端到端速度只比 RemoteOnly 快 `1.010x`，慢于 LocalFirst/LRU/LFU。因此这组真实实验更适合作为“机制和边界验证”，不能写成“端到端速度显著领先所有 baseline”。
+
+![多轮总耗时](07_real_speed_repeat/figures/repeat_wall_time_mean.svg)
+
+![多轮有效吞吐](07_real_speed_repeat/figures/repeat_effective_throughput_mean.svg)
+
+![多轮加速比](07_real_speed_repeat/figures/repeat_speedup_mean.svg)
 
 ## 2. 端到端延迟代理实验
 
@@ -161,6 +194,10 @@ TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/real_speed_benchmark.sh
 06_real_speed_benchmark/real_speed_summary.csv
 06_real_speed_benchmark/real_speed_report.md
 06_real_speed_benchmark/figures/
+07_real_speed_repeat/repeat_summary.csv
+07_real_speed_repeat/repeat_runs.csv
+07_real_speed_repeat/repeat_report.md
+07_real_speed_repeat/figures/
 figures/effective_performance_index.svg
 figures/aura_improvement_vs_baselines.svg
 paper_experiments_report.md

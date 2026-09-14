@@ -4,6 +4,7 @@ set -euo pipefail
 project_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 result_root="${1:-$project_root/reports/latest/real-speed-ablation}"
 base_config="${TOKENFS_CONFIG:-$project_root/config/tokenfs.dev.yaml}"
+local_quota_mib="${TOKENFS_ABLATION_LOCAL_QUOTA_MIB:-32}"
 
 tmp_dir="$(mktemp -d /tmp/tokenfs-real-ablation.XXXXXX)"
 
@@ -28,6 +29,7 @@ make_config() {
 
   python3 - "$base_config" "$output" "$quota_mib" "$eviction_policy" \
     "$placement_policy" "$promote" "$prefetch" "$cross_gpu" "$async_background" <<'PY'
+import os
 import re
 import sys
 from pathlib import Path
@@ -72,7 +74,10 @@ replace_scalar("migration_min_reuse_reads", "6")
 replace_scalar("migration_min_benefit_x100", "150")
 replace_scalar("migration_copy_cost_per_mib", "8")
 replace_scalar("speculative_copy_may_evict", "false")
-replace_scalar("qos_background_mib_per_sec_per_gpu", "256")
+replace_scalar(
+    "qos_background_mib_per_sec_per_gpu",
+    os.environ.get("TOKENFS_ABLATION_BACKGROUND_MIB_PER_SEC", "0"),
+)
 text = re.sub(r"(^\s*local_quota_mib:\s*)\d+.*$", rf"\g<1>{quota_mib}", text, flags=re.M)
 dst.write_text(text, encoding="utf-8")
 PY
@@ -111,10 +116,10 @@ run_case() {
 }
 
 run_case RemoteOnly 0 none remote_only false false false false
-run_case LocalFirst 32 none local_first false false false false
-run_case LRU-Local 32 lru local_first false false false false
-run_case LFU-Local 32 lfu local_first false false false false
-run_case AURA-Joint 32 value_aware value_aware true true true true
+run_case LocalFirst "$local_quota_mib" none local_first false false false false
+run_case LRU-Local "$local_quota_mib" lru local_first false false false false
+run_case LFU-Local "$local_quota_mib" lfu local_first false false false false
+run_case AURA-Joint "$local_quota_mib" value_aware value_aware true true true true
 
 python3 - "$result_root" <<'PY'
 import csv

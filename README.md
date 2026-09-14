@@ -133,6 +133,7 @@ python3 scripts/paper_experiments.py
 | 参数敏感性 | `reports/latest/paper-experiments/03_sensitivity/` | 扫描本地容量、远端 P99、副本预算，验证策略稳定性 | 模拟结果 |
 | NVMe-oF baseline | `reports/latest/paper-experiments/04_nvmeof_baseline/` | 汇总已有真实 NVMe/TCP 基线 | 真实链路摘要 |
 | 真实 TokenFS 速度 | `reports/latest/paper-experiments/06_real_speed_benchmark/` | 在 NVMe-oF 挂载目录上按消融分类比较真实总耗时、复用阶段吞吐和后台动作 | 真实运行结果 |
+| 多轮真实速度 | `reports/latest/paper-experiments/07_real_speed_repeat/` | 在更大数据量下重复运行 3 轮，汇总均值、标准差和 min-max 波动 | 论文级稳定性结果 |
 
 统一报告：
 
@@ -179,6 +180,24 @@ TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/real_speed_benchmark.sh
 reports/latest/paper-experiments/06_real_speed_benchmark/real_speed_report.md
 reports/latest/paper-experiments/06_real_speed_benchmark/real_speed_summary.csv
 ```
+
+论文写作前建议再运行多轮汇总版本：
+
+```bash
+TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/real_speed_repeat_benchmark.sh
+```
+
+默认设置为 `32 MiB` shard、`160 MiB` 本地配额、重复 `3` 轮。每个策略每轮总读写约 `8 GiB`，比快速验证版本更适合观察稳定性能；脚本会让 shard 大小和本地配额按比例放大，并保留一个 shard 左右的替换缓冲，避免“只放大文件、不放大缓存”或“把缓存压到完全无余量”改变实验含义。它不改变访问形状，只放大数据规模并重复采样，输出：
+
+```text
+reports/latest/paper-experiments/07_real_speed_repeat/repeat_report.md
+reports/latest/paper-experiments/07_real_speed_repeat/repeat_summary.csv
+reports/latest/paper-experiments/07_real_speed_repeat/repeat_runs.csv
+```
+
+其中 `repeat_summary.csv` 给出每个策略的平均总耗时、平均吞吐、平均加速比、标准差和最小/最大范围。论文里优先使用这张表，而不是只引用某一次单轮结果。
+
+主速度实验默认不人为限制后台复制带宽，因为这里要回答的是“策略是否让端到端 workload 更快”。如果要单独研究后台复制对前台 I/O 的干扰，可以设置 `TOKENFS_ABLATION_BACKGROUND_MIB_PER_SEC=256` 之类的限速参数另跑专项实验，不和主速度表混在一起。
 
 这部分直接看 `wall_time_s`、`effective_mib_s`、`read_mib_s`、`avg_read_us` 和 `speedup_vs_baseline`。其中 `speedup_vs_baseline` 的 baseline 是 `RemoteOnly`，表示完整 workload 总耗时是否真的变快；`read_mib_s` 只看读路径吞吐，更接近 KV Cache 获取速度。同时还要看 `steady_reuse_mib_s` 和 `steady_reuse_vs_baseline`，它们只统计热点提升、顺序预取和跨 GPU 副本生效之后的复用读取阶段，用来判断后台策略完成后是否真的减少后续读取代价。`promote_count`、`prefetch_count`、`evict_count`、`cross_gpu_local_replica_hit` 是内部动作统计，用来解释 AURA-Joint 做了什么，不再作为论文主对照组名称。
 
@@ -240,6 +259,9 @@ python3 scripts/paper_experiments.py
 
 # 真实 TokenFS workload 速度实验，需 Linux/FUSE
 TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/real_speed_benchmark.sh
+
+# 更大数据量下重复 3 轮，汇总均值和波动范围
+TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/real_speed_repeat_benchmark.sh
 
 # 检查当前环境本地/远端是否存在足够性能差距
 TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/nvmeof_gap_diagnostic.sh
