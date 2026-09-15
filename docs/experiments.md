@@ -80,16 +80,16 @@ Ubuntu VM / 内网客户端
 
 因此它能证明真实 NVMe-oF 远端层参与了 TokenFS 端到端路径，也能验证多逻辑 GPU 的亲和副本机制。但它仍然不是多台真实 GPU 物理服务器并发实验，论文中不要把它写成完整物理集群结果。
 
-更适合论文主表的是多轮真实速度实验：
+更适合论文主表的是统一入口中的多轮真实速度实验：
 
 ```bash
-TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/real_speed_repeat_benchmark.sh
+TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/lab_single_client_multigpu_experiment.sh
 ```
 
 默认参数是 `32 MiB` shard、`160 MiB` 本地配额、重复 `3` 轮。相比单轮 `8 MiB` shard 的快速验证，它放大数据块和本地缓存容量，同时保留一个 shard 左右的替换缓冲，避免缓存一开始就处于完全无余量状态。每个策略每轮总读写量约 `8 GiB`，并输出均值、标准差、最小值和最大值：
 
 ```text
-reports/latest/paper-experiments/07_real_speed_repeat/
+reports/latest/paper-experiments/08_lab_single_client_multigpu/03_repeat_speed/
 ├── repeat_report.md
 ├── repeat_summary.csv
 ├── repeat_runs.csv
@@ -98,11 +98,13 @@ reports/latest/paper-experiments/07_real_speed_repeat/
 
 这不是为了构造只适合 AURA-Joint 的极端数据，而是在保持同一访问形状的前提下扩大规模并重复采样。论文中应优先报告 `repeat_summary.csv`，因为它能说明性能提升是否稳定。
 
+最新一次真实运行的环境差距诊断显示：本地读吞吐约 `1259 MiB/s`，远端 NVMe-oF 读吞吐约 `269 MiB/s`。三轮重复真实速度中，AURA-Joint 平均有效吞吐约 `890.55 MiB/s`，相对 RemoteOnly 约 `1.079x`，本地读命中率约 `95.26%`，远端打开读取从 `260` 次降到约 `12.33` 次。
+
 主速度实验默认不启用后台复制限速。这样做是为了直接比较策略本身带来的端到端收益；后台 QoS 和限速属于干扰控制专项实验，可以通过 `TOKENFS_ABLATION_BACKGROUND_MIB_PER_SEC` 单独打开，不应混入主速度对比。
 
 默认情况下，该脚本会在关键阶段和每次逻辑读取计时前请求清理 Linux page cache。清缓存动作会写入 `summary.csv` 的 `cache_control` 行，但不会计入 `wall_time_s`、`effective_mib_s` 和 `read_mib_s`。这样做是为了避免实验数据集小于内存时，RemoteOnly 的重复读取被 DRAM 页缓存加速，导致远端 NVMe-oF 和本地 SSD 的真实差异被掩盖。
 
-输出：
+单轮真实速度输出：
 
 ```text
 reports/latest/paper-experiments/06_real_speed_benchmark/

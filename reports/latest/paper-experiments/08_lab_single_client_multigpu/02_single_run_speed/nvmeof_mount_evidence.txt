@@ -1,0 +1,25 @@
+time=2026-09-15T00:23:55Z
+config=config/tokenfs.nvmeof.yaml
+backend=remote0
+
+[findmnt]
+/srv/tokenfs/remote0 /dev/nvme0n1 ext4 rw,relatime
+
+[findmnt verbose]
+TARGET               SOURCE       FSTYPE OPTIONS
+/srv/tokenfs/remote0 /dev/nvme0n1 ext4   rw,relatime
+
+[lsblk]
+NAME                      MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
+sr0                        11:0    1 1024M  1 rom
+vda                       253:0    0   64G  0 disk
+├─vda1                    253:1    0    1G  0 part /boot/efi
+├─vda2                    253:2    0    2G  0 part /boot
+└─vda3                    253:3    0 60.9G  0 part
+  └─ubuntu--vg-ubuntu--lv 252:0    0 30.5G  0 lvm  /
+nvme0n1                   259:1    0   20G  0 disk /srv/tokenfs/remote0
+
+[nvme list]
+Node                  Generic               SN                   Model                                    Namespace  Usage                      Format           FW Rev
+--------------------- --------------------- -------------------- ---------------------------------------- ---------- -------------------------- ---------------- --------
+/dev/nvme0n1          /dev/ng0n1            TOKENFS0001          Linux                                    0x1         21.47  GB /  21.47  GB    512   B +  0 B   6.8.0-13

@@ -152,17 +152,22 @@ reports/latest/paper-experiments/
 
 前面的 `综合代价/请求` 是策略模型指标，依赖代价权重；它能解释控制器为什么选择某个布局，但不能单独证明系统真实变快。因此当前报告把真实速度实验单独列出，只看 TokenFS/FUSE 在 NVMe-oF 挂载目录上的实际 wall-clock 时间、有效吞吐和平均读写延迟。
 
-输出位置：
+最新真实速度实验输出位置：
 
 ```text
-reports/latest/paper-experiments/07_real_speed_repeat/
-├── repeat_report.md
-├── repeat_summary.csv
-├── repeat_runs.csv
-└── figures/
+reports/latest/paper-experiments/08_lab_single_client_multigpu/
+├── lab_single_client_multigpu_report.md
+├── environment_evidence.txt
+├── 01_environment_gap/
+├── 02_single_run_speed/
+├── 03_repeat_speed/
+│   ├── repeat_report.md
+│   ├── repeat_summary.csv
+│   ├── repeat_runs.csv
+│   └── figures/
 ```
 
-本次实验按用户要求放大数据量并重复 3 次：默认使用 `32 MiB` shard、`160 MiB` 本地缓存配额，5 个策略每个策略每轮约 `8456 MiB` 逻辑读写量，3 轮合计约 `126.8 GiB` 逻辑 workload。它不是极端的“全热点”数据，而是混合了远端 canonical KV、本地冷缓存、容量压力、热点复用、连续 shard 访问和跨 GPU 共享读取；场景会适当覆盖 AURA-KV 的目标优势，但所有策略使用同一访问形状。
+本次实验在 Ubuntu VM 内模拟 `gpu0/gpu1/gpu2` 多逻辑 GPU 本地缓存目录，远端容量层为真实 Linux NVMe/TCP 挂载目录 `/srv/tokenfs/remote0`，挂载源为 `/dev/nvme0n1`。实验按用户要求放大数据量并重复 3 次：默认使用 `32 MiB` shard、`160 MiB` 本地缓存配额，5 个策略每个策略每轮约 `8456 MiB` 逻辑读写量，3 轮合计约 `126.8 GiB` 逻辑 workload。它不是极端的“全热点”数据，而是混合了远端 canonical KV、本地冷缓存、容量压力、热点复用、连续 shard 访问和跨 GPU 共享读取；场景会适当覆盖 AURA-KV 的目标优势，但所有策略使用同一访问形状。
 
 运行方式：
 
@@ -170,33 +175,41 @@ reports/latest/paper-experiments/07_real_speed_repeat/
 cp config/tokenfs.nvmeof.example.yaml config/tokenfs.nvmeof.yaml
 # 填入真实 target_ip、subnqn、device
 sudo ./scripts/connect_nvme.sh --config config/tokenfs.nvmeof.yaml --backend remote0 --chown-current
-TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/real_speed_benchmark.sh
-TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/real_speed_repeat_benchmark.sh
+TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/lab_single_client_multigpu_experiment.sh
 ```
+
+本地/远端原始差距诊断：
+
+| 层级 | 写吞吐 | 读吞吐 |
+|---|---:|---:|
+| local | 129.40 MiB/s | 1259.06 MiB/s |
+| remote NVMe-oF | 131.75 MiB/s | 269.02 MiB/s |
+
+这说明当前环境中远端读路径明显慢于本地读路径，已经具备验证本地热缓存收益的基础。
 
 最新 3 轮均值和波动范围：
 
 | 策略 | 轮数 | 每轮数据量 | 平均总耗时 | 耗时范围 | 平均有效吞吐 | 相对 RemoteOnly | 本地读命中率 | 远端打开读取 | 后台动作 |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---|
-| RemoteOnly | 3 | 8456 MiB | 9.21 s | 8.98-9.65 s | 919.43 MiB/s | 1.000x | 0.00% | 260 | promote=0, prefetch=0, evict=0, xgpu_hit=0 |
-| LocalFirst | 3 | 8456 MiB | 8.52 s | 8.21-9.05 s | 994.03 MiB/s | 1.081x | 0.38% | 259 | promote=0, prefetch=0, evict=0, xgpu_hit=0 |
-| LRU-Local | 3 | 8456 MiB | 8.78 s | 7.86-9.70 s | 969.70 MiB/s | 1.053x | 0.38% | 259 | promote=0, prefetch=0, evict=0, xgpu_hit=0 |
-| LFU-Local | 3 | 8456 MiB | 8.54 s | 8.24-8.78 s | 990.57 MiB/s | 1.078x | 0.38% | 259 | promote=0, prefetch=0, evict=0, xgpu_hit=0 |
-| AURA-Joint | 3 | 8456 MiB | 9.12 s | 8.88-9.33 s | 927.98 MiB/s | 1.010x | 96.15% | 10 | promote=1, prefetch=1, evict=1, xgpu_hit=62 |
+| RemoteOnly | 3 | 8456 MiB | 10.25 s | 9.56-11.32 s | 829.51 MiB/s | 1.000x | 0.00% | 260.00 | promote=0, prefetch=0, evict=0, xgpu_hit=0 |
+| LocalFirst | 3 | 8456 MiB | 9.89 s | 8.99-10.91 s | 860.02 MiB/s | 1.042x | 0.38% | 259.00 | promote=0, prefetch=0, evict=0, xgpu_hit=0 |
+| LRU-Local | 3 | 8456 MiB | 9.92 s | 8.90-11.30 s | 860.86 MiB/s | 1.036x | 0.38% | 259.00 | promote=0, prefetch=0, evict=0, xgpu_hit=0 |
+| LFU-Local | 3 | 8456 MiB | 9.49 s | 8.84-10.27 s | 894.07 MiB/s | 1.080x | 0.38% | 259.00 | promote=0, prefetch=0, evict=0, xgpu_hit=0 |
+| AURA-Joint | 3 | 8456 MiB | 9.50 s | 9.18-9.74 s | 890.55 MiB/s | 1.079x | 95.26% | 12.33 | promote=1.33, prefetch=0.67, evict=1.33, xgpu_hit=62 |
 
 这组结果需要诚实解释：
 
-- AURA-Joint 的机制已经真实触发：本地读命中率达到 `96.15%`，远端打开读取从 `260` 次降到 `10` 次，说明热点提升、预取、淘汰和跨 GPU 本地副本确实在工作。
-- 当前双 VM NVMe-oF 环境下，AURA-Joint 平均端到端速度只比 RemoteOnly 快 `1.010x`，并没有超过 LocalFirst、LRU 和 LFU。原因是该环境中本地与远端性能差距不够稳定，且 AURA 的元数据和后台副本管理开销会抵消一部分收益。
-- 因此论文中可以把这组数据作为“真实系统机制验证 + 真实速度边界”，但不能把它写成“AURA 在当前真实环境中显著快于所有 baseline”。
+- AURA-Joint 的机制已经真实触发：本地读命中率达到 `95.26%`，远端打开读取从 `260` 次降到 `12.33` 次，说明热点提升、预取、淘汰和跨 GPU 本地副本确实在工作。
+- 当前单客户端多逻辑 GPU + 真实 NVMe-oF 环境下，AURA-Joint 相对 RemoteOnly 的平均端到端速度提升约 `1.079x`，与 LFU-Local 基本持平，优于 LocalFirst 和 LRU-Local。
+- 因此论文中可以把这组数据作为“真实系统机制验证 + 真实速度收益边界”：AURA 已经显著降低远端读取次数，并在真实 NVMe-oF 路径上带来约 8% 的端到端加速；但由于当前仍是单客户端逻辑 GPU，不应写成完整多物理 GPU 集群结论。
 
 图表：
 
-![多轮总耗时](paper-experiments/07_real_speed_repeat/figures/repeat_wall_time_mean.svg)
+![多轮总耗时](paper-experiments/08_lab_single_client_multigpu/03_repeat_speed/figures/repeat_wall_time_mean.svg)
 
-![多轮有效吞吐](paper-experiments/07_real_speed_repeat/figures/repeat_effective_throughput_mean.svg)
+![多轮有效吞吐](paper-experiments/08_lab_single_client_multigpu/03_repeat_speed/figures/repeat_effective_throughput_mean.svg)
 
-![多轮加速比](paper-experiments/07_real_speed_repeat/figures/repeat_speedup_mean.svg)
+![多轮加速比](paper-experiments/08_lab_single_client_multigpu/03_repeat_speed/figures/repeat_speedup_mean.svg)
 
 ## 5. 参数敏感性摘要
 

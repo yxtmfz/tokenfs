@@ -1,0 +1,44 @@
+time=2026-09-15T00:23:45Z
+config=config/tokenfs.nvmeof.yaml
+backend_id=remote0
+host=mfz
+
+[uname]
+Linux mfz 6.8.0-136-generic #136-Ubuntu SMP PREEMPT_DYNAMIC Wed Jul  1 21:33:11 UTC 2026 aarch64 aarch64 aarch64 GNU/Linux
+
+[ip address]
+lo               UNKNOWN        127.0.0.1/8 ::1/128
+enp0s1           UP             192.168.64.2/24 metric 100 fdd2:c166:81af:16e7:4487:96ff:fe3d:2329/64 fe80::4487:96ff:fe3d:2329/64
+
+[remote backend config]
+type=nvmeof
+root=/srv/tokenfs/remote0
+nvme_transport=tcp
+nvme_target_ip=192.168.64.3
+nvme_port=4420
+nvme_subnqn=nqn.2026-09.local.aura-kv:remote0
+nvme_device=/dev/nvme0n1
+nvme_mount=/srv/tokenfs/remote0
+
+[findmnt remote]
+TARGET               SOURCE       FSTYPE OPTIONS
+/srv/tokenfs/remote0 /dev/nvme0n1 ext4   rw,relatime
+
+[df]
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/nvme0n1     20G   15G  4.4G  77% /srv/tokenfs/remote0
+
+[lsblk]
+NAME                      MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
+sr0                        11:0    1 1024M  1 rom
+vda                       253:0    0   64G  0 disk
+├─vda1                    253:1    0    1G  0 part /boot/efi
+├─vda2                    253:2    0    2G  0 part /boot
+└─vda3                    253:3    0 60.9G  0 part
+  └─ubuntu--vg-ubuntu--lv 252:0    0 30.5G  0 lvm  /
+nvme0n1                   259:1    0   20G  0 disk /srv/tokenfs/remote0
+
+[nvme list]
+Node                  Generic               SN                   Model                                    Namespace  Usage                      Format           FW Rev
+--------------------- --------------------- -------------------- ---------------------------------------- ---------- -------------------------- ---------------- --------
+/dev/nvme0n1          /dev/ng0n1            TOKENFS0001          Linux                                    0x1         21.47  GB /  21.47  GB    512   B +  0 B   6.8.0-13

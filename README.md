@@ -192,6 +192,7 @@ python3 scripts/paper_experiments.py
 | NVMe-oF baseline | `reports/latest/paper-experiments/04_nvmeof_baseline/` | 汇总已有真实 NVMe/TCP 基线 | 真实链路摘要 |
 | 真实 TokenFS 速度 | `reports/latest/paper-experiments/06_real_speed_benchmark/` | 在 NVMe-oF 挂载目录上按消融分类比较真实总耗时、复用阶段吞吐和后台动作 | 真实运行结果 |
 | 多轮真实速度 | `reports/latest/paper-experiments/07_real_speed_repeat/` | 在更大数据量下重复运行 3 轮，汇总均值、标准差和 min-max 波动 | 论文级稳定性结果 |
+| 单客户端多逻辑 GPU + 真实 NVMe-oF | `reports/latest/paper-experiments/08_lab_single_client_multigpu/` | 当前推荐主实验入口，串联环境证据、差距诊断、单轮速度和三轮重复速度 | 最新真实系统结果 |
 
 统一报告：
 
@@ -218,7 +219,7 @@ reports/latest/paper-experiments/paper_experiments_report.md
 
 后台动作也被分成两类：热点提升是确认复用后的强动作，必要时可以通过价值感知淘汰腾空间；顺序预取和跨 GPU 副本是推测动作，默认只在本地有余量时执行，不为了预测性复制挤掉已有缓存。这样可以降低后台迁移造成的写放大和抖动。
 
-成本模型的结果不能单独证明系统更快，所以当前仓库还提供真实速度入口。这个入口默认只接受 NVMe-oF 直连挂载目录，并使用和论文消融一致的策略分类：
+成本模型的结果不能单独证明系统更快，所以当前仓库还提供真实速度入口。当前推荐直接运行统一编排脚本；它默认只接受 NVMe-oF 直连挂载目录，并使用和论文消融一致的策略分类：
 
 | 真实速度对照 | 含义 |
 |---|---|
@@ -229,31 +230,31 @@ reports/latest/paper-experiments/paper_experiments_report.md
 | `AURA-Joint` | 价值感知、GPU 亲和、容量约束和后台动作联合决策 |
 
 ```bash
-TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/real_speed_benchmark.sh
+TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/lab_single_client_multigpu_experiment.sh
 ```
 
-它实际启动 TokenFS，运行同一组 token shard workload，再输出：
+它实际启动 TokenFS，确认远端目录来自 `/dev/nvme*`，运行同一组 token shard workload，再输出：
 
 ```text
-reports/latest/paper-experiments/06_real_speed_benchmark/real_speed_report.md
-reports/latest/paper-experiments/06_real_speed_benchmark/real_speed_summary.csv
+reports/latest/paper-experiments/08_lab_single_client_multigpu/
+├── lab_single_client_multigpu_report.md
+├── environment_evidence.txt
+├── 01_environment_gap/storage_gap_summary.csv
+├── 02_single_run_speed/real_speed_summary.csv
+└── 03_repeat_speed/repeat_summary.csv
 ```
 
-论文写作前建议再运行多轮汇总版本：
+其中 `03_repeat_speed/repeat_summary.csv` 是论文真实速度实验优先引用的多轮汇总表。
+
+如果只想单独跑某个阶段，也可以分别运行：
 
 ```bash
+TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/nvmeof_gap_diagnostic.sh
+TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/real_speed_benchmark.sh
 TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/real_speed_repeat_benchmark.sh
 ```
 
-默认设置为 `32 MiB` shard、`160 MiB` 本地配额、重复 `3` 轮。每个策略每轮总读写约 `8 GiB`，比快速验证版本更适合观察稳定性能；脚本会让 shard 大小和本地配额按比例放大，并保留一个 shard 左右的替换缓冲，避免“只放大文件、不放大缓存”或“把缓存压到完全无余量”改变实验含义。它不改变访问形状，只放大数据规模并重复采样，输出：
-
-```text
-reports/latest/paper-experiments/07_real_speed_repeat/repeat_report.md
-reports/latest/paper-experiments/07_real_speed_repeat/repeat_summary.csv
-reports/latest/paper-experiments/07_real_speed_repeat/repeat_runs.csv
-```
-
-其中 `repeat_summary.csv` 给出每个策略的平均总耗时、平均吞吐、平均加速比、标准差和最小/最大范围。论文里优先使用这张表，而不是只引用某一次单轮结果。
+重复实验默认设置为 `32 MiB` shard、`160 MiB` 本地配额、重复 `3` 轮。每个策略每轮总读写约 `8 GiB`，比快速验证版本更适合观察稳定性能；脚本会让 shard 大小和本地配额按比例放大，并保留一个 shard 左右的替换缓冲，避免“只放大文件、不放大缓存”或“把缓存压到完全无余量”改变实验含义。它不改变访问形状，只放大数据规模并重复采样。`repeat_summary.csv` 给出每个策略的平均总耗时、平均吞吐、平均加速比、标准差和最小/最大范围。论文里优先使用这张表，而不是只引用某一次单轮结果。
 
 主速度实验默认不人为限制后台复制带宽，因为这里要回答的是“策略是否让端到端 workload 更快”。如果要单独研究后台复制对前台 I/O 的干扰，可以设置 `TOKENFS_ABLATION_BACKGROUND_MIB_PER_SEC=256` 之类的限速参数另跑专项实验，不和主速度表混在一起。
 
@@ -283,6 +284,8 @@ reports/latest/paper-experiments/06_real_speed_benchmark/environment-gap/storage
 - 校准实验环境：用真实 NVMe-oF 直连、真实网络 RTT/带宽、`fio` 基线和环境差距诊断证明远端代价确实存在。
 
 当前真实速度脚本会保留 workload 不变，只改变策略实现和配置门槛。这样得到的结果才是在改系统，而不是改题目。
+
+最新一次在 Ubuntu VM 客户端上运行的结果中，远端层挂载证据为 `/dev/nvme0n1 -> /srv/tokenfs/remote0`。环境差距诊断显示本地读吞吐约 `1259 MiB/s`，远端 NVMe-oF 读吞吐约 `269 MiB/s`。三轮重复真实速度中，AURA-Joint 平均有效吞吐约 `890.55 MiB/s`，相对 RemoteOnly 约 `1.079x`，本地读命中率约 `95.26%`，远端打开读取次数从 `260` 降到约 `12.33`。这说明系统机制和真实远端路径都已经接通，并且在当前单客户端多逻辑 GPU 环境中取得约 8% 的端到端加速。
 
 当前真实 workload 会使用每轮独立的实验命名空间，避免旧的远端文件影响结果，也不会清理已有远端数据。它显式构造：
 
