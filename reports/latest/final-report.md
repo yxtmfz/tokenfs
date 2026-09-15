@@ -10,14 +10,14 @@
 |---|---|---|---|
 | TokenFS/FUSE 原型 | 真实代码路径 | 本地目录、远端目录、SQLite 元数据、配额、溢写和基础文件操作可运行 | 生产级分布式文件系统 |
 | 双 VM NVMe-oF | 真实 Linux NVMe/TCP 协议 | Host/Target 连接、远端 Namespace 挂载、TokenFS 远端层可接 NVMe-oF | 真实物理 SSD/GPU 集群性能 |
-| 实验室单客户端 NVMe-oF | 真实内网 NVMe/TCP 链路 | 本地 NVMe 与远端 NVMe-oF 的实际访问差距 | 多客户端并发和跨机器 GPU 亲和 |
+| 单客户端 NVMe-oF | 真实 Linux NVMe/TCP 链路 | 本地目录与远端 NVMe-oF 挂载目录的实际访问差距 | 多客户端并发和跨机器 GPU 亲和 |
 | AURA-KV 策略实验 | 模拟/代理 | 价值感知替换和共享副本放置相对 LRU/LFU 等 baseline 的趋势 | 真实 vLLM/SGLang TTFT 收益 |
 
 论文汇报时建议写：
 
 ```text
 系统原型已经实现 FUSE 分层缓存、元数据管理、后台任务队列和动态监控；
-NVMe-oF 层已完成双 VM 与实验室单客户端真实 NVMe/TCP 基线；
+NVMe-oF 层已完成双 VM 单客户端真实 NVMe/TCP 基线；
 核心策略已通过 trace-driven simulator 完成多场景消融。
 ```
 
@@ -37,7 +37,7 @@ Ubuntu VM / 内网客户端
   ├── gpu0/gpu1/gpu2 多逻辑 GPU 本地缓存目录
   └── /srv/tokenfs/remote0 真实 NVMe-oF 挂载目录
         ↓
-老师服务器 NVMe/TCP Target
+远端 NVMe/TCP Target
 ```
 
 这条路线比目录模拟更真实，因为远端容量层确实走 Linux NVMe/TCP；同时也比完整物理集群更保守，因为多个 GPU 仍是同一客户端内的逻辑节点。
@@ -251,7 +251,7 @@ TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/lab_single_client_multigpu_e
 - 多 GPU 共享副本放置：ReplicaGain、访问亲和、趋势判断和防抖动。
 - 前台请求与后台任务解耦：PROMOTE、PREFETCH、REPLICATE、EVICT、SWAP。
 - trace-driven simulator 和多 baseline 消融实验。
-- 双 VM 和实验室单客户端 NVMe/TCP baseline。
+- 双 VM 单客户端 NVMe/TCP baseline。
 
 暂时不要写：
 

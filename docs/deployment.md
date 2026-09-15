@@ -113,7 +113,7 @@ Ubuntu VM / 内网客户端
         ↓
     /srv/tokenfs/remote0
         ↓
-老师服务器 NVMe/TCP Target
+远端 NVMe/TCP Target
 ```
 
 这里的 `gpu0/gpu1/gpu2` 是逻辑 GPU 节点，用于模拟多 GPU KV Cache 的访问分布和本地副本放置；远端 `/srv/tokenfs/remote0` 必须是通过 NVMe-oF 挂载出来的真实远端目录。
@@ -134,7 +134,7 @@ backends:
     type: nvmeof
     root: /srv/tokenfs/remote0
     nvme_transport: tcp
-    nvme_target_ip: "<老师服务器 Target IP>"
+    nvme_target_ip: "<远端 NVMe/TCP Target IP>"
     nvme_port: "4420"
     nvme_subnqn: "<Subsystem NQN>"
     nvme_device: "/dev/nvmeXnY"

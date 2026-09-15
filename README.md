@@ -76,7 +76,7 @@ flowchart TD
 |---|---|---|---|
 | 目录模拟环境 | 否 | 开发 FUSE、策略、元数据和测试 | 不能代表真实远端性能 |
 | 双 VM NVMe-oF | 是，真实 Linux NVMe/TCP 协议 | 验证 Host/Target、远端挂载和 TokenFS 端到端路径 | 底层是虚拟网络和虚拟磁盘 |
-| 实验室单客户端 NVMe-oF | 是，真实内网 NVMe/TCP 链路 | 测量本地 NVMe 与远端 NVMe-oF 差距 | 当前只有单客户端，不能完整验证跨机器 GPU 亲和 |
+| 单客户端 NVMe-oF | 是，真实 Linux NVMe/TCP 链路 | 测量本地目录与远端 NVMe-oF 挂载目录的差距 | 当前只有单客户端，不能完整验证跨机器 GPU 亲和 |
 
 论文表述时要区分：策略实验是模拟/代理结果，NVMe-oF baseline 是真实协议链路结果，真实 GPU 推理收益还需要后续接入模型 workload。
 
@@ -92,7 +92,7 @@ Ubuntu VM / 内网客户端
   ├── /gpu2 -> 本地缓存目录 /var/lib/tokenfs/local/gpu2
   └── /srv/tokenfs/remote0 -> 真实远端 NVMe-oF 挂载目录
 
-老师服务器 / Storage
+远端 NVMe/TCP Target / Storage
   └── Linux NVMe/TCP Target -> 远端 SSD 或安全测试后端
 ```
 

@@ -9,7 +9,7 @@
 | Python 单元测试 | 真实代码逻辑 | 验证模型、任务队列和策略性质 |
 | FUSE 功能测试 | 真实文件系统路径 | 验证 TokenFS 基础文件操作 |
 | 双 VM NVMe-oF | 真实 Linux NVMe/TCP 协议 | 验证 Host/Target 和远端挂载 |
-| 实验室 NVMe-oF baseline | 真实内网协议链路 | 测量本地 NVMe 与远端 NVMe-oF 差距 |
+| 单客户端 NVMe-oF baseline | 真实 Linux NVMe/TCP 协议链路 | 测量本地目录与远端 NVMe-oF 挂载目录的差距 |
 | 真实 TokenFS workload | 真实 FUSE 程序耗时 | 直接比较不同策略是否降低总耗时、提高吞吐 |
 | trace-driven simulator | 模拟/代理 | 比较不同策略和消融组合 |
 
@@ -51,7 +51,7 @@ reports/latest/paper-experiments/
 TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/real_speed_benchmark.sh
 ```
 
-如果当前环境是“一个 Ubuntu 客户端模拟多个 GPU 逻辑节点，远端目录来自老师服务器 NVMe-oF”，推荐直接运行统一编排入口：
+如果当前环境是“一个 Ubuntu 客户端模拟多个 GPU 逻辑节点，远端目录来自真实 NVMe/TCP Target”，推荐直接运行统一编排入口：
 
 ```bash
 TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/lab_single_client_multigpu_experiment.sh
@@ -75,7 +75,7 @@ Ubuntu VM / 内网客户端
   ├── TokenFS FUSE
   └── /srv/tokenfs/remote0 真实 NVMe-oF 挂载目录
           ↓
-老师服务器 NVMe/TCP Target
+远端 NVMe/TCP Target
 ```
 
 因此它能证明真实 NVMe-oF 远端层参与了 TokenFS 端到端路径，也能验证多逻辑 GPU 的亲和副本机制。但它仍然不是多台真实 GPU 物理服务器并发实验，论文中不要把它写成完整物理集群结果。
@@ -333,7 +333,7 @@ Dashboard 用于观察：
 可以写：
 
 - 已实现 FUSE 分层缓存文件系统原型。
-- 已跑通双 VM 和实验室单客户端 NVMe/TCP baseline。
+- 已跑通双 VM 单客户端 NVMe/TCP baseline。
 - 已实现价值感知本地缓存管理和共享副本放置模型。
 - 已通过 13 个 trace 场景和多个 baseline 完成消融。
 
