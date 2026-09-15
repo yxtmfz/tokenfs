@@ -181,16 +181,16 @@ fi
 
 echo
 echo "[local mount]"
-if command -v findmnt >/dev/null 2>&1 && findmnt -rn --target "$mount_point" >/dev/null 2>&1; then
-  findmnt --target "$mount_point" || true
-  source_dev="$(findmnt -rn --target "$mount_point" -o SOURCE 2>/dev/null || true)"
+if command -v findmnt >/dev/null 2>&1 && findmnt -rn --mountpoint "$mount_point" >/dev/null 2>&1; then
+  findmnt --mountpoint "$mount_point" || true
+  source_dev="$(findmnt -rn --mountpoint "$mount_point" -o SOURCE 2>/dev/null || true)"
   if [[ "$source_dev" == /dev/nvme* ]]; then
     pass "$mount_point is backed by an NVMe namespace"
   else
     note "$mount_point is mounted, but source is '$source_dev' instead of /dev/nvme*"
   fi
 else
-  note "$mount_point is not mounted yet"
+  note "$mount_point is not an exact mount point yet"
 fi
 
 echo
