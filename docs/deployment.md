@@ -118,6 +118,26 @@ Ubuntu VM / 内网客户端
 
 这里的 `gpu0/gpu1/gpu2` 是逻辑 GPU 节点，用于模拟多 GPU KV Cache 的访问分布和本地副本放置；远端 `/srv/tokenfs/remote0` 必须是通过 NVMe-oF 挂载出来的真实远端目录。
 
+当前已排查到的边界：
+
+```text
+本地 UTM VM:
+  tokenfs-dev  192.168.64.2
+  tokenfs-target 192.168.64.3
+  网络模式: Shared/NAT
+
+老师内网:
+  nvm-jump-public 可登录
+  从跳板机内部可以访问 28.10.10.13:4420
+  28.10.10.14:4420 当前不可达
+
+阻塞点:
+  Mac 本机和 UTM VM 当前都不能直连 28.10.10.13:4420。
+  SSH 跳板能登录，不等于 NVMe/TCP 能直连。
+```
+
+因此，切换到老师物理远端 SSD 前，必须先让 Ubuntu 客户端位于能访问 `28.10.10.13:4420` 的网络里。最直接的方法是把 UTM 网卡从 `Shared` 改成 `Bridged`，或者使用老师提供的真实内网 Ubuntu 客户端。
+
 ### 5.1 准备配置
 
 复制示例配置：
@@ -148,6 +168,24 @@ backends:
 ```bash
 ./scripts/connect_nvme.sh --config config/tokenfs.nvmeof.yaml --dry-run
 ```
+
+连接前先做只读网络探测：
+
+```bash
+./scripts/lab_network_probe.sh \
+  --config config/tokenfs.nvmeof.yaml \
+  --target-ip 28.10.10.13 \
+  --port 4420
+```
+
+合格状态应该至少包含：
+
+```text
+[OK] TCP 28.10.10.13:4420 is reachable from this client
+[OK] nvme-cli is installed
+```
+
+如果这里显示 `TCP ... is not reachable`，就不要继续跑真实实验。此时问题在客户端网络路径，不在 AURA-KV 策略代码。
 
 真实连接：
 
@@ -219,6 +257,7 @@ AURA_LOCAL_READ_DEVICE=/dev/nvme0n1 \
 | `scripts/check_environment.sh` | 检查依赖和运行环境 |
 | `scripts/connect_nvme.sh` | 连接并挂载 NVMe-oF 后端 |
 | `scripts/disconnect_nvme.sh` | 断开 NVMe-oF 后端 |
+| `scripts/lab_network_probe.sh` | 只读检查实验室 Target 端口、NVMe 工具和挂载状态 |
 | `scripts/setup_nvme_target.sh` | 双 VM Target 配置 |
 | `scripts/setup_lab_nvmeof_target.sh` | 实验室 Target 通用配置脚本 |
 | `scripts/real_nvmeof_baseline.sh` | 真实 NVMe-oF fio baseline |

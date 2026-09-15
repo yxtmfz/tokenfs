@@ -65,7 +65,7 @@ flowchart TD
 | 动态监控 | 已实现 | 支持事件流、指标快照、布局快照和本地 Dashboard |
 | 真实 TokenFS 速度实验 | 已补充 | 使用实际 FUSE workload 的 wall-clock 时间、吞吐和平均读写延迟验证策略是否真的变快 |
 | 双 VM NVMe-oF | 已验证 | 两台 Ubuntu VM 跑通过 Linux NVMe/TCP Host/Target |
-| 实验室 NVMe-oF 基线 | 已验证 | 一台内网计算节点已连接实验室远端 NVMe/TCP Target 并完成 fio 基线 |
+| 实验室 NVMe-oF 基线 | 已有摘要/待当前 VM 复测 | 已有一组内网计算节点到实验室远端 NVMe/TCP Target 的 fio 摘要；当前 UTM 客户端 VM 尚未直连老师存储网 4420 |
 | 真实 vLLM/SGLang 集成 | 未完成 | 当前结果还不是真实模型 TTFT 结果 |
 
 ## 4. 环境边界
@@ -76,7 +76,7 @@ flowchart TD
 |---|---|---|---|
 | 目录模拟环境 | 否 | 开发 FUSE、策略、元数据和测试 | 不能代表真实远端性能 |
 | 双 VM NVMe-oF | 是，真实 Linux NVMe/TCP 协议 | 验证 Host/Target、远端挂载和 TokenFS 端到端路径 | 底层是虚拟网络和虚拟磁盘 |
-| 单客户端 NVMe-oF | 是，真实 Linux NVMe/TCP 链路 | 测量本地目录与远端 NVMe-oF 挂载目录的差距 | 当前只有单客户端，不能完整验证跨机器 GPU 亲和 |
+| 单客户端 NVMe-oF | 是，真实 Linux NVMe/TCP 链路 | 测量本地目录与远端 NVMe-oF 挂载目录的差距 | 当前仓库最新实跑证据中的 Target 为双 VM `192.168.64.3`；老师物理 Target 需要客户端 VM 先进入可直连 `28.10.10.13:4420` 的内网 |
 
 论文表述时要区分：策略实验是模拟/代理结果，NVMe-oF baseline 是真实协议链路结果，真实 GPU 推理收益还需要后续接入模型 workload。
 
@@ -96,7 +96,17 @@ Ubuntu VM / 内网客户端
   └── Linux NVMe/TCP Target -> 远端 SSD 或安全测试后端
 ```
 
-这不是“纯模拟”：远端容量层和 NVMe-oF 协议链路是真实的。它也不是“完整多物理 GPU 集群”：`gpu0/gpu1/gpu2` 是同一客户端里的逻辑 GPU 节点，用来验证访问分布、亲和副本、价值感知淘汰和后台迁移机制。
+这不是“纯模拟”：远端容量层和 NVMe-oF 协议链路必须是真实的。它也不是“完整多物理 GPU 集群”：`gpu0/gpu1/gpu2` 是同一客户端里的逻辑 GPU 节点，用来验证访问分布、亲和副本、价值感知淘汰和后台迁移机制。
+
+当前网络排查结论是：本地两台 UTM VM 的网卡模式为 `Shared` NAT，只能稳定访问 `192.168.64.x` 虚拟网；老师给的 `nvm-jump-public` 能从跳板机内部访问 `28.10.10.13:4420`，但 Mac 本机和 UTM VM 不能直连 `28.10.10.13:4420`。因此，若要把主实验切到老师物理远端 SSD，需要先满足下面任一条件：
+
+```text
+1. 把 Ubuntu 客户端 VM 网卡改为 Bridged，让它获得实验室/校园内网可路由地址；
+2. 或由老师提供一台 Ubuntu 22.04/24.04 内网客户端，并允许安装 nvme-cli、fuse3、cmake 等依赖；
+3. 或由网络侧放行当前 VM 所在网段到 28.10.10.13:4420 的直连访问。
+```
+
+SSH 跳板只能用于登录管理，不能等同于 NVMe/TCP 直连。使用 SSH tunnel 转发 4420 可以验证功能，但不能作为论文里的直连 NVMe-oF 性能结果。
 
 该形态能支撑的结论：
 
@@ -110,13 +120,14 @@ Ubuntu VM / 内网客户端
 统一实验入口：
 
 ```bash
+./scripts/lab_network_probe.sh --config config/tokenfs.nvmeof.yaml --target-ip 28.10.10.13 --port 4420
 TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/lab_single_client_multigpu_experiment.sh
 ```
 
 脚本会按顺序完成：
 
 ```text
-环境检查
+网络和环境检查
 -> 确认 /srv/tokenfs/remote0 必须来自 /dev/nvme* 挂载
 -> 记录 nvme list、findmnt、df、lsblk 证据
 -> 运行本地/远端差距诊断
@@ -285,7 +296,7 @@ reports/latest/paper-experiments/06_real_speed_benchmark/environment-gap/storage
 
 当前真实速度脚本会保留 workload 不变，只改变策略实现和配置门槛。这样得到的结果才是在改系统，而不是改题目。
 
-最新一次在 Ubuntu VM 客户端上运行的结果中，远端层挂载证据为 `/dev/nvme0n1 -> /srv/tokenfs/remote0`。环境差距诊断显示本地读吞吐约 `1259 MiB/s`，远端 NVMe-oF 读吞吐约 `269 MiB/s`。三轮重复真实速度中，AURA-Joint 平均有效吞吐约 `890.55 MiB/s`，相对 RemoteOnly 约 `1.079x`，本地读命中率约 `95.26%`，远端打开读取次数从 `260` 降到约 `12.33`。这说明系统机制和真实远端路径都已经接通，并且在当前单客户端多逻辑 GPU 环境中取得约 8% 的端到端加速。
+最新一次在 Ubuntu VM 客户端上运行的结果中，远端层挂载证据为 `/dev/nvme0n1 -> /srv/tokenfs/remote0`，但 Target IP 为本地第二台 VM `192.168.64.3`。这组结果能证明 Linux NVMe/TCP、FUSE、TokenFS 和 AURA 控制链路已经打通；它不能写成老师物理服务器结果。切到老师物理远端后，应使用同一入口重新生成 `08_lab_single_client_multigpu` 报告。
 
 当前真实 workload 会使用每轮独立的实验命名空间，避免旧的远端文件影响结果，也不会清理已有远端数据。它显式构造：
 
@@ -327,6 +338,9 @@ TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/real_speed_repeat_benchmark.
 # 检查当前环境本地/远端是否存在足够性能差距
 TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/nvmeof_gap_diagnostic.sh
 
+# 只读检查老师物理 NVMe-oF Target 是否能从当前客户端直连
+./scripts/lab_network_probe.sh --target-ip 28.10.10.13 --port 4420
+
 # TokenFS 基础功能，需 Linux/FUSE
 ./scripts/smoke_test.sh
 ./scripts/integration_test.sh
@@ -344,6 +358,7 @@ macOS 主机上主要运行 Python 策略测试；FUSE 和 NVMe-oF 脚本应在 
 
 ```bash
 cp config/tokenfs.nvmeof.example.yaml config/tokenfs.nvmeof.yaml
+./scripts/lab_network_probe.sh --config config/tokenfs.nvmeof.yaml --target-ip 28.10.10.13 --port 4420
 ./scripts/connect_nvme.sh --config config/tokenfs.nvmeof.yaml --dry-run
 sudo ./scripts/connect_nvme.sh --config config/tokenfs.nvmeof.yaml --backend remote0 --chown-current
 ```

@@ -10,14 +10,14 @@
 |---|---|---|---|
 | TokenFS/FUSE 原型 | 真实代码路径 | 本地目录、远端目录、SQLite 元数据、配额、溢写和基础文件操作可运行 | 生产级分布式文件系统 |
 | 双 VM NVMe-oF | 真实 Linux NVMe/TCP 协议 | Host/Target 连接、远端 Namespace 挂载、TokenFS 远端层可接 NVMe-oF | 真实物理 SSD/GPU 集群性能 |
-| 单客户端 NVMe-oF | 真实 Linux NVMe/TCP 链路 | 本地目录与远端 NVMe-oF 挂载目录的实际访问差距 | 多客户端并发和跨机器 GPU 亲和 |
+| 单客户端 NVMe-oF | 真实 Linux NVMe/TCP 链路 | 本地目录与远端 NVMe-oF 挂载目录的实际访问差距 | 当前最新 VM 实跑 Target 为 `192.168.64.3`，不能等同于老师物理服务器 |
 | AURA-KV 策略实验 | 模拟/代理 | 价值感知替换和共享副本放置相对 LRU/LFU 等 baseline 的趋势 | 真实 vLLM/SGLang TTFT 收益 |
 
 论文汇报时建议写：
 
 ```text
 系统原型已经实现 FUSE 分层缓存、元数据管理、后台任务队列和动态监控；
-NVMe-oF 层已完成双 VM 单客户端真实 NVMe/TCP 基线；
+NVMe-oF 层已完成双 VM 单客户端真实 NVMe/TCP 基线；老师物理 Target 已确认在跳板机内部可见 `28.10.10.13:4420`，但当前 UTM 客户端 VM 尚不能直连该端口；
 核心策略已通过 trace-driven simulator 完成多场景消融。
 ```
 
@@ -40,7 +40,7 @@ Ubuntu VM / 内网客户端
 远端 NVMe/TCP Target
 ```
 
-这条路线比目录模拟更真实，因为远端容量层确实走 Linux NVMe/TCP；同时也比完整物理集群更保守，因为多个 GPU 仍是同一客户端内的逻辑节点。
+这条路线比目录模拟更真实，因为远端容量层确实走 Linux NVMe/TCP；同时也比完整物理集群更保守，因为多个 GPU 仍是同一客户端内的逻辑节点。当前报告中的最新 VM 实跑结果使用本地第二台 VM 作为 NVMe/TCP Target，适合证明协议链路和系统机制；老师物理远端 SSD 需要客户端 VM 先具备到 `28.10.10.13:4420` 的直连网络路径后再复测。
 
 统一运行入口：
 
@@ -185,7 +185,7 @@ TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/lab_single_client_multigpu_e
 | local | 129.40 MiB/s | 1259.06 MiB/s |
 | remote NVMe-oF | 131.75 MiB/s | 269.02 MiB/s |
 
-这说明当前环境中远端读路径明显慢于本地读路径，已经具备验证本地热缓存收益的基础。
+这说明当前双 VM 环境中远端读路径明显慢于本地读路径，已经具备验证本地热缓存收益的基础；但该结论不代表老师物理远端 SSD 的最终性能。
 
 最新 3 轮均值和波动范围：
 
@@ -200,8 +200,8 @@ TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/lab_single_client_multigpu_e
 这组结果需要诚实解释：
 
 - AURA-Joint 的机制已经真实触发：本地读命中率达到 `95.26%`，远端打开读取从 `260` 次降到 `12.33` 次，说明热点提升、预取、淘汰和跨 GPU 本地副本确实在工作。
-- 当前单客户端多逻辑 GPU + 真实 NVMe-oF 环境下，AURA-Joint 相对 RemoteOnly 的平均端到端速度提升约 `1.079x`，与 LFU-Local 基本持平，优于 LocalFirst 和 LRU-Local。
-- 因此论文中可以把这组数据作为“真实系统机制验证 + 真实速度收益边界”：AURA 已经显著降低远端读取次数，并在真实 NVMe-oF 路径上带来约 8% 的端到端加速；但由于当前仍是单客户端逻辑 GPU，不应写成完整多物理 GPU 集群结论。
+- 当前单客户端多逻辑 GPU + 双 VM NVMe-oF 环境下，AURA-Joint 相对 RemoteOnly 的平均端到端速度提升约 `1.079x`，与 LFU-Local 基本持平，优于 LocalFirst 和 LRU-Local。
+- 因此论文中可以把这组数据作为“系统机制验证 + 双 VM NVMe/TCP 速度收益边界”：AURA 已经显著降低远端读取次数，并在真实 Linux NVMe/TCP 路径上带来约 8% 的端到端加速；但由于 Target 仍是本地第二台 VM，不应写成老师物理 SSD 或完整多物理 GPU 集群结论。
 
 图表：
 

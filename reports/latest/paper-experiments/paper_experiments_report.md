@@ -105,7 +105,7 @@ TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/real_speed_benchmark.sh
 TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/real_speed_repeat_benchmark.sh
 ```
 
-当前结果来自双 VM 真实 Linux NVMe/TCP 环境，远端目录是 `/dev/nvme0n1` 挂载后的 NVMe-oF 文件系统。实验默认使用 `32 MiB` shard、`160 MiB` 本地缓存配额，重复 `3` 轮。每个策略每轮约 `8456 MiB` 逻辑 workload，5 个策略 3 轮合计约 `126.8 GiB`。这组实验不再只看最好的一轮，而是报告均值、标准差和最小/最大范围。
+当前结果来自双 VM 真实 Linux NVMe/TCP 环境，Target 是本地第二台 VM `192.168.64.3`，远端目录是 `/dev/nvme0n1` 挂载后的 NVMe-oF 文件系统。实验默认使用 `32 MiB` shard、`160 MiB` 本地缓存配额，重复 `3` 轮。每个策略每轮约 `8456 MiB` 逻辑 workload，5 个策略 3 轮合计约 `126.8 GiB`。这组实验不再只看最好的一轮，而是报告均值、标准差和最小/最大范围。它适合作为协议链路和系统机制验证；老师物理远端 SSD 结果需要当前客户端具备到 `28.10.10.13:4420` 的直连路径后重新采集。
 
 | 策略 | 轮数 | 每轮数据量 | 平均总耗时 | 耗时范围 | 平均有效吞吐 | 相对 RemoteOnly | 读吞吐均值 | 本地读命中率 | 远端打开读取 | 后台动作 |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---|

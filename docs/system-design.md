@@ -127,7 +127,7 @@ SWAP 必须先创建并校验新副本，再删除旧副本。失败时旧副本
 
 - FUSE 目录后端与元数据路径。
 - 双 VM Linux NVMe/TCP Host/Target。
-- 单客户端实验室真实 NVMe/TCP baseline。
+- 实验室 NVMe/TCP baseline 摘要；当前 UTM VM 尚未直连老师物理 Target。
 - AURA-KV 控制器、任务队列、模拟器和动态监控。
 
 仍有限制：
