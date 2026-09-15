@@ -1,0 +1,61 @@
+time=2026-09-15T15:07:26Z
+config=/home/wjxt/projects/tokenfs/config/tokenfs.cn14.yaml
+backend_id=remote0
+host=cn14
+
+[uname]
+Linux cn14 6.8.0-31-generic #31-Ubuntu SMP PREEMPT_DYNAMIC Sat Apr 20 00:40:06 UTC 2024 x86_64 x86_64 x86_64 GNU/Linux
+
+[ip address]
+lo               UNKNOWN        127.0.0.1/8 ::1/128 
+eno1np0          DOWN           
+eno3             UP             28.10.10.14/24 fe80::b226:28ff:fefc:8870/64 
+eno2np1          DOWN           
+eno4             DOWN           
+ibp175s0         UP             89.89.10.14/24 fe80::ee0d:9a03:d4:3134/64 
+
+[remote backend config]
+type=nvmeof
+root=/srv/tokenfs/remote0
+nvme_transport=tcp
+nvme_target_ip=28.10.10.13
+nvme_port=4420
+nvme_subnqn=nqn.2026-09.local.aura-kv:remote0
+nvme_device=/dev/nvme3n1
+nvme_mount=/srv/tokenfs/remote0
+
+[findmnt remote]
+TARGET               SOURCE       FSTYPE OPTIONS
+/srv/tokenfs/remote0 /dev/nvme3n1 ext4   rw,noatime
+
+[df]
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/nvme3n1     63G  1.1G   59G   2% /srv/tokenfs/remote0
+
+[lsblk]
+NAME                      MAJ:MIN RM   SIZE RO TYPE MOUNTPOINTS
+sda                         8:0    0 558.9G  0 disk 
+├─sda1                      8:1    0     1M  0 part 
+├─sda2                      8:2    0     2G  0 part /boot
+└─sda3                      8:3    0 556.9G  0 part 
+  ├─ubuntu--vg-ubuntu--lv 252:0    0   100G  0 lvm  /
+  └─ubuntu--vg-lv--0      252:1    0 456.9G  0 lvm  /home
+sdb                         8:16   0 447.1G  0 disk 
+nvme0n1                   259:0    0   1.5T  0 disk 
+├─nvme0n1p1               259:1    0   800G  0 part 
+└─nvme0n1p2               259:2    0 690.4G  0 part 
+nvme1n1                   259:3    0   1.5T  0 disk 
+├─nvme1n1p1               259:4    0   800G  0 part 
+└─nvme1n1p2               259:5    0 690.4G  0 part 
+nvme2n1                   259:6    0   1.5T  0 disk 
+├─nvme2n1p1               259:7    0   800G  0 part 
+└─nvme2n1p2               259:8    0 690.4G  0 part 
+nvme3n1                   259:10   0    64G  0 disk /srv/tokenfs/remote0
+
+[nvme list]
+Node                  Generic               SN                   Model                                    Namespace  Usage                      Format           FW Rev  
+--------------------- --------------------- -------------------- ---------------------------------------- ---------- -------------------------- ---------------- --------
+/dev/nvme0n1          /dev/ng0n1            CVMD750000PS1P6SGN   INTEL SSDPEDME016T4F                     0x1          1.60  TB /   1.60  TB    512   B +  0 B   8DV1FF05
+/dev/nvme1n1          /dev/ng1n1            CVMD751200181P6SGN   INTEL SSDPEDME016T4F                     0x1          1.60  TB /   1.60  TB    512   B +  0 B   8DV1FF05
+/dev/nvme2n1          /dev/ng2n1            PHMD6105005F1P6DGN   INTEL SSDPEDME016T4                      0x1          1.60  TB /   1.60  TB    512   B +  0 B   8DV10171
+/dev/nvme3n1          /dev/ng3n1            dbf6c6164edf04c8ff47 Linux                                    0x1         68.72  GB /  68.72  GB    512   B +  0 B   6.8.0-31

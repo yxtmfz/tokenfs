@@ -1,0 +1,29 @@
+# TokenFS Token Workload 报告
+
+实验命名空间：`real-LRU-Local-1789486112-999638`。该 workload 不再只是端到端读写压测，而是显式构造 AURA-KV 论文场景：远端已有 canonical KV Cache，本地 GPU 缓存被冷数据占满，随后通过扩展已有本地文件、热点重复访问、连续 shard 访问和跨 GPU 共享访问触发淘汰、提升、预取与跨 GPU 副本。每次运行使用独立命名空间，避免旧远端文件污染结果，也不会删除已有远端数据。
+
+| 操作 | 阶段 | 文件所属 GPU | 调用 GPU | 数据量 MiB | 耗时 s | 带宽 MiB/s | 说明 |
+|---|---|---:|---:|---:|---:|---:|---|
+| seed_remote | remote-canonical-hot | 0 | 0 | 64.00 | 0.000000 | 0.00 | pre-existing remote canonical cache |
+| seed_remote | remote-canonical-hot | 0 | 0 | 64.00 | 0.000000 | 0.00 | pre-existing remote canonical cache |
+| seed_remote | remote-canonical-cross-gpu | 0 | 0 | 64.00 | 0.000000 | 0.00 | pre-existing remote canonical cache |
+| write | cold-local-cache-fill | 0 | 0 | 64.00 | 1.184264 | 54.04 |  |
+| write | cold-local-cache-fill | 0 | 0 | 64.00 | 1.642560 | 38.96 |  |
+| write | cold-local-cache-fill | 0 | 0 | 64.00 | 1.780234 | 35.95 |  |
+| write | cold-local-cache-fill | 0 | 0 | 64.00 | 1.710712 | 37.41 |  |
+| cache_control | before-cold-local-read | -1 | -1 | 0.00 | 0.006966 | 0.00 | requested Linux page cache drop but sudo non-interactive permission was unavailable |
+| read | cold-local-read | 0 | 0 | 64.00 | 0.516676 | 123.87 |  |
+| write | capacity-pressure-append-existing | 0 | 0 | 8.00 | 0.749985 | 10.67 | append existing local cache to force eviction |
+| cache_control | before-remote-hot-first-read | -1 | -1 | 0.00 | 0.006894 | 0.00 | requested Linux page cache drop but sudo non-interactive permission was unavailable |
+| read | remote-hot-first-read | 0 | 0 | 64.00 | 0.613809 | 104.27 |  |
+| read | remote-hot-second-read-promote | 0 | 0 | 64.00 | 0.392483 | 163.06 |  |
+| cache_control | before-hot-rehit-after-promote | -1 | -1 | 0.00 | 0.006207 | 0.00 | requested Linux page cache drop but sudo non-interactive permission was unavailable |
+| read | hot-rehit-after-promote | 0 | 0 | 8192.00 | 30.752910 | 266.38 | batched 128 repeated reads in one loader process |
+| cache_control | before-sequential-next-read-after-prefetch | -1 | -1 | 0.00 | 0.006591 | 0.00 | requested Linux page cache drop but sudo non-interactive permission was unavailable |
+| read | sequential-next-read-after-prefetch | 0 | 0 | 64.00 | 0.100151 | 639.03 |  |
+| cache_control | before-sequential-rehit-after-prefetch | -1 | -1 | 0.00 | 0.007089 | 0.00 | requested Linux page cache drop but sudo non-interactive permission was unavailable |
+| read | sequential-rehit-after-prefetch | 0 | 0 | 4096.00 | 10.234885 | 400.20 | batched 64 repeated reads in one loader process |
+| cache_control | before-cross-gpu-first-read | -1 | -1 | 0.00 | 0.006858 | 0.00 | requested Linux page cache drop but sudo non-interactive permission was unavailable |
+| read | cross-gpu-first-read-create-replica | 0 | 1 | 64.00 | 0.124469 | 514.18 |  |
+| cache_control | before-cross-gpu-rehit-after-replica | -1 | -1 | 0.00 | 0.006184 | 0.00 | requested Linux page cache drop but sudo non-interactive permission was unavailable |
+| read | cross-gpu-rehit-after-replica | 0 | 1 | 4032.00 | 10.920648 | 369.21 | batched 63 repeated reads in one loader process |

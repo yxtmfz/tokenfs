@@ -31,8 +31,9 @@ reports/latest/paper-experiments/
 ├── 03_sensitivity/sensitivity_summary.csv
 ├── 04_nvmeof_baseline/real_nvmeof_summary.csv
 ├── 05_performance_summary/performance_summary.csv
-├── 06_real_speed_benchmark/real_speed_summary.csv
-├── 07_real_speed_repeat/repeat_summary.csv
+├── 09_real_cn14_nvmeof/01_environment_gap/storage_gap_summary.csv
+├── 09_real_cn14_nvmeof/02_single_run_speed/real_speed_summary.csv
+├── 09_real_cn14_nvmeof/03_repeat_speed/repeat_summary.csv
 └── figures/
 ```
 
@@ -61,21 +62,21 @@ TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/lab_single_client_multigpu_e
 
 | 阶段 | 输出 | 作用 |
 |---|---|---|
-| 环境证据 | `08_lab_single_client_multigpu/environment_evidence.txt` | 保存 `findmnt`、`nvme list`、`df`、`lsblk` 等证据，证明远端目录确实来自 `/dev/nvme*` |
-| 环境差距诊断 | `08_lab_single_client_multigpu/01_environment_gap/` | 先测本地目录和远端 NVMe-oF 目录的原始读写差距 |
-| 单轮真实速度消融 | `08_lab_single_client_multigpu/02_single_run_speed/` | 快速观察各策略的实际 wall-clock 表现 |
-| 三轮重复真实速度消融 | `08_lab_single_client_multigpu/03_repeat_speed/` | 论文优先引用的均值、波动范围和加速比 |
-| 总报告 | `08_lab_single_client_multigpu/lab_single_client_multigpu_report.md` | 把上述结果合并成一个易读入口 |
+| 环境证据 | `09_real_cn14_nvmeof/environment_evidence.txt` | 保存 `findmnt`、`nvme list`、`df`、`lsblk` 等证据，证明远端目录确实来自 `/dev/nvme3n1` |
+| 环境差距诊断 | `09_real_cn14_nvmeof/01_environment_gap/` | 先测本地目录和远端 NVMe-oF 目录的原始读写差距 |
+| 单轮真实速度消融 | `09_real_cn14_nvmeof/02_single_run_speed/` | 快速观察各策略的实际 wall-clock 表现 |
+| 三轮重复真实速度消融 | `09_real_cn14_nvmeof/03_repeat_speed/` | 论文优先引用的均值、波动范围和加速比 |
+| 总报告 | `09_real_cn14_nvmeof/lab_single_client_multigpu_report.md` | 把上述结果合并成一个易读入口 |
 
 这条路线的实验拓扑是：
 
 ```text
-Ubuntu VM / 内网客户端
+cn14 内网客户端
   ├── gpu0/gpu1/gpu2 逻辑本地缓存目录
   ├── TokenFS FUSE
   └── /srv/tokenfs/remote0 真实 NVMe-oF 挂载目录
           ↓
-远端 NVMe/TCP Target
+cn13 远端 NVMe/TCP Target
 ```
 
 因此它能证明真实 NVMe-oF 远端层参与了 TokenFS 端到端路径，也能验证多逻辑 GPU 的亲和副本机制。但它仍然不是多台真实 GPU 物理服务器并发实验，论文中不要把它写成完整物理集群结果。
@@ -86,10 +87,10 @@ Ubuntu VM / 内网客户端
 TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/lab_single_client_multigpu_experiment.sh
 ```
 
-默认参数是 `32 MiB` shard、`160 MiB` 本地配额、重复 `3` 轮。相比单轮 `8 MiB` shard 的快速验证，它放大数据块和本地缓存容量，同时保留一个 shard 左右的替换缓冲，避免缓存一开始就处于完全无余量状态。每个策略每轮总读写量约 `8 GiB`，并输出均值、标准差、最小值和最大值：
+当前真实参数是 `64 MiB` shard、`512 MiB` 本地配额、重复 `3` 轮。相比小数据快速验证，它放大数据块和本地缓存容量，同时保留替换缓冲，避免缓存一开始就处于完全无余量状态。每个策略每轮总读写量约 `16904 MiB`，并输出均值、标准差、最小值和最大值：
 
 ```text
-reports/latest/paper-experiments/08_lab_single_client_multigpu/03_repeat_speed/
+reports/latest/paper-experiments/09_real_cn14_nvmeof/03_repeat_speed/
 ├── repeat_report.md
 ├── repeat_summary.csv
 ├── repeat_runs.csv
@@ -98,7 +99,7 @@ reports/latest/paper-experiments/08_lab_single_client_multigpu/03_repeat_speed/
 
 这不是为了构造只适合 AURA-Joint 的极端数据，而是在保持同一访问形状的前提下扩大规模并重复采样。论文中应优先报告 `repeat_summary.csv`，因为它能说明性能提升是否稳定。
 
-最新一次真实运行的环境差距诊断显示：本地读吞吐约 `1259 MiB/s`，远端 NVMe-oF 读吞吐约 `269 MiB/s`。三轮重复真实速度中，AURA-Joint 平均有效吞吐约 `890.55 MiB/s`，相对 RemoteOnly 约 `1.079x`，本地读命中率约 `95.26%`，远端打开读取从 `260` 次降到约 `12.33` 次。
+最新一次 `cn14 -> cn13` 真实运行的环境差距诊断显示：本地读吞吐约 `164.27 MiB/s`，远端 NVMe-oF 读吞吐约 `110.45 MiB/s`。三轮重复真实速度中，AURA-Joint 平均有效吞吐约 `260.02 MiB/s`，相对 RemoteOnly 约 `0.997x`，本地读命中率约 `95.38%`，远端打开读取从 `260` 次降到 `12` 次。也就是说，机制已经生效，但当前实现的总耗时还没有超过 LRU/LFU。
 
 主速度实验默认不启用后台复制限速。这样做是为了直接比较策略本身带来的端到端收益；后台 QoS 和限速属于干扰控制专项实验，可以通过 `TOKENFS_ABLATION_BACKGROUND_MIB_PER_SEC` 单独打开，不应混入主速度对比。
 
@@ -107,7 +108,7 @@ reports/latest/paper-experiments/08_lab_single_client_multigpu/03_repeat_speed/
 单轮真实速度输出：
 
 ```text
-reports/latest/paper-experiments/06_real_speed_benchmark/
+reports/latest/paper-experiments/09_real_cn14_nvmeof/02_single_run_speed/
 ├── real_speed_report.md
 ├── real_speed_summary.csv
 └── figures/
@@ -296,7 +297,7 @@ normalized_to_lru = LRU-Local 综合代价 / 当前策略综合代价
 | 远端 NVMe-oF 顺序写 | write | 112.16 MiB/s | 112.16 | 166.724 ms |
 | 远端 NVMe-oF 4K 随机读 | read | 110.16 MiB/s | 28201.84 | 1.188 ms |
 
-这组数据说明远端访问代价真实存在，支撑“本地 SSD 作为热点缓存层”的动机。但这组摘要不是当前 UTM VM 直连老师物理 Target 后重新采集的完整 AURA 结果；当前 UTM VM 仍需要先打通到 `28.10.10.13:4420` 的直连网络路径。它也不能证明真实多 GPU 亲和放置效果，因为当前真实环境还没有多台已接入的物理 GPU 客户端。
+这组数据说明远端访问代价真实存在，支撑“本地 SSD 作为热点缓存层”的动机。最新主结果已经在 `cn14` 内网客户端直连老师物理 Target `28.10.10.13:4420` 后重新采集；它仍不能证明真实多物理 GPU 客户端的亲和放置效果，因为当前 `gpu0/gpu1/gpu2` 是同一客户端中的逻辑 GPU。
 
 ## 7. 动态监控
 
@@ -333,7 +334,7 @@ Dashboard 用于观察：
 可以写：
 
 - 已实现 FUSE 分层缓存文件系统原型。
-- 已跑通双 VM 单客户端 NVMe/TCP baseline，并已有实验室 NVMe/TCP baseline 摘要。
+- 已跑通双 VM 单客户端 NVMe/TCP baseline，并完成实验室 `cn14 -> cn13` 单客户端真实 NVMe-oF 复测。
 - 已实现价值感知本地缓存管理和共享副本放置模型。
 - 已通过 13 个 trace 场景和多个 baseline 完成消融。
 
@@ -341,5 +342,5 @@ Dashboard 用于观察：
 
 - 已在真实 GPU 集群中降低 TTFT。
 - 已完成生产级分布式文件系统。
-- 已用当前 UTM VM 直连老师物理 NVMe-oF Target 完成端到端 AURA 性能实验。
+- 已完成多台真实 GPU 物理服务器并发访问同一个远端 SSD 池的端到端实验。
 - 已验证多客户端共享远端 Target 的并发极限。

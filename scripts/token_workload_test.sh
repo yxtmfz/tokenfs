@@ -2,10 +2,34 @@
 set -euo pipefail
 
 project_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-mount_point="${TOKENFS_MOUNT:-/mnt/tokenfs}"
-metadata_db="${TOKENFS_DB:-/var/lib/tokenfs/metadata/tokenfs.db}"
 result_root="${1:-$project_root/reports/latest}"
 config_file="${TOKENFS_CONFIG:-$project_root/config/tokenfs.dev.yaml}"
+mount_point="${TOKENFS_MOUNT:-}"
+metadata_db="${TOKENFS_DB:-}"
+
+if [[ -z "$mount_point" || -z "$metadata_db" ]]; then
+  config_values="$(
+    python3 - "$project_root" "$config_file" <<'PY'
+import sys
+from pathlib import Path
+
+project_root = Path(sys.argv[1])
+config_file = Path(sys.argv[2])
+sys.path.insert(0, str(project_root / "scripts"))
+from tokenfsctl import parse_config  # noqa: E402
+
+config = parse_config(config_file)
+print(config.mount_point)
+print(config.metadata_db)
+PY
+  )"
+  if [[ -z "$mount_point" ]]; then
+    mount_point="$(printf '%s\n' "$config_values" | sed -n '1p')"
+  fi
+  if [[ -z "$metadata_db" ]]; then
+    metadata_db="$(printf '%s\n' "$config_values" | sed -n '2p')"
+  fi
+fi
 
 shard_mib="${TOKENFS_SHARD_MIB:-8}"
 remote_hot_shards="${TOKENFS_REMOTE_HOT_SHARDS:-2}"
@@ -24,7 +48,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-"$project_root/scripts/reset_dev_state.sh" "$mount_point" >/dev/null
+TOKENFS_CONFIG="$config_file" "$project_root/scripts/reset_dev_state.sh" "$mount_point" >/dev/null
 cmake -S "$project_root" -B "$project_root/build" -G Ninja >/dev/null
 cmake --build "$project_root/build" >/dev/null
 "$project_root/scripts/start_tokenfs.sh" "$config_file" "$mount_point" >/dev/null

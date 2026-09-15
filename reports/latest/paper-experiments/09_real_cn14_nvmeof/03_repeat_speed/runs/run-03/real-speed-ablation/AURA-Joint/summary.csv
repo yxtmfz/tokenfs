@@ -1,0 +1,24 @@
+operation,group,owner_gpu,caller_gpu,path,size_mib,seconds,mib_per_sec,note
+seed_remote,remote-canonical-hot,0,0,/srv/tokenfs/remote0/gpu0/real-AURA-Joint-1789486251-999638/dataset-a/shard-000100.tokens,64.00,0.000000,0.00,pre-existing remote canonical cache
+seed_remote,remote-canonical-hot,0,0,/srv/tokenfs/remote0/gpu0/real-AURA-Joint-1789486251-999638/dataset-a/shard-000101.tokens,64.00,0.000000,0.00,pre-existing remote canonical cache
+seed_remote,remote-canonical-cross-gpu,0,0,/srv/tokenfs/remote0/gpu0/real-AURA-Joint-1789486251-999638/shared/shard-000200.tokens,64.00,0.000000,0.00,pre-existing remote canonical cache
+write,cold-local-cache-fill,0,0,/home/wjxt/aura-kv/mnt/tokenfs/gpu0/real-AURA-Joint-1789486251-999638/dataset-a/shard-000000.tokens,64.00,1.201526,53.27,
+write,cold-local-cache-fill,0,0,/home/wjxt/aura-kv/mnt/tokenfs/gpu0/real-AURA-Joint-1789486251-999638/dataset-a/shard-000001.tokens,64.00,1.671400,38.29,
+write,cold-local-cache-fill,0,0,/home/wjxt/aura-kv/mnt/tokenfs/gpu0/real-AURA-Joint-1789486251-999638/dataset-a/shard-000002.tokens,64.00,1.728223,37.03,
+write,cold-local-cache-fill,0,0,/home/wjxt/aura-kv/mnt/tokenfs/gpu0/real-AURA-Joint-1789486251-999638/dataset-a/shard-000003.tokens,64.00,1.676569,38.17,
+cache_control,before-cold-local-read,-1,-1,/proc/sys/vm/drop_caches,0.00,0.007139,0.00,requested Linux page cache drop but sudo non-interactive permission was unavailable
+read,cold-local-read,0,0,/home/wjxt/aura-kv/mnt/tokenfs/gpu0/real-AURA-Joint-1789486251-999638/dataset-a/shard-000000.tokens,64.00,0.632543,101.18,
+write,capacity-pressure-append-existing,0,0,/home/wjxt/aura-kv/mnt/tokenfs/gpu0/real-AURA-Joint-1789486251-999638/dataset-a/shard-000000.tokens,8.00,0.704260,11.36,append existing local cache to force eviction
+cache_control,before-remote-hot-first-read,-1,-1,/proc/sys/vm/drop_caches,0.00,0.007067,0.00,requested Linux page cache drop but sudo non-interactive permission was unavailable
+read,remote-hot-first-read,0,0,/home/wjxt/aura-kv/mnt/tokenfs/gpu0/real-AURA-Joint-1789486251-999638/dataset-a/shard-000100.tokens,64.00,1.347773,47.49,
+read,remote-hot-second-read-promote,0,0,/home/wjxt/aura-kv/mnt/tokenfs/gpu0/real-AURA-Joint-1789486251-999638/dataset-a/shard-000100.tokens,64.00,0.484756,132.03,
+cache_control,before-hot-rehit-after-promote,-1,-1,/proc/sys/vm/drop_caches,0.00,0.006518,0.00,requested Linux page cache drop but sudo non-interactive permission was unavailable
+read,hot-rehit-after-promote,0,0,/home/wjxt/aura-kv/mnt/tokenfs/gpu0/real-AURA-Joint-1789486251-999638/dataset-a/shard-000100.tokens,8192.00,32.403635,252.81,batched 128 repeated reads in one loader process
+cache_control,before-sequential-next-read-after-prefetch,-1,-1,/proc/sys/vm/drop_caches,0.00,0.007366,0.00,requested Linux page cache drop but sudo non-interactive permission was unavailable
+read,sequential-next-read-after-prefetch,0,0,/home/wjxt/aura-kv/mnt/tokenfs/gpu0/real-AURA-Joint-1789486251-999638/dataset-a/shard-000101.tokens,64.00,0.114535,558.78,
+cache_control,before-sequential-rehit-after-prefetch,-1,-1,/proc/sys/vm/drop_caches,0.00,0.006468,0.00,requested Linux page cache drop but sudo non-interactive permission was unavailable
+read,sequential-rehit-after-prefetch,0,0,/home/wjxt/aura-kv/mnt/tokenfs/gpu0/real-AURA-Joint-1789486251-999638/dataset-a/shard-000101.tokens,4096.00,11.058130,370.41,batched 64 repeated reads in one loader process
+cache_control,before-cross-gpu-first-read,-1,-1,/proc/sys/vm/drop_caches,0.00,0.007370,0.00,requested Linux page cache drop but sudo non-interactive permission was unavailable
+read,cross-gpu-first-read-create-replica,0,1,/home/wjxt/aura-kv/mnt/tokenfs/gpu0/real-AURA-Joint-1789486251-999638/shared/shard-000200.tokens,64.00,0.138768,461.20,
+cache_control,before-cross-gpu-rehit-after-replica,-1,-1,/proc/sys/vm/drop_caches,0.00,0.006511,0.00,requested Linux page cache drop but sudo non-interactive permission was unavailable
+read,cross-gpu-rehit-after-replica,0,1,/home/wjxt/aura-kv/mnt/tokenfs/gpu0/real-AURA-Joint-1789486251-999638/shared/shard-000200.tokens,4032.00,12.719423,317.00,batched 63 repeated reads in one loader process

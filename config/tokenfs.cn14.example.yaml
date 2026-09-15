@@ -1,0 +1,76 @@
+filesystem:
+  mount_point: /home/wjxt/aura-kv/mnt/tokenfs
+  metadata_db: /home/wjxt/aura-kv/metadata/tokenfs.db
+  temp_suffix: ".tokenfs_tmp"
+  log_level: info
+
+policy:
+  mode: local_first
+  local_high_watermark: 0.90
+  local_low_watermark: 0.75
+  immutable_token_files: false
+  checksum: fnv1a64
+  placement_policy: value_aware
+  replica_policy: remote_primary_local_cache
+  cache_gc_policy: value_aware
+  local_eviction_policy: value_aware
+  default_recompute_cost: 80
+  default_remote_access_cost: 80
+  value_promote_threshold: 10
+  affinity_dominant_threshold_x100: 70
+  affinity_shared_threshold_x100: 55
+  affinity_short_window_sec: 300
+  affinity_long_window_sec: 3600
+  affinity_trend_min_reads: 3
+  affinity_hot_read_threshold: 4
+  affinity_warm_read_threshold: 2
+  max_local_replicas_per_file: 2
+  cross_gpu_local_cache: true
+  affinity_replica_cooldown_sec: 30
+  affinity_replica_min_residency_sec: 120
+  adaptive_migration: false
+  adaptive_remote_promote_us: 10000
+  qos_read_iops_per_gpu: 0
+  qos_write_iops_per_gpu: 0
+  qos_background_iops_per_gpu: 0
+  qos_background_mib_per_sec_per_gpu: 0
+  promote_on_read: true
+  async_promote_on_read: true
+  promote_read_threshold: 2
+  migration_min_reuse_reads: 2
+  migration_min_benefit_x100: 100
+  migration_copy_cost_per_mib: 4
+  speculative_copy_may_evict: false
+  prefetch_on_read: true
+  async_cross_gpu_replica: true
+
+gpus:
+  - gpu_id: 0
+    logical_root: /gpu0
+    local_root: /home/wjxt/aura-kv/local/gpu0
+    local_quota_mib: 1024
+    remote_backend: remote0
+
+  - gpu_id: 1
+    logical_root: /gpu1
+    local_root: /home/wjxt/aura-kv/local/gpu1
+    local_quota_mib: 1024
+    remote_backend: remote0
+
+  - gpu_id: 2
+    logical_root: /gpu2
+    local_root: /home/wjxt/aura-kv/local/gpu2
+    local_quota_mib: 1024
+    remote_backend: remote0
+
+backends:
+  - id: remote0
+    type: nvmeof
+    root: /srv/tokenfs/remote0
+    nvme_transport: tcp
+    nvme_target_ip: "28.10.10.13"
+    nvme_port: "4420"
+    nvme_subnqn: "nqn.2026-09.local.aura-kv:remote0"
+    nvme_device: "/dev/nvme3n1"
+    nvme_mount: /srv/tokenfs/remote0
+    nvme_filesystem: ext4

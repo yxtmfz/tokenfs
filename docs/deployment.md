@@ -103,17 +103,17 @@ cd ~/projects/tokenfs
 
 ## 5. 实验室 NVMe-oF
 
-当前推荐的真实实验形态不是继续依赖双 VM Target，而是：
+当前真实实验形态不是继续依赖双 VM Target，而是使用老师提供的 `cn14` 作为内网客户端，直连 `cn13` 的 NVMe/TCP Target：
 
 ```text
-Ubuntu VM / 内网客户端
+cn14 内网客户端
   ├── TokenFS / AURA-KV
   ├── gpu0/gpu1/gpu2 本地缓存目录
   └── NVMe/TCP Host
         ↓
-    /srv/tokenfs/remote0
+    /srv/tokenfs/remote0 -> /dev/nvme3n1
         ↓
-远端 NVMe/TCP Target
+cn13 远端 NVMe/TCP Target 28.10.10.13:4420
 ```
 
 这里的 `gpu0/gpu1/gpu2` 是逻辑 GPU 节点，用于模拟多 GPU KV Cache 的访问分布和本地副本放置；远端 `/srv/tokenfs/remote0` 必须是通过 NVMe-oF 挂载出来的真实远端目录。
@@ -126,24 +126,21 @@ Ubuntu VM / 内网客户端
   tokenfs-target  172.26.23.154/17
   网络模式: Bridged/en0
   到 28.10.10.13 的路由: via 172.26.127.254
+  仍不能直连 28.10.10.13:4420
 
-老师内网:
-  nvm-jump-public 可登录
-  从跳板机内部可以访问 28.10.10.13:4420
-
-阻塞点:
-  桥接后的 UTM VM 仍不能直连 28.10.10.13:4420 或 28.10.10.14:4420。
-  SSH 跳板能登录，不等于 NVMe/TCP 能直连。
+老师内网客户端:
+  cn14 可以直连 28.10.10.13:4420
+  /dev/nvme3n1 已通过 NVMe/TCP 挂载到 /srv/tokenfs/remote0
 ```
 
-因此，切换到老师物理远端 SSD 前，必须先让 Ubuntu 客户端位于能访问 `28.10.10.13:4420` 的网络里。当前 UTM 桥接已经完成，下一步需要老师或网络侧确认 `172.26.0.0/17` 这类客户端网段是否允许访问 Target 的 TCP 4420，或者提供一台已经在目标存储网内的 Ubuntu 客户端。
+因此，论文主实验应在 `cn14` 上运行；本地 UTM VM 继续用于代码开发、双 VM 协议验证和非真实远端调试。SSH 跳板只用于登录管理，不能替代 NVMe/TCP 数据面。
 
 ### 5.1 准备配置
 
 复制示例配置：
 
 ```bash
-cp config/tokenfs.nvmeof.example.yaml config/tokenfs.nvmeof.yaml
+cp config/tokenfs.cn14.example.yaml config/tokenfs.cn14.yaml
 ```
 
 至少修改：
@@ -218,13 +215,13 @@ nvme list 能看到远端 namespace
 挂载成功后，直接运行当前推荐入口：
 
 ```bash
-TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/lab_single_client_multigpu_experiment.sh
+TOKENFS_CONFIG=config/tokenfs.cn14.yaml ./scripts/lab_single_client_multigpu_experiment.sh /home/wjxt/aura-kv/reports/real-nvmeof-cn14
 ```
 
 它会生成：
 
 ```text
-reports/latest/paper-experiments/08_lab_single_client_multigpu/
+reports/latest/paper-experiments/09_real_cn14_nvmeof/
 ├── lab_single_client_multigpu_report.md
 ├── environment_evidence.txt
 ├── 01_environment_gap/
