@@ -103,20 +103,100 @@ cd ~/projects/tokenfs
 
 ## 5. 实验室 NVMe-oF
 
+当前推荐的真实实验形态不是继续依赖双 VM Target，而是：
+
+```text
+Ubuntu VM / 内网客户端
+  ├── TokenFS / AURA-KV
+  ├── gpu0/gpu1/gpu2 本地缓存目录
+  └── NVMe/TCP Host
+        ↓
+    /srv/tokenfs/remote0
+        ↓
+老师服务器 NVMe/TCP Target
+```
+
+这里的 `gpu0/gpu1/gpu2` 是逻辑 GPU 节点，用于模拟多 GPU KV Cache 的访问分布和本地副本放置；远端 `/srv/tokenfs/remote0` 必须是通过 NVMe-oF 挂载出来的真实远端目录。
+
+### 5.1 准备配置
+
+复制示例配置：
+
+```bash
+cp config/tokenfs.nvmeof.example.yaml config/tokenfs.nvmeof.yaml
+```
+
+至少修改：
+
+```yaml
+backends:
+  - id: remote0
+    type: nvmeof
+    root: /srv/tokenfs/remote0
+    nvme_transport: tcp
+    nvme_target_ip: "<老师服务器 Target IP>"
+    nvme_port: "4420"
+    nvme_subnqn: "<Subsystem NQN>"
+    nvme_device: "/dev/nvmeXnY"
+    nvme_mount: /srv/tokenfs/remote0
+```
+
+如果 `nvme_device` 还不知道，可以先保留 `/dev/nvmeXnY`，连接后由脚本自动识别；如果自动识别失败，再根据 `nvme list` 输出手动填写。
+
 连接前先 dry-run：
 
 ```bash
-./scripts/connect_nvme.sh --config config/tokenfs.dev.yaml --dry-run
+./scripts/connect_nvme.sh --config config/tokenfs.nvmeof.yaml --dry-run
 ```
 
 真实连接：
 
 ```bash
 sudo ./scripts/connect_nvme.sh \
-  --config config/tokenfs.dev.yaml \
+  --config config/tokenfs.nvmeof.yaml \
   --backend remote0 \
   --chown-current
 ```
+
+验证挂载：
+
+```bash
+findmnt --target /srv/tokenfs/remote0
+nvme list
+df -h /srv/tokenfs/remote0
+```
+
+合格状态应该是：
+
+```text
+/srv/tokenfs/remote0 的挂载源是 /dev/nvme...
+nvme list 能看到远端 namespace
+```
+
+如果 `/srv/tokenfs/remote0` 只是普通目录或来自 `/dev/vda`、`/dev/sda`，就不能把结果写成真实 NVMe-oF。
+
+### 5.2 单客户端多逻辑 GPU 实验
+
+挂载成功后，直接运行当前推荐入口：
+
+```bash
+TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/lab_single_client_multigpu_experiment.sh
+```
+
+它会生成：
+
+```text
+reports/latest/paper-experiments/08_lab_single_client_multigpu/
+├── lab_single_client_multigpu_report.md
+├── environment_evidence.txt
+├── 01_environment_gap/
+├── 02_single_run_speed/
+└── 03_repeat_speed/
+```
+
+这份结果是当前最适合论文汇报的真实系统结果：远端层是真实 NVMe-oF，GPU 节点是单客户端内的逻辑模拟。
+
+### 5.3 fio 基线
 
 复测 baseline：
 

@@ -27,6 +27,44 @@ NVMe-oF 层已完成双 VM 与实验室单客户端真实 NVMe/TCP 基线；
 已经完成真实多 GPU 集群端到端 TTFT 论文实验。
 ```
 
+### 1.1 当前推荐真实实验路线
+
+在只有一台远端 NVMe-oF 服务器、没有多台真实 GPU 计算节点时，当前应采用：
+
+```text
+Ubuntu VM / 内网客户端
+  ├── TokenFS / AURA-KV
+  ├── gpu0/gpu1/gpu2 多逻辑 GPU 本地缓存目录
+  └── /srv/tokenfs/remote0 真实 NVMe-oF 挂载目录
+        ↓
+老师服务器 NVMe/TCP Target
+```
+
+这条路线比目录模拟更真实，因为远端容量层确实走 Linux NVMe/TCP；同时也比完整物理集群更保守，因为多个 GPU 仍是同一客户端内的逻辑节点。
+
+统一运行入口：
+
+```bash
+TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/lab_single_client_multigpu_experiment.sh
+```
+
+输出：
+
+```text
+reports/latest/paper-experiments/08_lab_single_client_multigpu/
+├── lab_single_client_multigpu_report.md
+├── environment_evidence.txt
+├── 01_environment_gap/
+├── 02_single_run_speed/
+└── 03_repeat_speed/
+```
+
+论文里这部分建议表述为：
+
+```text
+单客户端多逻辑 GPU + 真实远端 NVMe-oF 容量层实验。
+```
+
 ## 2. 论文前四项实验
 
 统一入口：

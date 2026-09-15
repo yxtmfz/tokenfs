@@ -17,3 +17,4 @@
 
 - 策略模型结果：看 `reports/latest/paper-experiments/01_trace_replay/` 和 `05_performance_summary/`，用于解释 AURA-KV 相比 LRU/LFU 为什么降低综合代价。
 - 真实速度结果：看 `reports/latest/paper-experiments/06_real_speed_benchmark/`，用于按 `RemoteOnly`、`LocalFirst`、`LRU-Local`、`LFU-Local`、`AURA-Joint` 消融分类，直接回答同一组 TokenFS workload 是否真的更快。该结果默认要求 NVMe-oF 直连挂载；SSH tunnel 只能作为功能验证。
+- 当前推荐真实实验入口：运行 `TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/lab_single_client_multigpu_experiment.sh`，结果看 `reports/latest/paper-experiments/08_lab_single_client_multigpu/lab_single_client_multigpu_report.md`。这一路线对应“单 Ubuntu 客户端模拟多逻辑 GPU + 老师服务器真实 NVMe-oF 远端层”。

@@ -80,6 +80,64 @@ flowchart TD
 
 论文表述时要区分：策略实验是模拟/代理结果，NVMe-oF baseline 是真实协议链路结果，真实 GPU 推理收益还需要后续接入模型 workload。
 
+### 4.1 当前推荐真实实验形态
+
+在老师只提供一台远端 NVMe-oF 存储服务器、暂时没有多台真实 GPU 计算节点时，当前最合理的论文前实验形态是：
+
+```text
+Ubuntu VM / 内网客户端
+  ├── TokenFS / AURA-KV / FUSE
+  ├── /gpu0 -> 本地缓存目录 /var/lib/tokenfs/local/gpu0
+  ├── /gpu1 -> 本地缓存目录 /var/lib/tokenfs/local/gpu1
+  ├── /gpu2 -> 本地缓存目录 /var/lib/tokenfs/local/gpu2
+  └── /srv/tokenfs/remote0 -> 真实远端 NVMe-oF 挂载目录
+
+老师服务器 / Storage
+  └── Linux NVMe/TCP Target -> 远端 SSD 或安全测试后端
+```
+
+这不是“纯模拟”：远端容量层和 NVMe-oF 协议链路是真实的。它也不是“完整多物理 GPU 集群”：`gpu0/gpu1/gpu2` 是同一客户端里的逻辑 GPU 节点，用来验证访问分布、亲和副本、价值感知淘汰和后台迁移机制。
+
+该形态能支撑的结论：
+
+| 能支撑 | 不能直接支撑 |
+|---|---|
+| FUSE + TokenFS 真实可运行 | 真实 vLLM/SGLang TTFT 已降低 |
+| 远端层通过 NVMe-oF 真实接入 | 多台物理 GPU 服务器并发结果 |
+| AURA / LRU / LFU / LocalFirst 在同一 workload 下的真实 wall-clock 对比 | 生产级多客户端一致性 |
+| 多逻辑 GPU 的亲和副本和缓存淘汰机制是否生效 | NUMA、真实 GPU PCIe 拓扑收益 |
+
+统一实验入口：
+
+```bash
+TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/lab_single_client_multigpu_experiment.sh
+```
+
+脚本会按顺序完成：
+
+```text
+环境检查
+-> 确认 /srv/tokenfs/remote0 必须来自 /dev/nvme* 挂载
+-> 记录 nvme list、findmnt、df、lsblk 证据
+-> 运行本地/远端差距诊断
+-> 运行单轮真实速度消融
+-> 运行三轮重复真实速度消融
+-> 生成统一汇总报告
+```
+
+输出位置：
+
+```text
+reports/latest/paper-experiments/08_lab_single_client_multigpu/
+├── lab_single_client_multigpu_report.md
+├── environment_evidence.txt
+├── 01_environment_gap/
+├── 02_single_run_speed/
+└── 03_repeat_speed/
+```
+
+论文里可以把它写成“单客户端多逻辑 GPU + 真实远端 NVMe-oF 容量层实验”。这个表述准确，也足够让老师看懂当前实验边界。
+
 ## 5. 快速开始
 
 推荐 Ubuntu 24.04 LTS：
