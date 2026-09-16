@@ -158,7 +158,8 @@ reports/latest/paper-experiments/09_real_cn14_nvmeof/
 ├── 01_environment_gap/
 ├── 02_single_run_speed/
 ├── 03_repeat_speed/          # 优化前重复实验，保留作历史对照
-└── 06_optimized_repeat/      # 当前论文主引用重复实验
+├── 06_optimized_repeat/      # 5 策略历史重复实验
+└── 07_fair_readthrough_repeat/ # 当前论文主引用重复实验，包含强 LRU/LFU baseline
 ```
 
 论文里可以把它写成“单客户端多逻辑 GPU + 实验室真实远端 NVMe-oF 容量层实验”。这个表述准确，也足够让老师看懂当前实验边界。
@@ -271,10 +272,11 @@ reports/latest/paper-experiments/09_real_cn14_nvmeof/
 ├── 01_environment_gap/storage_gap_summary.csv
 ├── 03_repeat_speed/repeat_summary.csv        # 优化前重复实验，保留作历史对照
 ├── 05_fast_local_hit_single/strategy_summary.csv
-└── 06_optimized_repeat/repeat_summary.csv    # 当前论文主引用结果
+├── 06_optimized_repeat/repeat_summary.csv    # 5 策略历史结果
+└── 07_fair_readthrough_repeat/repeat_summary.csv # 当前论文主引用结果，包含强 LRU/LFU baseline
 ```
 
-其中 `06_optimized_repeat/repeat_summary.csv` 是论文真实速度实验优先引用的多轮汇总表。`03_repeat_speed` 是优化前结果，用来说明“只提高命中率还不够，必须降低前台和后台实现开销”。
+其中 `07_fair_readthrough_repeat/repeat_summary.csv` 是论文真实速度实验优先引用的多轮汇总表。`06_optimized_repeat` 是旧的 5 策略结果，能说明 AURA 机制有效，但 LRU/LFU 没有远端读后回填本地缓存，baseline 偏弱；`03_repeat_speed` 是优化前结果，用来说明“只提高命中率还不够，必须降低前台和后台实现开销”。
 
 如果只想单独跑某个阶段，也可以分别运行：
 
@@ -294,14 +296,18 @@ TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/real_speed_repeat_benchmark.
 | `LocalFirst` | 61.293 | 59.474-62.481 | 275.92 | 1.043x | 0.38% | 259 |
 | `LRU-Local` | 61.229 | 60.039-62.136 | 276.14 | 1.044x | 0.38% | 259 |
 | `LFU-Local` | 62.038 | 60.357-63.736 | 272.61 | 1.030x | 0.38% | 259 |
-| `AURA-Joint` | **58.372** | **57.274-59.251** | **289.65** | **1.095x** | **95.38%** | **12** |
+| `LRU-ReadThrough` | 59.278 | 58.127-60.604 | 285.25 | 1.098x | 73.85% | 68 |
+| `LFU-ReadThrough` | 59.409 | 58.361-61.032 | 284.64 | 1.095x | 73.85% | 68 |
+| `AURA-no-prefetch` | 58.674 | 58.512-58.829 | 288.10 | 1.109x | 91.15% | 23 |
+| `AURA-no-xgpu` | 60.035 | 59.462-60.509 | 281.58 | 1.083x | 71.54% | 74 |
+| `AURA-Joint` | **57.977** | **57.429-58.973** | **291.61** | **1.122x** | **95.25%** | **12.3** |
 
-这组结果说明，优化后的 AURA-Joint 不只是减少远端访问次数，也已经在真实 wall-clock 总耗时上领先。相比 RemoteOnly 平均快约 `8.65%`，相比 LRU-Local 平均快约 `4.67%`。这里的提升来自两个工程修正：
+这组结果说明，优化后的 AURA-Joint 不只是减少远端访问次数，也已经在真实 wall-clock 总耗时上领先。加入强 baseline 后，`LRU-ReadThrough` 和 `LFU-ReadThrough` 的本地读命中率提升到 `73.85%`，不再是弱对照；AURA-Joint 仍然是平均总耗时最低。相比 RemoteOnly 平均快约 `10.87%`，相比 LRU-ReadThrough 快约 `2.20%`，相比 LFU-ReadThrough 快约 `2.41%`。这里的提升来自两个工程修正：
 
 1. **远端权威、本地可重建缓存语义**：远端 NVMe-oF 层保存 canonical 数据，本地副本作为可重建缓存。`durable_local_cache=false` 时，热点提升和跨 GPU 本地副本不再对每个本地缓存副本执行前台强 `fsync`，避免把缓存创建写成持久化事务。
 2. **本地命中快路径**：`fast_local_cache_hit=true` 时，已经存在的本地 READY 副本优先服务前台读，请求不会被同步指标写库、亲和判断和预取判断阻塞；远端 miss 仍会走完整 AURA 决策链路。
 
-这两个改动没有改变 workload，也没有人为制造更适合 AURA 的访问序列，而是把系统实现和项目语义对齐：远端是权威容量层，本地是高速缓存层。论文中可以把旧 `03_repeat_speed` 与新 `06_optimized_repeat` 作为一组实现优化前后的对照。
+这两个改动没有改变 workload，也没有人为制造更适合 AURA 的访问序列，而是把系统实现和项目语义对齐：远端是权威容量层，本地是高速缓存层。论文中可以把旧 `03_repeat_speed`、5 策略 `06_optimized_repeat` 与强 baseline `07_fair_readthrough_repeat` 作为一组逐步补强的对照。
 
 主速度实验默认不人为限制后台复制带宽，因为这里要回答的是“策略是否让端到端 workload 更快”。如果要单独研究后台复制对前台 I/O 的干扰，可以设置 `TOKENFS_ABLATION_BACKGROUND_MIB_PER_SEC=256` 之类的限速参数另跑专项实验，不和主速度表混在一起。
 

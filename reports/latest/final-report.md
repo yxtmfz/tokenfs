@@ -70,7 +70,8 @@ reports/latest/paper-experiments/09_real_cn14_nvmeof/
 ├── 02_single_run_speed/real_speed_summary.csv
 ├── 03_repeat_speed/repeat_summary.csv          # 优化前重复实验，保留作历史对照
 ├── 05_fast_local_hit_single/strategy_summary.csv
-└── 06_optimized_repeat/repeat_summary.csv      # 当前论文主引用结果
+├── 06_optimized_repeat/repeat_summary.csv      # 5 策略历史结果
+└── 07_fair_readthrough_repeat/repeat_summary.csv # 当前论文主引用结果，包含强 LRU/LFU baseline
 ```
 
 实验设置：
@@ -78,13 +79,13 @@ reports/latest/paper-experiments/09_real_cn14_nvmeof/
 | 项 | 值 |
 |---|---|
 | 实验形态 | 单客户端多逻辑 GPU + 实验室真实 NVMe-oF 远端层 |
-| 策略 | RemoteOnly、LocalFirst、LRU-Local、LFU-Local、AURA-Joint |
+| 策略 | RemoteOnly、LocalFirst、LRU-Local、LFU-Local、LRU-ReadThrough、LFU-ReadThrough、AURA-no-prefetch、AURA-no-xgpu、AURA-Joint |
 | 每轮逻辑读写量 | 16904 MiB |
 | shard 大小 | 64 MiB |
 | 本地配额 | 512 MiB |
 | 重复次数 | 3 |
 
-当前主引用的三轮重复结果来自 `06_optimized_repeat/repeat_summary.csv`：
+当前主引用的三轮重复结果来自 `07_fair_readthrough_repeat/repeat_summary.csv`。这组结果加入了远端读后回填本地缓存的强 LRU/LFU baseline，用来回应“旧 LRU/LFU 本地命中率过低、对照不够公平”的问题：
 
 | 策略 | 平均总耗时 | 耗时范围 | 平均吞吐 | 相对 RemoteOnly | 本地读命中率 | 远端打开读取 |
 |---|---:|---:|---:|---:|---:|---:|
@@ -92,22 +93,27 @@ reports/latest/paper-experiments/09_real_cn14_nvmeof/
 | LocalFirst | 61.29 s | 59.47-62.48 s | 275.92 MiB/s | 1.043x | 0.38% | 259 |
 | LRU-Local | 61.23 s | 60.04-62.14 s | 276.14 MiB/s | 1.044x | 0.38% | 259 |
 | LFU-Local | 62.04 s | 60.36-63.74 s | 272.61 MiB/s | 1.030x | 0.38% | 259 |
-| AURA-Joint | **58.37 s** | **57.27-59.25 s** | **289.65 MiB/s** | **1.095x** | **95.38%** | **12** |
+| LRU-ReadThrough | 59.28 s | 58.13-60.60 s | 285.25 MiB/s | 1.098x | 73.85% | 68 |
+| LFU-ReadThrough | 59.41 s | 58.36-61.03 s | 284.64 MiB/s | 1.095x | 73.85% | 68 |
+| AURA-no-prefetch | 58.67 s | 58.51-58.83 s | 288.10 MiB/s | 1.109x | 91.15% | 23 |
+| AURA-no-xgpu | 60.03 s | 59.46-60.51 s | 281.58 MiB/s | 1.083x | 71.54% | 74 |
+| AURA-Joint | **57.98 s** | **57.43-58.97 s** | **291.61 MiB/s** | **1.122x** | **95.25%** | **12.3** |
 
 真实结果需要如实解释：
 
-- AURA-Joint 的机制已经真实触发：本地读命中率从 `0%` 提升到 `95.38%`，远端打开读取从 `260` 次降到 `12` 次。
-- 优化后 AURA-Joint 的平均总耗时最低：相比 RemoteOnly 快约 `8.65%`，相比 LRU-Local 快约 `4.67%`。
+- AURA-Joint 的机制已经真实触发：本地读命中率从 `0%` 提升到约 `95.25%`，远端打开读取从 `260` 次降到约 `12.3` 次。
+- 强 baseline 已经补齐：`LRU-ReadThrough` 和 `LFU-ReadThrough` 的本地读命中率达到 `73.85%`，但 AURA-Joint 的平均总耗时仍最低。
+- 优化后 AURA-Joint 相比 RemoteOnly 快约 `10.87%`，相比 LRU-ReadThrough 快约 `2.20%`，相比 LFU-ReadThrough 快约 `2.41%`。
 - 关键原因不是更改 workload，而是修正本地缓存语义和前台快路径：远端 NVMe-oF 保存权威副本，本地副本作为可重建缓存，不再把每个缓存创建都当作强持久化事务；本地命中请求也不再被同步控制平面更新阻塞。
 - 论文中仍然要同时报告 wall-clock 总耗时、吞吐、远端访问减少和后台动作开销，不能只写“命中率提高”。
 
 图表：
 
-![多轮总耗时](paper-experiments/09_real_cn14_nvmeof/06_optimized_repeat/figures/repeat_wall_time_mean.svg)
+![多轮总耗时](paper-experiments/09_real_cn14_nvmeof/07_fair_readthrough_repeat/figures/repeat_wall_time_mean.svg)
 
-![多轮有效吞吐](paper-experiments/09_real_cn14_nvmeof/06_optimized_repeat/figures/repeat_effective_throughput_mean.svg)
+![多轮有效吞吐](paper-experiments/09_real_cn14_nvmeof/07_fair_readthrough_repeat/figures/repeat_effective_throughput_mean.svg)
 
-![多轮加速比](paper-experiments/09_real_cn14_nvmeof/06_optimized_repeat/figures/repeat_speedup_mean.svg)
+![多轮加速比](paper-experiments/09_real_cn14_nvmeof/07_fair_readthrough_repeat/figures/repeat_speedup_mean.svg)
 
 ## 5. 策略消融结果
 

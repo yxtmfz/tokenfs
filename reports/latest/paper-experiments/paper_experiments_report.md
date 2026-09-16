@@ -114,10 +114,10 @@ Trace 回放用于验证策略模型本身是否有效，不直接等同于真�
 当前主引用数据文件：
 
 ```text
-09_real_cn14_nvmeof/06_optimized_repeat/repeat_summary.csv
-09_real_cn14_nvmeof/06_optimized_repeat/repeat_runs.csv
-09_real_cn14_nvmeof/06_optimized_repeat/repeat_report.md
-09_real_cn14_nvmeof/06_optimized_repeat/figures/
+09_real_cn14_nvmeof/07_fair_readthrough_repeat/repeat_summary.csv
+09_real_cn14_nvmeof/07_fair_readthrough_repeat/repeat_runs.csv
+09_real_cn14_nvmeof/07_fair_readthrough_repeat/repeat_report.md
+09_real_cn14_nvmeof/07_fair_readthrough_repeat/figures/
 ```
 
 当前汇总：
@@ -128,9 +128,13 @@ Trace 回放用于验证策略模型本身是否有效，不直接等同于真�
 | `LocalFirst` | 3 | 16904 | 61.293 | 59.474-62.481 | 275.92 | 1.043x | 0.38% | 259 |
 | `LRU-Local` | 3 | 16904 | 61.229 | 60.039-62.136 | 276.14 | 1.044x | 0.38% | 259 |
 | `LFU-Local` | 3 | 16904 | 62.038 | 60.357-63.736 | 272.61 | 1.030x | 0.38% | 259 |
-| `AURA-Joint` | 3 | 16904 | **58.372** | **57.274-59.251** | **289.65** | **1.095x** | **95.38%** | **12** |
+| `LRU-ReadThrough` | 3 | 16904 | 59.278 | 58.127-60.604 | 285.25 | 1.098x | 73.85% | 68 |
+| `LFU-ReadThrough` | 3 | 16904 | 59.409 | 58.361-61.032 | 284.64 | 1.095x | 73.85% | 68 |
+| `AURA-no-prefetch` | 3 | 16904 | 58.674 | 58.512-58.829 | 288.10 | 1.109x | 91.15% | 23 |
+| `AURA-no-xgpu` | 3 | 16904 | 60.035 | 59.462-60.509 | 281.58 | 1.083x | 71.54% | 74 |
+| `AURA-Joint` | 3 | 16904 | **57.977** | **57.429-58.973** | **291.61** | **1.122x** | **95.25%** | **12.3** |
 
-结论：优化后的 AURA-Joint 在同一真实 NVMe-oF workload 上平均总耗时最低。相比 RemoteOnly 快约 `8.65%`，相比 LRU-Local 快约 `4.67%`。同时，远端打开读取从 `260` 次降到 `12` 次，说明性能提升不是来自修改测试内容，而是来自让热点远端数据真正转化为本地可重建缓存，并减少本地命中时的控制面同步开销。
+结论：优化后的 AURA-Joint 在同一真实 NVMe-oF workload 上平均总耗时最低。相比 RemoteOnly 快约 `10.87%`，相比更强的 LRU-ReadThrough 快约 `2.20%`，相比 LFU-ReadThrough 快约 `2.41%`。同时，远端打开读取从 `260` 次降到约 `12.3` 次。强 LRU/LFU baseline 已经通过读后回填把本地读命中率提高到 `73.85%`，因此该结果比旧 5 策略结果更适合作为论文主表。
 
 ## 6. 图表
 
@@ -145,15 +149,15 @@ figures/aura_improvement_vs_baselines.svg
 
 ```text
 09_real_cn14_nvmeof/02_single_run_speed/figures/
-09_real_cn14_nvmeof/06_optimized_repeat/figures/
+09_real_cn14_nvmeof/07_fair_readthrough_repeat/figures/
 ```
 
 ## 7. 当前可写入论文的结论
 
 - AURA-KV 已经形成完整原型：FUSE 统一命名空间、本地缓存目录、远端 NVMe-oF canonical 层、元数据表、策略控制器、后台任务和监控指标。
 - Trace 回放中，AURA-Joint 能够在多场景下把综合服务代价降到最低，说明价值感知和 GPU 亲和联合决策是有效的。
-- 真实 cn14 到 cn13 NVMe-oF 环境中，AURA 能将远端读取次数从 260 次降到 12 次，说明策略动作确实进入了真实系统路径。
-- 优化后的真实三轮重复实验中，AURA-Joint 的平均总耗时低于 RemoteOnly、LocalFirst、LRU-Local 和 LFU-Local，说明当前实现已经能把模型收益转化为端到端速度提升。
+- 真实 cn14 到 cn13 NVMe-oF 环境中，AURA 能将远端打开读取从 260 次降到约 12.3 次，说明策略动作确实进入了真实系统路径。
+- 最新真实三轮重复实验中，AURA-Joint 的平均总耗时低于 RemoteOnly、LocalFirst、LRU-Local、LFU-Local、LRU-ReadThrough 和 LFU-ReadThrough，说明当前实现已经能在更公平的强 baseline 下把模型收益转化为端到端速度提升。
 
 ## 8. 后续优化方向
 

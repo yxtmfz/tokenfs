@@ -1,0 +1,10 @@
+case,read_local_rate_pct,write_local_rate_pct,remote_read_open,local_read_open,promote_count,prefetch_count,evict_count,evict_skip_hot,spill_count,cross_gpu_replica_create_count,cross_gpu_local_replica_hit,prefetch_request_count,local_cache_create_count,local_cache_delete_count,avg_read_us,avg_write_us,workload_seconds
+RemoteOnly,0.0,0.0,260,0,0,0,0,0,0,0,0,0,0,0,46.63,2290.74,65.0486
+LocalFirst,0.38,100.0,259,1,0,0,0,0,0,0,0,0,0,0,41.35,2434.92,59.8389
+LRU-Local,0.38,100.0,259,1,0,0,0,0,0,0,0,0,0,0,40.72,2441.05,61.103
+LFU-Local,0.38,100.0,259,1,0,0,0,0,0,0,0,0,0,0,43.17,2433.3,61.0139
+LRU-ReadThrough,73.85,100.0,68,192,2,0,0,0,0,0,0,0,2,0,41.25,2618.28,58.127
+LFU-ReadThrough,73.85,100.0,68,192,2,0,0,0,0,0,0,0,2,0,42.19,2531.98,58.8344
+AURA-no-prefetch,91.15,100.0,23,237,2,0,0,0,0,1,62,0,2,0,43.76,2430.96,58.6798
+AURA-no-xgpu,71.54,100.0,74,186,1,1,0,0,0,0,0,1,2,0,42.21,2358.98,59.4623
+AURA-Joint,95.0,100.0,13,247,1,1,0,0,0,1,62,1,2,0,42.05,2452.06,57.5281
