@@ -36,6 +36,8 @@ policy:
   qos_background_mib_per_sec_per_gpu: 0
   promote_on_read: false
   async_promote_on_read: false
+  read_through_cache: false
+  read_through_min_reads: 2
   promote_read_threshold: 2
   migration_min_reuse_reads: 6
   migration_min_benefit_x100: 150

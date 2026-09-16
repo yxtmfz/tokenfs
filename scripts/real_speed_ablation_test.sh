@@ -25,10 +25,12 @@ make_config() {
   local prefetch="$6"
   local cross_gpu="$7"
   local async_background="$8"
+  local read_through="$9"
   local output="$tmp_dir/$name.yaml"
 
   python3 - "$base_config" "$output" "$quota_mib" "$eviction_policy" \
-    "$placement_policy" "$promote" "$prefetch" "$cross_gpu" "$async_background" <<'PY'
+    "$placement_policy" "$promote" "$prefetch" "$cross_gpu" "$async_background" \
+    "$read_through" <<'PY'
 import os
 import re
 import sys
@@ -43,6 +45,7 @@ promote = sys.argv[6]
 prefetch = sys.argv[7]
 cross_gpu = sys.argv[8]
 async_background = sys.argv[9]
+read_through = sys.argv[10]
 
 text = src.read_text(encoding="utf-8")
 
@@ -68,6 +71,8 @@ replace_scalar("prefetch_on_read", prefetch)
 replace_scalar("cross_gpu_local_cache", cross_gpu)
 replace_scalar("async_promote_on_read", async_background)
 replace_scalar("async_cross_gpu_replica", async_background)
+replace_scalar("read_through_cache", read_through)
+replace_scalar("read_through_min_reads", os.environ.get("TOKENFS_READ_THROUGH_MIN_READS", "2"))
 replace_scalar("value_promote_threshold", "100")
 replace_scalar("promote_read_threshold", "2")
 replace_scalar("migration_min_reuse_reads", "6")
@@ -95,9 +100,10 @@ run_case() {
   local prefetch="$6"
   local cross_gpu="$7"
   local async_background="$8"
+  local read_through="$9"
 
   local config
-  config="$(make_config "$name" "$quota_mib" "$eviction_policy" "$placement_policy" "$promote" "$prefetch" "$cross_gpu" "$async_background")"
+  config="$(make_config "$name" "$quota_mib" "$eviction_policy" "$placement_policy" "$promote" "$prefetch" "$cross_gpu" "$async_background" "$read_through")"
   local out="$result_root/$name"
   local run_id="real-${name}-$(date +%s)-$$"
   echo "real-speed ablation: $name"
@@ -117,11 +123,15 @@ run_case() {
     "$project_root/scripts/token_workload_test.sh" "$out" >/dev/null
 }
 
-run_case RemoteOnly 0 none remote_only false false false false
-run_case LocalFirst "$local_quota_mib" none local_first false false false false
-run_case LRU-Local "$local_quota_mib" lru local_first false false false false
-run_case LFU-Local "$local_quota_mib" lfu local_first false false false false
-run_case AURA-Joint "$local_quota_mib" value_aware value_aware true true true true
+run_case RemoteOnly 0 none remote_only false false false false false
+run_case LocalFirst "$local_quota_mib" none local_first false false false false false
+run_case LRU-Local "$local_quota_mib" lru local_first false false false false false
+run_case LFU-Local "$local_quota_mib" lfu local_first false false false false false
+run_case LRU-ReadThrough "$local_quota_mib" lru local_first true false false true true
+run_case LFU-ReadThrough "$local_quota_mib" lfu local_first true false false true true
+run_case AURA-no-prefetch "$local_quota_mib" value_aware value_aware true false true true false
+run_case AURA-no-xgpu "$local_quota_mib" value_aware value_aware true true false true false
+run_case AURA-Joint "$local_quota_mib" value_aware value_aware true true true true false
 
 python3 - "$result_root" <<'PY'
 import csv
@@ -130,7 +140,17 @@ import sys
 from pathlib import Path
 
 root = Path(sys.argv[1])
-cases = ["RemoteOnly", "LocalFirst", "LRU-Local", "LFU-Local", "AURA-Joint"]
+cases = [
+    "RemoteOnly",
+    "LocalFirst",
+    "LRU-Local",
+    "LFU-Local",
+    "LRU-ReadThrough",
+    "LFU-ReadThrough",
+    "AURA-no-prefetch",
+    "AURA-no-xgpu",
+    "AURA-Joint",
+]
 
 def metric(metrics: dict, name: str) -> int:
     return int(metrics.get(name, 0))
@@ -204,6 +224,10 @@ lines.extend(
         "- `LocalFirst`：本地够用就写本地，本地不够就溢写远端，但不主动淘汰旧本地数据。",
         "- `LRU-Local`：本地不够时，淘汰最久没有访问的数据。",
         "- `LFU-Local`：本地不够时，淘汰累计访问次数最少的数据。",
+        "- `LRU-ReadThrough`：远端读后也缓存到本地，本地不够时按 LRU 淘汰，是更公平的强 baseline。",
+        "- `LFU-ReadThrough`：远端读后也缓存到本地，本地不够时按 LFU 淘汰，是更公平的强 baseline。",
+        "- `AURA-no-prefetch`：保留价值感知和跨 GPU 副本，但关闭顺序预取，用于判断预取贡献。",
+        "- `AURA-no-xgpu`：保留价值感知和顺序预取，但关闭跨 GPU 本地副本，用于判断 GPU 共享贡献。",
         "- `AURA-Joint`：同时考虑数据价值、GPU 热度/亲和、远端访问代价、容量约束和后台复制/淘汰；本 workload 会显式制造远端热点、本地冷缓存、连续 shard 和跨 GPU 访问，验证后台策略确实被触发。",
     ]
 )

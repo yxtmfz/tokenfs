@@ -250,7 +250,13 @@ reports/latest/paper-experiments/paper_experiments_report.md
 | `LocalFirst` | 本地够用优先，本地不足溢写远端，不主动淘汰 |
 | `LRU-Local` | 本地不足时淘汰最久未访问数据 |
 | `LFU-Local` | 本地不足时淘汰访问次数最少数据 |
+| `LRU-ReadThrough` | 远端读后也复制回本地，本地满后按 LRU 淘汰，是更强、更公平的 LRU baseline |
+| `LFU-ReadThrough` | 远端读后也复制回本地，本地满后按 LFU 淘汰，是更强、更公平的 LFU baseline |
+| `AURA-no-prefetch` | 保留价值感知与 GPU 亲和副本，关闭顺序预取 |
+| `AURA-no-xgpu` | 保留价值感知与顺序预取，关闭跨 GPU 本地副本 |
 | `AURA-Joint` | 价值感知、GPU 亲和、容量约束和后台动作联合决策 |
+
+早期真实速度表只比较了 `RemoteOnly`、`LocalFirst`、`LRU-Local`、`LFU-Local` 和 `AURA-Joint`。那组结果能说明 AURA 机制有效，但 LRU/LFU baseline 偏弱，因为它们没有远端读后回填本地缓存。当前脚本已经加入 `LRU-ReadThrough` 和 `LFU-ReadThrough`，后续论文主表应优先引用包含这两个强 baseline 的重复实验结果。如果 AURA 在强 baseline 下仍然总耗时最低，结论会更有说服力；如果不是最低，就应诚实报告 AURA 的适用场景，并继续优化后台复制、预取和阈值。
 
 ```bash
 TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/lab_single_client_multigpu_experiment.sh

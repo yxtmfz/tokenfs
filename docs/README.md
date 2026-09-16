@@ -16,5 +16,5 @@
 当前结果分两类读：
 
 - 策略模型结果：看 `reports/latest/paper-experiments/01_trace_replay/` 和 `05_performance_summary/`，用于解释 AURA-KV 相比 LRU/LFU 为什么降低综合代价。
-- 真实速度结果：看 `reports/latest/paper-experiments/09_real_cn14_nvmeof/`，用于按 `RemoteOnly`、`LocalFirst`、`LRU-Local`、`LFU-Local`、`AURA-Joint` 消融分类，直接回答同一组 TokenFS workload 在实验室 NVMe-oF 环境中是否真的更快。
+- 真实速度结果：看 `reports/latest/paper-experiments/09_real_cn14_nvmeof/`，用于按 `RemoteOnly`、`LocalFirst`、`LRU-Local`、`LFU-Local`、`LRU-ReadThrough`、`LFU-ReadThrough`、`AURA-no-prefetch`、`AURA-no-xgpu`、`AURA-Joint` 消融分类，直接回答同一组 TokenFS workload 在实验室 NVMe-oF 环境中是否真的更快。
 - 当前推荐真实实验入口：在 `cn14` 上运行 `TOKENFS_CONFIG=config/tokenfs.cn14.yaml ./scripts/lab_single_client_multigpu_experiment.sh /home/wjxt/aura-kv/reports/real-nvmeof-cn14`，结果看 `reports/latest/paper-experiments/09_real_cn14_nvmeof/lab_single_client_multigpu_report.md`。这一路线对应“单内网客户端模拟多逻辑 GPU + cn13 真实 NVMe/TCP Target 远端层”，实际 Target 以 `environment_evidence.txt` 为准。

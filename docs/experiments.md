@@ -151,9 +151,13 @@ AURA-Joint 的策略动作分成前台和后台两类。前台只负责完成当
 | `LocalFirst` | 只有本地优先和远端溢写，没有主动替换 |
 | `LRU-Local` | 传统最近最少使用替换 |
 | `LFU-Local` | 传统最少访问次数替换 |
+| `LRU-ReadThrough` | 远端读后也缓存到本地，本地满后按 LRU 淘汰；用于避免把 LRU 设成过弱 baseline |
+| `LFU-ReadThrough` | 远端读后也缓存到本地，本地满后按 LFU 淘汰；用于避免把 LFU 设成过弱 baseline |
+| `AURA-no-prefetch` | 关闭顺序预取，只保留价值感知和 GPU 亲和副本 |
+| `AURA-no-xgpu` | 关闭跨 GPU 本地副本，只保留价值感知和顺序预取 |
 | `AURA-Joint` | 价值感知、GPU 亲和和后台动作的联合策略 |
 
-`promote_count`、`prefetch_count`、`evict_count` 和 `cross_gpu_local_replica_hit` 只作为内部动作统计，用来解释 `AURA-Joint` 为什么快或为什么不快，不再作为主对照组名称。
+`promote_count`、`prefetch_count`、`evict_count` 和 `cross_gpu_local_replica_hit` 只作为内部动作统计，用来解释 `AURA-Joint` 为什么快或为什么不快，不再作为主对照组名称。论文主表应优先使用包含 `LRU-ReadThrough` 和 `LFU-ReadThrough` 的重复实验；旧的 5 策略表只能作为历史阶段结果。
 
 真实 workload 不是简单顺序读写压测。它会为每轮消融创建独立逻辑命名空间，先在远端 NVMe-oF 挂载目录准备 canonical KV shard，再填满本地冷缓存，然后制造容量压力、热点重复读取、连续 shard 读取和跨 GPU 共享读取。这样可以明确观察：
 

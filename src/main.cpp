@@ -75,6 +75,8 @@ struct Config {
   bool physical_dedup = false;
   bool promote_on_read = false;
   bool async_promote_on_read = false;
+  bool read_through_cache = false;
+  uint64_t read_through_min_reads = 2;
   uint64_t promote_read_threshold = 2;
   uint64_t migration_min_reuse_reads = 6;
   uint64_t migration_min_benefit_x100 = 150;
@@ -2157,6 +2159,18 @@ class TokenFS {
           config_.adaptive_migration)) {
       return false;
     }
+    if (config_.read_through_cache) {
+      if (gpu_id != meta.gpu_id) {
+        metadata_.AddMetric("read_through_skip_cross_gpu", 1);
+        return false;
+      }
+      if (read_count < config_.read_through_min_reads) {
+        metadata_.AddMetric("read_through_skip_low_reuse", 1);
+        return false;
+      }
+      metadata_.AddMetric("read_through_promote_request", 1);
+      return true;
+    }
     if (gpu_id != meta.gpu_id) {
       metadata_.AddMetric("affinity_cross_gpu_promote_skip", 1);
       return false;
@@ -3375,6 +3389,14 @@ Config LoadConfig(const fs::path& path) {
   if (root["policy"] && root["policy"]["async_promote_on_read"]) {
     config.async_promote_on_read =
         root["policy"]["async_promote_on_read"].as<bool>(false);
+  }
+  if (root["policy"] && root["policy"]["read_through_cache"]) {
+    config.read_through_cache =
+        root["policy"]["read_through_cache"].as<bool>(false);
+  }
+  if (root["policy"] && root["policy"]["read_through_min_reads"]) {
+    config.read_through_min_reads =
+        root["policy"]["read_through_min_reads"].as<uint64_t>(2);
   }
   if (root["policy"] && root["policy"]["promote_read_threshold"]) {
     config.promote_read_threshold =

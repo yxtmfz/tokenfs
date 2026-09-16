@@ -7,12 +7,26 @@ from pathlib import Path
 from xml.sax.saxutils import escape
 
 
-CASE_ORDER = ["RemoteOnly", "LocalFirst", "LRU-Local", "LFU-Local", "AURA-Joint"]
+CASE_ORDER = [
+    "RemoteOnly",
+    "LocalFirst",
+    "LRU-Local",
+    "LFU-Local",
+    "LRU-ReadThrough",
+    "LFU-ReadThrough",
+    "AURA-no-prefetch",
+    "AURA-no-xgpu",
+    "AURA-Joint",
+]
 CASE_NAMES = {
     "RemoteOnly": "RemoteOnly：全部从远端容量层读取",
     "LocalFirst": "LocalFirst：本地够用优先，本地不足溢写远端",
     "LRU-Local": "LRU-Local：按最近访问时间淘汰",
     "LFU-Local": "LFU-Local：按累计访问次数淘汰",
+    "LRU-ReadThrough": "LRU-ReadThrough：远端读后缓存，本地满后按 LRU 淘汰",
+    "LFU-ReadThrough": "LFU-ReadThrough：远端读后缓存，本地满后按 LFU 淘汰",
+    "AURA-no-prefetch": "AURA-no-prefetch：关闭顺序预取的 AURA 消融",
+    "AURA-no-xgpu": "AURA-no-xgpu：关闭跨 GPU 本地副本的 AURA 消融",
     "AURA-Joint": "AURA-Joint：价值感知、GPU 亲和和后台动作联合决策",
 }
 STEADY_REUSE_GROUPS = {

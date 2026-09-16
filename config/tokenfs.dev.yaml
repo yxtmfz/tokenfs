@@ -48,6 +48,9 @@ policy:
   promote_on_read: false
   # 打开后，热点提升只进入后台队列，不阻塞当前前台读请求。
   async_promote_on_read: false
+  # 强 LRU/LFU baseline 可打开读穿缓存：远端读后也复制到本地，但不使用 AURA 价值门槛。
+  read_through_cache: false
+  read_through_min_reads: 2
   promote_read_threshold: 2
   # 后台提升/复制必须能摊销复制成本，避免只为提高命中率而拖慢总耗时。
   migration_min_reuse_reads: 6

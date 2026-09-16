@@ -9,7 +9,17 @@ from statistics import mean, stdev
 from xml.sax.saxutils import escape
 
 
-CASE_ORDER = ["RemoteOnly", "LocalFirst", "LRU-Local", "LFU-Local", "AURA-Joint"]
+CASE_ORDER = [
+    "RemoteOnly",
+    "LocalFirst",
+    "LRU-Local",
+    "LFU-Local",
+    "LRU-ReadThrough",
+    "LFU-ReadThrough",
+    "AURA-no-prefetch",
+    "AURA-no-xgpu",
+    "AURA-Joint",
+]
 NUMERIC_FIELDS = [
     "total_mib",
     "wall_time_s",
