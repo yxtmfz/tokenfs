@@ -11,7 +11,7 @@ AURA-KV / TokenFS 当前已经完成从软件原型到实验室真实 NVMe-oF �
 | TokenFS FUSE 原型 | 已完成 | 支持基础 POSIX 文件操作、本地配额、远端溢写、SQLite 元数据和指标记录 |
 | AURA 控制器 | 已完成 | 支持价值感知本地缓存管理、多 GPU 逻辑副本放置、后台任务队列和布局反馈 |
 | 策略消融 | 已完成 | 已对比 RemoteOnly、LocalFirst、LRU、LFU、DualWindow、AffinityOnly、AURA-Joint 等策略 |
-| 真实 NVMe-oF 实验 | 已完成单客户端 | `cn14` 直连 `cn13:4420`，远端 `/dev/nvme3n1` 挂载为 `/srv/tokenfs/remote0` |
+| 真实 NVMe-oF 实验 | 已完成单客户端 | `cn14` 直连 `cn13:4420`，远端 `/dev/nvme3n1` 挂载为 `/srv/tokenfs/remote0`，三轮重复速度实验中 AURA-Joint 平均总耗时最低 |
 | 多物理 GPU 集群 | 未完成 | 当前 `gpu0/gpu1/gpu2` 是同一客户端内的多逻辑 GPU，用于验证亲和副本机制 |
 | vLLM/SGLang TTFT | 未完成 | 当前测的是 TokenFS/KV shard workload，不是真实模型 TTFT |
 
@@ -68,7 +68,9 @@ reports/latest/paper-experiments/09_real_cn14_nvmeof/
 ├── lab_single_client_multigpu_report.md
 ├── 01_environment_gap/storage_gap_summary.csv
 ├── 02_single_run_speed/real_speed_summary.csv
-└── 03_repeat_speed/repeat_summary.csv
+├── 03_repeat_speed/repeat_summary.csv          # 优化前重复实验，保留作历史对照
+├── 05_fast_local_hit_single/strategy_summary.csv
+└── 06_optimized_repeat/repeat_summary.csv      # 当前论文主引用结果
 ```
 
 实验设置：
@@ -82,30 +84,30 @@ reports/latest/paper-experiments/09_real_cn14_nvmeof/
 | 本地配额 | 512 MiB |
 | 重复次数 | 3 |
 
-三轮重复结果：
+当前主引用的三轮重复结果来自 `06_optimized_repeat/repeat_summary.csv`：
 
 | 策略 | 平均总耗时 | 耗时范围 | 平均吞吐 | 相对 RemoteOnly | 本地读命中率 | 远端打开读取 |
 |---|---:|---:|---:|---:|---:|---:|
-| RemoteOnly | 64.82 s | 63.06-65.92 s | 260.89 MiB/s | 1.000x | 0.00% | 260 |
-| LocalFirst | 63.16 s | 62.84-63.37 s | 267.63 MiB/s | 1.026x | 0.38% | 259 |
-| LRU-Local | 61.49 s | 60.72-62.00 s | 274.94 MiB/s | 1.054x | 0.38% | 259 |
-| LFU-Local | 61.84 s | 61.22-63.03 s | 273.38 MiB/s | 1.048x | 0.38% | 259 |
-| AURA-Joint | 65.02 s | 64.30-65.88 s | 260.02 MiB/s | 0.997x | 95.38% | 12 |
+| RemoteOnly | 63.90 s | 62.48-65.31 s | 264.64 MiB/s | 1.000x | 0.00% | 260 |
+| LocalFirst | 61.29 s | 59.47-62.48 s | 275.92 MiB/s | 1.043x | 0.38% | 259 |
+| LRU-Local | 61.23 s | 60.04-62.14 s | 276.14 MiB/s | 1.044x | 0.38% | 259 |
+| LFU-Local | 62.04 s | 60.36-63.74 s | 272.61 MiB/s | 1.030x | 0.38% | 259 |
+| AURA-Joint | **58.37 s** | **57.27-59.25 s** | **289.65 MiB/s** | **1.095x** | **95.38%** | **12** |
 
 真实结果需要如实解释：
 
 - AURA-Joint 的机制已经真实触发：本地读命中率从 `0%` 提升到 `95.38%`，远端打开读取从 `260` 次降到 `12` 次。
-- 但在当前实现和环境下，AURA-Joint 平均总耗时没有超过 LRU/LFU。当前最快的是 `LRU-Local`，平均 `61.49 s`。
-- 这说明系统“减少远端访问”的方向是成立的，但后台复制、预取、指标写入和 FUSE 路径开销仍会抵消部分收益。
-- 论文中不能只写“命中率提高”，必须同时报告 wall-clock 总耗时、吞吐、远端访问减少和后台动作开销。
+- 优化后 AURA-Joint 的平均总耗时最低：相比 RemoteOnly 快约 `8.65%`，相比 LRU-Local 快约 `4.67%`。
+- 关键原因不是更改 workload，而是修正本地缓存语义和前台快路径：远端 NVMe-oF 保存权威副本，本地副本作为可重建缓存，不再把每个缓存创建都当作强持久化事务；本地命中请求也不再被同步控制平面更新阻塞。
+- 论文中仍然要同时报告 wall-clock 总耗时、吞吐、远端访问减少和后台动作开销，不能只写“命中率提高”。
 
 图表：
 
-![多轮总耗时](paper-experiments/09_real_cn14_nvmeof/03_repeat_speed/figures/repeat_wall_time_mean.svg)
+![多轮总耗时](paper-experiments/09_real_cn14_nvmeof/06_optimized_repeat/figures/repeat_wall_time_mean.svg)
 
-![多轮有效吞吐](paper-experiments/09_real_cn14_nvmeof/03_repeat_speed/figures/repeat_effective_throughput_mean.svg)
+![多轮有效吞吐](paper-experiments/09_real_cn14_nvmeof/06_optimized_repeat/figures/repeat_effective_throughput_mean.svg)
 
-![多轮加速比](paper-experiments/09_real_cn14_nvmeof/03_repeat_speed/figures/repeat_speedup_mean.svg)
+![多轮加速比](paper-experiments/09_real_cn14_nvmeof/06_optimized_repeat/figures/repeat_speedup_mean.svg)
 
 ## 5. 策略消融结果
 
@@ -127,7 +129,7 @@ reports/latest/paper-experiments/01_trace_replay/trace_summary.csv
 | WA-Affinity-Independent | 0.7864 | 368.92 | 2.8872 ms | 0.9922 |
 | AURA-Joint | 0.8822 | 228.31 | 1.4749 ms | 0.5376 |
 
-这组结果说明 AURA-Joint 在综合代价模型中明显优于 LRU/LFU；真实速度实验则说明当前工程实现还需要继续压低控制和后台搬迁开销，才能把模型收益更稳定地转换成 wall-clock 加速。
+这组结果说明 AURA-Joint 在综合代价模型中明显优于 LRU/LFU；最新真实速度实验进一步说明，在远端权威、本地可重建缓存和本地命中快路径启用后，模型收益已经可以转化为 wall-clock 加速。
 
 ## 6. 论文表述建议
 
@@ -135,23 +137,22 @@ reports/latest/paper-experiments/01_trace_replay/trace_summary.csv
 
 - 提出了面向多 GPU 大模型 KV Cache 的本地-远程自适应分层文件系统 AURA-KV / TokenFS。
 - 实现了 FUSE 原型、SQLite 元数据、远端权威副本、本地热点副本、价值感知淘汰和多逻辑 GPU 副本放置。
-- 在实验室真实 NVMe-oF 环境中完成单客户端多逻辑 GPU 实验，证明系统可通过 NVMe/TCP 接入远端 SSD，并显著减少远端读取次数。
+- 在实验室真实 NVMe-oF 环境中完成单客户端多逻辑 GPU 实验，证明系统可通过 NVMe/TCP 接入远端 SSD，并在三轮重复实验中同时减少远端读取次数和平均总耗时。
 - Trace-driven 消融显示 AURA-Joint 相比 LRU/LFU 能降低综合服务代价。
-- 真实速度实验显示当前 AURA 已触发机制，但端到端耗时仍受后台复制和实现开销影响，后续优化重点是降低策略执行开销。
+- 真实速度实验显示当前 AURA 已触发机制，优化后的缓存语义和本地命中快路径已将模型收益转化为 wall-clock 加速。
 
 不要写：
 
 - 已经完成多台真实 GPU 物理服务器并发实验。
 - 已经证明 vLLM/SGLang 的 TTFT 被显著降低。
-- AURA-Joint 在所有真实速度指标上都超过 LRU/LFU。
+- AURA-Joint 已经完成真实多物理 GPU 集群验证。
 
 ## 7. 后续优化重点
 
 | 优先级 | 方向 | 目的 |
 |---:|---|---|
-| 1 | 减少前台 FUSE 路径同步数据库写入 | 降低每次 read/open 的固定开销 |
-| 2 | 后台复制限速与批量化 | 避免 promote/prefetch 抢占前台 I/O |
-| 3 | 更严格的迁移收益门槛 | 只复制未来收益能覆盖成本的数据 |
-| 4 | 使用真实 KV Cache trace | 让访问序列更接近 vLLM/SGLang |
-| 5 | 多物理客户端实验 | 验证真正跨 GPU 服务器的亲和副本收益 |
-
+| 1 | 使用真实 KV Cache trace | 让访问序列更接近 vLLM/SGLang |
+| 2 | 多物理客户端实验 | 验证真正跨 GPU 服务器的亲和副本收益 |
+| 3 | 前台路径进一步降开销 | 把更多指标更新改为采样或异步批量落盘 |
+| 4 | 后台复制限速与批量化 | 避免大规模 promote/prefetch 抢占前台 I/O |
+| 5 | 参数敏感性复测 | 在不同本地配额、远端延迟和复用强度下验证稳定性 |

@@ -73,6 +73,8 @@ replace_scalar("promote_read_threshold", "2")
 replace_scalar("migration_min_reuse_reads", "6")
 replace_scalar("migration_min_benefit_x100", "150")
 replace_scalar("migration_copy_cost_per_mib", "8")
+replace_scalar("durable_local_cache", "false")
+replace_scalar("fast_local_cache_hit", "true")
 replace_scalar("speculative_copy_may_evict", "false")
 replace_scalar(
     "qos_background_mib_per_sec_per_gpu",

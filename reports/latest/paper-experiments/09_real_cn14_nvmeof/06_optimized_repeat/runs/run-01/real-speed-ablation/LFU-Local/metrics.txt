@@ -1,0 +1,125 @@
+TokenFS Metrics
+============================================================
+读请求:   133120 次，16640.00 MiB
+写请求:   264 次，264.00 MiB
+本地读:   512 次，64.00 MiB
+远端读:   132608 次，16576.00 MiB
+本地写:   264 次，264.00 MiB
+远端写:   0 次，0.00 MiB
+本地读命中率: 0.4%
+本地写命中率: 100.0%
+平均读耗时:   42.4 us
+平均写耗时:   2618.9 us
+本地平均读:   43.6 us
+远端平均读:   42.4 us
+本地平均写:   2618.9 us
+远端平均写:   0.0 us
+最大读耗时:   453 us
+最大写耗时:   25112 us
+读 P99 区间:  <=100 us
+写 P99 区间:  <=100 ms
+文件打开读取: 260 次
+本地打开读取: 1 次
+溢写次数:     0
+溢写数据量:   0.00 MiB
+远端初始放置: 0 次
+远端打开读取: 259 次
+热点提升次数: 0
+热点提升数据: 0.00 MiB
+提升空间不足: 0 次
+提升失败次数: 0 次
+预取请求次数: 0
+预取成功次数: 0
+预取数据量:   0.00 MiB
+预取本地已有: 0 次
+预取目标缺失: 0 次
+预取空间不足: 0 次
+预取失败次数: 0 次
+本地淘汰次数: 0 次
+本地淘汰数据: 0.00 MiB
+迁移到远端:   0 次
+迁移回本地:   0 次
+迁移恢复次数: 0 次
+本地缓存创建: 0 次
+本地缓存删除: 0 次
+缓存 GC 删除: 0 次
+慢读提升触发(工程指标): 0 次
+跨 GPU 调用识别: 64 次
+跨 GPU 提升跳过: 0 次
+共享远端倾向跳过: 0 次
+非 dominant GPU 提升跳过: 0 次
+跨 GPU 本地副本创建: 0 次
+跨 GPU 本地副本数据: 0.00 MiB
+跨 GPU 本地副本命中: 0 次
+跨 GPU 本地副本复用: 0 次
+跨 GPU 本地副本删除: 0 次
+跨 GPU 副本冷却跳过: 0 次
+跨 GPU 副本驻留保护: 0 次
+跨 GPU 副本容量跳过: 0 次
+跳过打开文件: 0 次
+跳过热点文件: 0 次
+淘汰失败次数: 0 次
+预分配次数:   4
+预分配数据量: 256.00 MiB
+QoS 延迟次数: 0 次
+QoS 总延迟:   0 us
+前台 QoS 读:  133120 次
+前台 QoS 写:  264 次
+前台 QoS 延迟:0 次/0 us
+后台 QoS 操作:0 次，0.00 MiB
+后台 QoS 延迟:0 次/0 us
+
+每 GPU QoS 观测
+- GPU 0: read 100352 次/12544.00 MiB, write 264 次/264.00 MiB
+- GPU 1: read 32768 次/4096.00 MiB, write 0 次/0.00 MiB
+- GPU 2: read 0 次/0.00 MiB, write 0 次/0.00 MiB
+
+原始计数
+- affinity_cross_gpu_caller_count: 64
+- fallocate_bytes: 268435456
+- fallocate_ops: 4
+- fast_local_hit_open_count: 1
+- fsync_ops: 5
+- local_read_open_count: 1
+- open_local: 2
+- open_remote: 259
+- prefetch_skip_affinity: 64
+- qos_foreground_read_ops: 133120
+- qos_foreground_write_ops: 264
+- qos_gpu0_read_bytes: 13153337344
+- qos_gpu0_read_ops: 100352
+- qos_gpu0_write_bytes: 276824064
+- qos_gpu0_write_ops: 264
+- qos_gpu1_read_bytes: 4294967296
+- qos_gpu1_read_ops: 32768
+- read_bytes: 17448304640
+- read_latency_bucket_le_100us: 133112
+- read_latency_bucket_le_1ms: 8
+- read_latency_us_max: 453
+- read_latency_us_total: 5641443
+- read_local_bytes: 67108864
+- read_local_latency_bucket_le_100us: 512
+- read_local_latency_us_max: 85
+- read_local_latency_us_total: 22309
+- read_local_ops: 512
+- read_open_count: 260
+- read_ops: 133120
+- read_remote_bytes: 17381195776
+- read_remote_latency_bucket_le_100us: 132600
+- read_remote_latency_bucket_le_1ms: 8
+- read_remote_latency_us_max: 453
+- read_remote_latency_us_total: 5619134
+- read_remote_ops: 132608
+- remote_read_open_count: 259
+- write_bytes: 276824064
+- write_latency_bucket_le_100ms: 10
+- write_latency_bucket_le_10ms: 254
+- write_latency_us_max: 25112
+- write_latency_us_total: 691389
+- write_local_bytes: 276824064
+- write_local_latency_bucket_le_100ms: 10
+- write_local_latency_bucket_le_10ms: 254
+- write_local_latency_us_max: 25112
+- write_local_latency_us_total: 691389
+- write_local_ops: 264
+- write_ops: 264

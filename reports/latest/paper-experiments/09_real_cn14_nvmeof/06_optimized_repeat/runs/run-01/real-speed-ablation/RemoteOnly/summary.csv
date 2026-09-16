@@ -1,0 +1,24 @@
+operation,group,owner_gpu,caller_gpu,path,size_mib,seconds,mib_per_sec,note
+seed_remote,remote-canonical-hot,0,0,/srv/tokenfs/remote0/gpu0/real-RemoteOnly-1789519234-1006499/dataset-a/shard-000100.tokens,64.00,0.000000,0.00,pre-existing remote canonical cache
+seed_remote,remote-canonical-hot,0,0,/srv/tokenfs/remote0/gpu0/real-RemoteOnly-1789519234-1006499/dataset-a/shard-000101.tokens,64.00,0.000000,0.00,pre-existing remote canonical cache
+seed_remote,remote-canonical-cross-gpu,0,0,/srv/tokenfs/remote0/gpu0/real-RemoteOnly-1789519234-1006499/shared/shard-000200.tokens,64.00,0.000000,0.00,pre-existing remote canonical cache
+write,cold-local-cache-fill,0,0,/home/wjxt/aura-kv/mnt/tokenfs/gpu0/real-RemoteOnly-1789519234-1006499/dataset-a/shard-000000.tokens,64.00,1.760829,36.35,
+write,cold-local-cache-fill,0,0,/home/wjxt/aura-kv/mnt/tokenfs/gpu0/real-RemoteOnly-1789519234-1006499/dataset-a/shard-000001.tokens,64.00,2.270755,28.18,
+write,cold-local-cache-fill,0,0,/home/wjxt/aura-kv/mnt/tokenfs/gpu0/real-RemoteOnly-1789519234-1006499/dataset-a/shard-000002.tokens,64.00,2.396594,26.70,
+write,cold-local-cache-fill,0,0,/home/wjxt/aura-kv/mnt/tokenfs/gpu0/real-RemoteOnly-1789519234-1006499/dataset-a/shard-000003.tokens,64.00,2.327937,27.49,
+cache_control,before-cold-local-read,-1,-1,/proc/sys/vm/drop_caches,0.00,0.007229,0.00,requested Linux page cache drop but sudo non-interactive permission was unavailable
+read,cold-local-read,0,0,/home/wjxt/aura-kv/mnt/tokenfs/gpu0/real-RemoteOnly-1789519234-1006499/dataset-a/shard-000000.tokens,64.00,0.544115,117.62,Linux page cache dropped before each logical read
+write,capacity-pressure-append-existing,0,0,/home/wjxt/aura-kv/mnt/tokenfs/gpu0/real-RemoteOnly-1789519234-1006499/dataset-a/shard-000000.tokens,8.00,0.880897,9.08,append existing local cache to force eviction
+cache_control,before-remote-hot-first-read,-1,-1,/proc/sys/vm/drop_caches,0.00,0.006967,0.00,requested Linux page cache drop but sudo non-interactive permission was unavailable
+read,remote-hot-first-read,0,0,/home/wjxt/aura-kv/mnt/tokenfs/gpu0/real-RemoteOnly-1789519234-1006499/dataset-a/shard-000100.tokens,64.00,0.649379,98.56,Linux page cache dropped before each logical read
+read,remote-hot-second-read-promote,0,0,/home/wjxt/aura-kv/mnt/tokenfs/gpu0/real-RemoteOnly-1789519234-1006499/dataset-a/shard-000100.tokens,64.00,0.289182,221.31,Linux page cache dropped before each logical read
+cache_control,before-hot-rehit-after-promote,-1,-1,/proc/sys/vm/drop_caches,0.00,0.007322,0.00,requested Linux page cache drop but sudo non-interactive permission was unavailable
+read,hot-rehit-after-promote,0,0,/home/wjxt/aura-kv/mnt/tokenfs/gpu0/real-RemoteOnly-1789519234-1006499/dataset-a/shard-000100.tokens,8192.00,30.338654,270.02,batched 128 repeated reads in one loader process; Linux page cache dropped before each logical read
+cache_control,before-sequential-next-read-after-prefetch,-1,-1,/proc/sys/vm/drop_caches,0.00,0.006913,0.00,requested Linux page cache drop but sudo non-interactive permission was unavailable
+read,sequential-next-read-after-prefetch,0,0,/home/wjxt/aura-kv/mnt/tokenfs/gpu0/real-RemoteOnly-1789519234-1006499/dataset-a/shard-000101.tokens,64.00,0.120840,529.62,Linux page cache dropped before each logical read
+cache_control,before-sequential-rehit-after-prefetch,-1,-1,/proc/sys/vm/drop_caches,0.00,0.006725,0.00,requested Linux page cache drop but sudo non-interactive permission was unavailable
+read,sequential-rehit-after-prefetch,0,0,/home/wjxt/aura-kv/mnt/tokenfs/gpu0/real-RemoteOnly-1789519234-1006499/dataset-a/shard-000101.tokens,4096.00,10.033174,408.25,batched 64 repeated reads in one loader process; Linux page cache dropped before each logical read
+cache_control,before-cross-gpu-first-read,-1,-1,/proc/sys/vm/drop_caches,0.00,0.006725,0.00,requested Linux page cache drop but sudo non-interactive permission was unavailable
+read,cross-gpu-first-read-create-replica,0,1,/home/wjxt/aura-kv/mnt/tokenfs/gpu0/real-RemoteOnly-1789519234-1006499/shared/shard-000200.tokens,64.00,0.115458,554.32,Linux page cache dropped before each logical read
+cache_control,before-cross-gpu-rehit-after-replica,-1,-1,/proc/sys/vm/drop_caches,0.00,0.007028,0.00,requested Linux page cache drop but sudo non-interactive permission was unavailable
+read,cross-gpu-rehit-after-replica,0,1,/home/wjxt/aura-kv/mnt/tokenfs/gpu0/real-RemoteOnly-1789519234-1006499/shared/shard-000200.tokens,4032.00,10.748053,375.14,batched 63 repeated reads in one loader process; Linux page cache dropped before each logical read

@@ -40,6 +40,10 @@ policy:
   migration_min_reuse_reads: 6
   migration_min_benefit_x100: 150
   migration_copy_cost_per_mib: 8
+  # 本地副本默认是可重建缓存，远端 NVMe-oF 层保存权威副本。
+  durable_local_cache: false
+  # 本地命中走快速路径，远端未命中仍进入完整 AURA 决策。
+  fast_local_cache_hit: true
   speculative_copy_may_evict: false
   prefetch_on_read: false
   async_cross_gpu_replica: false

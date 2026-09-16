@@ -53,6 +53,10 @@ policy:
   migration_min_reuse_reads: 6
   migration_min_benefit_x100: 150
   migration_copy_cost_per_mib: 8
+  # 本地副本默认是可重建缓存，远端为权威副本；因此缓存提升不强制 fsync。
+  durable_local_cache: false
+  # 已经命中的本地缓存走轻量前台路径，避免每次本地读都同步写完整控制面统计。
+  fast_local_cache_hit: true
   # 预取/跨 GPU 副本属于推测动作；默认不能为了推测复制而驱逐已有本地缓存。
   speculative_copy_may_evict: false
   # 顺序 shard 预取默认关闭；实验时开启，用于比较远端读取和提前回迁本地的收益。

@@ -34,6 +34,7 @@ reports/latest/paper-experiments/
 ├── 09_real_cn14_nvmeof/01_environment_gap/storage_gap_summary.csv
 ├── 09_real_cn14_nvmeof/02_single_run_speed/real_speed_summary.csv
 ├── 09_real_cn14_nvmeof/03_repeat_speed/repeat_summary.csv
+├── 09_real_cn14_nvmeof/06_optimized_repeat/repeat_summary.csv
 └── figures/
 ```
 
@@ -65,7 +66,7 @@ TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/lab_single_client_multigpu_e
 | 环境证据 | `09_real_cn14_nvmeof/environment_evidence.txt` | 保存 `findmnt`、`nvme list`、`df`、`lsblk` 等证据，证明远端目录确实来自 `/dev/nvme3n1` |
 | 环境差距诊断 | `09_real_cn14_nvmeof/01_environment_gap/` | 先测本地目录和远端 NVMe-oF 目录的原始读写差距 |
 | 单轮真实速度消融 | `09_real_cn14_nvmeof/02_single_run_speed/` | 快速观察各策略的实际 wall-clock 表现 |
-| 三轮重复真实速度消融 | `09_real_cn14_nvmeof/03_repeat_speed/` | 论文优先引用的均值、波动范围和加速比 |
+| 三轮重复真实速度消融 | `09_real_cn14_nvmeof/06_optimized_repeat/` | 当前论文优先引用的均值、波动范围和加速比 |
 | 总报告 | `09_real_cn14_nvmeof/lab_single_client_multigpu_report.md` | 把上述结果合并成一个易读入口 |
 
 这条路线的实验拓扑是：
@@ -97,9 +98,19 @@ reports/latest/paper-experiments/09_real_cn14_nvmeof/03_repeat_speed/
 └── figures/
 ```
 
-这不是为了构造只适合 AURA-Joint 的极端数据，而是在保持同一访问形状的前提下扩大规模并重复采样。论文中应优先报告 `repeat_summary.csv`，因为它能说明性能提升是否稳定。
+旧的 `03_repeat_speed` 保留为优化前对照；当前主引用结果在：
 
-最新一次 `cn14 -> cn13` 真实运行的环境差距诊断显示：本地读吞吐约 `164.27 MiB/s`，远端 NVMe-oF 读吞吐约 `110.45 MiB/s`。三轮重复真实速度中，AURA-Joint 平均有效吞吐约 `260.02 MiB/s`，相对 RemoteOnly 约 `0.997x`，本地读命中率约 `95.38%`，远端打开读取从 `260` 次降到 `12` 次。也就是说，机制已经生效，但当前实现的总耗时还没有超过 LRU/LFU。
+```text
+reports/latest/paper-experiments/09_real_cn14_nvmeof/06_optimized_repeat/
+├── repeat_report.md
+├── repeat_summary.csv
+├── repeat_runs.csv
+└── figures/
+```
+
+这不是为了构造只适合 AURA-Joint 的极端数据，而是在保持同一访问形状的前提下扩大规模并重复采样。论文中应优先报告 `06_optimized_repeat/repeat_summary.csv`，因为它能说明性能提升是否稳定。
+
+最新一次 `cn14 -> cn13` 真实运行的环境差距诊断显示：本地读吞吐约 `164.27 MiB/s`，远端 NVMe-oF 读吞吐约 `110.45 MiB/s`。优化后三轮重复真实速度中，AURA-Joint 平均有效吞吐约 `289.65 MiB/s`，相对 RemoteOnly 约 `1.095x`，本地读命中率约 `95.38%`，远端打开读取从 `260` 次降到 `12` 次。也就是说，机制已经生效，并且当前实现已经把收益转化为平均总耗时下降。
 
 主速度实验默认不启用后台复制限速。这样做是为了直接比较策略本身带来的端到端收益；后台 QoS 和限速属于干扰控制专项实验，可以通过 `TOKENFS_ABLATION_BACKGROUND_MIB_PER_SEC` 单独打开，不应混入主速度对比。
 

@@ -226,10 +226,11 @@ reports/latest/paper-experiments/09_real_cn14_nvmeof/
 ├── environment_evidence.txt
 ├── 01_environment_gap/
 ├── 02_single_run_speed/
-└── 03_repeat_speed/
+├── 03_repeat_speed/          # 优化前重复实验
+└── 06_optimized_repeat/      # 当前主引用重复实验
 ```
 
-这份结果是当前最适合论文汇报的真实系统结果：远端层是真实 NVMe-oF，GPU 节点是单客户端内的逻辑模拟。
+这份结果是当前最适合论文汇报的真实系统结果：远端层是真实 NVMe-oF，GPU 节点是单客户端内的逻辑模拟。论文主速度表优先引用 `06_optimized_repeat/repeat_summary.csv`。
 
 ### 5.3 fio 基线
 

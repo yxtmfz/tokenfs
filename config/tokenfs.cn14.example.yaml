@@ -40,6 +40,8 @@ policy:
   migration_min_reuse_reads: 2
   migration_min_benefit_x100: 100
   migration_copy_cost_per_mib: 4
+  durable_local_cache: false
+  fast_local_cache_hit: true
   speculative_copy_may_evict: false
   prefetch_on_read: true
   async_cross_gpu_replica: true

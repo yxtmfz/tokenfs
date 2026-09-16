@@ -79,6 +79,8 @@ struct Config {
   uint64_t migration_min_reuse_reads = 6;
   uint64_t migration_min_benefit_x100 = 150;
   uint64_t migration_copy_cost_per_mib = 8;
+  bool durable_local_cache = false;
+  bool fast_local_cache_hit = true;
   bool speculative_copy_may_evict = false;
   bool prefetch_on_read = false;
   bool async_cross_gpu_replica = false;
@@ -1389,56 +1391,77 @@ class TokenFS {
     const bool writable = IsWritable(fi->flags);
     const int caller_gpu_id = DetectCallerGpuId(gpu->gpu_id);
     if (!writable) {
-      uint64_t read_count = metadata_.IncrementReadCount(
-          path, caller_gpu_id, config_.affinity_dominant_threshold_x100,
-          config_.affinity_shared_threshold_x100,
-          config_.affinity_short_window_sec,
-          config_.affinity_long_window_sec,
-          config_.affinity_trend_min_reads,
-          config_.affinity_hot_read_threshold,
-          config_.affinity_warm_read_threshold,
-          config_.max_local_replicas_per_file);
-      meta.read_count = read_count;
-      if (auto updated = metadata_.Get(path)) {
-        meta = *updated;
-      }
-      MaybeManageCrossGpuReplica(meta, caller_gpu_id);
-      if (auto updated = metadata_.Get(path)) {
-        meta = *updated;
-      }
       if (caller_gpu_id != gpu->gpu_id) {
         if (auto replica = metadata_.GetLocalReplica(path, caller_gpu_id);
             replica && replica->state == "READY" &&
             fs::exists(replica->physical_path)) {
-          metadata_.TouchLocalReplica(path, caller_gpu_id);
           meta.tier = "local";
           meta.backend_id = "local-replica";
           meta.physical_path = replica->physical_path;
           meta.size_bytes = std::max(meta.size_bytes, replica->size_bytes);
-          metadata_.AddMetric("cross_gpu_local_replica_hit", 1);
+          if (!config_.fast_local_cache_hit) {
+            metadata_.TouchLocalReplica(path, caller_gpu_id);
+          }
+          AddBufferedMetric("cross_gpu_local_replica_hit", 1);
         }
       }
-      metadata_.AddMetric("read_open_count", 1);
-      metadata_.AddMetric(meta.tier == "local" ? "local_read_open_count"
-                                                : "remote_read_open_count",
-                          1);
-      if (meta.tier == "remote" &&
-          ShouldPromoteOnRead(meta, read_count, caller_gpu_id)) {
-        if (config_.async_promote_on_read) {
-          SchedulePromoteToLocal(*gpu, rel, path, "promote", true);
-        } else {
-          if (int rc = PromoteToLocal(*gpu, rel, meta, "promote"); rc != 0) {
-            metadata_.AddMetric("promote_error_count", 1);
+      const bool fast_local_hit =
+          config_.fast_local_cache_hit && meta.tier == "local" &&
+          fs::exists(meta.physical_path);
+      if (fast_local_hit) {
+        AddBufferedMetric("fast_local_hit_open_count", 1);
+      } else {
+        uint64_t read_count = metadata_.IncrementReadCount(
+            path, caller_gpu_id, config_.affinity_dominant_threshold_x100,
+            config_.affinity_shared_threshold_x100,
+            config_.affinity_short_window_sec,
+            config_.affinity_long_window_sec,
+            config_.affinity_trend_min_reads,
+            config_.affinity_hot_read_threshold,
+            config_.affinity_warm_read_threshold,
+            config_.max_local_replicas_per_file);
+        meta.read_count = read_count;
+        if (auto updated = metadata_.Get(path)) {
+          meta = *updated;
+        }
+        MaybeManageCrossGpuReplica(meta, caller_gpu_id);
+        if (auto updated = metadata_.Get(path)) {
+          meta = *updated;
+        }
+        if (caller_gpu_id != gpu->gpu_id) {
+          if (auto replica = metadata_.GetLocalReplica(path, caller_gpu_id);
+              replica && replica->state == "READY" &&
+              fs::exists(replica->physical_path)) {
+            metadata_.TouchLocalReplica(path, caller_gpu_id);
+            meta.tier = "local";
+            meta.backend_id = "local-replica";
+            meta.physical_path = replica->physical_path;
+            meta.size_bytes = std::max(meta.size_bytes, replica->size_bytes);
+            AddBufferedMetric("cross_gpu_local_replica_hit", 1);
           }
         }
+        if (meta.tier == "remote" &&
+            ShouldPromoteOnRead(meta, read_count, caller_gpu_id)) {
+          if (config_.async_promote_on_read) {
+            SchedulePromoteToLocal(*gpu, rel, path, "promote", true);
+          } else {
+            if (int rc = PromoteToLocal(*gpu, rel, meta, "promote"); rc != 0) {
+              metadata_.AddMetric("promote_error_count", 1);
+            }
+          }
+        }
+        if (caller_gpu_id == gpu->gpu_id &&
+            meta.affinity_state != "REMOTE_SHARED_HOT" &&
+            meta.affinity_state != "CROSS_GPU_SHARED") {
+          MaybeSchedulePrefetch(*gpu, rel);
+        } else {
+          AddBufferedMetric("prefetch_skip_affinity", 1);
+        }
       }
-      if (caller_gpu_id == gpu->gpu_id &&
-          meta.affinity_state != "REMOTE_SHARED_HOT" &&
-          meta.affinity_state != "CROSS_GPU_SHARED") {
-        MaybeSchedulePrefetch(*gpu, rel);
-      } else {
-        metadata_.AddMetric("prefetch_skip_affinity", 1);
-      }
+      AddBufferedMetric("read_open_count", 1);
+      AddBufferedMetric(meta.tier == "local" ? "local_read_open_count"
+                                              : "remote_read_open_count",
+                        1);
     }
     int fd = open(meta.physical_path.c_str(), fi->flags);
     if (fd < 0) {
@@ -1460,7 +1483,7 @@ class TokenFS {
     handle.writable = writable;
     handle.state = meta.state;
     fi->fh = StoreHandle(std::move(handle));
-    metadata_.AddMetric(meta.tier == "local" ? "open_local" : "open_remote", 1);
+    AddBufferedMetric(meta.tier == "local" ? "open_local" : "open_remote", 1);
     return 0;
   }
 
@@ -2309,10 +2332,15 @@ class TokenFS {
       metadata_.AddMetric("cross_gpu_replica_error_count", 1);
       return;
     }
-    int fd = open(tmp.c_str(), O_RDONLY);
-    if (fd >= 0) {
-      fsync(fd);
-      close(fd);
+    if (config_.durable_local_cache) {
+      int fd = open(tmp.c_str(), O_RDONLY);
+      if (fd >= 0) {
+        fsync(fd);
+        close(fd);
+      }
+    } else {
+      metadata_.AddMetric("local_cache_fsync_skipped", 1);
+      metadata_.AddMetric("local_cache_fsync_skipped_bytes", size);
     }
     fs::rename(tmp, local, ec);
     if (ec) {
@@ -2397,10 +2425,12 @@ class TokenFS {
     fs::remove(tmp, ec);
     ec.clear();
 
-    FileMeta migrating = meta;
-    migrating.state = "COPYING_TO_LOCAL";
-    metadata_.Upsert(migrating);
     metadata_.AddMetric("migration_to_local_begin", 1);
+    if (config_.durable_local_cache) {
+      FileMeta migrating = meta;
+      migrating.state = "COPYING_TO_LOCAL";
+      metadata_.Upsert(migrating);
+    }
 
     fs::copy_file(source, tmp, fs::copy_options::overwrite_existing, ec);
     if (ec) {
@@ -2408,18 +2438,23 @@ class TokenFS {
       return -ec.value();
     }
 
-    int fd = open(tmp.c_str(), O_RDONLY);
-    if (fd < 0) {
-      fs::remove(tmp, ec);
-      return -errno;
-    }
-    if (fsync(fd) != 0) {
-      int err = errno;
+    if (config_.durable_local_cache) {
+      int fd = open(tmp.c_str(), O_RDONLY);
+      if (fd < 0) {
+        fs::remove(tmp, ec);
+        return -errno;
+      }
+      if (fsync(fd) != 0) {
+        int err = errno;
+        close(fd);
+        fs::remove(tmp, ec);
+        return -err;
+      }
       close(fd);
-      fs::remove(tmp, ec);
-      return -err;
+    } else {
+      metadata_.AddMetric("local_cache_fsync_skipped", 1);
+      metadata_.AddMetric("local_cache_fsync_skipped_bytes", size);
     }
-    close(fd);
 
     fs::rename(tmp, local, ec);
     if (ec) {
@@ -2437,8 +2472,6 @@ class TokenFS {
     meta.replica_state = "REMOTE_WITH_LOCAL_CACHE";
     meta.cache_generation += 1;
     meta.last_promoted_at = UnixNowSeconds();
-    meta.state = "LOCAL_READY";
-    metadata_.Upsert(meta);
     meta.state = "COMMITTED";
     metadata_.Upsert(meta);
     metadata_.AddMetric("migration_to_local_commit", 1);
@@ -3358,6 +3391,14 @@ Config LoadConfig(const fs::path& path) {
   if (root["policy"] && root["policy"]["migration_copy_cost_per_mib"]) {
     config.migration_copy_cost_per_mib =
         root["policy"]["migration_copy_cost_per_mib"].as<uint64_t>(8);
+  }
+  if (root["policy"] && root["policy"]["durable_local_cache"]) {
+    config.durable_local_cache =
+        root["policy"]["durable_local_cache"].as<bool>(false);
+  }
+  if (root["policy"] && root["policy"]["fast_local_cache_hit"]) {
+    config.fast_local_cache_hit =
+        root["policy"]["fast_local_cache_hit"].as<bool>(true);
   }
   if (root["policy"] && root["policy"]["speculative_copy_may_evict"]) {
     config.speculative_copy_may_evict =
