@@ -1,5 +1,7 @@
 # AURA-KV / TokenFS
 
+> 2026-09-18 环境迁移：后续主客户端改为 **cn7**，cn8 备用；cn13 为远端存储。新客户端使用独立 namespace，配置与验证见 [cn7 迁移记录](docs/client-migration-cn7.md)。下文 cn14 数据仍是历史实验结果，尚未在 cn7 运行新性能实验。
+
 ```text
 面向多 GPU 大模型 KV Cache 的本地 SSD 与 NVMe-oF 远端 SSD 自适应分层缓存系统
 ```
