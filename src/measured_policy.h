@@ -47,12 +47,23 @@ class MeasuredPolicy {
       // Repeated misses to a small new working set indicate stale resident heat.
       // A stream of one-off misses must not erase useful frequency history.
       if(latest.size()<=k/2) {
-        while(d.history.size()>k) {
-          auto found=d.counts.find(d.history.front());
-          if(--found->second==0)d.counts.erase(found);
-          d.history.pop_front();
+        uint64_t stale_peak=0,current_peak=0;
+        for(const auto& [observed,count]:d.counts) {
+          if(latest.count(observed))current_peak=std::max(current_peak,count);
+          else stale_peak=std::max(stale_peak,count);
         }
-        d.misses=0;reset=true;
+        // Repeated misses alone also occur while a stable working set is still
+        // accumulating enough reuse to repay copying. Reset only with dominant
+        // OLD demand outside the recent set; otherwise periodic resets can make
+        // admission impossible even for an indefinitely repeated four-object loop.
+        if(stale_peak>=k && stale_peak>2*current_peak) {
+          while(d.history.size()>k) {
+            auto found=d.counts.find(d.history.front());
+            if(--found->second==0)d.counts.erase(found);
+            d.history.pop_front();
+          }
+          d.misses=0;reset=true;
+        }
       }
     }
     if(o.aging) while(d.history.size()>std::max<size_t>(2,o.window)) {

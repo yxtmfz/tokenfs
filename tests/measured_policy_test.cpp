@@ -50,5 +50,15 @@ int main(){
  for(int i=0;i<64;i++)scan.Observe(0,"old",adapt,true);
  for(int i=0;i<8;i++)assert(!scan.Observe(0,std::to_string(i),adapt,false));
  assert(scan.Frequency(0,"old")==64); // One-off scans must not force a reset.
+ // Cold repeated misses are not a demand change. Even expensive copies must
+ // eventually become admissible when enough repeat evidence accumulates.
+ MeasuredPolicy warming;warming.ReadSample(false,100,100);warming.ReadSample(true,100,20);warming.CopySample(100,500);
+ bool eventually_admitted=false;
+ for(int i=0;i<96;i++) {
+   const auto key=std::to_string(i%4);
+   assert(!warming.Observe(0,key,adapt,false));
+   eventually_admitted=eventually_admitted || warming.Plan(0,{key,100,0},{},0,400,adapt).allowed;
+ }
+ assert(eventually_admitted);
  std::cout<<"measured admission invariants passed\n";
 }

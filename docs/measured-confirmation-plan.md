@@ -5,12 +5,22 @@ Drafted before any performance access to the held-out application records or see
 record identifying the source revision, binary hashes, and final specification.
 Development outcomes are retained separately and cannot be pooled with confirmation.
 
-Freeze record: `study-configs/measured-b2-freeze.json`. The B2 algorithm/runner
-revision is 199d74da8b3af47640960e6e5ad1567e1559c78d. Both cn7 and cn8 passed
-65 content-validation cases. B2 is now fixed; the already queued dev-04/05
-diagnostics will not be used to retune this version. Their successful completion
-and audits remain a hard execution gate. Negative speed results do not fail an
-integrity gate and must remain in the report.
+The B2 freeze `study-configs/measured-b2-freeze.json` was withdrawn **before any
+confirmation performance run**, as recorded in `measured-b2-freeze-withdrawn.json`.
+A deterministic code-review counterexample found repeated resets could prevent
+admission of an unchanged cyclic working set. The original B2 revision
+199d74da8b3af47640960e6e5ad1567e1559c78d, development results, freeze and cancellation
+record remain available. Both hosts' 65 content tests passed; they did not detect
+this policy-liveness failure. Negative speed results are not integrity failures.
+
+B3 requires dominant old demand outside the recent miss set before a reset: its
+peak count must be at least eight and exceed twice the peak in the current set.
+The identical deterministic counterexample fails on B2 (11 resets, never admits)
+and passes on B3 (zero resets, eventually admits). These artificial unit-test
+service samples are not performance evidence. New content checks and a new freeze
+must precede confirmation. The predefined held-out request windows remain unused;
+the matrix/endpoints/sample sizes will remain unchanged rather than being selected
+from new performance outcomes.
 
 ## Question and scope
 
