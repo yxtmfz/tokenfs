@@ -1,0 +1,28 @@
+# cn7 正式批次预先固定方案
+
+本方案在 formal-01 首次运行前固定。开发数据为 pilot-01（种子 7、11、17）；不进入正式区间/检验。正确性批次单独保存，不作为速度证据。
+
+- 客户端 cn7，目标 cn13，独立 remote-cn7 namespace；不使用 cn14。
+- 二进制与主测量入口：正式 manifest 中记录 SHA256；全批次不改算法、不改参数。
+- 入口：`evidence_benchmark.py --profile paper --scenarios stable scan mixed shared_shift uniform sequential --seeds 101 102 103 104 105 106 107 108 109 110 --requests 96 --shard-mib 4 --quota-mib 8 --backend-direct`。
+- 每场景每种子一个配对块，块内策略顺序随机；40 个策略×场景组合，每组10个独立块，共400次。合成 trace、单请求流、三个逻辑缓存域。
+- 各域配额8 MiB；普通对象4 MiB；mixed 的大对象16 MiB，超过单域配额，因此该场景也检验大对象绕过，不应单独解释为大小感知淘汰的纯效应。
+- 组件和场景选择以入口 PAPER_MATRIX 为准：稳定/扫描/变长/热点迁移/均匀随机/顺序预取。四格协同在 scan 和 shared_shift。
+- 主结果：完整任务 `job_wall_s`、有效 MiB/s；后台 drain、含 drain 时间、p95/p99、源字节、复制/淘汰计数作为附属证据。
+- 主比较 AURA-core 对 LRU-equal、LFU-equal 跨五场景共10项为一个 Holm 家族。其余每个组件跨所选场景分别一个家族；RemoteOnly 自成跨场景家族。家族内控制 alpha=.05，不声称论文级错误率控制。
+- 配对 log 时间比作双侧符号翻转检验（零假设下配对差对称），块 bootstrap 95%区间。显著提速要求 Holm p<.05 且区间上界<1；退化同样报告。区间未经多重校正。
+- n=10 是固定资源预算下的确认批次，并非经功效分析保证检测任意小差异。不能因接近显著追加种子；不确定即未得到支持。
+- 交互项 T11−T10−T01+T00 的区间仅为探索性证据，不能称完整统一模型的协同已证实。
+- 不按输赢排除轮次。短读、字节不符、后台错误、校验失败、容量超配均保留失败记录并终止该批；修复后全新批次，不拼接版本。
+- 未实际淘汰时不评价淘汰贡献；配置开关有效不等于机制产生不同决策。组件未产生动作差异必须披露。
+- 保留全部负结果。吞吐没有提升，不能以命中率提高替代性能结论。
+
+环境边界：客户端双层前台 O_DIRECT；目标 loop/backing 缓存未受控；本地和远端不是独占物理 NVMe。背景资源争用、单客户端和合成 trace 限制外推。formal-01 只检验 C++ AURA-core，不代表 Python RobustBenefit、需求置信区间、真实 GPU 或推理 TTFT。
+
+## 因正确性缺陷重启：formal-02
+
+formal-01 进行期间，独立 cn8 matrix-01 在 stable/LRU-equal 的第47次请求前报 ENOENT。排查与可控制时序的 C++ 回归确认：GetAttr 没有与 unlink→远端元数据提交同步。本批已主动终止并以 INVALIDATED.json 标记；包括成功轮次在内均不进入正式速度结论。
+
+修复仅为 GetAttr 与布局转换共用互斥锁；冻结新的源码与二进制 SHA256。新正式批次命名 formal-02，种子改为 **201–210**，其余400次矩阵、96请求、4 MiB对象、每域8 MiB配额、计时和统计规则保持不变。未依照旧批次输赢调参或选择场景。启动前须通过 C++ 竞态正/负向回归及全变体内容校验；两个版本不能合并，新的正式批次也不能与 pilot 混合。
+
+构建复查发现原默认 CMake 构建未启用优化。因此 formal-02 同时明确统一 **Release** 构建（`cmake -S . -B build-release -DCMAKE_BUILD_TYPE=Release`），正式入口记录 build_type 并拒绝非 Release 的 paper profile；所有策略仍共享同一优化二进制。旧 pilot 仅作为开发排错记录，其绝对速度不能与 Release 批次拼接。该修正于 formal-02 首次运行之前固定，不改变对照和统计家族。

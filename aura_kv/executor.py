@@ -94,6 +94,9 @@ class DirectoryReplicaExecutor:
         return stats
 
     def execute(self, task: BackgroundTask, current_layout_version: int) -> TaskRunResult:
+        persisted = self.queue.get(task.task_id)
+        if persisted is not None and persisted.state in {TaskState.COMMITTED, TaskState.FAILED, TaskState.CANCELED}:
+            return TaskRunResult(task.task_id, persisted.state, False, "task already terminal")
         if task.layout_version != current_layout_version:
             canceled = self.queue.transition(
                 task.task_id,
@@ -102,6 +105,12 @@ class DirectoryReplicaExecutor:
                 error_message=f"task layout {task.layout_version} != current layout {current_layout_version}",
             )
             return TaskRunResult(task.task_id, canceled.state, False, "stale layout")
+        dependencies = [self.queue.get(key) for key in task.dependency_task_ids]
+        if any(dep is not None and dep.state in {TaskState.FAILED, TaskState.CANCELED} for dep in dependencies):
+            canceled = self.queue.transition(task.task_id, TaskState.CANCELED,
+                                            error_code="DEPENDENCY_FAILED",
+                                            error_message="a prerequisite ended without committing")
+            return TaskRunResult(task.task_id, canceled.state, False, "dependency failed")
         if not self.queue.dependencies_committed(task):
             return TaskRunResult(task.task_id, task.state, False, "waiting for dependencies")
         try:
@@ -112,6 +121,8 @@ class DirectoryReplicaExecutor:
             if task.action_type == TaskType.SWAP:
                 return self._finish_swap(task)
         except Exception as exc:  # pragma: no cover - defensive path is covered through states
+            if self.queue.get(task.task_id).state == TaskState.PENDING:
+                self.queue.transition(task.task_id, TaskState.RUNNING)
             failed = self.queue.mark_failed_or_retry(task.task_id, "EXECUTOR_EXCEPTION", str(exc))
             return TaskRunResult(task.task_id, failed.state, False, str(exc))
         return TaskRunResult(task.task_id, task.state, False, "unknown task type")
@@ -134,6 +145,10 @@ class DirectoryReplicaExecutor:
             self.queue.transition(task.task_id, TaskState.RUNNING)
             failed = self.queue.mark_failed_or_retry(task.task_id, "MISSING_SOURCE", f"source does not exist: {src}")
             return TaskRunResult(task.task_id, failed.state, False, "missing source")
+        if src.stat().st_size != cache.size_bytes:
+            self.queue.transition(task.task_id, TaskState.RUNNING)
+            failed = self.queue.mark_failed_or_retry(task.task_id, "SOURCE_SIZE_MISMATCH", "source size differs from reserved object size")
+            return TaskRunResult(task.task_id, failed.state, False, "source size mismatch")
 
         self.queue.transition(task.task_id, TaskState.RUNNING)
         dst = self.local_path(task.target, task.cache_key)
@@ -146,9 +161,11 @@ class DirectoryReplicaExecutor:
         self.queue.transition(task.task_id, TaskState.VERIFYING)
         src_checksum = file_checksum(src)
         dst_checksum = file_checksum(tmp)
-        if src_checksum != dst_checksum:
+        expected_checksums = [value for value in (task.checksum, cache.checksum) if value]
+        if (src_checksum != dst_checksum or tmp.stat().st_size != cache.size_bytes
+                or any(value != src_checksum for value in expected_checksums)):
             tmp.unlink(missing_ok=True)
-            failed = self.queue.mark_failed_or_retry(task.task_id, "CHECKSUM_MISMATCH", "copied replica checksum mismatch")
+            failed = self.queue.mark_failed_or_retry(task.task_id, "CHECKSUM_MISMATCH", "replica does not match source size/checksum or expected identity")
             return TaskRunResult(task.task_id, failed.state, False, "checksum mismatch")
 
         os.replace(tmp, dst)
@@ -182,6 +199,14 @@ class DirectoryReplicaExecutor:
         if replica.status != ReplicaStatus.READY:
             failed = self.queue.mark_failed_or_retry(task.task_id, "REPLICA_NOT_READY", "only READY replicas can be evicted")
             return TaskRunResult(task.task_id, failed.state, False, "not ready")
+        alternative_exists = self.remote_path(task.cache_key).is_file() or any(
+            other_id != task.target and other.has_replica(task.cache_key)
+            and self.local_path(other_id, task.cache_key).is_file()
+            for other_id, other in self.nodes.items()
+        )
+        if not alternative_exists:
+            failed = self.queue.mark_failed_or_retry(task.task_id, "UNSAFE_LAST_REPLICA", "no remaining canonical or READY replica")
+            return TaskRunResult(task.task_id, failed.state, False, "last reliable replica")
         path.unlink(missing_ok=True)
         node.remove_replica(task.cache_key)
         self.queue.transition(task.task_id, TaskState.VERIFYING)

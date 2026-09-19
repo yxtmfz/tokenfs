@@ -149,7 +149,8 @@ class NodeState:
         return self.local_used_bytes + size_bytes <= self.local_capacity_bytes
 
     def add_replica(self, replica: Replica) -> bool:
-        if self.has_replica(replica.cache_key):
+        # COPYING/RESERVED also consume capacity and must not be double-counted.
+        if replica.cache_key in self.replicas:
             return True
         if not self.can_fit(replica.size_bytes):
             return False

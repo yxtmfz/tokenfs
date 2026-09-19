@@ -1,6 +1,8 @@
 # AURA-KV / TokenFS 文档导航
 
-当前文档已经整理为最终阅读结构。阅读顺序建议如下：
+当前真实评估迁移到 cn7→cn13；cn14 保持停用。优先阅读 [证据实验方案](evidence-experiments.md) 与 [正式批次预先固定方案](evidence-preregistration.md)。历史模拟和 cn14 表格不能替代修复后的真实速度证据。
+
+阅读顺序建议如下：
 
 | 顺序 | 文档 | 作用 |
 |---:|---|---|
@@ -9,12 +11,12 @@
 | 3 | [model-and-controller.md](model-and-controller.md) | 价值感知缓存管理、多 GPU 副本放置和联合控制器 |
 | 4 | [experiments.md](experiments.md) | 实验设计、指标、已有结果和论文边界 |
 | 5 | [deployment.md](deployment.md) | Ubuntu、FUSE、NVMe-oF、脚本和配置说明 |
-| 6 | [../reports/latest/final-report.md](../reports/latest/final-report.md) | 最新统一实验结果 |
+| 6 | [cn7 正式实测报告](../reports/latest/paper-experiments/10_real_cn7_evidence/README.md) | 最新统一实验结果 |
 
 仓库不再保留大量 `01_xxx.md` 到 `15_xxx.md` 的分散文档；对应内容已经合并到上面四份核心文档里。之后继续优化时，也优先更新这些文件。
 
-当前结果分两类读：
+当前结果按证据级别阅读：
 
-- 策略模型结果：看 `reports/latest/paper-experiments/01_trace_replay/` 和 `05_performance_summary/`，用于解释 AURA-KV 相比 LRU/LFU 为什么降低综合代价。
-- 真实速度结果：看 `reports/latest/paper-experiments/09_real_cn14_nvmeof/`，用于按 `RemoteOnly`、`LocalFirst`、`LRU-Local`、`LFU-Local`、`LRU-ReadThrough`、`LFU-ReadThrough`、`AURA-no-prefetch`、`AURA-no-xgpu`、`AURA-Joint` 消融分类，直接回答同一组 TokenFS workload 在实验室 NVMe-oF 环境中是否真的更快。
-- 当前推荐真实实验入口：在 `cn14` 上运行 `TOKENFS_CONFIG=config/tokenfs.cn14.yaml ./scripts/lab_single_client_multigpu_experiment.sh /home/wjxt/aura-kv/reports/real-nvmeof-cn14`，结果看 `reports/latest/paper-experiments/09_real_cn14_nvmeof/lab_single_client_multigpu_report.md`。这一路线对应“单内网客户端模拟多逻辑 GPU + cn13 真实 NVMe/TCP Target 远端层”，实际 Target 以 `environment_evidence.txt` 为准。
+- 策略模型历史结果：`reports/latest/paper-experiments/01_trace_replay/` 和 `05_performance_summary/`。修复前在途复制、容量和统计问题影响这些结果，不能直接沿用旧优势结论。
+- 旧真实结果：`reports/latest/paper-experiments/09_real_cn14_nvmeof/`，保留用于追溯；旧计时口径和基线差异尚不足以支持新的公平性能比较。
+- 当前真实入口：cn7 上运行 `scripts/evidence_benchmark.py`；统一使用实际 NVMe/TCP 路径、相同任务字节、完整任务耗时、配对种子和独立输出目录。`evidence_audit.py` 先审计整批完整性，`evidence_report.py` 再生成速度优先的结论。

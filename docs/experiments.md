@@ -1,5 +1,7 @@
 # 实验与结果
 
+> 历史结果警示：此页旧数字尚未按修复后的统一计账、对等基线和外层计时重跑，不能视为当前性能证据。见 `docs/evidence-experiments.md`（仓库根目录相对路径）。
+
 本文是实验设计和结果解释入口。最新数字以 [../reports/latest/final-report.md](../reports/latest/final-report.md) 和 `reports/latest/paper-experiments/` 为准。
 
 ## 1. 实验层次

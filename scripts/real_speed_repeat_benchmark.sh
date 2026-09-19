@@ -8,7 +8,7 @@ shard_mib="${TOKENFS_REPEAT_SHARD_MIB:-32}"
 quota_mib="${TOKENFS_REPEAT_LOCAL_QUOTA_MIB:-$((shard_mib * 5))}"
 label="${TOKENFS_REPEAT_LABEL:-${shard_mib}MiB shards, ${quota_mib}MiB local quota, ${runs} repeated runs, verified NVMe-oF}"
 
-rm -rf "$result_root"
+if [[ -e "$result_root" ]]; then echo "Refusing to overwrite $result_root" >&2; exit 1; fi
 mkdir -p "$result_root/runs"
 
 echo "TokenFS repeated real-speed benchmark"

@@ -1,0 +1,70 @@
+{
+  "args": {
+    "output": "/home/wjxt/aura-kv-cn7/evidence/formal-02",
+    "remote_root": "/srv/tokenfs/remote-cn7",
+    "expected_target": "28.10.10.13",
+    "expected_nqn": "nqn.2026-09.local.aura-kv:remote-cn7",
+    "binary": "build-release/tokenfs",
+    "profile": "paper",
+    "strategies": [
+      "RemoteOnly",
+      "LRU-equal",
+      "LFU-equal",
+      "AURA-core",
+      "no-value",
+      "no-gain",
+      "no-affinity",
+      "no-trend",
+      "no-xgpu",
+      "AURA-prefetch",
+      "E0A0",
+      "synchronous"
+    ],
+    "scenarios": [
+      "stable",
+      "scan",
+      "mixed",
+      "shared_shift",
+      "uniform",
+      "sequential"
+    ],
+    "seeds": [
+      201,
+      202,
+      203,
+      204,
+      205,
+      206,
+      207,
+      208,
+      209,
+      210
+    ],
+    "requests": 96,
+    "shard_mib": 4,
+    "quota_mib": 8,
+    "verify": false,
+    "backend_direct": true,
+    "report_only": false
+  },
+  "binary_sha256": "88f857a58e5918ce7bd04f901c9638057f842e01a9bd67c6946cbed938048a41",
+  "build_type": "Release",
+  "mount": {
+    "target": "/srv/tokenfs/remote-cn7",
+    "source": "/dev/nvme1n1",
+    "fstype": "ext4",
+    "options": "rw,nosuid,nodev,relatime"
+  },
+  "nvme_identity": {
+    "transport": "tcp",
+    "address": "traddr=28.10.10.13,trsvcid=4420,src_addr=28.10.10.7",
+    "subsysnqn": "nqn.2026-09.local.aura-kv:remote-cn7"
+  },
+  "source_sha256": "44597674679b9e8a7ad46379c10ed57897804861a6bfcad65a0ebe8234039634",
+  "harness_sha256": "14e3665f82d1bd2bb72b105b92e3347ced0a9bd74d9b99202a56bed1a9523558",
+  "kernel": "Linux cn7 6.8.0-31-generic #31-Ubuntu SMP PREEMPT_DYNAMIC Sat Apr 20 00:40:06 UTC 2024 x86_64 x86_64 x86_64 GNU/Linux",
+  "created_utc": "2026-09-19T03:57:07Z",
+  "cache_mode": "client O_DIRECT, server caches uncontrolled",
+  "synthetic_workload": true,
+  "primary_metric": "job_wall_s"
+}
