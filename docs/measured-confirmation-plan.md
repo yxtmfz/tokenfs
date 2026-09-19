@@ -121,6 +121,15 @@ threshold itself remains 8; the window study is not a complete sensitivity sweep
 of every parameter. Paced block replay still uses one serialized client, so it does
 not reproduce original serving concurrency or establish an inference TTFT claim.
 
+A separate `measured-domain-supplement-01.json` adds 12 descriptive runs (n=3):
+three logical callers alternate on stable or changing hotspots, with 384 requests,
+2 MiB objects and 8 MiB per-domain quota. Compare only AURA-adaptive and RecentLFU
+here: both share the same owner-local reuse behavior. Including older LRU/LFU
+cross-domain copying would mix that architectural difference with the policy
+comparison. Caller IDs alternate in a serialized loader; this is not a simultaneous
+multi-client or physical multi-GPU scaling test. Content validation covers migration,
+interleaving and cyclic reuse separately from all timing results.
+
 ## Failure and evidence retention
 
 Require complete matrix/config/trace/byte/source/queue/content/capacity audits.

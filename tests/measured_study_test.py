@@ -30,5 +30,14 @@ class MeasuredStudyTest(unittest.TestCase):
    a=synthetic(scene,303,256,2);self.assertEqual(a,synthetic(scene,303,256,2))
    self.assertEqual(len(a[1]),256);self.assertLessEqual(max(a[0].values()),8)
    self.assertNotEqual(digest(a),digest(synthetic(scene,304,256,2)))
+ def test_domain_supplement_has_equal_caller_bytes_and_no_phase_oracle(self):
+  from measured_domain_study import trace
+  for scene in ['domain_stable','domain_shift']:
+   block=dict(scenario=scene,seed=701,requests=384,shard_mib=2)
+   events=trace(block)
+   self.assertEqual(events,trace(block))
+   for gpu in range(3):self.assertEqual(sum(e['bytes'] for e in events if e['caller']==gpu),256*1024*1024)
+   self.assertTrue(all(set(e)=={'index','key','caller','bytes'} for e in events))
+   self.assertNotEqual(events,trace(dict(block,seed=702)))
 
 if __name__=='__main__':unittest.main()
