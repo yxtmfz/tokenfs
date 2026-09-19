@@ -7,6 +7,7 @@ import errno
 import hashlib
 import json
 import os
+import random
 from pathlib import Path
 import sqlite3
 import subprocess
@@ -24,7 +25,9 @@ def run(binary, root):
     expected={}
     for i in range(8):
         path=remote/"gpu0"/f"shard-{i:06d}.tokens"
-        path.write_bytes(bytes([i+1])*(2*MIB));expected[path.name]=sha(path)
+        # Unique bytes across offsets catch repeated/shifted-block read bugs.
+        path.write_bytes(random.Random(500+i).randbytes(2*MIB+(123 if i==0 else 0)))
+        expected[path.name]=sha(path)
     checks=[]
     proc=None; log=None
 
@@ -75,6 +78,16 @@ def run(binary, root):
                 if exc.errno != errno.EROFS: raise
             else: raise RuntimeError(f"mutation unexpectedly accepted: {name}")
         canonical_unchanged();checks.append("seven mutations rejected with EROFS; canonical unchanged")
+        original=(remote/"gpu0"/target.name).read_bytes()
+        for phase in range(2):
+            for offset in [0,1,4095,4096,MIB-1,2*MIB,len(original)-1,len(original),len(original)+7]:
+                for length in [0,1,17,4097,MIB+3]:
+                    with target.open("rb",buffering=0) as f:
+                        f.seek(offset)
+                        if f.read(length)!=original[offset:offset+length]:
+                            raise RuntimeError(f"range mismatch at {offset}+{length}")
+            drain(case/"state.db")
+        checks.append("unique-byte unaligned ranges, partial EOF and reads beyond EOF match canonical")
         with ThreadPoolExecutor(max_workers=4) as pool:
             list(pool.map(read,[i%8 for i in range(96)]))
         drain(case/"state.db")
