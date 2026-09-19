@@ -165,9 +165,9 @@ def drain(db, timeout=120):
     raise TimeoutError("background queue did not drain")
 
 
-def run_case(binary, case, remote, strategy, events, expected, quota_mib, verify, backend_direct=False):
+def run_case(binary, case, remote, strategy, events, expected, quota_mib, verify, backend_direct=False, configuration=None):
     case.mkdir()
-    config = config_for(strategy, case, remote, quota_mib, backend_direct)
+    config = configuration if configuration is not None else config_for(strategy, case, remote, quota_mib, backend_direct)
     dump(case / "config.json", config)
     mount = case / "mnt"; mount.mkdir()
     # Equal explicit warm-backend initialization, with empty TokenFS caches.
@@ -194,9 +194,16 @@ def run_case(binary, case, remote, strategy, events, expected, quota_mib, verify
             if not parent.poll(15) or not parent.recv().get("ready"): raise RuntimeError("loader startup")
             workers.append((parent, w))
         rows = []
+        def cpu_seconds():
+            parts=Path(f"/proc/{proc.pid}/stat").read_text().split()
+            return (int(parts[13])+int(parts[14]))/os.sysconf("SC_CLK_TCK")
+        cpu_start=cpu_seconds()
         outer_start = time.monotonic_ns()
         for event in events:
             conn, _ = workers[event["caller"]]
+            if "release_s" in event:
+                delay=event["release_s"]-(time.monotonic_ns()-outer_start)/1e9
+                if delay>0:time.sleep(delay)
             request_start = time.monotonic_ns()
             conn.send(event)
             if not conn.poll(120): raise TimeoutError("request timeout")
@@ -204,9 +211,14 @@ def run_case(binary, case, remote, strategy, events, expected, quota_mib, verify
             if "error" in result: raise RuntimeError(result["error"])
             if result["bytes"] != event["bytes"]: raise RuntimeError("short read")
             if verify and result["sha256"] != expected[str(event["key"])]: raise RuntimeError("content mismatch")
-            rows.append(dict(event, **result, response_seconds=(time.monotonic_ns() - request_start) / 1e9))
+            rows.append(dict(event, **result, response_seconds=(time.monotonic_ns() - request_start) / 1e9,
+                             issued_s=(request_start-outer_start)/1e9,
+                             completed_s=(time.monotonic_ns()-outer_start)/1e9))
         wall = (time.monotonic_ns() - outer_start) / 1e9
         drain_seconds = drain(case / "state.db")
+        daemon_cpu_s=cpu_seconds()-cpu_start
+        status_text=Path(f"/proc/{proc.pid}/status").read_text()
+        rss_match=re.search(r"^VmHWM:\s+(\d+) kB",status_text,re.MULTILINE)
         data_bytes = sum(e["bytes"] for e in events)
         stats_deadline = time.monotonic() + 10
         while True:
@@ -233,6 +245,7 @@ def run_case(binary, case, remote, strategy, events, expected, quota_mib, verify
         data_bytes = sum(e["bytes"] for e in events)
         if m.get("read_bytes", 0) != data_bytes: raise RuntimeError("FUSE read bytes mismatch")
         result = dict(status="ok", strategy=strategy, job_wall_s=wall,
+                      daemon_cpu_s=daemon_cpu_s,daemon_peak_rss_kib=int(rss_match.group(1)) if rss_match else None,
                       effective_mib_s=data_bytes / MIB / wall, logical_bytes=data_bytes,
                       foreground_service_sum_s=sum(r["seconds"] for r in rows),
                       drain_s=drain_seconds, completed_with_background_s=wall + drain_seconds,
