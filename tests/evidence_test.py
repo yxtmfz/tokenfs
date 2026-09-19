@@ -1,17 +1,70 @@
 import math
+import json
 import sys
 from pathlib import Path
 import tempfile
 import unittest
+from types import SimpleNamespace
 
 from aura_kv.core import AccessEvent, ReplicaStatus
 from aura_kv.simulator import MIB, SimulationConfig, TraceSimulator, make_cache, make_policy
 from scripts.evidence_benchmark import config_for, paired_interval, trace_for
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "scripts"))
 from evidence_report import holm, paired_p
+from evidence_audit import audit
+from scripts.evidence_benchmark import dump
+from aura_kv.controller import AuraController
+from aura_kv.core import NodeState, Replica
+from aura_kv.optimization import LayoutConstraints
 
 
 class EvidenceRegression(unittest.TestCase):
+    def test_batch_audit_rejects_missing_runs_and_changed_bytes(self):
+        # Synthetic unit fixture only; no fixture timing is published as evidence.
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d)/"fixture";root.mkdir()
+            args=dict(output=str(root),remote_root="/remote",requests=3,shard_mib=1,quota_mib=8,
+                      scenarios=["stable"],strategies=["AURA-core"],seeds=[2],backend_direct=True,verify=False)
+            dump(root/"manifest.json",dict(args=args))
+            self.assertFalse(audit(root)["passed"])
+            block=root/"stable-seed-2";block.mkdir();case=block/"AURA-core";case.mkdir()
+            _,trace=trace_for("stable",2,3,1)
+            dump(block/"trace.json",trace);dump(block/"order.json",["AURA-core"])
+            dump(case/"config.json",config_for("AURA-core",case,Path("/remote/eval-fixture/stable-seed-2"),8,True))
+            dump(case/"requests.json",trace)
+            result=dict(strategy="AURA-core",status="ok",logical_bytes=3*MIB,job_wall_s=1,effective_mib_s=3,
+                        metrics=dict(read_open_count=3,read_bytes=3*MIB,read_remote_bytes=3*MIB),
+                        verify_every_request=False,retained_cache_bytes=[0,0,0])
+            dump(case/"result.json",result)
+            self.assertTrue(audit(root)["passed"])
+            result["metrics"]["read_remote_bytes"]-=1;dump(case/"result.json",result)
+            self.assertFalse(audit(root)["passed"])
+            self.assertIn("source byte accounting",audit(root)["errors"][0])
+
+    def test_controller_reserves_batch_and_never_bypasses_hard_constraints_for_swap(self):
+        evaluator = SimpleNamespace(
+            demand_estimator=SimpleNamespace(observe=lambda event: None),
+            robust_benefit_for_add=lambda *args: SimpleNamespace(allowed=True, benefit_ms=100, reason="gain"))
+        caches = {k: make_cache(k, "node0", 0, 1, 80) for k in ["a", "b", "old"]}
+        events = [AccessEvent(i, str(i), "default", k, "", "node0", 0, "read", MIB, 1, True, 80)
+                  for i,k in enumerate(["a", "a", "b"])]
+        nodes = {"node0": NodeState("node0", MIB)}
+        constraints = LayoutConstraints(10*MIB, 10*MIB)
+        plan = AuraController(evaluator, constraints).plan_from_accesses(events,caches,nodes,True,1,now=10)
+        self.assertEqual([t.cache_key for t in plan.tasks], ["a"])
+        self.assertEqual(nodes["node0"].local_used_bytes, 0)  # Planning is not committing.
+        self.assertIn("node_capacity", plan.rejected[0])
+        nodes["node0"].add_replica(Replica("old", "node0", size_bytes=MIB))
+        full = AuraController(evaluator, constraints).plan_from_accesses(events,caches,nodes,True,1,now=10)
+        self.assertEqual(full.tasks, [])
+        self.assertTrue(nodes["node0"].has_replica("old"))
+        nodes = {"node0": NodeState("node0", 8*MIB)}
+        for gate in ["foreground_slo_gate", "background_bandwidth_budget_bytes_per_cycle"]:
+            constrained = LayoutConstraints(10*MIB,10*MIB)
+            setattr(constrained,gate,True if gate == "foreground_slo_gate" else 0)
+            plan=AuraController(evaluator,constrained).plan_from_accesses(events,caches,nodes,True,1,now=10)
+            self.assertEqual(plan.tasks, [], gate)
+
     def make_sim(self, policy, times=(0, .01, 2), capacity=8):
         cfg = SimulationConfig(nodes=1, local_capacity_mib=capacity, background_bandwidth_mib_s=8)
         caches = {"k": make_cache("k", "node0", 0, 8, 80)}
