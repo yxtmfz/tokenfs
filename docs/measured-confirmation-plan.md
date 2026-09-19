@@ -1,7 +1,7 @@
 # Measured-policy confirmation plan
 
 Drafted before any performance access to the held-out application records or seeds
-501--512. Execution requires completion of B2 development and a committed freeze
+501--512. Execution requires completion of B3 development and a committed freeze
 record identifying the source revision, binary hashes, and final specification.
 Development outcomes are retained separately and cannot be pooled with confirmation.
 
@@ -22,6 +22,18 @@ must precede confirmation. The predefined held-out request windows remain unused
 the matrix/endpoints/sample sizes will remain unchanged rather than being selected
 from new performance outcomes.
 
+The replacement freeze is `study-configs/measured-b3-freeze.json`, with algorithm
+revision c3270ece4922818c24f32164804100cea60e050a and actual cn7 binary hash
+c62a05c796bfcb4f0d2cd39ead078493ee4438dc79188bbbda012bbbe6f2d75e. cn7 and cn8 each
+passed 65 B3 content cases; cn8 additionally passed 39 logical-domain cases,
+independently re-audited from downloaded request hashes. The remaining development
+diagnostics cannot retune this frozen version. Confirmation starts only after the
+entire cn7 development sequence succeeds and its fresh audits and all frozen
+source/binary/specification hashes agree. The main/supplementary matrices are now
+named `measured-confirm-02` and `measured-supplement-02`; their blocks are identical
+to the withdrawn, unexecuted plans. Total new performance cases are 648 + 96 + 12;
+development and content-verification runs are not included in that number.
+
 ## Question and scope
 
 Does the executable, measured-cost admission policy reduce real storage-replay wall
@@ -36,7 +48,7 @@ experiment. The new policy does not inherit those claims from the Python design.
 
 ## Fixed main matrix
 
-`study-configs/measured-confirm-01.json` is authoritative. There are 12 paired
+`study-configs/measured-confirm-02.json` is authoritative. There are 12 paired
 blocks per scenario, seeds 501--512. Each block uses exactly the same requests,
 payload identities, quota, copy verification, and background concurrency across
 strategies; fresh application caches and randomized strategy order are used.
