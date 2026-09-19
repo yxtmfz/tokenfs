@@ -1,0 +1,402 @@
+[
+  {
+    "scenario": "stable",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "RemoteOnly",
+    "n": 1,
+    "time_ratio": 0.6023186431273472,
+    "ci95": [
+      null,
+      null
+    ],
+    "p_raw": null,
+    "p_holm": null,
+    "family": "RemoteOnly",
+    "with_drain_ratio": 0.6023489110688521,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "stable",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "LRU-equal",
+    "n": 1,
+    "time_ratio": 0.8622956685726013,
+    "ci95": [
+      null,
+      null
+    ],
+    "p_raw": null,
+    "p_holm": null,
+    "family": "primary",
+    "with_drain_ratio": 0.8623075349945991,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "stable",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "LFU-equal",
+    "n": 1,
+    "time_ratio": 0.9070913012868604,
+    "ci95": [
+      null,
+      null
+    ],
+    "p_raw": null,
+    "p_holm": null,
+    "family": "primary",
+    "with_drain_ratio": 0.9070634885391002,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "stable",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "RecentLFU-admit",
+    "n": 1,
+    "time_ratio": 1.0054632613639978,
+    "ci95": [
+      null,
+      null
+    ],
+    "p_raw": null,
+    "p_holm": null,
+    "family": "primary",
+    "with_drain_ratio": 1.0053948773430101,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "shift",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "RemoteOnly",
+    "n": 1,
+    "time_ratio": 0.8919237960401217,
+    "ci95": [
+      null,
+      null
+    ],
+    "p_raw": null,
+    "p_holm": null,
+    "family": "RemoteOnly",
+    "with_drain_ratio": 0.892006313001653,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "shift",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "LRU-equal",
+    "n": 1,
+    "time_ratio": 1.1132192964568632,
+    "ci95": [
+      null,
+      null
+    ],
+    "p_raw": null,
+    "p_holm": null,
+    "family": "primary",
+    "with_drain_ratio": 1.1133421793423712,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "shift",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "LFU-equal",
+    "n": 1,
+    "time_ratio": 0.9723665847826146,
+    "ci95": [
+      null,
+      null
+    ],
+    "p_raw": null,
+    "p_holm": null,
+    "family": "primary",
+    "with_drain_ratio": 0.9723733840370327,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "shift",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "RecentLFU-admit",
+    "n": 1,
+    "time_ratio": 1.0061141044021369,
+    "ci95": [
+      null,
+      null
+    ],
+    "p_raw": null,
+    "p_holm": null,
+    "family": "primary",
+    "with_drain_ratio": 1.0061541701127292,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "scan",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "RemoteOnly",
+    "n": 1,
+    "time_ratio": 0.6732646627366894,
+    "ci95": [
+      null,
+      null
+    ],
+    "p_raw": null,
+    "p_holm": null,
+    "family": "RemoteOnly",
+    "with_drain_ratio": 0.6733396942544964,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "scan",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "LRU-equal",
+    "n": 1,
+    "time_ratio": 0.8971879962976328,
+    "ci95": [
+      null,
+      null
+    ],
+    "p_raw": null,
+    "p_holm": null,
+    "family": "primary",
+    "with_drain_ratio": 0.8972200503436997,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "scan",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "LFU-equal",
+    "n": 1,
+    "time_ratio": 0.9379549949188098,
+    "ci95": [
+      null,
+      null
+    ],
+    "p_raw": null,
+    "p_holm": null,
+    "family": "primary",
+    "with_drain_ratio": 0.9352934694500998,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "scan",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "RecentLFU-admit",
+    "n": 1,
+    "time_ratio": 1.0110676836595212,
+    "ci95": [
+      null,
+      null
+    ],
+    "p_raw": null,
+    "p_holm": null,
+    "family": "primary",
+    "with_drain_ratio": 1.0111240160786024,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "mixed_fit",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "RemoteOnly",
+    "n": 1,
+    "time_ratio": 0.9618420713575487,
+    "ci95": [
+      null,
+      null
+    ],
+    "p_raw": null,
+    "p_holm": null,
+    "family": "RemoteOnly",
+    "with_drain_ratio": 0.9618741571627532,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "mixed_fit",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "LRU-equal",
+    "n": 1,
+    "time_ratio": 0.9172638238333838,
+    "ci95": [
+      null,
+      null
+    ],
+    "p_raw": null,
+    "p_holm": null,
+    "family": "primary",
+    "with_drain_ratio": 0.9172672690745916,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "mixed_fit",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "LFU-equal",
+    "n": 1,
+    "time_ratio": 0.9154864221526479,
+    "ci95": [
+      null,
+      null
+    ],
+    "p_raw": null,
+    "p_holm": null,
+    "family": "primary",
+    "with_drain_ratio": 0.9154901181692423,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "mixed_fit",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "RecentLFU-admit",
+    "n": 1,
+    "time_ratio": 0.9855344951109558,
+    "ci95": [
+      null,
+      null
+    ],
+    "p_raw": null,
+    "p_holm": null,
+    "family": "primary",
+    "with_drain_ratio": 0.9855533130965396,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "uniform",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "RemoteOnly",
+    "n": 1,
+    "time_ratio": 0.9954888285197062,
+    "ci95": [
+      null,
+      null
+    ],
+    "p_raw": null,
+    "p_holm": null,
+    "family": "RemoteOnly",
+    "with_drain_ratio": 0.9954997916356423,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "uniform",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "LRU-equal",
+    "n": 1,
+    "time_ratio": 0.9071780728525851,
+    "ci95": [
+      null,
+      null
+    ],
+    "p_raw": null,
+    "p_holm": null,
+    "family": "primary",
+    "with_drain_ratio": 0.9071966796040688,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "uniform",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "LFU-equal",
+    "n": 1,
+    "time_ratio": 0.9181615502046252,
+    "ci95": [
+      null,
+      null
+    ],
+    "p_raw": null,
+    "p_holm": null,
+    "family": "primary",
+    "with_drain_ratio": 0.9181775038241801,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "uniform",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "RecentLFU-admit",
+    "n": 1,
+    "time_ratio": 1.0147039536526137,
+    "ci95": [
+      null,
+      null
+    ],
+    "p_raw": null,
+    "p_holm": null,
+    "family": "primary",
+    "with_drain_ratio": 1.0147512362869742,
+    "verdict": "development / no confirmatory claim"
+  }
+]

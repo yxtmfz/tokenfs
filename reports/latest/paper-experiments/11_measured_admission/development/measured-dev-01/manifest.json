@@ -1,0 +1,107 @@
+{
+  "spec": {
+    "stage": "development",
+    "blocks": [
+      {
+        "id": "stable-q8-s301",
+        "scenario": "stable",
+        "seed": 301,
+        "requests": 384,
+        "shard_mib": 2,
+        "quota_mib": 8,
+        "variants": [
+          "RemoteOnly",
+          "LRU-equal",
+          "LFU-equal",
+          "RecentLFU-admit",
+          "AURA-adaptive"
+        ]
+      },
+      {
+        "id": "shift-q8-s301",
+        "scenario": "shift",
+        "seed": 301,
+        "requests": 384,
+        "shard_mib": 2,
+        "quota_mib": 8,
+        "variants": [
+          "RemoteOnly",
+          "LRU-equal",
+          "LFU-equal",
+          "RecentLFU-admit",
+          "AURA-adaptive"
+        ]
+      },
+      {
+        "id": "scan-q8-s301",
+        "scenario": "scan",
+        "seed": 301,
+        "requests": 384,
+        "shard_mib": 2,
+        "quota_mib": 8,
+        "variants": [
+          "RemoteOnly",
+          "LRU-equal",
+          "LFU-equal",
+          "RecentLFU-admit",
+          "AURA-adaptive"
+        ]
+      },
+      {
+        "id": "mixed_fit-q8-s301",
+        "scenario": "mixed_fit",
+        "seed": 301,
+        "requests": 384,
+        "shard_mib": 2,
+        "quota_mib": 8,
+        "variants": [
+          "RemoteOnly",
+          "LRU-equal",
+          "LFU-equal",
+          "RecentLFU-admit",
+          "AURA-adaptive"
+        ]
+      },
+      {
+        "id": "uniform-q8-s301",
+        "scenario": "uniform",
+        "seed": 301,
+        "requests": 384,
+        "shard_mib": 2,
+        "quota_mib": 8,
+        "variants": [
+          "RemoteOnly",
+          "LRU-equal",
+          "LFU-equal",
+          "RecentLFU-admit",
+          "AURA-adaptive"
+        ]
+      }
+    ]
+  },
+  "spec_sha256": "ce6a0897d5aa2482b525b0761e9c350babedd12e1db24dc6085a20287ce18130",
+  "binary_sha256": "8a6c239fb8b7b801e5a562b101ff2e8e6eeeaf62e1b25877168957cf19538af7",
+  "build_type": "Release",
+  "source_hashes": {
+    "src/main.cpp": "80851d62966d56aae4d87ede5d1960567f2359e518e64b6bc415633a4fea60d3",
+    "src/measured_policy.h": "2d55bb054b0c00680a8ecc4f26e741f1a19247b5789d6136819b627cf6f31219",
+    "scripts/measured_study.py": "efd4818dd7bc853029b353a5582e8ba6940a12a778d2f8453873f9648e225dad",
+    "scripts/evidence_benchmark.py": "c1faf9b0a0ccea4404c3a5f5957b03889513d3959bfc541d434f919ae78770fc"
+  },
+  "output": "/home/wjxt/aura-kv-cn7/evidence/measured-dev-01",
+  "remote_data": "/srv/tokenfs/remote-cn7/measured-measured-dev-01",
+  "verify": false,
+  "backend_direct": true,
+  "created_utc": "2026-09-19T08:38:38Z",
+  "mount": {
+    "target": "/srv/tokenfs/remote-cn7",
+    "source": "/dev/nvme1n1",
+    "fstype": "ext4",
+    "options": "rw,nosuid,nodev,relatime"
+  },
+  "nvme_identity": {
+    "transport": "tcp",
+    "address": "traddr=28.10.10.13,trsvcid=4420,src_addr=28.10.10.7",
+    "subsysnqn": "nqn.2026-09.local.aura-kv:remote-cn7"
+  }
+}

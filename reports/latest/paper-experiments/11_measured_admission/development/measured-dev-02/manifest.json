@@ -1,0 +1,64 @@
+{
+  "spec": {
+    "stage": "development",
+    "blocks": [
+      {
+        "id": "mooncake_conversation-q16-s302",
+        "scenario": "mooncake_conversation",
+        "seed": 302,
+        "source_offset": 0,
+        "requests": 2048,
+        "shard_mib": 1,
+        "quota_mib": 16,
+        "variants": [
+          "RemoteOnly",
+          "LRU-equal",
+          "LFU-equal",
+          "RecentLFU-admit",
+          "AURA-adaptive"
+        ]
+      },
+      {
+        "id": "mooncake_toolagent-q16-s302",
+        "scenario": "mooncake_toolagent",
+        "seed": 302,
+        "source_offset": 0,
+        "requests": 2048,
+        "shard_mib": 1,
+        "quota_mib": 16,
+        "variants": [
+          "RemoteOnly",
+          "LRU-equal",
+          "LFU-equal",
+          "RecentLFU-admit",
+          "AURA-adaptive"
+        ]
+      }
+    ]
+  },
+  "spec_sha256": "de11edb7cfd7a785baa253b71ddb1d28a47840d4ceba195ae92283a12bfb346d",
+  "binary_sha256": "8a6c239fb8b7b801e5a562b101ff2e8e6eeeaf62e1b25877168957cf19538af7",
+  "build_type": "Release",
+  "source_hashes": {
+    "src/main.cpp": "80851d62966d56aae4d87ede5d1960567f2359e518e64b6bc415633a4fea60d3",
+    "src/measured_policy.h": "2d55bb054b0c00680a8ecc4f26e741f1a19247b5789d6136819b627cf6f31219",
+    "scripts/measured_study.py": "efd4818dd7bc853029b353a5582e8ba6940a12a778d2f8453873f9648e225dad",
+    "scripts/evidence_benchmark.py": "c1faf9b0a0ccea4404c3a5f5957b03889513d3959bfc541d434f919ae78770fc"
+  },
+  "output": "/home/wjxt/aura-kv-cn7/evidence/measured-dev-02",
+  "remote_data": "/srv/tokenfs/remote-cn7/measured-measured-dev-02",
+  "verify": false,
+  "backend_direct": true,
+  "created_utc": "2026-09-19T08:44:11Z",
+  "mount": {
+    "target": "/srv/tokenfs/remote-cn7",
+    "source": "/dev/nvme1n1",
+    "fstype": "ext4",
+    "options": "rw,nosuid,nodev,relatime"
+  },
+  "nvme_identity": {
+    "transport": "tcp",
+    "address": "traddr=28.10.10.13,trsvcid=4420,src_addr=28.10.10.7",
+    "subsysnqn": "nqn.2026-09.local.aura-kv:remote-cn7"
+  }
+}

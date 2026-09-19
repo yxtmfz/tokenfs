@@ -1,0 +1,11 @@
+scenario,quota_mib,paced,requests,shard_mib,window,strategy,n,mean_wall_s,mean_mib_s,mean_copy_mib,mean_cpu_s,mean_rss_kib
+mooncake_conversation,16,False,2048,1,128,RemoteOnly,1,29.945978196,68.38981804486718,0.0,7.31,10088
+mooncake_conversation,16,False,2048,1,128,LRU-equal,1,29.930259513,68.42573480228147,1.0,7.2,10088
+mooncake_conversation,16,False,2048,1,128,LFU-equal,1,30.053112775,68.14601919384705,1.0,7.31,9732
+mooncake_conversation,16,False,2048,1,128,RecentLFU-admit,1,27.845792255,73.54791636902557,1.0,5.69,10088
+mooncake_conversation,16,False,2048,1,128,AURA-adaptive,1,29.490538573,69.44600197552995,1.0,7.43,10088
+mooncake_toolagent,16,False,2048,1,128,RemoteOnly,1,30.159213971,67.90627905519295,0.0,7.56,9448
+mooncake_toolagent,16,False,2048,1,128,LRU-equal,1,28.983901918,70.65991341656182,188.0,8.3,11824
+mooncake_toolagent,16,False,2048,1,128,LFU-equal,1,28.40036512,72.11174896331755,134.0,8.18,13308
+mooncake_toolagent,16,False,2048,1,128,RecentLFU-admit,1,27.809197294,73.64470028920498,72.0,8.0,11764
+mooncake_toolagent,16,False,2048,1,128,AURA-adaptive,1,27.190145294,75.3214069971126,24.0,7.52,11208

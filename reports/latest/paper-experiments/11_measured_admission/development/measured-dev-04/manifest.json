@@ -1,0 +1,239 @@
+{
+  "spec": {
+    "stage": "development",
+    "blocks": [
+      {
+        "id": "mooncake_conversation-q16-s305",
+        "scenario": "mooncake_conversation",
+        "seed": 305,
+        "requests": 2048,
+        "shard_mib": 1,
+        "quota_mib": 16,
+        "source_offset": 0,
+        "variants": [
+          "RemoteOnly",
+          "LRU-equal",
+          "LFU-equal",
+          "RecentLFU-admit",
+          "AURA-adaptive"
+        ]
+      },
+      {
+        "id": "mooncake_toolagent-q16-s305",
+        "scenario": "mooncake_toolagent",
+        "seed": 305,
+        "requests": 2048,
+        "shard_mib": 1,
+        "quota_mib": 16,
+        "source_offset": 0,
+        "variants": [
+          "RemoteOnly",
+          "LRU-equal",
+          "LFU-equal",
+          "RecentLFU-admit",
+          "AURA-adaptive"
+        ]
+      },
+      {
+        "id": "mooncake_conversation-q16-s306",
+        "scenario": "mooncake_conversation",
+        "seed": 306,
+        "requests": 2048,
+        "shard_mib": 1,
+        "quota_mib": 16,
+        "source_offset": 1200,
+        "variants": [
+          "RemoteOnly",
+          "LRU-equal",
+          "LFU-equal",
+          "RecentLFU-admit",
+          "AURA-adaptive"
+        ]
+      },
+      {
+        "id": "mooncake_toolagent-q16-s306",
+        "scenario": "mooncake_toolagent",
+        "seed": 306,
+        "requests": 2048,
+        "shard_mib": 1,
+        "quota_mib": 16,
+        "source_offset": 1200,
+        "variants": [
+          "RemoteOnly",
+          "LRU-equal",
+          "LFU-equal",
+          "RecentLFU-admit",
+          "AURA-adaptive"
+        ]
+      },
+      {
+        "id": "stable-q16-s305",
+        "scenario": "stable",
+        "seed": 305,
+        "requests": 384,
+        "shard_mib": 2,
+        "quota_mib": 16,
+        "variants": [
+          "RemoteOnly",
+          "LRU-equal",
+          "LFU-equal",
+          "RecentLFU-admit",
+          "AURA-adaptive"
+        ]
+      },
+      {
+        "id": "stable-q32-s305",
+        "scenario": "stable",
+        "seed": 305,
+        "requests": 384,
+        "shard_mib": 2,
+        "quota_mib": 32,
+        "variants": [
+          "RemoteOnly",
+          "LRU-equal",
+          "LFU-equal",
+          "RecentLFU-admit",
+          "AURA-adaptive"
+        ]
+      },
+      {
+        "id": "mixed_fit-q16-s305",
+        "scenario": "mixed_fit",
+        "seed": 305,
+        "requests": 384,
+        "shard_mib": 2,
+        "quota_mib": 16,
+        "variants": [
+          "RemoteOnly",
+          "LRU-equal",
+          "LFU-equal",
+          "RecentLFU-admit",
+          "AURA-adaptive"
+        ]
+      },
+      {
+        "id": "mixed_fit-q32-s305",
+        "scenario": "mixed_fit",
+        "seed": 305,
+        "requests": 384,
+        "shard_mib": 2,
+        "quota_mib": 32,
+        "variants": [
+          "RemoteOnly",
+          "LRU-equal",
+          "LFU-equal",
+          "RecentLFU-admit",
+          "AURA-adaptive"
+        ]
+      },
+      {
+        "id": "stable-long-s305",
+        "scenario": "stable",
+        "seed": 305,
+        "requests": 4096,
+        "shard_mib": 1,
+        "quota_mib": 4,
+        "variants": [
+          "RemoteOnly",
+          "LRU-equal",
+          "LFU-equal",
+          "RecentLFU-admit",
+          "AURA-adaptive"
+        ]
+      },
+      {
+        "id": "shift-long-s305",
+        "scenario": "shift",
+        "seed": 305,
+        "requests": 4096,
+        "shard_mib": 1,
+        "quota_mib": 4,
+        "variants": [
+          "RemoteOnly",
+          "LRU-equal",
+          "LFU-equal",
+          "RecentLFU-admit",
+          "AURA-adaptive"
+        ]
+      },
+      {
+        "id": "shift-w64-s305",
+        "scenario": "shift",
+        "seed": 305,
+        "requests": 384,
+        "shard_mib": 2,
+        "quota_mib": 8,
+        "window": 64,
+        "variants": [
+          "RecentLFU-admit",
+          "AURA-adaptive"
+        ]
+      },
+      {
+        "id": "shift-w256-s305",
+        "scenario": "shift",
+        "seed": 305,
+        "requests": 384,
+        "shard_mib": 2,
+        "quota_mib": 8,
+        "window": 256,
+        "variants": [
+          "RecentLFU-admit",
+          "AURA-adaptive"
+        ]
+      },
+      {
+        "id": "mixed_fit-w64-s305",
+        "scenario": "mixed_fit",
+        "seed": 305,
+        "requests": 384,
+        "shard_mib": 2,
+        "quota_mib": 8,
+        "window": 64,
+        "variants": [
+          "RecentLFU-admit",
+          "AURA-adaptive"
+        ]
+      },
+      {
+        "id": "mixed_fit-w256-s305",
+        "scenario": "mixed_fit",
+        "seed": 305,
+        "requests": 384,
+        "shard_mib": 2,
+        "quota_mib": 8,
+        "window": 256,
+        "variants": [
+          "RecentLFU-admit",
+          "AURA-adaptive"
+        ]
+      }
+    ]
+  },
+  "spec_sha256": "b19ede2dae1def0b13847e181dd65a4e49e6b56432e33e7f5da3c5f5a9baf12f",
+  "binary_sha256": "c1bda5856614d8fa2fc28b000d6b0f8c55c1f41f5e57eb100a4656ad08f5d974",
+  "build_type": "Release",
+  "source_hashes": {
+    "src/main.cpp": "96970a8b161c3d94a667c13d1fb9359932b35f8a081472020ce68caa0c3395bb",
+    "src/measured_policy.h": "513cf993c6a2fc5d28c91fb0eb689ab7c19cb5b2df8de72d2b500adca51464b7",
+    "scripts/measured_study.py": "3ee5c676f63a5216862d7a1e1e0304003cc24929e454a4cc1909baa1a70df0ad",
+    "scripts/evidence_benchmark.py": "c1faf9b0a0ccea4404c3a5f5957b03889513d3959bfc541d434f919ae78770fc"
+  },
+  "configuration_schema": 3,
+  "output": "/home/wjxt/aura-kv-cn7/evidence/measured-dev-04",
+  "remote_data": "/srv/tokenfs/remote-cn7/measured-measured-dev-04",
+  "verify": false,
+  "backend_direct": true,
+  "created_utc": "2026-09-19T09:17:08Z",
+  "mount": {
+    "target": "/srv/tokenfs/remote-cn7",
+    "source": "/dev/nvme1n1",
+    "fstype": "ext4",
+    "options": "rw,nosuid,nodev,relatime"
+  },
+  "nvme_identity": {
+    "transport": "tcp",
+    "address": "traddr=28.10.10.13,trsvcid=4420,src_addr=28.10.10.7",
+    "subsysnqn": "nqn.2026-09.local.aura-kv:remote-cn7"
+  }
+}

@@ -1,0 +1,11 @@
+block,scenario,strategy,admissions,calibrated_admissions,prior_admissions,calibration_annotation_unavailable,evictions,shift_resets,reject_no_reuse,reject_copy_cost,reject_victim_loss,local_fraction,copy_mib,with_drain_s,request_p50_ms,request_p99_ms,arrival_to_completion_p99_ms,arrival_to_issue_p99_ms,daemon_cpu_s,daemon_peak_rss_kib
+mooncake_conversation-q16-s302,mooncake_conversation,RemoteOnly,0,0,0,0,0,0,0,0,0,0.0,0.0,29.948071520437736,14.797176,15.684175000000002,,,7.31,10088
+mooncake_conversation-q16-s302,mooncake_conversation,LRU-equal,0,0,0,0,0,0,0,0,0,0.03857421875,1.0,29.932197725662935,14.7783,16.368589,,,7.2,10088
+mooncake_conversation-q16-s302,mooncake_conversation,LFU-equal,0,0,0,0,0,0,0,0,0,0.03857421875,1.0,30.05509432210233,14.883265999999999,16.568157,,,7.31,9732
+mooncake_conversation-q16-s302,mooncake_conversation,RecentLFU-admit,1,0,0,1,0,0,1968,0,0,0.03857421875,1.0,27.847798991584007,13.91048,15.012836,,,5.69,10088
+mooncake_conversation-q16-s302,mooncake_conversation,AURA-adaptive,1,0,0,1,0,0,1968,2,0,0.03759765625,1.0,29.492427097740933,14.773568000000001,15.608739,,,7.43,10088
+mooncake_toolagent-q16-s302,mooncake_toolagent,RemoteOnly,0,0,0,0,0,0,0,0,0,0.0,0.0,30.16118074080704,14.810594,15.822585,,,7.56,9448
+mooncake_toolagent-q16-s302,mooncake_toolagent,LRU-equal,0,0,0,0,172,0,0,0,0,0.15087890625,188.0,28.986102180621046,14.602978,18.514221,,,8.3,11824
+mooncake_toolagent-q16-s302,mooncake_toolagent,LFU-equal,0,0,0,0,118,0,0,0,0,0.17724609375,134.0,28.402461439571137,14.692166,18.373633,,,8.18,13308
+mooncake_toolagent-q16-s302,mooncake_toolagent,RecentLFU-admit,72,0,0,72,56,0,1567,0,13,0.1923828125,72.0,27.810820990647585,14.706169,19.249977,,,8.0,11764
+mooncake_toolagent-q16-s302,mooncake_toolagent,AURA-adaptive,24,0,0,24,8,0,1567,2,21,0.21142578125,24.0,27.191640204568,14.730027999999999,18.020478,,,7.52,11208

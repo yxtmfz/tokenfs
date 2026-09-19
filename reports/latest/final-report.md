@@ -1,6 +1,6 @@
-> **历史报告，结论已撤回作为当前论文证据。** 下文保留旧批次记录；旧分段计时、模拟计账与基线差异尚不足以支持新性能主张。当前经过整批审计的结果请读 [cn7 正式实测报告](paper-experiments/10_real_cn7_evidence/README.md)。
+> **历史报告，不能作为当前论文性能证据。** 下文保留旧批次及当时叙述。当前结果请读 [第二轮 756 次实测与消融报告](paper-experiments/11_measured_admission/README.md)；第一轮 400 次结果仍单独保留。
 
-# AURA-KV / TokenFS 最新统一结果报告
+# AURA-KV / TokenFS 历史统一结果报告
 
 > 历史结果警示：此页旧数字尚未按修复后的统一计账、对等基线和外层计时重跑，不能视为当前性能证据。见 `docs/evidence-experiments.md`（仓库根目录相对路径）。
 

@@ -23,6 +23,9 @@ def csv_file(path, rows):
 def generate(root, figures=False):
     summaries, comparisons=report(root)
     manifest=json.loads((root/'manifest.json').read_text())
+    analysis_label=manifest['spec']['stage']
+    if analysis_label=='confirmation' and max((r['n'] for r in comparisons),default=0)<10:
+        analysis_label='descriptive supplement (small n; no confirmatory claim)'
     mechanisms=[]; segments=[]; interactions={};by_case={}
     for block in manifest['spec']['blocks']:
         results={}
@@ -103,19 +106,19 @@ def generate(root, figures=False):
     dump(root/'component-evidence.json',component_rows);csv_file(root/'component-evidence.csv',component_rows)
     csv_file(root/'summary.csv',summaries);csv_file(root/'paired-comparisons.csv',comparisons)
     lines=['# Measured-policy evidence', '',
-        f"Stage: {manifest['spec']['stage']}. Batch: {root.name}. All expected runs passed audit.", '',
+        f"Analysis: {analysis_label}. Recorded stage: {manifest['spec']['stage']}. Batch: {root.name}. All expected runs passed audit.", '',
         'Time ratio = AURA-adaptive/reference; less than one is faster. Actual throughput is logical MiB / outer wall time.', '',
-        '| Scenario | Quota MiB | Requests | Reference | n | Time ratio [95% CI] | Holm p | Verdict |',
-        '|---|---:|---:|---|---:|---|---:|---|']
+        '| Scenario | Quota MiB | Requests | Base MiB | Window | Paced | Reference | n | Time ratio [95% CI] | Holm p | Verdict |',
+        '|---|---:|---:|---:|---:|---|---|---:|---|---:|---|']
     for row in comparisons:
         ci=row['ci95'];bounds='unavailable' if ci[0] is None else f'{ci[0]:.4f}, {ci[1]:.4f}'
         p='unavailable' if row['p_holm'] is None else f"{row['p_holm']:.5g}"
-        lines.append(f"| {row['scenario']} | {row['quota_mib']} | {row['requests']} | {row['baseline']} | {row['n']} | {row['time_ratio']:.4f} [{bounds}] | {p} | {row['verdict']} |")
+        lines.append(f"| {row['scenario']} | {row['quota_mib']} | {row['requests']} | {row['shard_mib']} | {row['window']} | {row['paced']} | {row['baseline']} | {row['n']} | {row['time_ratio']:.4f} [{bounds}] | {p} | {row['verdict']} |")
     lines += ['', '## Absolute performance and resource cost', '',
-        '| Scenario | Quota MiB | Requests | Strategy | n | Mean wall s | Mean MiB/s | Copied MiB | Daemon CPU s | Peak RSS KiB |',
-        '|---|---:|---:|---|---:|---:|---:|---:|---:|---:|']
+        '| Scenario | Quota MiB | Requests | Base MiB | Window | Paced | Strategy | n | Mean wall s | Mean MiB/s | Copied MiB | Daemon CPU s | Peak RSS KiB |',
+        '|---|---:|---:|---:|---:|---|---|---:|---:|---:|---:|---:|---:|']
     for row in summaries:
-        lines.append(f"| {row['scenario']} | {row['quota_mib']} | {row['requests']} | {row['strategy']} | {row['n']} | {row['mean_wall_s']:.4f} | {row['mean_mib_s']:.3f} | {row['mean_copy_mib']:.2f} | {row['mean_cpu_s']:.3f} | {row['mean_rss_kib']:.1f} |")
+        lines.append(f"| {row['scenario']} | {row['quota_mib']} | {row['requests']} | {row['shard_mib']} | {row['window']} | {row['paced']} | {row['strategy']} | {row['n']} | {row['mean_wall_s']:.4f} | {row['mean_mib_s']:.3f} | {row['mean_copy_mib']:.2f} | {row['mean_cpu_s']:.3f} | {row['mean_rss_kib']:.1f} |")
     lines += ['', '## Interpretation', '',
         'The primary family comprises LRU, LFU and RecentLFU comparisons across the scenes in this batch; other families are per-component. Intervals are unadjusted paired bootstrap intervals; p-values use Holm correction within each family. No component is necessary merely because its point estimate is favorable. Inspect mechanisms.json and component-evidence.json for actual activity and changed actions; untriggered components have no identified necessity even if timing differs.', '',
         'Report paired-comparisons.json with_drain_ratio alongside foreground time. mechanisms.json contains p50/p99 of individual object reads, CPU, RSS and copying for every run. In paced replay it also reports block arrival-to-issue and arrival-to-completion p99, including loader backlog; these are not inference TTFT. segments.json partitions time by request-index quarter, including boundary idle gaps; quarters are not independent replication units. interactions.json is an exploratory four-cell comparison, not a full RobustBenefit test.', '',
@@ -132,14 +135,16 @@ def generate(root, figures=False):
         for title,selected in selections:
             if not selected:continue
             fig,ax=plt.subplots(figsize=(10,max(4,len(selected)*.3)))
+            def inactive(r):
+                return any(c['scenario']==r['scenario'] and c['quota_mib']==r['quota_mib'] and c['window']==r['window'] and c['baseline']==r['baseline'] and c['blocks_with_relevant_activity']==0 for c in component_rows)
             for i,r in enumerate(selected):
-                ci=r['ci95'];color='#2066a8' if r['verdict']=='faster' else '#bb4b38' if r['verdict']=='slower' else '#666666'
+                ci=r['ci95'];color='#666666' if inactive(r) else '#2066a8' if r['verdict']=='faster' else '#bb4b38' if r['verdict']=='slower' else '#666666'
                 ax.plot(r['time_ratio'],i,'o',color=color,markersize=4)
                 if ci[0] is not None:ax.plot(ci,[i,i],color=color)
-            ax.set_yticks(range(len(selected)),[f"{r['scenario']} q={r['quota_mib']} N={r['requests']} n={r['n']} / {r['baseline']}" for r in selected],fontsize=7)
+            ax.set_yticks(range(len(selected)),[f"{r['scenario']} q={r['quota_mib']} N={r['requests']} w={r['window']} {'paced' if r['paced'] else 'sat'} n={r['n']} / {r['baseline']}"+(' [inactive]' if inactive(r) else '') for r in selected],fontsize=7)
             ax.axvline(1,color='black',linestyle='--',linewidth=.8);ax.invert_yaxis()
             ax.set_xlabel('Paired time ratio (AURA-adaptive/reference); 95% intervals only when n >= 2')
-            ax.set_title(f"{root.name}: {manifest['spec']['stage']}")
+            ax.set_title(f"{root.name}: {analysis_label}",fontsize=10)
             ax.grid(axis='x',alpha=.2);fig.tight_layout()
             for suffix in ['png','svg','pdf']:fig.savefig(out/f'{title}.{suffix}',dpi=180)
             plt.close(fig)

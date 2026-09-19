@@ -1,0 +1,28 @@
+[
+  {
+    "scenario": "stable",
+    "quota_mib": 8,
+    "requests": 384,
+    "shard_mib": 2,
+    "n": 12,
+    "mean_interaction_s": 0.704666809,
+    "ci95": [
+      0.5483115450833334,
+      0.8290228735833334
+    ],
+    "definition": "T(full)-T(no-admission)-T(no-value)+T(no-joint); negative favors interaction; exploratory"
+  },
+  {
+    "scenario": "scan",
+    "quota_mib": 8,
+    "requests": 384,
+    "shard_mib": 2,
+    "n": 12,
+    "mean_interaction_s": 0.6978659397499998,
+    "ci95": [
+      0.48348239516666647,
+      0.9289130694166666
+    ],
+    "definition": "T(full)-T(no-admission)-T(no-value)+T(no-joint); negative favors interaction; exploratory"
+  }
+]

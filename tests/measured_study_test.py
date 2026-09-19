@@ -49,4 +49,57 @@ class MeasuredStudyTest(unittest.TestCase):
    self.assertEqual([p.name for p in root.iterdir()],['sentinel.json'])
    self.assertEqual((root/'sentinel.json').read_text(),'{"preserve":true}')
 
+class FreezeAuditTest(unittest.TestCase):
+ def fixture(self, root):
+  import hashlib
+  sha=lambda p:hashlib.sha256(p.read_bytes()).hexdigest()
+  put=lambda p,x:p.write_text(json.dumps(x))
+  src=root/'source.jsonl'
+  src.write_text('\n'.join(json.dumps(dict(timestamp=i*100,hash_ids=[1,i+10],input_length=1024,output_length=20)) for i in range(20)))
+  _,trace,_=application(src,'confirmation',0,6,1,True)
+  spec=dict(blocks=[dict(id='heldout',scenario='mooncake_test',source_offset=0,requests=6,shard_mib=1,paced=True,variants=['AURA-adaptive'])])
+  sp=root/'test-batch.json';put(sp,spec)
+  hashes={k:'frozen-'+k for k in ['src/main.cpp','src/measured_policy.h','scripts/measured_study.py','scripts/evidence_benchmark.py','build-release/tokenfs']}
+  freeze=dict(hashes=hashes,specifications={'test-batch':dict(sha256=sha(sp),canonical_sha256=digest(spec),runs=1)},public_windows=[dict(block='heldout',source=src.name,source_sha256=sha(src),trace_sha256=digest(trace))])
+  fp=root/'freeze.json';put(fp,freeze)
+  put(root/'measured-b3-confirmation-execution-context.json',dict(freeze_sha256=sha(fp),frozen_hashes=hashes))
+  batch=root/'test-batch';case=batch/'heldout/AURA-adaptive';case.mkdir(parents=True)
+  put(batch/'manifest.json',dict(spec=spec,binary_sha256=hashes['build-release/tokenfs'],source_hashes={k:v for k,v in hashes.items() if k!='build-release/tokenfs'},nvme_identity=dict(transport='tcp',address='traddr=28.10.10.13,trsvcid=4420',subsysnqn='nqn.2026-09.local.aura-kv:remote-cn7')))
+  put(batch/'heldout/trace.json',trace)
+  put(case/'result.json',dict(job_wall_s=7,completed_with_background_s=8))
+  put(case/'requests.json',[dict(issued_s=i,completed_s=i+.5,seconds=.49,release_s=e['release_s']) for i,e in enumerate(trace)])
+  script=Path(__file__).resolve().parents[1]/'scripts/measured_freeze_audit.py'
+  return lambda:subprocess.run([sys.executable,str(script),'--evidence-root',str(root),'--trace-dir',str(root),'--freeze',str(fp)],capture_output=True,text=True)
+ def test_accepts_consistent_freeze_and_rejects_public_source_change(self):
+  with tempfile.TemporaryDirectory() as d:
+   root=Path(d);run=self.fixture(root);ok=run()
+   self.assertEqual(ok.returncode,0,ok.stderr)
+   self.assertEqual(json.loads(ok.stdout)['checked_performance_cases'],1)
+   src=root/'source.jsonl';src.write_text(src.read_text()+'\n')
+   bad=run();self.assertNotEqual(bad.returncode,0)
+   self.assertIn('changed public source',bad.stdout)
+ def test_rejects_binary_identity_or_missing_source_record(self):
+  for problem in ['binary','source']:
+   with self.subTest(problem=problem),tempfile.TemporaryDirectory() as d:
+    root=Path(d);run=self.fixture(root);p=root/'test-batch/manifest.json';m=json.loads(p.read_text())
+    if problem=='binary':m['binary_sha256']='different-program'
+    else:del m['source_hashes']['src/main.cpp']
+    p.write_text(json.dumps(m));bad=run()
+    self.assertNotEqual(bad.returncode,0)
+    self.assertFalse(json.loads(bad.stdout)['passed'])
+ def test_rejects_invalid_timeline_and_nan_completion(self):
+  for problem in ['backward','latency','release','background']:
+   with self.subTest(problem=problem),tempfile.TemporaryDirectory() as d:
+    root=Path(d);run=self.fixture(root);case=root/'test-batch/heldout/AURA-adaptive'
+    if problem=='background':
+     p=case/'result.json';v=json.loads(p.read_text());v['completed_with_background_s']=float('nan')
+    else:
+     p=case/'requests.json';v=json.loads(p.read_text())
+     if problem=='backward':v[1]['issued_s']=.1
+     elif problem=='latency':v[1]['seconds']=4
+     else:v[1]['release_s']=9
+    p.write_text(json.dumps(v));bad=run()
+    self.assertNotEqual(bad.returncode,0)
+    self.assertFalse(json.loads(bad.stdout)['passed'])
+
 if __name__=='__main__':unittest.main()

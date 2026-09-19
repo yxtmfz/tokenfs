@@ -1,0 +1,197 @@
+{
+  "spec": {
+    "stage": "development",
+    "blocks": [
+      {
+        "id": "stable-s307",
+        "scenario": "stable",
+        "seed": 307,
+        "requests": 384,
+        "shard_mib": 2,
+        "quota_mib": 8,
+        "variants": [
+          "AURA-adaptive",
+          "AURA-no-cost",
+          "AURA-no-shift",
+          "RecentLFU-admit"
+        ]
+      },
+      {
+        "id": "shift-s307",
+        "scenario": "shift",
+        "seed": 307,
+        "requests": 384,
+        "shard_mib": 2,
+        "quota_mib": 8,
+        "variants": [
+          "AURA-adaptive",
+          "AURA-no-cost",
+          "AURA-no-shift",
+          "RecentLFU-admit"
+        ]
+      },
+      {
+        "id": "mixed_fit-s307",
+        "scenario": "mixed_fit",
+        "seed": 307,
+        "requests": 384,
+        "shard_mib": 2,
+        "quota_mib": 8,
+        "variants": [
+          "AURA-adaptive",
+          "AURA-no-cost",
+          "AURA-no-shift",
+          "RecentLFU-admit"
+        ]
+      },
+      {
+        "id": "uniform-s307",
+        "scenario": "uniform",
+        "seed": 307,
+        "requests": 384,
+        "shard_mib": 2,
+        "quota_mib": 8,
+        "variants": [
+          "AURA-adaptive",
+          "AURA-no-cost",
+          "AURA-no-shift",
+          "RecentLFU-admit"
+        ]
+      },
+      {
+        "id": "mooncake_conversation-s307",
+        "scenario": "mooncake_conversation",
+        "seed": 307,
+        "requests": 2048,
+        "shard_mib": 1,
+        "quota_mib": 16,
+        "source_offset": 1800,
+        "variants": [
+          "AURA-adaptive",
+          "AURA-no-cost"
+        ]
+      },
+      {
+        "id": "mooncake_toolagent-s307",
+        "scenario": "mooncake_toolagent",
+        "seed": 307,
+        "requests": 2048,
+        "shard_mib": 1,
+        "quota_mib": 16,
+        "source_offset": 1800,
+        "variants": [
+          "AURA-adaptive",
+          "AURA-no-cost"
+        ]
+      },
+      {
+        "id": "stable-s308",
+        "scenario": "stable",
+        "seed": 308,
+        "requests": 384,
+        "shard_mib": 2,
+        "quota_mib": 8,
+        "variants": [
+          "AURA-adaptive",
+          "AURA-no-cost",
+          "AURA-no-shift",
+          "RecentLFU-admit"
+        ]
+      },
+      {
+        "id": "shift-s308",
+        "scenario": "shift",
+        "seed": 308,
+        "requests": 384,
+        "shard_mib": 2,
+        "quota_mib": 8,
+        "variants": [
+          "AURA-adaptive",
+          "AURA-no-cost",
+          "AURA-no-shift",
+          "RecentLFU-admit"
+        ]
+      },
+      {
+        "id": "mixed_fit-s308",
+        "scenario": "mixed_fit",
+        "seed": 308,
+        "requests": 384,
+        "shard_mib": 2,
+        "quota_mib": 8,
+        "variants": [
+          "AURA-adaptive",
+          "AURA-no-cost",
+          "AURA-no-shift",
+          "RecentLFU-admit"
+        ]
+      },
+      {
+        "id": "uniform-s308",
+        "scenario": "uniform",
+        "seed": 308,
+        "requests": 384,
+        "shard_mib": 2,
+        "quota_mib": 8,
+        "variants": [
+          "AURA-adaptive",
+          "AURA-no-cost",
+          "AURA-no-shift",
+          "RecentLFU-admit"
+        ]
+      },
+      {
+        "id": "mooncake_conversation-s308",
+        "scenario": "mooncake_conversation",
+        "seed": 308,
+        "requests": 2048,
+        "shard_mib": 1,
+        "quota_mib": 16,
+        "source_offset": 2000,
+        "variants": [
+          "AURA-adaptive",
+          "AURA-no-cost"
+        ]
+      },
+      {
+        "id": "mooncake_toolagent-s308",
+        "scenario": "mooncake_toolagent",
+        "seed": 308,
+        "requests": 2048,
+        "shard_mib": 1,
+        "quota_mib": 16,
+        "source_offset": 2000,
+        "variants": [
+          "AURA-adaptive",
+          "AURA-no-cost"
+        ]
+      }
+    ]
+  },
+  "spec_sha256": "cd5310cb20da941415a07938f7fa4d56e1ed23fb4197266eed26c8af82a63ecb",
+  "binary_sha256": "c1bda5856614d8fa2fc28b000d6b0f8c55c1f41f5e57eb100a4656ad08f5d974",
+  "build_type": "Release",
+  "source_hashes": {
+    "src/main.cpp": "96970a8b161c3d94a667c13d1fb9359932b35f8a081472020ce68caa0c3395bb",
+    "src/measured_policy.h": "513cf993c6a2fc5d28c91fb0eb689ab7c19cb5b2df8de72d2b500adca51464b7",
+    "scripts/measured_study.py": "3ee5c676f63a5216862d7a1e1e0304003cc24929e454a4cc1909baa1a70df0ad",
+    "scripts/evidence_benchmark.py": "c1faf9b0a0ccea4404c3a5f5957b03889513d3959bfc541d434f919ae78770fc"
+  },
+  "configuration_schema": 3,
+  "output": "/home/wjxt/aura-kv-cn7/evidence/measured-dev-05",
+  "remote_data": "/srv/tokenfs/remote-cn7/measured-measured-dev-05",
+  "verify": false,
+  "backend_direct": true,
+  "created_utc": "2026-09-19T09:51:27Z",
+  "mount": {
+    "target": "/srv/tokenfs/remote-cn7",
+    "source": "/dev/nvme1n1",
+    "fstype": "ext4",
+    "options": "rw,nosuid,nodev,relatime"
+  },
+  "nvme_identity": {
+    "transport": "tcp",
+    "address": "traddr=28.10.10.13,trsvcid=4420,src_addr=28.10.10.7",
+    "subsysnqn": "nqn.2026-09.local.aura-kv:remote-cn7"
+  }
+}

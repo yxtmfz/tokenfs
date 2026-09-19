@@ -1,0 +1,15 @@
+scenario,quota_mib,paced,requests,shard_mib,window,baseline,n,time_ratio,ci95,p_raw,p_holm,family,with_drain_ratio,verdict
+stable,8,False,384,2,128,AURA-no-cost,2,0.9988537092207198,"[0.9839299926726602, 1.0140037806083162]",1.0,1,AURA-no-cost,0.9987776550624259,development / no confirmatory claim
+stable,8,False,384,2,128,AURA-no-shift,2,0.9948881220961214,"[0.9912913490471035, 0.9984979455731278]",0.5,1,AURA-no-shift,0.9948188438605527,development / no confirmatory claim
+stable,8,False,384,2,128,RecentLFU-admit,2,1.0049962935083467,"[1.0000419222736165, 1.0099752095084362]",0.5,1,primary,1.0049794509866885,development / no confirmatory claim
+shift,8,False,384,2,128,AURA-no-cost,2,1.03429238093099,"[1.0088046486581137, 1.0604240679053818]",0.5,1,AURA-no-cost,1.0342647531671225,development / no confirmatory claim
+shift,8,False,384,2,128,AURA-no-shift,2,0.7724866857420332,"[0.7721091343015206, 0.7728644218003464]",0.5,1,AURA-no-shift,0.7725442518344394,development / no confirmatory claim
+shift,8,False,384,2,128,RecentLFU-admit,2,0.7807499095591247,"[0.7803560093376638, 0.7811440086095595]",0.5,1,primary,0.7808146507112055,development / no confirmatory claim
+mixed_fit,8,False,384,2,128,AURA-no-cost,2,1.029424934629876,"[1.0131130243954318, 1.0459994793474328]",0.5,1,AURA-no-cost,1.0294041830764316,development / no confirmatory claim
+mixed_fit,8,False,384,2,128,AURA-no-shift,2,1.022726563012113,"[1.0084746037183705, 1.0371799337672463]",0.5,1,AURA-no-shift,1.0227174278552802,development / no confirmatory claim
+mixed_fit,8,False,384,2,128,RecentLFU-admit,2,1.034658321025435,"[1.0241320637248965, 1.045292769541425]",0.5,1,primary,1.0346520487302542,development / no confirmatory claim
+uniform,8,False,384,2,128,AURA-no-cost,2,1.0176899918921323,"[1.0027708819296874, 1.0328310666583846]",0.5,1,AURA-no-cost,1.0176919279639656,development / no confirmatory claim
+uniform,8,False,384,2,128,AURA-no-shift,2,0.9979986187297094,"[0.9942801731891767, 1.0017309706495612]",1.0,1,AURA-no-shift,0.9980497992615402,development / no confirmatory claim
+uniform,8,False,384,2,128,RecentLFU-admit,2,1.0171648557252082,"[1.0002843504103691, 1.0343302314967004]",0.5,1,primary,1.0171311954572377,development / no confirmatory claim
+mooncake_conversation,16,False,2048,1,128,AURA-no-cost,2,1.008726791838157,"[1.000286499234234, 1.0172383025773788]",0.5,1,AURA-no-cost,1.0087412205526327,development / no confirmatory claim
+mooncake_toolagent,16,False,2048,1,128,AURA-no-cost,2,1.0201698570063384,"[1.008764026813443, 1.031704649928803]",0.5,1,AURA-no-cost,1.0201720615338103,development / no confirmatory claim

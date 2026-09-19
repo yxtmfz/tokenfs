@@ -1,0 +1,162 @@
+[
+  {
+    "scenario": "mooncake_conversation",
+    "quota_mib": 16,
+    "paced": false,
+    "requests": 2048,
+    "shard_mib": 1,
+    "window": 128,
+    "baseline": "RemoteOnly",
+    "n": 1,
+    "time_ratio": 0.9847912925061558,
+    "ci95": [
+      null,
+      null
+    ],
+    "p_raw": null,
+    "p_holm": null,
+    "family": "RemoteOnly",
+    "with_drain_ratio": 0.9847855170779243,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "mooncake_conversation",
+    "quota_mib": 16,
+    "paced": false,
+    "requests": 2048,
+    "shard_mib": 1,
+    "window": 128,
+    "baseline": "LRU-equal",
+    "n": 1,
+    "time_ratio": 0.9853084822131591,
+    "ci95": [
+      null,
+      null
+    ],
+    "p_raw": null,
+    "p_holm": null,
+    "family": "primary",
+    "with_drain_ratio": 0.9853077735235941,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "mooncake_conversation",
+    "quota_mib": 16,
+    "paced": false,
+    "requests": 2048,
+    "shard_mib": 1,
+    "window": 128,
+    "baseline": "LFU-equal",
+    "n": 1,
+    "time_ratio": 0.9812806677893285,
+    "ci95": [
+      null,
+      null
+    ],
+    "p_raw": null,
+    "p_holm": null,
+    "family": "primary",
+    "with_drain_ratio": 0.9812788069027081,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "mooncake_conversation",
+    "quota_mib": 16,
+    "paced": false,
+    "requests": 2048,
+    "shard_mib": 1,
+    "window": 128,
+    "baseline": "RecentLFU-admit",
+    "n": 1,
+    "time_ratio": 1.0590662425022104,
+    "ci95": [
+      null,
+      null
+    ],
+    "p_raw": null,
+    "p_holm": null,
+    "family": "primary",
+    "with_drain_ratio": 1.059057741211575,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "mooncake_toolagent",
+    "quota_mib": 16,
+    "paced": false,
+    "requests": 2048,
+    "shard_mib": 1,
+    "window": 128,
+    "baseline": "RemoteOnly",
+    "n": 1,
+    "time_ratio": 0.9015535126394558,
+    "ci95": [
+      null,
+      null
+    ],
+    "p_raw": null,
+    "p_holm": null,
+    "family": "RemoteOnly",
+    "with_drain_ratio": 0.9015442876140006,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "mooncake_toolagent",
+    "quota_mib": 16,
+    "paced": false,
+    "requests": 2048,
+    "shard_mib": 1,
+    "window": 128,
+    "baseline": "LRU-equal",
+    "n": 1,
+    "time_ratio": 0.9381119688758671,
+    "ci95": [
+      null,
+      null
+    ],
+    "p_raw": null,
+    "p_holm": null,
+    "family": "primary",
+    "with_drain_ratio": 0.9380923324953725,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "mooncake_toolagent",
+    "quota_mib": 16,
+    "paced": false,
+    "requests": 2048,
+    "shard_mib": 1,
+    "window": 128,
+    "baseline": "LFU-equal",
+    "n": 1,
+    "time_ratio": 0.9573871736899698,
+    "ci95": [
+      null,
+      null
+    ],
+    "p_raw": null,
+    "p_holm": null,
+    "family": "primary",
+    "with_drain_ratio": 0.9573691443053528,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "mooncake_toolagent",
+    "quota_mib": 16,
+    "paced": false,
+    "requests": 2048,
+    "shard_mib": 1,
+    "window": 128,
+    "baseline": "RecentLFU-admit",
+    "n": 1,
+    "time_ratio": 0.97773930712723,
+    "ci95": [
+      null,
+      null
+    ],
+    "p_raw": null,
+    "p_holm": null,
+    "family": "primary",
+    "with_drain_ratio": 0.9777359759969758,
+    "verdict": "development / no confirmatory claim"
+  }
+]

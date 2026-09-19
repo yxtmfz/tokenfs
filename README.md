@@ -4,6 +4,8 @@
 
 > 当前评估使用 **cn7 → cn13** 的独立 NVMe/TCP namespace，cn8 承担独立正确性校验，cn14 停用。配置见 [迁移记录](docs/client-migration-cn7.md)，实验分类与未闭合主张见 [证据对应表](docs/claim-evidence-ledger.md)。旧 cn14 表格及失效批次不能用作新结论。
 
+> 第二轮已完成 **756/756** 次预先固定的速度实验。当前可执行策略是显式启用的 **AURA-adaptive / measured_policy**，默认旧 AURA-core 保留；它是近期需求与实测成本的 C++ 启发式，不等于完整 Python RobustBenefit，也未验证真实多 GPU 推理收益。读 [第二轮完整报告](reports/latest/paper-experiments/11_measured_admission/README.md) 和 [第一轮 400 次结果](reports/latest/paper-experiments/10_real_cn7_evidence/README.md) 时请分开解释，不能跨批次直接比较速度。
+
 ```text
 面向多 GPU 大模型 KV Cache 的本地 SSD 与 NVMe-oF 远端 SSD 自适应分层缓存系统
 ```
@@ -16,7 +18,7 @@ AURA-KV 是研究控制层，TokenFS 是可挂载的 FUSE 文件系统原型。�
 |---|---|---|
 | 代码 | `src/`、`aura_kv/`、`scripts/`、`tests/` | FUSE 原型、AURA-KV 控制器、实验脚本和测试 |
 | 说明文档 | [docs/README.md](docs/README.md) | 项目设计、模型公式、实验方法和部署说明 |
-| 数据结果 | [cn7 正式实测报告](reports/latest/paper-experiments/10_real_cn7_evidence/README.md) | 最新统一结果报告和论文实验结果 |
+| 数据结果 | [第二轮实测与消融报告](reports/latest/paper-experiments/11_measured_admission/README.md) | 756 次冻结速度实验、完整负结果与写作边界 |
 
 ## 1. 当前项目定位
 
