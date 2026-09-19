@@ -14,6 +14,9 @@ from measured_study import VARIANTS,configuration,digest
 def run(args):
     binary=args.binary.resolve();root=args.output.resolve();remote=args.remote_root.resolve()
     reference=json.loads(args.reference.read_text())
+    completed=json.loads((args.reference.parent/'batch-audit.json').read_text())
+    if not reference['verify'] or reference['build_type']!='Release' or not completed['passed'] or completed['checked_runs']!=completed['expected_runs']:
+        raise ValueError('reference content-validation batch is incomplete or failed')
     if sha(binary)!=reference['binary_sha256']:
         raise ValueError('binary differs from the completed correctness reference')
     root.mkdir(parents=True,exist_ok=False)
@@ -60,10 +63,51 @@ def run(args):
         performance_eligible=False,checks=['per-request SHA256','retained-copy SHA256','three caller byte totals','source byte totals','queue drain','visible final quota','error counters']))
 
 
+def audit(root):
+    m=json.loads((root/'manifest.json').read_text());errors=[];checked=0;seen=set()
+    if m['stage']!='correctness' or m['performance_eligible'] or not m['verify_every_request']:errors.append('incorrect evidence stage')
+    for scenario in m['scenarios']:
+        block=root/scenario;rng=random.Random(m['seed']);events=[]
+        for i in range(m['requests']):
+            caller=i//32 if scenario=='shared_migration' else i%3
+            key=(i//3)%4 if scenario=='shared_cycle' else rng.randrange(6)
+            events.append(dict(index=i,key=key,caller=caller,bytes=MIB))
+        order=m['variants'].copy();random.Random(m['seed']).shuffle(order)
+        if not (block/'input.json').exists():errors.append(scenario+': missing input');continue
+        expected=json.loads((block/'objects.json').read_text())
+        if json.loads((block/'input.json').read_text())!=dict(trace_sha256=digest(events),order=order) or json.loads((block/'trace.json').read_text())!=events:errors.append(scenario+': input integrity')
+        for name in order:
+            seen.add((scenario,name));case=block/name
+            if not (case/'result.json').exists():errors.append(f'{scenario}/{name}: missing result');continue
+            result=json.loads((case/'result.json').read_text());metrics=result['metrics']
+            rows=json.loads((case/'requests.json').read_text());cfg=json.loads((case/'config.json').read_text())
+            original_case=Path(cfg['filesystem']['mount_point']).parent
+            reference=configuration(name,original_case,Path(cfg['backends'][0]['root']),m['quota_mib'],False)
+            checks=[cfg==reference,result['verify_every_request'],result['strategy']==name,result['status']=='ok',
+                len(rows)==len(events) and all(all(row.get(k)==v for k,v in e.items()) and row.get('sha256')==expected[str(e['key'])] for row,e in zip(rows,events)),
+                metrics.get('read_bytes',0)==m['requests']*MIB,metrics.get('read_open_count',0)==m['requests'],
+                metrics.get('read_local_bytes',0)+metrics.get('read_remote_bytes',0)==m['requests']*MIB,
+                all(metrics.get(f'qos_gpu{g}_read_bytes',0)==sum(e['bytes'] for e in events if e['caller']==g) for g in range(3)),
+                max(result['retained_cache_bytes'])<=m['quota_mib']*MIB,
+                metrics.get('background_submitted',0)==metrics.get('background_completed',0),
+                not any(v for k,v in metrics.items() if k.endswith('error_count'))]
+            if not all(checks):errors.append(f'{scenario}/{name}: failed checks {checks}')
+            checked+=1
+    actual={(p.parent.parent.name,p.parent.name) for p in root.glob('*/*/result.json')}
+    if actual-seen:errors.append('unexpected cases')
+    if list(root.rglob('failure.json')) or (root/'validation-failure.json').exists():errors.append('failure record present')
+    answer=dict(passed=not errors,checked_runs=checked,expected_runs=len(m['variants'])*len(m['scenarios']),performance_eligible=False,errors=errors)
+    dump(root/'external-audit.json',answer);return answer
+
+
 if __name__=='__main__':
-    parser=argparse.ArgumentParser();parser.add_argument('--binary',type=Path,required=True)
-    parser.add_argument('--reference',type=Path,required=True);parser.add_argument('--output',type=Path,required=True)
-    parser.add_argument('--remote-root',type=Path,required=True);args=parser.parse_args()
+    parser=argparse.ArgumentParser();parser.add_argument('--binary',type=Path)
+    parser.add_argument('--reference',type=Path);parser.add_argument('--output',type=Path,required=True)
+    parser.add_argument('--remote-root',type=Path);parser.add_argument('--audit',action='store_true');args=parser.parse_args()
+    if args.audit:
+        result=audit(args.output);print(json.dumps(result,indent=2));raise SystemExit(0 if result['passed'] else 1)
+    if not all([args.binary,args.reference,args.remote_root]):parser.error('run requires --binary, --reference and --remote-root')
+    if args.output.exists():parser.error('output already exists; refusing to alter previous evidence')
     try:run(args)
     except Exception as exc:
         if args.output.exists():dump(args.output/'validation-failure.json',{'error':repr(exc),'passed':False})

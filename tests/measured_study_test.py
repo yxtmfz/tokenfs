@@ -3,6 +3,7 @@ from pathlib import Path
 import sys
 import tempfile
 import unittest
+import subprocess
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'scripts'))
 from measured_study import application,configuration,synthetic,digest,VARIANTS
 
@@ -39,5 +40,13 @@ class MeasuredStudyTest(unittest.TestCase):
    for gpu in range(3):self.assertEqual(sum(e['bytes'] for e in events if e['caller']==gpu),256*1024*1024)
    self.assertTrue(all(set(e)=={'index','key','caller','bytes'} for e in events))
    self.assertNotEqual(events,trace(dict(block,seed=702)))
+ def test_domain_validation_refuses_to_modify_existing_evidence(self):
+  script=Path(__file__).resolve().parents[1]/'scripts/measured_multidomain_check.py'
+  with tempfile.TemporaryDirectory() as d:
+   root=Path(d);(root/'sentinel.json').write_text('{"preserve":true}')
+   result=subprocess.run([sys.executable,str(script),'--output',str(root),'--binary','unused','--reference','unused','--remote-root','unused'],capture_output=True,text=True)
+   self.assertEqual(result.returncode,2)
+   self.assertEqual([p.name for p in root.iterdir()],['sentinel.json'])
+   self.assertEqual((root/'sentinel.json').read_text(),'{"preserve":true}')
 
 if __name__=='__main__':unittest.main()

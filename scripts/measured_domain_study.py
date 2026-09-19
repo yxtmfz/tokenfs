@@ -27,6 +27,8 @@ def trace(block):
 def run(args):
     root=args.output.resolve();remote=args.remote_root.resolve();binary=args.binary.resolve()
     reference=json.loads(args.reference.read_text());spec=json.loads(args.spec.read_text())
+    completed=json.loads((args.reference.parent/'batch-audit.json').read_text())
+    if not reference['verify'] or not completed['passed'] or completed['checked_runs']!=completed['expected_runs']:raise ValueError('content-validation reference is incomplete or failed')
     if reference['build_type']!='Release' or sha(binary)!=reference['binary_sha256']:raise ValueError('unvalidated binary')
     source=Path(__file__).resolve().parents[1]
     for name,expected in reference['source_hashes'].items():
