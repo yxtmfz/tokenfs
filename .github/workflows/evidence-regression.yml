@@ -1,0 +1,33 @@
+name: Evidence regression
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: evidence-regression-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  correctness:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake ninja-build g++ pkg-config libfuse3-dev libsqlite3-dev libyaml-cpp-dev
+      - name: Configure and build Release
+        run: |
+          cmake -S . -B build-release -G Ninja -DCMAKE_BUILD_TYPE=Release
+          cmake --build build-release -j 2
+      - name: Test real metadata and lookup eviction synchronization
+        run: ctest --test-dir build-release --output-on-failure
+      - name: Test policy accounting and evidence audits
+        run: python3 -m unittest tests.aura_kv_unit_test tests.evidence_test
