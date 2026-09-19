@@ -18,9 +18,9 @@ from evidence_report import interval,paired_p,holm
 
 VARIANTS={
  'RemoteOnly':None,'LRU-equal':None,'LFU-equal':None,'AURA-core':None,
- 'RecentLFU-admit':{'measured_cost':False,'measured_size_aware':False},
+ 'RecentLFU-admit':{'measured_cost':False,'measured_size_aware':False,'measured_frequency_admission':True,'measured_shift_reset':False},
  'AURA-adaptive':{},'AURA-no-admission':{'measured_admission':False},
- 'AURA-no-aging':{'measured_aging':False},'AURA-no-value':{'measured_value_victim':False},
+ 'AURA-no-aging':{'measured_aging':False},'AURA-no-shift':{'measured_shift_reset':False},'AURA-no-value':{'measured_value_victim':False},
  'AURA-no-size':{'measured_size_aware':False},'AURA-no-cost':{'measured_cost':False},
  'AURA-no-joint':{'measured_admission':False,'measured_value_victim':False},
  'AURA-synchronous':{'async_promote_on_read':False,'async_cross_gpu_replica':False},
@@ -29,12 +29,15 @@ VARIANTS={
 def digest(value):
  return hashlib.sha256(json.dumps(value,sort_keys=True,separators=(',',':')).encode()).hexdigest()
 
-def configuration(name,case,remote,quota,direct,window=128):
+def configuration(name,case,remote,quota,direct,window=128,schema=3):
  cfg=old_config(name if VARIANTS[name] is None else 'AURA-core',case,remote,quota,direct)
  if VARIANTS[name] is not None:
   cfg['policy'].update(measured_policy=True,measured_window=window,measured_aging=True,
-      measured_admission=True,measured_cost=True,measured_value_victim=True,measured_size_aware=True)
+      measured_admission=True,measured_cost=True,measured_value_victim=True,measured_size_aware=True,measured_frequency_admission=False,measured_shift_reset=True,measured_shift_window=8)
   cfg['policy'].update(VARIANTS[name])
+  if schema==1:cfg['policy'].pop('measured_frequency_admission',None)
+  if schema<3:
+   cfg['policy'].pop('measured_shift_reset',None);cfg['policy'].pop('measured_shift_window',None)
  return cfg
 
 def synthetic(scenario,seed,requests,shard_mib):
@@ -97,7 +100,7 @@ def execute(args):
  source_root=Path(__file__).resolve().parents[1]
  manifest=dict(spec=spec,spec_sha256=digest(spec),binary_sha256=sha(args.binary),build_type='Release',
      source_hashes={str(p.relative_to(source_root)):sha(p) for p in [source_root/'src/main.cpp',source_root/'src/measured_policy.h',source_root/'scripts/measured_study.py',source_root/'scripts/evidence_benchmark.py']},
-     output=str(root),remote_data=str(data_root),verify=args.verify,backend_direct=not args.verify or args.backend_direct,
+     configuration_schema=3,output=str(root),remote_data=str(data_root),verify=args.verify,backend_direct=not args.verify or args.backend_direct,
      created_utc=time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),**identity)
  dump(root/'manifest.json',manifest)
  for block_spec in spec['blocks']:
@@ -146,7 +149,7 @@ def audit(root):
    seen.add((bs['id'],name));case=b/name
    if not (case/'result.json').exists():errors.append(f'{bs["id"]}/{name}: missing result');continue
    r=json.loads((case/'result.json').read_text());rows=json.loads((case/'requests.json').read_text());cfg=json.loads((case/'config.json').read_text())
-   reference=configuration(name,Path(m['output'])/bs['id']/name,Path(m['remote_data'])/bs['id'],bs['quota_mib'],m['backend_direct'],bs.get('window',128))
+   reference=configuration(name,Path(m['output'])/bs['id']/name,Path(m['remote_data'])/bs['id'],bs['quota_mib'],m['backend_direct'],bs.get('window',128),m.get('configuration_schema',1))
    if cfg!=reference:errors.append(f'{bs["id"]}/{name}: config differs')
    if len(rows)!=len(trace) or any(any(row.get(k)!=v for k,v in e.items()) for row,e in zip(rows,trace)):errors.append(f'{bs["id"]}/{name}: trace mismatch')
    total=sum(e['bytes'] for e in trace);metrics=r['metrics'];problems=[]

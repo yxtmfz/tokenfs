@@ -9,7 +9,7 @@ from measured_study import application,configuration,synthetic,digest,VARIANTS
 class MeasuredStudyTest(unittest.TestCase):
  def test_each_ablation_has_only_declared_policy_difference(self):
   root=Path('/test');base=configuration('AURA-adaptive',root,root/'remote',16,True)
-  expected={'AURA-no-admission':{'measured_admission'},'AURA-no-aging':{'measured_aging'},'AURA-no-value':{'measured_value_victim'},'AURA-no-size':{'measured_size_aware'},'AURA-no-cost':{'measured_cost'},'AURA-synchronous':{'async_promote_on_read','async_cross_gpu_replica'},'AURA-no-joint':{'measured_admission','measured_value_victim'}}
+  expected={'AURA-no-admission':{'measured_admission'},'AURA-no-aging':{'measured_aging'},'AURA-no-shift':{'measured_shift_reset'},'AURA-no-value':{'measured_value_victim'},'AURA-no-size':{'measured_size_aware'},'AURA-no-cost':{'measured_cost'},'AURA-synchronous':{'async_promote_on_read','async_cross_gpu_replica'},'AURA-no-joint':{'measured_admission','measured_value_victim'}}
   for name,keys in expected.items():
    cfg=configuration(name,root,root/'remote',16,True)
    self.assertEqual({k for k in base['policy'] if base['policy'][k]!=cfg['policy'][k]},keys)

@@ -7,6 +7,7 @@
 #include <mutex>
 #include <string>
 #include <unordered_map>
+#include <unordered_set>
 #include <vector>
 
 namespace tokenfs_policy {
@@ -20,19 +21,40 @@ struct Options {
   bool cost=true;
   bool value_victim=true;
   bool size_aware=true;
+  bool frequency_admission=false;
+  bool shift_reset=false;
+  size_t shift_window=8;
 };
 struct Decision {
   bool allowed=false;
   std::string reason;
   double incoming_us=0, displaced_us=0, copy_us=0;
+  bool costs_calibrated=false;
+  uint64_t incoming_count=0;
   std::vector<std::string> victims;
 };
 
 class MeasuredPolicy {
  public:
-  void Observe(int gpu,const std::string& key,const Options& o) {
+  bool Observe(int gpu,const std::string& key,const Options& o,bool local_hit=false) {
     std::lock_guard<std::mutex> lock(mu_);
     auto& d=domains_[gpu];++d.counts[key];d.history.push_back(key);
+    d.misses=local_hit?0:d.misses+1;
+    bool reset=false;
+    const size_t k=std::max<size_t>(4,o.shift_window);
+    if(o.aging && o.shift_reset && d.misses>=k && d.history.size()>k) {
+      std::unordered_set<std::string> latest(d.history.end()-k,d.history.end());
+      // Repeated misses to a small new working set indicate stale resident heat.
+      // A stream of one-off misses must not erase useful frequency history.
+      if(latest.size()<=k/2) {
+        while(d.history.size()>k) {
+          auto found=d.counts.find(d.history.front());
+          if(--found->second==0)d.counts.erase(found);
+          d.history.pop_front();
+        }
+        d.misses=0;reset=true;
+      }
+    }
     if(o.aging) while(d.history.size()>std::max<size_t>(2,o.window)) {
       auto found=d.counts.find(d.history.front());
       if(--found->second==0)d.counts.erase(found);
@@ -41,6 +63,7 @@ class MeasuredPolicy {
     // No-aging is an explicit ablation using cumulative frequencies. Avoid an
     // additional unbounded event log; its per-key counters are reported separately.
     if(!o.aging)d.history.clear();
+    return reset;
   }
   void ReadSample(bool local,uint64_t bytes,uint64_t micros) {
     if(!bytes || !micros)return;
@@ -67,9 +90,11 @@ class MeasuredPolicy {
     std::lock_guard<std::mutex> lock(mu_);Decision result;
     if(incoming.bytes>quota){result.reason="oversize";return result;}
     const auto frequency=Count(gpu,incoming.key);
+    result.incoming_count=frequency;
+    result.costs_calibrated=remote_.n && local_.n && copy_.n;
     if(o.admission && frequency<2){result.reason="no_reuse";return result;}
     Sort(gpu,residents,o);
-    uint64_t freed=0;const auto needed=incoming.bytes>quota-std::min(used,quota)?incoming.bytes-(quota-std::min(used,quota)):0;
+    uint64_t freed=0;const auto needed=used>quota ? used-quota+incoming.bytes : (incoming.bytes>quota-used ? incoming.bytes-(quota-used) : 0);
     for(const auto& victim:residents) {
       if(freed>=needed)break;
       freed+=victim.bytes;result.victims.push_back(victim.key);
@@ -89,7 +114,7 @@ class MeasuredPolicy {
   }
  private:
   struct Rate {double mean=0;uint64_t n=0;};
-  struct Domain {std::deque<std::string> history;std::unordered_map<std::string,uint64_t> counts;};
+  struct Domain {size_t misses=0;std::deque<std::string> history;std::unordered_map<std::string,uint64_t> counts;};
   static void Update(Rate& r,double value) {r.mean=r.n?0.95*r.mean+0.05*value:value;++r.n;}
   uint64_t Count(int gpu,const std::string& key) const {
     const auto domain=domains_.find(gpu);if(domain==domains_.end())return 0;
@@ -102,7 +127,11 @@ class MeasuredPolicy {
   }
   double Value(int gpu,const Item& item,const Options& o,bool incoming) const {
     double repeats=double(Count(gpu,item.key));
-    if(incoming && o.cost)repeats=std::max(0.0,repeats-1.0); // Current miss cannot become a hit.
+    (void)incoming;
+    // Use the same repeat-evidence estimate for arrivals and residents. Charging
+    // resident frequency in full while subtracting one only from the incoming
+    // object would add an unintended incumbent preference to the cost ablation.
+    if(!o.frequency_admission)repeats=std::max(0.0,repeats-1.0);
     return repeats*(o.cost?SavingRate()*item.bytes:1.0);
   }
   void Sort(int gpu,std::vector<Item>& items,const Options& o) const {

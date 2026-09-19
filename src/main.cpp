@@ -67,6 +67,9 @@ struct Config {
   bool measured_cost = true;
   bool measured_value_victim = true;
   bool measured_size_aware = true;
+  bool measured_frequency_admission = false;
+  bool measured_shift_reset = false;
+  uint64_t measured_shift_window = 8;
   bool adaptive_migration = false;
   uint64_t adaptive_remote_promote_us = 10000;
   uint64_t qos_read_iops_per_gpu = 0;
@@ -1569,7 +1572,6 @@ class TokenFS {
     const int caller_gpu_id = DetectCallerGpuId(gpu->gpu_id);
     // Update policy state on every logical read, including local fast hits.
     if (!writable) {
-      if(config_.measured_policy) measured_.Observe(caller_gpu_id,path,MeasuredOptions());
       metadata_.IncrementReadCount(path, caller_gpu_id,
           config_.affinity_dominant_threshold_x100, config_.affinity_shared_threshold_x100,
           config_.affinity_short_window_sec,
@@ -1587,6 +1589,8 @@ class TokenFS {
           AddBufferedMetric("cross_gpu_local_replica_hit", 1);
         }
       }
+      if(config_.measured_policy && measured_.Observe(caller_gpu_id,path,MeasuredOptions(),meta.tier=="local"))
+        AddBufferedMetric("measured_shift_resets",1);
       AddBufferedMetric("read_open_count", 1);
       AddBufferedMetric(meta.tier == "local" ? "local_read_open_count" : "remote_read_open_count", 1);
     }
@@ -2195,7 +2199,7 @@ class TokenFS {
   tokenfs_policy::Options MeasuredOptions() const {
     return {static_cast<size_t>(config_.measured_window),config_.measured_aging,
             config_.measured_admission,config_.measured_cost,
-            config_.measured_value_victim,config_.measured_size_aware};
+            config_.measured_value_victim,config_.measured_size_aware,config_.measured_frequency_admission,config_.measured_shift_reset,static_cast<size_t>(config_.measured_shift_window)};
   }
 
   tokenfs_policy::Decision MeasuredPlan(const GpuConfig& gpu,const FileMeta& incoming) {
@@ -2238,8 +2242,12 @@ class TokenFS {
       const auto plan=MeasuredPlan(gpu,*incoming);
       AddBufferedMetric("measured_commit_"+plan.reason,1);
       if(!plan.allowed)return false;
+      std::ostringstream detail;
+      detail << plan.reason << ";incoming=" << plan.incoming_us
+             << ";displaced=" << plan.displaced_us << ";copy=" << plan.copy_us
+             << ";frequency=" << plan.incoming_count << ";calibrated=" << plan.costs_calibrated;
       metadata_.RecordPolicyEvent("ADMIT",protected_logical_path,gpu.gpu_id,required_size,
-          plan.reason,plan.incoming_us-plan.displaced_us-plan.copy_us);
+          detail.str(),plan.incoming_us-plan.displaced_us-plan.copy_us);
     }
     if (used + required_size <= gpu.local_quota_bytes) {
       return true;
@@ -3525,6 +3533,9 @@ uint64_t MiBToBytes(uint64_t mib) { return mib * 1024ULL * 1024ULL; }
 Config LoadConfig(const fs::path& path) {
   YAML::Node root = YAML::LoadFile(path.string());
   Config config;
+  if(root["policy"] && root["policy"]["measured_shift_reset"]) config.measured_shift_reset=root["policy"]["measured_shift_reset"].as<bool>();
+  if(root["policy"] && root["policy"]["measured_shift_window"]) config.measured_shift_window=root["policy"]["measured_shift_window"].as<uint64_t>();
+  if(root["policy"] && root["policy"]["measured_frequency_admission"]) config.measured_frequency_admission=root["policy"]["measured_frequency_admission"].as<bool>();
   if(root["policy"] && root["policy"]["measured_policy"]) config.measured_policy=root["policy"]["measured_policy"].as<bool>();
   if(root["policy"] && root["policy"]["measured_aging"]) config.measured_aging=root["policy"]["measured_aging"].as<bool>();
   if(root["policy"] && root["policy"]["measured_admission"]) config.measured_admission=root["policy"]["measured_admission"].as<bool>();
