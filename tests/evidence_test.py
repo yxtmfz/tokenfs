@@ -16,9 +16,52 @@ from scripts.evidence_benchmark import dump
 from aura_kv.controller import AuraController
 from aura_kv.core import NodeState, Replica
 from aura_kv.optimization import LayoutConstraints
+from aura_kv.executor import DirectoryReplicaExecutor
+from aura_kv.tasks import BackgroundTask, DurableTaskQueue, TaskState, TaskType
 
 
 class EvidenceRegression(unittest.TestCase):
+    def test_executor_rejects_size_or_expected_identity_before_ready(self):
+        for size,checksum,error in [(MIB+1,"","SOURCE_SIZE_MISMATCH"),(MIB,"0"*64,"CHECKSUM_MISMATCH"),(MIB,"","EXECUTOR_EXCEPTION")]:
+            with tempfile.TemporaryDirectory() as d:
+                root=Path(d);cache=make_cache("k","node0",0,1,10)
+                nodes={"node0":NodeState("node0",2*MIB)};queue=DurableTaskQueue(root/"tasks.db")
+                cache_index={} if error == "EXECUTOR_EXCEPTION" else {"k":cache}
+                executor=DirectoryReplicaExecutor(queue,root/"remote",root/"local",nodes,cache_index)
+                executor.write_remote("k",b"x"*size)
+                task=queue.enqueue(BackgroundTask(TaskType.REPLICATE,"k","remote","node0",1,checksum=checksum,max_retries=0))
+                executor.execute_pending(1)
+                self.assertEqual(queue.get(task.task_id).error_code,error)
+                self.assertEqual(queue.get(task.task_id).state,TaskState.FAILED)
+                self.assertEqual(nodes["node0"].local_used_bytes,0)
+                self.assertFalse(executor.local_path("node0","k").exists())
+                self.assertFalse(list(executor.node_dir("node0").glob("*.tmp")))
+                queue.close()
+
+    def test_retry_dependency_waits_then_commits_and_last_copy_is_protected(self):
+        with tempfile.TemporaryDirectory() as d:
+            root=Path(d);caches={k:make_cache(k,"node0",0,1,10) for k in ["old","new"]}
+            nodes={"node0":NodeState("node0",2*MIB)};queue=DurableTaskQueue(root/"tasks.db")
+            executor=DirectoryReplicaExecutor(queue,root/"remote",root/"local",nodes,caches)
+            nodes["node0"].add_replica(Replica("old","node0",size_bytes=MIB))
+            executor.local_path("node0","old").write_bytes(b"o"*MIB)
+            unsafe=queue.enqueue(BackgroundTask(TaskType.EVICT,"old","node:node0","node0",1,max_retries=0))
+            executor.execute_pending(1)
+            self.assertEqual(queue.get(unsafe.task_id).error_code,"UNSAFE_LAST_REPLICA")
+            self.assertTrue(executor.local_path("node0","old").exists())
+            copy=queue.enqueue(BackgroundTask(TaskType.REPLICATE,"new","remote","node0",1,max_retries=1))
+            evict=queue.enqueue(BackgroundTask(TaskType.EVICT,"old","node:node0","node0",1,dependency_task_ids=[copy.task_id]))
+            executor.execute_pending(1)
+            self.assertEqual(queue.get(copy.task_id).state,TaskState.PENDING)
+            self.assertEqual(queue.get(evict.task_id).state,TaskState.PENDING)
+            executor.write_remote("new",b"n"*MIB);executor.write_remote("old",b"o"*MIB)
+            executor.execute_pending(1)
+            self.assertEqual(queue.get(copy.task_id).state,TaskState.COMMITTED)
+            self.assertEqual(queue.get(evict.task_id).state,TaskState.COMMITTED)
+            self.assertTrue(nodes["node0"].has_replica("new"))
+            self.assertFalse(nodes["node0"].has_replica("old"))
+            queue.close()
+
     def test_batch_audit_rejects_missing_runs_and_changed_bytes(self):
         # Synthetic unit fixture only; no fixture timing is published as evidence.
         with tempfile.TemporaryDirectory() as d:
@@ -40,6 +83,9 @@ class EvidenceRegression(unittest.TestCase):
             result["metrics"]["read_remote_bytes"]-=1;dump(case/"result.json",result)
             self.assertFalse(audit(root)["passed"])
             self.assertIn("source byte accounting",audit(root)["errors"][0])
+            result["metrics"]["read_remote_bytes"]=3*MIB
+            result["job_wall_s"]=float("nan");dump(case/"result.json",result)
+            self.assertFalse(audit(root)["passed"])
 
     def test_controller_reserves_batch_and_never_bypasses_hard_constraints_for_swap(self):
         evaluator = SimpleNamespace(

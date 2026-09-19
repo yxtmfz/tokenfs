@@ -3,6 +3,7 @@
 from __future__ import annotations
 import argparse
 import json
+import math
 from pathlib import Path
 import random
 
@@ -67,7 +68,8 @@ def audit(root):
                     problems.append("unfinished background")
                 if any(v for k,v in m.items() if k.endswith("error_count")):
                     problems.append("error metric")
-                if r["job_wall_s"] <= 0 or abs(r["effective_mib_s"] - byte_count/MIB/r["job_wall_s"]) > 1e-8:
+                valid_rate = all(math.isfinite(r[k]) and r[k] > 0 for k in ["job_wall_s","effective_mib_s"])
+                if not valid_rate or abs(r["effective_mib_s"] - byte_count/MIB/r["job_wall_s"]) > 1e-8:
                     problems.append("wall/throughput identity")
                 if r["verify_every_request"] != args["verify"]: problems.append("mixed verification mode")
                 if max(r["retained_cache_bytes"], default=0) > args["quota_mib"]*MIB:

@@ -355,7 +355,7 @@ class AuraKVUnitTest(unittest.TestCase):
             nodes = {"node0": NodeState("node0", 4 * MIB)}
             queue = DurableTaskQueue(root / "tasks.db")
             executor = DirectoryReplicaExecutor(queue, root / "remote", root / "local", nodes, {"k": cache})
-            checksum = executor.write_remote("k", b"x" * 4096)
+            checksum = executor.write_remote("k", b"x" * MIB)
             task = queue.enqueue(
                 BackgroundTask(TaskType.REPLICATE, "k", "remote", "node0", layout_version=3, checksum=checksum, reserved_bytes=cache.size_bytes)
             )
@@ -403,7 +403,7 @@ class AuraKVUnitTest(unittest.TestCase):
 
             queue = DurableTaskQueue(root / "tasks.db")
             executor = DirectoryReplicaExecutor(queue, root / "remote", root / "local", nodes, {"hot": cache})
-            executor.write_remote("hot", b"hot-data")
+            executor.write_remote("hot", b"h" * MIB)
             for task in plan.tasks:
                 queue.enqueue(task)
             stats = executor.execute_pending(current_layout_version=7)
@@ -421,7 +421,7 @@ class AuraKVUnitTest(unittest.TestCase):
             queue = DurableTaskQueue(root / "tasks.db")
             executor = DirectoryReplicaExecutor(queue, root / "remote", root / "local", nodes, {"old": old, "new": new})
             old_path = executor.local_path("node0", "old")
-            old_path.write_bytes(b"old")
+            old_path.write_bytes(b"o" * MIB)
             replicate = queue.enqueue(BackgroundTask(TaskType.REPLICATE, "new", "remote", "node0", layout_version=9, max_retries=0))
             evict = queue.enqueue(
                 BackgroundTask(
@@ -448,7 +448,8 @@ class AuraKVUnitTest(unittest.TestCase):
             self.assertEqual(stats.failed, 1)
             self.assertTrue(nodes["node0"].has_replica("old"))
             self.assertTrue(old_path.exists())
-            self.assertEqual(queue.get(evict.task_id).state, TaskState.PENDING)
+            self.assertEqual(queue.get(evict.task_id).state, TaskState.CANCELED)
+            self.assertFalse(queue.list(TaskState.PENDING))
             queue.close()
 
 
