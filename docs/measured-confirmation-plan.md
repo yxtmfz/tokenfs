@@ -5,6 +5,13 @@ Drafted before any performance access to the held-out application records or see
 record identifying the source revision, binary hashes, and final specification.
 Development outcomes are retained separately and cannot be pooled with confirmation.
 
+Freeze record: `study-configs/measured-b2-freeze.json`. The B2 algorithm/runner
+revision is 199d74da8b3af47640960e6e5ad1567e1559c78d. Both cn7 and cn8 passed
+65 content-validation cases. B2 is now fixed; the already queued dev-04/05
+diagnostics will not be used to retune this version. Their successful completion
+and audits remain a hard execution gate. Negative speed results do not fail an
+integrity gate and must remain in the report.
+
 ## Question and scope
 
 Does the executable, measured-cost admission policy reduce real storage-replay wall
@@ -97,6 +104,12 @@ Capacity, longer-duration, timestamp-paced and parameter-window checks are separ
 supplementary experiments. Their smaller replication counts are descriptive;
 do not pool them into the fixed primary family or use them to tune this version.
 Per-request content hashing runs are separate from all performance evidence.
+The supplementary JSON fixes 96 runs: n=3 per condition, capacities 16/32 MiB,
+4096-request runs, windows 64/256, and timestamp-paced public block replay. Its
+public windows do not overlap the main selected request ranges. The shift detector
+threshold itself remains 8; the window study is not a complete sensitivity sweep
+of every parameter. Paced block replay still uses one serialized client, so it does
+not reproduce original serving concurrency or establish an inference TTFT claim.
 
 ## Failure and evidence retention
 

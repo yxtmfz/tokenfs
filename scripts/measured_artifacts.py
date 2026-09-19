@@ -94,9 +94,9 @@ def generate(root, figures=False):
             ci=r['ci95'];color='#2066a8' if r['verdict']=='faster' else '#bb4b38' if r['verdict']=='slower' else '#666666'
             ax.plot(r['time_ratio'],i,'o',color=color,markersize=4)
             if ci[0] is not None:ax.plot(ci,[i,i],color=color)
-        ax.set_yticks(range(len(main)),[f"{r['scenario']} q={r['quota_mib']} N={r['requests']} / {r['baseline']}" for r in main],fontsize=7)
+        ax.set_yticks(range(len(main)),[f"{r['scenario']} q={r['quota_mib']} N={r['requests']} n={r['n']} / {r['baseline']}" for r in main],fontsize=7)
         ax.axvline(1,color='black',linestyle='--',linewidth=.8);ax.invert_yaxis()
-        ax.set_xlabel('Paired geometric mean time ratio (AURA-adaptive/reference), 95% CI')
+        ax.set_xlabel('Paired time ratio (AURA-adaptive/reference); 95% intervals only when n >= 2')
         ax.set_title(f"{root.name}: {manifest['spec']['stage']}")
         ax.grid(axis='x',alpha=.2);fig.tight_layout()
         for suffix in ['png','svg','pdf']:fig.savefig(out/f'time-ratios.{suffix}',dpi=180)
