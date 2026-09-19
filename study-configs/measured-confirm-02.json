@@ -1,0 +1,1520 @@
+{
+  "stage": "confirmation",
+  "name": "measured-confirm-02",
+  "preregistration": "docs/measured-confirmation-plan.md",
+  "blocks": [
+    {
+      "id": "uniform-s511",
+      "scenario": "uniform",
+      "seed": 511,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-admission",
+        "AURA-no-cost",
+        "AURA-no-shift"
+      ]
+    },
+    {
+      "id": "stable-s502",
+      "scenario": "stable",
+      "seed": 502,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-admission",
+        "AURA-no-value",
+        "AURA-no-joint",
+        "AURA-synchronous",
+        "AURA-no-shift",
+        "AURA-no-aging"
+      ]
+    },
+    {
+      "id": "shift-s503",
+      "scenario": "shift",
+      "seed": 503,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-aging",
+        "AURA-no-shift",
+        "AURA-no-cost"
+      ]
+    },
+    {
+      "id": "stable-s510",
+      "scenario": "stable",
+      "seed": 510,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-admission",
+        "AURA-no-value",
+        "AURA-no-joint",
+        "AURA-synchronous",
+        "AURA-no-shift",
+        "AURA-no-aging"
+      ]
+    },
+    {
+      "id": "shift-s509",
+      "scenario": "shift",
+      "seed": 509,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-aging",
+        "AURA-no-shift",
+        "AURA-no-cost"
+      ]
+    },
+    {
+      "id": "shift-s505",
+      "scenario": "shift",
+      "seed": 505,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-aging",
+        "AURA-no-shift",
+        "AURA-no-cost"
+      ]
+    },
+    {
+      "id": "mooncake_toolagent-s502",
+      "scenario": "mooncake_toolagent",
+      "seed": 502,
+      "requests": 2048,
+      "shard_mib": 1,
+      "quota_mib": 16,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-cost"
+      ],
+      "source_offset": 1573
+    },
+    {
+      "id": "mixed_fit-s504",
+      "scenario": "mixed_fit",
+      "seed": 504,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-size",
+        "AURA-no-cost",
+        "AURA-no-value"
+      ]
+    },
+    {
+      "id": "mixed_fit-s505",
+      "scenario": "mixed_fit",
+      "seed": 505,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-size",
+        "AURA-no-cost",
+        "AURA-no-value"
+      ]
+    },
+    {
+      "id": "stable-s506",
+      "scenario": "stable",
+      "seed": 506,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-admission",
+        "AURA-no-value",
+        "AURA-no-joint",
+        "AURA-synchronous",
+        "AURA-no-shift",
+        "AURA-no-aging"
+      ]
+    },
+    {
+      "id": "uniform-s508",
+      "scenario": "uniform",
+      "seed": 508,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-admission",
+        "AURA-no-cost",
+        "AURA-no-shift"
+      ]
+    },
+    {
+      "id": "mooncake_toolagent-s503",
+      "scenario": "mooncake_toolagent",
+      "seed": 503,
+      "requests": 2048,
+      "shard_mib": 1,
+      "quota_mib": 16,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-cost"
+      ],
+      "source_offset": 3146
+    },
+    {
+      "id": "scan-s510",
+      "scenario": "scan",
+      "seed": 510,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-admission",
+        "AURA-no-value",
+        "AURA-no-joint"
+      ]
+    },
+    {
+      "id": "scan-s506",
+      "scenario": "scan",
+      "seed": 506,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-admission",
+        "AURA-no-value",
+        "AURA-no-joint"
+      ]
+    },
+    {
+      "id": "uniform-s505",
+      "scenario": "uniform",
+      "seed": 505,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-admission",
+        "AURA-no-cost",
+        "AURA-no-shift"
+      ]
+    },
+    {
+      "id": "stable-s508",
+      "scenario": "stable",
+      "seed": 508,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-admission",
+        "AURA-no-value",
+        "AURA-no-joint",
+        "AURA-synchronous",
+        "AURA-no-shift",
+        "AURA-no-aging"
+      ]
+    },
+    {
+      "id": "mooncake_conversation-s502",
+      "scenario": "mooncake_conversation",
+      "seed": 502,
+      "requests": 2048,
+      "shard_mib": 1,
+      "quota_mib": 16,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ],
+      "source_offset": 802
+    },
+    {
+      "id": "shift-s501",
+      "scenario": "shift",
+      "seed": 501,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-aging",
+        "AURA-no-shift",
+        "AURA-no-cost"
+      ]
+    },
+    {
+      "id": "scan-s501",
+      "scenario": "scan",
+      "seed": 501,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-admission",
+        "AURA-no-value",
+        "AURA-no-joint"
+      ]
+    },
+    {
+      "id": "mooncake_conversation-s508",
+      "scenario": "mooncake_conversation",
+      "seed": 508,
+      "requests": 2048,
+      "shard_mib": 1,
+      "quota_mib": 16,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ],
+      "source_offset": 5614
+    },
+    {
+      "id": "mixed_fit-s506",
+      "scenario": "mixed_fit",
+      "seed": 506,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-size",
+        "AURA-no-cost",
+        "AURA-no-value"
+      ]
+    },
+    {
+      "id": "scan-s502",
+      "scenario": "scan",
+      "seed": 502,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-admission",
+        "AURA-no-value",
+        "AURA-no-joint"
+      ]
+    },
+    {
+      "id": "mooncake_toolagent-s512",
+      "scenario": "mooncake_toolagent",
+      "seed": 512,
+      "requests": 2048,
+      "shard_mib": 1,
+      "quota_mib": 16,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-cost"
+      ],
+      "source_offset": 17303
+    },
+    {
+      "id": "mixed_fit-s510",
+      "scenario": "mixed_fit",
+      "seed": 510,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-size",
+        "AURA-no-cost",
+        "AURA-no-value"
+      ]
+    },
+    {
+      "id": "uniform-s502",
+      "scenario": "uniform",
+      "seed": 502,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-admission",
+        "AURA-no-cost",
+        "AURA-no-shift"
+      ]
+    },
+    {
+      "id": "uniform-s512",
+      "scenario": "uniform",
+      "seed": 512,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-admission",
+        "AURA-no-cost",
+        "AURA-no-shift"
+      ]
+    },
+    {
+      "id": "mooncake_conversation-s511",
+      "scenario": "mooncake_conversation",
+      "seed": 511,
+      "requests": 2048,
+      "shard_mib": 1,
+      "quota_mib": 16,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ],
+      "source_offset": 8020
+    },
+    {
+      "id": "uniform-s506",
+      "scenario": "uniform",
+      "seed": 506,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-admission",
+        "AURA-no-cost",
+        "AURA-no-shift"
+      ]
+    },
+    {
+      "id": "uniform-s503",
+      "scenario": "uniform",
+      "seed": 503,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-admission",
+        "AURA-no-cost",
+        "AURA-no-shift"
+      ]
+    },
+    {
+      "id": "shift-s512",
+      "scenario": "shift",
+      "seed": 512,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-aging",
+        "AURA-no-shift",
+        "AURA-no-cost"
+      ]
+    },
+    {
+      "id": "mooncake_toolagent-s511",
+      "scenario": "mooncake_toolagent",
+      "seed": 511,
+      "requests": 2048,
+      "shard_mib": 1,
+      "quota_mib": 16,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-cost"
+      ],
+      "source_offset": 15730
+    },
+    {
+      "id": "mooncake_toolagent-s505",
+      "scenario": "mooncake_toolagent",
+      "seed": 505,
+      "requests": 2048,
+      "shard_mib": 1,
+      "quota_mib": 16,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-cost"
+      ],
+      "source_offset": 6292
+    },
+    {
+      "id": "mooncake_conversation-s512",
+      "scenario": "mooncake_conversation",
+      "seed": 512,
+      "requests": 2048,
+      "shard_mib": 1,
+      "quota_mib": 16,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ],
+      "source_offset": 8822
+    },
+    {
+      "id": "mooncake_toolagent-s509",
+      "scenario": "mooncake_toolagent",
+      "seed": 509,
+      "requests": 2048,
+      "shard_mib": 1,
+      "quota_mib": 16,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-cost"
+      ],
+      "source_offset": 12584
+    },
+    {
+      "id": "stable-s503",
+      "scenario": "stable",
+      "seed": 503,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-admission",
+        "AURA-no-value",
+        "AURA-no-joint",
+        "AURA-synchronous",
+        "AURA-no-shift",
+        "AURA-no-aging"
+      ]
+    },
+    {
+      "id": "uniform-s504",
+      "scenario": "uniform",
+      "seed": 504,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-admission",
+        "AURA-no-cost",
+        "AURA-no-shift"
+      ]
+    },
+    {
+      "id": "scan-s504",
+      "scenario": "scan",
+      "seed": 504,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-admission",
+        "AURA-no-value",
+        "AURA-no-joint"
+      ]
+    },
+    {
+      "id": "shift-s506",
+      "scenario": "shift",
+      "seed": 506,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-aging",
+        "AURA-no-shift",
+        "AURA-no-cost"
+      ]
+    },
+    {
+      "id": "scan-s508",
+      "scenario": "scan",
+      "seed": 508,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-admission",
+        "AURA-no-value",
+        "AURA-no-joint"
+      ]
+    },
+    {
+      "id": "mooncake_conversation-s504",
+      "scenario": "mooncake_conversation",
+      "seed": 504,
+      "requests": 2048,
+      "shard_mib": 1,
+      "quota_mib": 16,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ],
+      "source_offset": 2406
+    },
+    {
+      "id": "stable-s509",
+      "scenario": "stable",
+      "seed": 509,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-admission",
+        "AURA-no-value",
+        "AURA-no-joint",
+        "AURA-synchronous",
+        "AURA-no-shift",
+        "AURA-no-aging"
+      ]
+    },
+    {
+      "id": "mooncake_toolagent-s506",
+      "scenario": "mooncake_toolagent",
+      "seed": 506,
+      "requests": 2048,
+      "shard_mib": 1,
+      "quota_mib": 16,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-cost"
+      ],
+      "source_offset": 7865
+    },
+    {
+      "id": "scan-s505",
+      "scenario": "scan",
+      "seed": 505,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-admission",
+        "AURA-no-value",
+        "AURA-no-joint"
+      ]
+    },
+    {
+      "id": "mooncake_conversation-s501",
+      "scenario": "mooncake_conversation",
+      "seed": 501,
+      "requests": 2048,
+      "shard_mib": 1,
+      "quota_mib": 16,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ],
+      "source_offset": 0
+    },
+    {
+      "id": "uniform-s507",
+      "scenario": "uniform",
+      "seed": 507,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-admission",
+        "AURA-no-cost",
+        "AURA-no-shift"
+      ]
+    },
+    {
+      "id": "shift-s511",
+      "scenario": "shift",
+      "seed": 511,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-aging",
+        "AURA-no-shift",
+        "AURA-no-cost"
+      ]
+    },
+    {
+      "id": "stable-s511",
+      "scenario": "stable",
+      "seed": 511,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-admission",
+        "AURA-no-value",
+        "AURA-no-joint",
+        "AURA-synchronous",
+        "AURA-no-shift",
+        "AURA-no-aging"
+      ]
+    },
+    {
+      "id": "stable-s512",
+      "scenario": "stable",
+      "seed": 512,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-admission",
+        "AURA-no-value",
+        "AURA-no-joint",
+        "AURA-synchronous",
+        "AURA-no-shift",
+        "AURA-no-aging"
+      ]
+    },
+    {
+      "id": "shift-s510",
+      "scenario": "shift",
+      "seed": 510,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-aging",
+        "AURA-no-shift",
+        "AURA-no-cost"
+      ]
+    },
+    {
+      "id": "scan-s507",
+      "scenario": "scan",
+      "seed": 507,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-admission",
+        "AURA-no-value",
+        "AURA-no-joint"
+      ]
+    },
+    {
+      "id": "shift-s502",
+      "scenario": "shift",
+      "seed": 502,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-aging",
+        "AURA-no-shift",
+        "AURA-no-cost"
+      ]
+    },
+    {
+      "id": "shift-s507",
+      "scenario": "shift",
+      "seed": 507,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-aging",
+        "AURA-no-shift",
+        "AURA-no-cost"
+      ]
+    },
+    {
+      "id": "mooncake_toolagent-s501",
+      "scenario": "mooncake_toolagent",
+      "seed": 501,
+      "requests": 2048,
+      "shard_mib": 1,
+      "quota_mib": 16,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-cost"
+      ],
+      "source_offset": 0
+    },
+    {
+      "id": "mixed_fit-s508",
+      "scenario": "mixed_fit",
+      "seed": 508,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-size",
+        "AURA-no-cost",
+        "AURA-no-value"
+      ]
+    },
+    {
+      "id": "mooncake_conversation-s503",
+      "scenario": "mooncake_conversation",
+      "seed": 503,
+      "requests": 2048,
+      "shard_mib": 1,
+      "quota_mib": 16,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ],
+      "source_offset": 1604
+    },
+    {
+      "id": "mooncake_toolagent-s508",
+      "scenario": "mooncake_toolagent",
+      "seed": 508,
+      "requests": 2048,
+      "shard_mib": 1,
+      "quota_mib": 16,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-cost"
+      ],
+      "source_offset": 11011
+    },
+    {
+      "id": "scan-s512",
+      "scenario": "scan",
+      "seed": 512,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-admission",
+        "AURA-no-value",
+        "AURA-no-joint"
+      ]
+    },
+    {
+      "id": "mixed_fit-s503",
+      "scenario": "mixed_fit",
+      "seed": 503,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-size",
+        "AURA-no-cost",
+        "AURA-no-value"
+      ]
+    },
+    {
+      "id": "mooncake_conversation-s509",
+      "scenario": "mooncake_conversation",
+      "seed": 509,
+      "requests": 2048,
+      "shard_mib": 1,
+      "quota_mib": 16,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ],
+      "source_offset": 6416
+    },
+    {
+      "id": "uniform-s501",
+      "scenario": "uniform",
+      "seed": 501,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-admission",
+        "AURA-no-cost",
+        "AURA-no-shift"
+      ]
+    },
+    {
+      "id": "mixed_fit-s507",
+      "scenario": "mixed_fit",
+      "seed": 507,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-size",
+        "AURA-no-cost",
+        "AURA-no-value"
+      ]
+    },
+    {
+      "id": "uniform-s509",
+      "scenario": "uniform",
+      "seed": 509,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-admission",
+        "AURA-no-cost",
+        "AURA-no-shift"
+      ]
+    },
+    {
+      "id": "mixed_fit-s502",
+      "scenario": "mixed_fit",
+      "seed": 502,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-size",
+        "AURA-no-cost",
+        "AURA-no-value"
+      ]
+    },
+    {
+      "id": "mixed_fit-s511",
+      "scenario": "mixed_fit",
+      "seed": 511,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-size",
+        "AURA-no-cost",
+        "AURA-no-value"
+      ]
+    },
+    {
+      "id": "mooncake_conversation-s506",
+      "scenario": "mooncake_conversation",
+      "seed": 506,
+      "requests": 2048,
+      "shard_mib": 1,
+      "quota_mib": 16,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ],
+      "source_offset": 4010
+    },
+    {
+      "id": "shift-s504",
+      "scenario": "shift",
+      "seed": 504,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-aging",
+        "AURA-no-shift",
+        "AURA-no-cost"
+      ]
+    },
+    {
+      "id": "uniform-s510",
+      "scenario": "uniform",
+      "seed": 510,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-admission",
+        "AURA-no-cost",
+        "AURA-no-shift"
+      ]
+    },
+    {
+      "id": "mooncake_toolagent-s507",
+      "scenario": "mooncake_toolagent",
+      "seed": 507,
+      "requests": 2048,
+      "shard_mib": 1,
+      "quota_mib": 16,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-cost"
+      ],
+      "source_offset": 9438
+    },
+    {
+      "id": "mooncake_conversation-s510",
+      "scenario": "mooncake_conversation",
+      "seed": 510,
+      "requests": 2048,
+      "shard_mib": 1,
+      "quota_mib": 16,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ],
+      "source_offset": 7218
+    },
+    {
+      "id": "shift-s508",
+      "scenario": "shift",
+      "seed": 508,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-aging",
+        "AURA-no-shift",
+        "AURA-no-cost"
+      ]
+    },
+    {
+      "id": "scan-s503",
+      "scenario": "scan",
+      "seed": 503,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-admission",
+        "AURA-no-value",
+        "AURA-no-joint"
+      ]
+    },
+    {
+      "id": "stable-s505",
+      "scenario": "stable",
+      "seed": 505,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-admission",
+        "AURA-no-value",
+        "AURA-no-joint",
+        "AURA-synchronous",
+        "AURA-no-shift",
+        "AURA-no-aging"
+      ]
+    },
+    {
+      "id": "mixed_fit-s501",
+      "scenario": "mixed_fit",
+      "seed": 501,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-size",
+        "AURA-no-cost",
+        "AURA-no-value"
+      ]
+    },
+    {
+      "id": "mooncake_conversation-s507",
+      "scenario": "mooncake_conversation",
+      "seed": 507,
+      "requests": 2048,
+      "shard_mib": 1,
+      "quota_mib": 16,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ],
+      "source_offset": 4812
+    },
+    {
+      "id": "stable-s504",
+      "scenario": "stable",
+      "seed": 504,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-admission",
+        "AURA-no-value",
+        "AURA-no-joint",
+        "AURA-synchronous",
+        "AURA-no-shift",
+        "AURA-no-aging"
+      ]
+    },
+    {
+      "id": "scan-s509",
+      "scenario": "scan",
+      "seed": 509,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-admission",
+        "AURA-no-value",
+        "AURA-no-joint"
+      ]
+    },
+    {
+      "id": "stable-s507",
+      "scenario": "stable",
+      "seed": 507,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-admission",
+        "AURA-no-value",
+        "AURA-no-joint",
+        "AURA-synchronous",
+        "AURA-no-shift",
+        "AURA-no-aging"
+      ]
+    },
+    {
+      "id": "mixed_fit-s512",
+      "scenario": "mixed_fit",
+      "seed": 512,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-size",
+        "AURA-no-cost",
+        "AURA-no-value"
+      ]
+    },
+    {
+      "id": "mixed_fit-s509",
+      "scenario": "mixed_fit",
+      "seed": 509,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-size",
+        "AURA-no-cost",
+        "AURA-no-value"
+      ]
+    },
+    {
+      "id": "mooncake_toolagent-s510",
+      "scenario": "mooncake_toolagent",
+      "seed": 510,
+      "requests": 2048,
+      "shard_mib": 1,
+      "quota_mib": 16,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-cost"
+      ],
+      "source_offset": 14157
+    },
+    {
+      "id": "mooncake_toolagent-s504",
+      "scenario": "mooncake_toolagent",
+      "seed": 504,
+      "requests": 2048,
+      "shard_mib": 1,
+      "quota_mib": 16,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-cost"
+      ],
+      "source_offset": 4719
+    },
+    {
+      "id": "mooncake_conversation-s505",
+      "scenario": "mooncake_conversation",
+      "seed": 505,
+      "requests": 2048,
+      "shard_mib": 1,
+      "quota_mib": 16,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ],
+      "source_offset": 3208
+    },
+    {
+      "id": "stable-s501",
+      "scenario": "stable",
+      "seed": 501,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-admission",
+        "AURA-no-value",
+        "AURA-no-joint",
+        "AURA-synchronous",
+        "AURA-no-shift",
+        "AURA-no-aging"
+      ]
+    },
+    {
+      "id": "scan-s511",
+      "scenario": "scan",
+      "seed": 511,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-admission",
+        "AURA-no-value",
+        "AURA-no-joint"
+      ]
+    }
+  ],
+  "supersedes_unexecuted_spec": "measured-confirm-01"
+}
