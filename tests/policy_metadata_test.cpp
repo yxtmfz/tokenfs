@@ -7,6 +7,20 @@
 
 namespace {
 struct TokenFSTestAccess {
+  static void signed_eviction_audit_score() {
+    EvictionCandidate candidate;
+    candidate.meta.size_bytes=4*1024*1024;
+    candidate.meta.read_count=5;
+    candidate.meta.recompute_cost=10;
+    candidate.meta.remote_access_cost=10;
+    candidate.meta.producer_gpu=0;candidate.meta.gpu_id=0;
+    candidate.last_access_at=123;
+    const auto decision_score=TokenFS::ValueAwareEvictionScore(candidate,0);
+    assert(decision_score<0);
+    assert(TokenFS::EvictionAuditScore("value_aware",candidate,0)==static_cast<double>(decision_score));
+    assert(TokenFS::EvictionAuditScore("lru",candidate,0)==123.0);
+    assert(TokenFS::EvictionAuditScore("lfu",candidate,0)==5.0);
+  }
   static void lookup_during_eviction(const fs::path& root) {
     Config cfg; cfg.mount_point=root/"mnt";cfg.metadata_db=root/"lookup.db";
     cfg.gpus.push_back({0,"/gpu0",root/"local",4096,"remote"});
@@ -69,6 +83,7 @@ int main() {
     assert(newest->meta.logical_path=="/gpu0/b");
   }
   TokenFSTestAccess::lookup_during_eviction(root/"lookup-race");
+  TokenFSTestAccess::signed_eviction_audit_score();
   fs::remove_all(root);
   std::cout << "policy metadata invariants passed\n";
 }

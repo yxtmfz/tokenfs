@@ -11,7 +11,7 @@
 | 3 | [model-and-controller.md](model-and-controller.md) | 价值感知缓存管理、多 GPU 副本放置和联合控制器 |
 | 4 | [experiments.md](experiments.md) | 实验设计、指标、已有结果和论文边界 |
 | 5 | [deployment.md](deployment.md) | Ubuntu、FUSE、NVMe-oF、脚本和配置说明 |
-| 6 | [../reports/latest/final-report.md](../reports/latest/final-report.md) | 最新统一实验结果 |
+| 6 | [cn7 正式实测报告](../reports/latest/paper-experiments/10_real_cn7_evidence/README.md) | 最新统一实验结果 |
 
 仓库不再保留大量 `01_xxx.md` 到 `15_xxx.md` 的分散文档；对应内容已经合并到上面四份核心文档里。之后继续优化时，也优先更新这些文件。
 

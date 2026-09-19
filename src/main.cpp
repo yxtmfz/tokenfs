@@ -2074,6 +2074,15 @@ class TokenFS {
            static_cast<int64_t>(data_value * 1000);
   }
 
+  static double EvictionAuditScore(const std::string& policy,
+                                   const EvictionCandidate& candidate,
+                                   uint64_t now) {
+    // Convert each branch before combining signed value scores with unsigned counters.
+    if (policy == "lru") return static_cast<double>(candidate.last_access_at);
+    if (policy == "lfu") return static_cast<double>(candidate.meta.read_count);
+    return static_cast<double>(ValueAwareEvictionScore(candidate, now));
+  }
+
   uint64_t CurrentAffinityX100(const FileMeta& meta, int gpu_id) {
     if (!config_.affinity_placement) return 100;
     uint64_t affinity = metadata_.AccessAffinityX100(meta.logical_path, gpu_id);
@@ -2266,7 +2275,7 @@ class TokenFS {
         continue;
       }
       metadata_.RecordPolicyEvent("EVICT", candidate.meta.logical_path, gpu.gpu_id, candidate_size,
-          policy, policy == "lru" ? candidate.last_access_at : policy == "lfu" ? candidate.meta.read_count : ValueAwareEvictionScore(candidate, now));
+          policy, EvictionAuditScore(policy, candidate, now));
       used = used > candidate_size ? used - candidate_size : 0;
       if (used + required_size <= gpu.local_quota_bytes) {
         return true;

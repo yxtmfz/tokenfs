@@ -1,0 +1,866 @@
+[
+  {
+    "scenario": "stable",
+    "comparison": "整体性能 / 对等 LRU",
+    "treatment": "AURA-core",
+    "baseline": "LRU-equal",
+    "n": 10,
+    "complete": true,
+    "aura_wall_s": 4.2478588096,
+    "baseline_wall_s": 4.4491826289,
+    "aura_mib_s": 90.45985207487244,
+    "baseline_mib_s": 86.44374116643607,
+    "time_ratio": 0.9551784221071251,
+    "ci95": [
+      0.9416239144225216,
+      0.9686850440317607
+    ],
+    "time_ratio_with_drain": 0.9548098266348489,
+    "with_drain_ci95": [
+      0.9408675361647378,
+      0.9690970350355597
+    ],
+    "p_raw": 0.001953125,
+    "p_holm": 0.01953125,
+    "mechanism_triggered": true,
+    "family": "primary-LRU-LFU",
+    "verdict": "支持此场景下真实提速"
+  },
+  {
+    "scenario": "stable",
+    "comparison": "整体性能 / 对等 LFU",
+    "treatment": "AURA-core",
+    "baseline": "LFU-equal",
+    "n": 10,
+    "complete": true,
+    "aura_wall_s": 4.2478588096,
+    "baseline_wall_s": 4.3022174278000005,
+    "aura_mib_s": 90.45985207487244,
+    "baseline_mib_s": 89.37911930237405,
+    "time_ratio": 0.9877130938457478,
+    "ci95": [
+      0.9774854913589724,
+      0.9969425540551877
+    ],
+    "time_ratio_with_drain": 0.9863025667629989,
+    "with_drain_ci95": [
+      0.9769612982619857,
+      0.9947669356641321
+    ],
+    "p_raw": 0.048828125,
+    "p_holm": 0.29296875,
+    "mechanism_triggered": true,
+    "family": "primary-LRU-LFU",
+    "verdict": "速度贡献证据不确定"
+  },
+  {
+    "scenario": "stable",
+    "comparison": "整体性能 / 无缓存",
+    "treatment": "AURA-core",
+    "baseline": "RemoteOnly",
+    "n": 10,
+    "complete": true,
+    "aura_wall_s": 4.2478588096,
+    "baseline_wall_s": 4.7358381622,
+    "aura_mib_s": 90.45985207487244,
+    "baseline_mib_s": 81.08891210807747,
+    "time_ratio": 0.896683482487792,
+    "ci95": [
+      0.8807749236475211,
+      0.9142048940731364
+    ],
+    "time_ratio_with_drain": 0.8975913560403,
+    "with_drain_ci95": [
+      0.881246681363451,
+      0.915543925307335
+    ],
+    "p_raw": 0.001953125,
+    "p_holm": 0.009765625,
+    "mechanism_triggered": true,
+    "family": "整体性能 / 无缓存",
+    "verdict": "支持此场景下真实提速"
+  },
+  {
+    "scenario": "stable",
+    "comparison": "组件 / 价值淘汰",
+    "treatment": "AURA-core",
+    "baseline": "no-value",
+    "n": 10,
+    "complete": true,
+    "aura_wall_s": 4.2478588096,
+    "baseline_wall_s": 4.4106970807,
+    "aura_mib_s": 90.45985207487244,
+    "baseline_mib_s": 87.21350356860518,
+    "time_ratio": 0.9635938586002882,
+    "ci95": [
+      0.9474012270890707,
+      0.978283230767655
+    ],
+    "time_ratio_with_drain": 0.9641293723533563,
+    "with_drain_ci95": [
+      0.9480648700940649,
+      0.9787826066280428
+    ],
+    "p_raw": 0.001953125,
+    "p_holm": 0.0078125,
+    "mechanism_triggered": true,
+    "family": "组件 / 价值淘汰",
+    "verdict": "支持此场景下真实提速"
+  },
+  {
+    "scenario": "stable",
+    "comparison": "组件 / 收益准入",
+    "treatment": "AURA-core",
+    "baseline": "no-gain",
+    "n": 10,
+    "complete": true,
+    "aura_wall_s": 4.2478588096,
+    "baseline_wall_s": 4.1877918059,
+    "aura_mib_s": 90.45985207487244,
+    "baseline_mib_s": 91.8449995749477,
+    "time_ratio": 1.014830649806431,
+    "ci95": [
+      1.0027892016824829,
+      1.027500550441513
+    ],
+    "time_ratio_with_drain": 1.0152953972774386,
+    "with_drain_ci95": [
+      1.0031058353924172,
+      1.0282264047954843
+    ],
+    "p_raw": 0.05078125,
+    "p_holm": 0.1015625,
+    "mechanism_triggered": true,
+    "family": "组件 / 收益准入",
+    "verdict": "速度贡献证据不确定"
+  },
+  {
+    "scenario": "stable",
+    "comparison": "组件 / 亲和放置",
+    "treatment": "AURA-core",
+    "baseline": "no-affinity",
+    "n": 10,
+    "complete": true,
+    "aura_wall_s": 4.2478588096,
+    "baseline_wall_s": 4.316655881,
+    "aura_mib_s": 90.45985207487244,
+    "baseline_mib_s": 89.08713340618313,
+    "time_ratio": 0.9844486918311728,
+    "ci95": [
+      0.97442319672385,
+      0.9945709228712781
+    ],
+    "time_ratio_with_drain": 0.9844534568629776,
+    "with_drain_ci95": [
+      0.9747333761562826,
+      0.9943641267437434
+    ],
+    "p_raw": 0.02734375,
+    "p_holm": 0.08203125,
+    "mechanism_triggered": true,
+    "family": "组件 / 亲和放置",
+    "verdict": "速度贡献证据不确定"
+  },
+  {
+    "scenario": "stable",
+    "comparison": "组件 / 趋势",
+    "treatment": "AURA-core",
+    "baseline": "no-trend",
+    "n": 10,
+    "complete": true,
+    "aura_wall_s": 4.2478588096,
+    "baseline_wall_s": 4.2702036142,
+    "aura_mib_s": 90.45985207487244,
+    "baseline_mib_s": 90.06096703576634,
+    "time_ratio": 0.9951791363496773,
+    "ci95": [
+      0.9840132452601087,
+      1.0077078619720918
+    ],
+    "time_ratio_with_drain": 0.9951935184122821,
+    "with_drain_ci95": [
+      0.9845467323404384,
+      1.0075540862694017
+    ],
+    "p_raw": 0.470703125,
+    "p_holm": 0.77734375,
+    "mechanism_triggered": true,
+    "family": "组件 / 趋势",
+    "verdict": "速度贡献证据不确定"
+  },
+  {
+    "scenario": "stable",
+    "comparison": "系统开销 / 异步执行",
+    "treatment": "AURA-core",
+    "baseline": "synchronous",
+    "n": 10,
+    "complete": true,
+    "aura_wall_s": 4.2478588096,
+    "baseline_wall_s": 5.5620174927,
+    "aura_mib_s": 90.45985207487244,
+    "baseline_mib_s": 69.23589210154668,
+    "time_ratio": 0.7645580171593268,
+    "ci95": [
+      0.7484830929792025,
+      0.7803361276894224
+    ],
+    "time_ratio_with_drain": 0.7653641486814734,
+    "with_drain_ci95": [
+      0.7495944933043055,
+      0.7809113544753722
+    ],
+    "p_raw": 0.001953125,
+    "p_holm": 0.00390625,
+    "mechanism_triggered": true,
+    "family": "系统开销 / 异步执行",
+    "verdict": "支持此场景下真实提速"
+  },
+  {
+    "scenario": "scan",
+    "comparison": "整体性能 / 对等 LRU",
+    "treatment": "AURA-core",
+    "baseline": "LRU-equal",
+    "n": 10,
+    "complete": true,
+    "aura_wall_s": 4.3942901255999995,
+    "baseline_wall_s": 4.549946279,
+    "aura_mib_s": 87.4512092478249,
+    "baseline_mib_s": 84.5711381694133,
+    "time_ratio": 0.9664240794431415,
+    "ci95": [
+      0.9463497282716545,
+      0.9885047384512452
+    ],
+    "time_ratio_with_drain": 0.9402943257327905,
+    "with_drain_ci95": [
+      0.9239784634420385,
+      0.9578467284246024
+    ],
+    "p_raw": 0.017578125,
+    "p_holm": 0.123046875,
+    "mechanism_triggered": true,
+    "family": "primary-LRU-LFU",
+    "verdict": "速度贡献证据不确定"
+  },
+  {
+    "scenario": "scan",
+    "comparison": "整体性能 / 对等 LFU",
+    "treatment": "AURA-core",
+    "baseline": "LFU-equal",
+    "n": 10,
+    "complete": true,
+    "aura_wall_s": 4.3942901255999995,
+    "baseline_wall_s": 4.5163847489,
+    "aura_mib_s": 87.4512092478249,
+    "baseline_mib_s": 85.14099654962838,
+    "time_ratio": 0.9732709855219889,
+    "ci95": [
+      0.9588367666609224,
+      0.9885054463007129
+    ],
+    "time_ratio_with_drain": 0.9510209936347158,
+    "with_drain_ci95": [
+      0.9381953532180182,
+      0.9636304817408003
+    ],
+    "p_raw": 0.01171875,
+    "p_holm": 0.09375,
+    "mechanism_triggered": true,
+    "family": "primary-LRU-LFU",
+    "verdict": "速度贡献证据不确定"
+  },
+  {
+    "scenario": "scan",
+    "comparison": "整体性能 / 无缓存",
+    "treatment": "AURA-core",
+    "baseline": "RemoteOnly",
+    "n": 10,
+    "complete": true,
+    "aura_wall_s": 4.3942901255999995,
+    "baseline_wall_s": 4.7233681076,
+    "aura_mib_s": 87.4512092478249,
+    "baseline_mib_s": 81.31811288054581,
+    "time_ratio": 0.9300961265719742,
+    "ci95": [
+      0.9117206287615289,
+      0.9499992857892382
+    ],
+    "time_ratio_with_drain": 0.9466599684797598,
+    "with_drain_ci95": [
+      0.9290282534252947,
+      0.9660522449556689
+    ],
+    "p_raw": 0.001953125,
+    "p_holm": 0.009765625,
+    "mechanism_triggered": true,
+    "family": "整体性能 / 无缓存",
+    "verdict": "支持此场景下真实提速"
+  },
+  {
+    "scenario": "scan",
+    "comparison": "组件 / 价值淘汰",
+    "treatment": "AURA-core",
+    "baseline": "no-value",
+    "n": 10,
+    "complete": true,
+    "aura_wall_s": 4.3942901255999995,
+    "baseline_wall_s": 4.5168460456,
+    "aura_mib_s": 87.4512092478249,
+    "baseline_mib_s": 85.13667265570282,
+    "time_ratio": 0.973195647556877,
+    "ci95": [
+      0.9517568795723012,
+      0.9939750590023372
+    ],
+    "time_ratio_with_drain": 0.9771756342310393,
+    "with_drain_ci95": [
+      0.9566730733441763,
+      0.9961225199650661
+    ],
+    "p_raw": 0.046875,
+    "p_holm": 0.140625,
+    "mechanism_triggered": true,
+    "family": "组件 / 价值淘汰",
+    "verdict": "速度贡献证据不确定"
+  },
+  {
+    "scenario": "scan",
+    "comparison": "组件 / 亲和放置",
+    "treatment": "AURA-core",
+    "baseline": "no-affinity",
+    "n": 10,
+    "complete": true,
+    "aura_wall_s": 4.3942901255999995,
+    "baseline_wall_s": 4.4651690476,
+    "aura_mib_s": 87.4512092478249,
+    "baseline_mib_s": 86.04779070225146,
+    "time_ratio": 0.9840384595737186,
+    "ci95": [
+      0.9716860751683442,
+      0.9947434618890187
+    ],
+    "time_ratio_with_drain": 0.9577175419803733,
+    "with_drain_ci95": [
+      0.9459938657461248,
+      0.967856485544977
+    ],
+    "p_raw": 0.02734375,
+    "p_holm": 0.08203125,
+    "mechanism_triggered": true,
+    "family": "组件 / 亲和放置",
+    "verdict": "速度贡献证据不确定"
+  },
+  {
+    "scenario": "mixed",
+    "comparison": "整体性能 / 对等 LRU",
+    "treatment": "AURA-core",
+    "baseline": "LRU-equal",
+    "n": 10,
+    "complete": true,
+    "aura_wall_s": 7.3640110353,
+    "baseline_wall_s": 7.4332128118,
+    "aura_mib_s": 83.10808449476494,
+    "baseline_mib_s": 82.28161958975195,
+    "time_ratio": 0.9899344591426686,
+    "ci95": [
+      0.979830628815145,
+      0.9992318510347622
+    ],
+    "time_ratio_with_drain": 0.9899415829836369,
+    "with_drain_ci95": [
+      0.9798422163435169,
+      0.9992135816105165
+    ],
+    "p_raw": 0.091796875,
+    "p_holm": 0.458984375,
+    "mechanism_triggered": true,
+    "family": "primary-LRU-LFU",
+    "verdict": "速度贡献证据不确定"
+  },
+  {
+    "scenario": "mixed",
+    "comparison": "整体性能 / 对等 LFU",
+    "treatment": "AURA-core",
+    "baseline": "LFU-equal",
+    "n": 10,
+    "complete": true,
+    "aura_wall_s": 7.3640110353,
+    "baseline_wall_s": 7.3628063755,
+    "aura_mib_s": 83.10808449476494,
+    "baseline_mib_s": 83.11983380057958,
+    "time_ratio": 1.0000879445076447,
+    "ci95": [
+      0.9938688239870348,
+      1.0064312087380523
+    ],
+    "time_ratio_with_drain": 1.0000795168486076,
+    "with_drain_ci95": [
+      0.9938581671152067,
+      1.0064113562129382
+    ],
+    "p_raw": 0.98046875,
+    "p_holm": 1,
+    "mechanism_triggered": true,
+    "family": "primary-LRU-LFU",
+    "verdict": "速度贡献证据不确定"
+  },
+  {
+    "scenario": "mixed",
+    "comparison": "整体性能 / 无缓存",
+    "treatment": "AURA-core",
+    "baseline": "RemoteOnly",
+    "n": 10,
+    "complete": true,
+    "aura_wall_s": 7.3640110353,
+    "baseline_wall_s": 7.3553527079,
+    "aura_mib_s": 83.10808449476494,
+    "baseline_mib_s": 83.23247210486537,
+    "time_ratio": 1.0014954694389222,
+    "ci95": [
+      0.9939818158667095,
+      1.010445844386984
+    ],
+    "time_ratio_with_drain": 1.0015109943485,
+    "with_drain_ci95": [
+      0.994000007160568,
+      1.0104515149055844
+    ],
+    "p_raw": 0.78125,
+    "p_holm": 0.78125,
+    "mechanism_triggered": true,
+    "family": "整体性能 / 无缓存",
+    "verdict": "速度贡献证据不确定"
+  },
+  {
+    "scenario": "mixed",
+    "comparison": "组件 / 价值淘汰",
+    "treatment": "AURA-core",
+    "baseline": "no-value",
+    "n": 10,
+    "complete": true,
+    "aura_wall_s": 7.3640110353,
+    "baseline_wall_s": 7.3985766088,
+    "aura_mib_s": 83.10808449476494,
+    "baseline_mib_s": 82.68936235608022,
+    "time_ratio": 0.9949053846541983,
+    "ci95": [
+      0.9875150340832943,
+      1.0022360945951965
+    ],
+    "time_ratio_with_drain": 0.9948897367187639,
+    "with_drain_ci95": [
+      0.9875333253410827,
+      1.0022102389481604
+    ],
+    "p_raw": 0.236328125,
+    "p_holm": 0.453125,
+    "mechanism_triggered": true,
+    "family": "组件 / 价值淘汰",
+    "verdict": "速度贡献证据不确定"
+  },
+  {
+    "scenario": "shared_shift",
+    "comparison": "整体性能 / 对等 LRU",
+    "treatment": "AURA-core",
+    "baseline": "LRU-equal",
+    "n": 10,
+    "complete": true,
+    "aura_wall_s": 4.167178017,
+    "baseline_wall_s": 4.3372207878,
+    "aura_mib_s": 92.21750105098236,
+    "baseline_mib_s": 88.56995887899751,
+    "time_ratio": 0.9606230156205686,
+    "ci95": [
+      0.9425023730804216,
+      0.9763062336069961
+    ],
+    "time_ratio_with_drain": 0.9601954536299533,
+    "with_drain_ci95": [
+      0.9416045028689455,
+      0.976637554763538
+    ],
+    "p_raw": 0.001953125,
+    "p_holm": 0.01953125,
+    "mechanism_triggered": true,
+    "family": "primary-LRU-LFU",
+    "verdict": "支持此场景下真实提速"
+  },
+  {
+    "scenario": "shared_shift",
+    "comparison": "整体性能 / 对等 LFU",
+    "treatment": "AURA-core",
+    "baseline": "LFU-equal",
+    "n": 10,
+    "complete": true,
+    "aura_wall_s": 4.167178017,
+    "baseline_wall_s": 4.1697441539,
+    "aura_mib_s": 92.21750105098236,
+    "baseline_mib_s": 92.17333330577897,
+    "time_ratio": 0.9994576521081473,
+    "ci95": [
+      0.9887982261729688,
+      1.010934692375716
+    ],
+    "time_ratio_with_drain": 0.9994532126268371,
+    "with_drain_ci95": [
+      0.9888455750817884,
+      1.0109011552819125
+    ],
+    "p_raw": 0.91796875,
+    "p_holm": 1,
+    "mechanism_triggered": true,
+    "family": "primary-LRU-LFU",
+    "verdict": "速度贡献证据不确定"
+  },
+  {
+    "scenario": "shared_shift",
+    "comparison": "整体性能 / 无缓存",
+    "treatment": "AURA-core",
+    "baseline": "RemoteOnly",
+    "n": 10,
+    "complete": true,
+    "aura_wall_s": 4.167178017,
+    "baseline_wall_s": 4.7907509618,
+    "aura_mib_s": 92.21750105098236,
+    "baseline_mib_s": 80.15519544199557,
+    "time_ratio": 0.8695201221051907,
+    "ci95": [
+      0.8540677402440894,
+      0.8840531236929399
+    ],
+    "time_ratio_with_drain": 0.8700459792976273,
+    "with_drain_ci95": [
+      0.8545861459576992,
+      0.8844454437926401
+    ],
+    "p_raw": 0.001953125,
+    "p_holm": 0.009765625,
+    "mechanism_triggered": true,
+    "family": "整体性能 / 无缓存",
+    "verdict": "支持此场景下真实提速"
+  },
+  {
+    "scenario": "shared_shift",
+    "comparison": "组件 / 价值淘汰",
+    "treatment": "AURA-core",
+    "baseline": "no-value",
+    "n": 10,
+    "complete": true,
+    "aura_wall_s": 4.167178017,
+    "baseline_wall_s": 4.2250219578,
+    "aura_mib_s": 92.21750105098236,
+    "baseline_mib_s": 90.93831493497754,
+    "time_ratio": 0.9862218828441094,
+    "ci95": [
+      0.9662909979769916,
+      1.0051127897401624
+    ],
+    "time_ratio_with_drain": 0.9862303504447498,
+    "with_drain_ci95": [
+      0.9663465122218006,
+      1.005072477755643
+    ],
+    "p_raw": 0.2265625,
+    "p_holm": 0.453125,
+    "mechanism_triggered": true,
+    "family": "组件 / 价值淘汰",
+    "verdict": "速度贡献证据不确定"
+  },
+  {
+    "scenario": "shared_shift",
+    "comparison": "组件 / 亲和放置",
+    "treatment": "AURA-core",
+    "baseline": "no-affinity",
+    "n": 10,
+    "complete": true,
+    "aura_wall_s": 4.167178017,
+    "baseline_wall_s": 4.2148197766,
+    "aura_mib_s": 92.21750105098236,
+    "baseline_mib_s": 91.24229183202505,
+    "time_ratio": 0.9890536734674978,
+    "ci95": [
+      0.973853325272047,
+      1.0093664633197754
+    ],
+    "time_ratio_with_drain": 0.9885600983042367,
+    "with_drain_ci95": [
+      0.9732930856821879,
+      1.009337924632066
+    ],
+    "p_raw": 0.318359375,
+    "p_holm": 0.318359375,
+    "mechanism_triggered": true,
+    "family": "组件 / 亲和放置",
+    "verdict": "速度贡献证据不确定"
+  },
+  {
+    "scenario": "shared_shift",
+    "comparison": "组件 / 趋势",
+    "treatment": "AURA-core",
+    "baseline": "no-trend",
+    "n": 10,
+    "complete": true,
+    "aura_wall_s": 4.167178017,
+    "baseline_wall_s": 4.149720644,
+    "aura_mib_s": 92.21750105098236,
+    "baseline_mib_s": 92.60372854631251,
+    "time_ratio": 1.0042001100549174,
+    "ci95": [
+      0.9963621356996746,
+      1.0130844629662648
+    ],
+    "time_ratio_with_drain": 1.0041292505388675,
+    "with_drain_ci95": [
+      0.9957378759656572,
+      1.013430331207623
+    ],
+    "p_raw": 0.388671875,
+    "p_holm": 0.77734375,
+    "mechanism_triggered": true,
+    "family": "组件 / 趋势",
+    "verdict": "速度贡献证据不确定"
+  },
+  {
+    "scenario": "shared_shift",
+    "comparison": "架构 / 跨逻辑 GPU 缓存",
+    "treatment": "AURA-core",
+    "baseline": "no-xgpu",
+    "n": 10,
+    "complete": true,
+    "aura_wall_s": 4.167178017,
+    "baseline_wall_s": 4.2637066961,
+    "aura_mib_s": 92.21750105098236,
+    "baseline_mib_s": 90.10498936584422,
+    "time_ratio": 0.977230762672663,
+    "ci95": [
+      0.9595665437794997,
+      0.9954782336830954
+    ],
+    "time_ratio_with_drain": 0.9777386086320756,
+    "with_drain_ci95": [
+      0.9599417589735616,
+      0.9960307436208888
+    ],
+    "p_raw": 0.052734375,
+    "p_holm": 0.052734375,
+    "mechanism_triggered": true,
+    "family": "架构 / 跨逻辑 GPU 缓存",
+    "verdict": "速度贡献证据不确定"
+  },
+  {
+    "scenario": "shared_shift",
+    "comparison": "系统开销 / 异步执行",
+    "treatment": "AURA-core",
+    "baseline": "synchronous",
+    "n": 10,
+    "complete": true,
+    "aura_wall_s": 4.167178017,
+    "baseline_wall_s": 5.0365298329999995,
+    "aura_mib_s": 92.21750105098236,
+    "baseline_mib_s": 76.37785664948862,
+    "time_ratio": 0.8278163853177953,
+    "ci95": [
+      0.8127061066819249,
+      0.8457591966573438
+    ],
+    "time_ratio_with_drain": 0.8283021745726544,
+    "with_drain_ci95": [
+      0.8130676012646235,
+      0.8461106209419504
+    ],
+    "p_raw": 0.001953125,
+    "p_holm": 0.00390625,
+    "mechanism_triggered": true,
+    "family": "系统开销 / 异步执行",
+    "verdict": "支持此场景下真实提速"
+  },
+  {
+    "scenario": "uniform",
+    "comparison": "整体性能 / 对等 LRU",
+    "treatment": "AURA-core",
+    "baseline": "LRU-equal",
+    "n": 10,
+    "complete": true,
+    "aura_wall_s": 5.1947765522,
+    "baseline_wall_s": 5.2691062574,
+    "aura_mib_s": 73.93333508517485,
+    "baseline_mib_s": 72.89257100604323,
+    "time_ratio": 0.9859081901643072,
+    "ci95": [
+      0.9724331298620249,
+      0.9996926045828197
+    ],
+    "time_ratio_with_drain": 0.9867010022537283,
+    "with_drain_ci95": [
+      0.97255988248008,
+      1.0009831453179507
+    ],
+    "p_raw": 0.103515625,
+    "p_holm": 0.458984375,
+    "mechanism_triggered": true,
+    "family": "primary-LRU-LFU",
+    "verdict": "速度贡献证据不确定"
+  },
+  {
+    "scenario": "uniform",
+    "comparison": "整体性能 / 对等 LFU",
+    "treatment": "AURA-core",
+    "baseline": "LFU-equal",
+    "n": 10,
+    "complete": true,
+    "aura_wall_s": 5.1947765522,
+    "baseline_wall_s": 5.2410035348,
+    "aura_mib_s": 73.93333508517485,
+    "baseline_mib_s": 73.29525156638393,
+    "time_ratio": 0.9912736224867367,
+    "ci95": [
+      0.9812034354797946,
+      0.9998496227761594
+    ],
+    "time_ratio_with_drain": 0.9920890537102321,
+    "with_drain_ci95": [
+      0.981956958166534,
+      1.0008182092884745
+    ],
+    "p_raw": 0.126953125,
+    "p_holm": 0.458984375,
+    "mechanism_triggered": true,
+    "family": "primary-LRU-LFU",
+    "verdict": "速度贡献证据不确定"
+  },
+  {
+    "scenario": "uniform",
+    "comparison": "整体性能 / 无缓存",
+    "treatment": "AURA-core",
+    "baseline": "RemoteOnly",
+    "n": 10,
+    "complete": true,
+    "aura_wall_s": 5.1947765522,
+    "baseline_wall_s": 4.7575771675,
+    "aura_mib_s": 73.93333508517485,
+    "baseline_mib_s": 80.72357555454022,
+    "time_ratio": 1.0918686403308542,
+    "ci95": [
+      1.0825808390563223,
+      1.101359391475128
+    ],
+    "time_ratio_with_drain": 1.0927439933150465,
+    "with_drain_ci95": [
+      1.082967051114756,
+      1.102477409806738
+    ],
+    "p_raw": 0.001953125,
+    "p_holm": 0.009765625,
+    "mechanism_triggered": true,
+    "family": "整体性能 / 无缓存",
+    "verdict": "此场景下更慢"
+  },
+  {
+    "scenario": "uniform",
+    "comparison": "组件 / 收益准入",
+    "treatment": "AURA-core",
+    "baseline": "no-gain",
+    "n": 10,
+    "complete": true,
+    "aura_wall_s": 5.1947765522,
+    "baseline_wall_s": 5.2026575729,
+    "aura_mib_s": 73.93333508517485,
+    "baseline_mib_s": 73.82745984947502,
+    "time_ratio": 0.9985265923080463,
+    "ci95": [
+      0.9884751848581548,
+      1.0073905665992597
+    ],
+    "time_ratio_with_drain": 0.9993326594034403,
+    "with_drain_ci95": [
+      0.9890567189559846,
+      1.008349593754959
+    ],
+    "p_raw": 0.763671875,
+    "p_holm": 0.763671875,
+    "mechanism_triggered": true,
+    "family": "组件 / 收益准入",
+    "verdict": "速度贡献证据不确定"
+  },
+  {
+    "scenario": "uniform",
+    "comparison": "组件 / 亲和放置",
+    "treatment": "AURA-core",
+    "baseline": "no-affinity",
+    "n": 10,
+    "complete": true,
+    "aura_wall_s": 5.1947765522,
+    "baseline_wall_s": 5.2614068158,
+    "aura_mib_s": 73.93333508517485,
+    "baseline_mib_s": 72.9985868300904,
+    "time_ratio": 0.9873464758753445,
+    "ci95": [
+      0.9819024050515212,
+      0.9924493036019901
+    ],
+    "time_ratio_with_drain": 0.9881767082771096,
+    "with_drain_ci95": [
+      0.9824198897272274,
+      0.9935690423149452
+    ],
+    "p_raw": 0.00390625,
+    "p_holm": 0.015625,
+    "mechanism_triggered": true,
+    "family": "组件 / 亲和放置",
+    "verdict": "支持此场景下真实提速"
+  },
+  {
+    "scenario": "uniform",
+    "comparison": "组件 / 预取",
+    "treatment": "AURA-prefetch",
+    "baseline": "AURA-core",
+    "n": 10,
+    "complete": true,
+    "aura_wall_s": 5.5143314678,
+    "baseline_wall_s": 5.1947765522,
+    "aura_mib_s": 69.65588882908213,
+    "baseline_mib_s": 73.93333508517485,
+    "time_ratio": 1.0614611723986958,
+    "ci95": [
+      1.0476625351805144,
+      1.0752479164106155
+    ],
+    "time_ratio_with_drain": 1.0625743179759137,
+    "with_drain_ci95": [
+      1.0480157579936602,
+      1.0767507655158928
+    ],
+    "p_raw": 0.001953125,
+    "p_holm": 0.00390625,
+    "mechanism_triggered": true,
+    "family": "组件 / 预取",
+    "verdict": "此场景下更慢"
+  },
+  {
+    "scenario": "sequential",
+    "comparison": "组件 / 预取",
+    "treatment": "AURA-prefetch",
+    "baseline": "AURA-core",
+    "n": 10,
+    "complete": true,
+    "aura_wall_s": 5.3673087445,
+    "baseline_wall_s": 5.451387334,
+    "aura_mib_s": 71.55253443477004,
+    "baseline_mib_s": 70.44433616620117,
+    "time_ratio": 0.9845443898416676,
+    "ci95": [
+      0.9761030512473057,
+      0.9933405177733898
+    ],
+    "time_ratio_with_drain": 0.9845514647663016,
+    "with_drain_ci95": [
+      0.9760843086915861,
+      0.9933402083170847
+    ],
+    "p_raw": 0.015625,
+    "p_holm": 0.015625,
+    "mechanism_triggered": true,
+    "family": "组件 / 预取",
+    "verdict": "支持此场景下真实提速"
+  }
+]

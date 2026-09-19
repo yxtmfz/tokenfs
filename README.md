@@ -16,7 +16,7 @@ AURA-KV 是研究控制层，TokenFS 是可挂载的 FUSE 文件系统原型。�
 |---|---|---|
 | 代码 | `src/`、`aura_kv/`、`scripts/`、`tests/` | FUSE 原型、AURA-KV 控制器、实验脚本和测试 |
 | 说明文档 | [docs/README.md](docs/README.md) | 项目设计、模型公式、实验方法和部署说明 |
-| 数据结果 | [reports/latest/final-report.md](reports/latest/final-report.md) | 最新统一结果报告和论文实验结果 |
+| 数据结果 | [cn7 正式实测报告](reports/latest/paper-experiments/10_real_cn7_evidence/README.md) | 最新统一结果报告和论文实验结果 |
 
 ## 1. 当前项目定位
 
@@ -80,93 +80,25 @@ flowchart TD
 |---|---|---|---|
 | 目录模拟环境 | 否 | 开发 FUSE、策略、元数据和测试 | 不能代表真实远端性能 |
 | 双 VM NVMe-oF | 是，真实 Linux NVMe/TCP 协议 | 验证 Host/Target、远端挂载和 TokenFS 端到端路径 | 底层是虚拟网络和虚拟磁盘 |
-| 单客户端 NVMe-oF | 是，真实 Linux NVMe/TCP 链路 | 测量本地目录与远端 NVMe-oF 挂载目录的差距，并运行 TokenFS 真实速度消融 | 最新主结果来自实验室 `cn14 -> cn13`，多 GPU 仍为同一客户端内的逻辑 GPU |
+| 单客户端 NVMe-oF | 是，真实 Linux NVMe/TCP 链路 | 测量本地目录与远端 NVMe-oF 挂载目录的差距，并运行 TokenFS 真实速度消融 | 当前结果来自 `cn7 -> cn13`，三个逻辑 GPU 共享客户端磁盘；底层为既有文件系统/loop，非独占裸 NVMe |
 
 论文表述时要区分：策略实验是模拟/代理结果，NVMe-oF baseline 是真实协议链路结果，真实 GPU 推理收益还需要后续接入模型 workload。
 
-### 4.1 当前推荐真实实验形态
-
-在老师只提供一台远端 NVMe-oF 存储服务器、暂时没有多台真实 GPU 计算节点时，当前已经采用的论文前实验形态是：
+### 4.1 当前真实实验形态
 
 ```text
-cn14 内网客户端
-  ├── TokenFS / AURA-KV / FUSE
-  ├── /gpu0 -> 本地缓存目录 /var/lib/tokenfs/local/gpu0
-  ├── /gpu1 -> 本地缓存目录 /var/lib/tokenfs/local/gpu1
-  ├── /gpu2 -> 本地缓存目录 /var/lib/tokenfs/local/gpu2
-  └── /srv/tokenfs/remote0 -> 真实远端 NVMe-oF 挂载目录 /dev/nvme3n1
-
-cn13 远端 NVMe/TCP Target / Storage
-  └── Linux NVMe/TCP Target -> 远端 SSD 或安全测试后端
+cn7 客户端
+  ├── Release TokenFS / FUSE
+  ├── gpu0 / gpu1 / gpu2：同一客户端磁盘上的三个逻辑缓存域
+  └── /srv/tokenfs/remote-cn7 → /dev/nvme1n1 → NVMe/TCP
+cn13 远端
+  └── 独立 namespace → loop backing file → 既有文件系统
+cn8：独立目录后端正确性校验
 ```
 
-这不是“纯模拟”：远端容量层和 NVMe-oF 协议链路必须是真实的。它也不是“完整多物理 GPU 集群”：`gpu0/gpu1/gpu2` 是同一客户端里的逻辑 GPU 节点，用来验证访问分布、亲和副本、价值感知淘汰和后台迁移机制。
+cn14 保持停用。程序与数据使用本次专用目录，不替换原项目或业务盘。前台本地/远端读取均启用 O_DIRECT；后台复制仍为 buffered I/O，目标端缓存和其他任务争用不受控。逻辑 GPU 放置不能证明真实 PCIe/NVLink 或多物理 GPU 收益。
 
-当前网络排查结论是：本地两台 UTM VM 已从 `Shared` NAT 改为 `Bridged` 桥接模式，并获得校园网地址：
-
-```text
-tokenfs-dev     172.26.3.29/17
-tokenfs-target  172.26.23.154/17
-```
-
-桥接后，两台本地 VM 到老师存储网仍然不能直连 `28.10.10.13:4420`，因此它们不再作为主实验客户端。主实验已切换到老师提供的 `cn14`，该机器位于存储网内，可以直连 `cn13:4420` 并完成 NVMe/TCP 连接。
-
-最新真实 NVMe-oF 证据：
-
-```text
-客户端：cn14
-远端 Target：28.10.10.13:4420
-Subsystem NQN：nqn.2026-09.local.aura-kv:remote0
-远端块设备：/dev/nvme3n1
-远端挂载点：/srv/tokenfs/remote0
-文件系统：ext4, noatime
-```
-
-SSH 跳板只用于登录管理，不参与本次数据面。真实结果中的 TokenFS 远端后端是 `cn14` 通过 Linux NVMe/TCP 直接连接 `cn13:4420` 后挂载得到的目录，不是 SSH tunnel。
-
-该形态能支撑的结论：
-
-| 能支撑 | 不能直接支撑 |
-|---|---|
-| FUSE + TokenFS 真实可运行 | 真实 vLLM/SGLang TTFT 已降低 |
-| 远端层通过实验室 NVMe-oF 真实接入 | 多台物理 GPU 服务器并发结果 |
-| AURA / LRU / LFU / LocalFirst 在同一 workload 下的真实 wall-clock 对比 | 生产级多客户端一致性 |
-| 多逻辑 GPU 的亲和副本和缓存淘汰机制是否生效 | NUMA、真实 GPU PCIe 拓扑收益 |
-
-统一实验入口：
-
-```bash
-./scripts/lab_network_probe.sh --config config/tokenfs.nvmeof.yaml --target-ip 28.10.10.13 --port 4420
-cp config/tokenfs.cn14.example.yaml config/tokenfs.cn14.yaml
-TOKENFS_CONFIG=config/tokenfs.cn14.yaml ./scripts/lab_single_client_multigpu_experiment.sh /home/wjxt/aura-kv/reports/real-nvmeof-cn14
-```
-
-脚本会按顺序完成：
-
-```text
-网络和环境检查
--> 确认 /srv/tokenfs/remote0 必须来自 /dev/nvme* 挂载
--> 记录 nvme list、findmnt、df、lsblk 证据
--> 运行本地/远端差距诊断
--> 运行单轮真实速度消融
--> 运行三轮重复真实速度消融
--> 生成统一汇总报告
-```
-
-输出位置：
-
-```text
-reports/latest/paper-experiments/09_real_cn14_nvmeof/
-├── lab_single_client_multigpu_report.md
-├── environment_evidence.txt
-├── 01_environment_gap/
-├── 02_single_run_speed/
-├── 03_repeat_speed/          # 优化前重复实验，保留作历史对照
-├── 06_optimized_repeat/      # 5 策略历史重复实验
-└── 07_fair_readthrough_repeat/ # 当前论文主引用重复实验，包含强 LRU/LFU baseline
-```
-
-论文里可以把它写成“单客户端多逻辑 GPU + 实验室真实远端 NVMe-oF 容量层实验”。这个表述准确，也足够让老师看懂当前实验边界。
+实验分类、对照语义和完整复现命令见 [证据实验方案](docs/evidence-experiments.md)，主张与未闭合部分见 [证据对应表](docs/claim-evidence-ledger.md)。
 
 ## 5. 快速开始
 
@@ -182,7 +114,7 @@ sudo apt install -y build-essential cmake ninja-build pkg-config \
 构建：
 
 ```bash
-cmake -S . -B build -G Ninja
+cmake -S . -B build -G Ninja -DCMAKE_BUILD_TYPE=Release
 cmake --build build
 ```
 
@@ -206,160 +138,37 @@ cat /mnt/tokenfs/gpu0/demo/a.tokens
 
 ## 6. 论文实验入口
 
-当前最重要的统一实验入口：
+当前实际速度以 [cn7 正式实测报告](reports/latest/paper-experiments/10_real_cn7_evidence/README.md) 为入口。冻结矩阵按实际 C++ 实现划分：整体对照、价值淘汰、亲和放置、价值×亲和交互、趋势、收益准入、预取、异步执行。每项都用相同 trace/字节/配额下的外层任务耗时和 MiB/s 判定；内部命中率和复制量只作解释。
 
 ```bash
-python3 scripts/paper_experiments.py
+# Linux/FUSE；先按 docs/evidence-experiments.md 建立独立数据目录并运行完整批次
+python3 scripts/evidence_audit.py /path/to/formal-batch
+python3 scripts/evidence_report.py /path/to/formal-batch
+python3 scripts/evidence_figures.py /path/to/formal-batch /path/to/figures
 ```
 
-它一次生成四类结果：
+正式程序使用 Release 构建，运行前完成独立全内容正确性验证。报告保留每次 trace、配置、请求、动作、结果、哈希与失败记录；缺组、数据不一致或失效标记会阻止统计。置信区间与检验按预先固定的配对方案计算，退化与无明确收益的组件同样报告。
 
-| 实验 | 输出目录 | 作用 | 结果性质 |
-|---|---|---|---|
-| Trace 回放 | `reports/latest/paper-experiments/01_trace_replay/` | 比较 AURA-Joint 与 RemoteOnly、LocalFirst、LRU/LFU 等策略 | 模拟结果 |
-| 端到端延迟代理 | `reports/latest/paper-experiments/02_e2e_latency/` | 比较本地、Peer、远端和后台动作共同造成的请求代价 | 代理结果 |
-| 参数敏感性 | `reports/latest/paper-experiments/03_sensitivity/` | 扫描本地容量、远端 P99、副本预算，验证策略稳定性 | 模拟结果 |
-| NVMe-oF baseline | `reports/latest/paper-experiments/04_nvmeof_baseline/` | 汇总已有真实 NVMe/TCP 基线 | 真实链路摘要 |
-| 单客户端多逻辑 GPU + 真实 NVMe-oF | `reports/latest/paper-experiments/09_real_cn14_nvmeof/` | 当前主实验结果，串联环境证据、差距诊断、单轮速度和三轮重复速度 | 最新真实系统结果 |
+`paper_experiments.py` 仍可生成 Python 模拟/代理研究结果；`lab_single_client_multigpu_experiment.sh` 和 cn14 三轮报告为历史入口。修复前模拟计账、弱基线及分段求和计时影响旧结论，不能作为新论文速度证据。历史数据保留在 `01_trace_replay/` 至 `09_real_cn14_nvmeof/`，不与 cn7 正式批次合并。
 
-统一报告：
-
-```text
-reports/latest/paper-experiments/paper_experiments_report.md
-```
-
-当前关键结果：
-
-| 策略 | 本地命中率 | 远端读取 | P99 代理延迟 | 综合代价/请求 |
-|---|---:|---:|---:|---:|
-| RemoteOnly | 0.0000 | 2244.77 MiB | 9.0188 ms | 3.1889 |
-| LRU-Local | 0.7362 | 400.62 MiB | 3.0247 ms | 1.7085 |
-| LFU-Local | 0.7586 | 380.31 MiB | 3.0594 ms | 1.5691 |
-| DualWindowReplacement | 0.8907 | 146.15 MiB | 1.4685 ms | 0.7717 |
-| AURA-Joint | 0.8822 | 228.31 MiB | 1.4749 ms | 0.5376 |
-
-`AURA-Joint` 不追求单项指标永远第一，而是降低综合服务代价：前台访问延迟、远端读取、Peer 读取、后台迁移、重复副本空间和副本创建/删除抖动。真实速度实验中，如果 AURA 已经显著减少远端读取但总耗时没有提升，不能通过构造极端 workload 来证明策略，而要回到两个根因：
-
-1. **实现开销是否过大**：前台读写是否被 SQLite 指标写入、同步提升、同步副本复制或后台淘汰拖慢。
-2. **环境差距是否真实**：当前本地 SSD 与 NVMe-oF 远端 SSD 的读写差距是否足够大，是否被页缓存、虚拟化或同宿主机路径抹平。
-
-因此当前代码采用更保守的在线决策：远端对象不会因为“读过两次”就立刻搬到本地，而是同时满足复用次数、价值分数和迁移收益比之后才触发后台提升或复制。本地命中率不是唯一目标，最终仍以真实 `wall_time_s`、`effective_mib_s`、`read_mib_s` 和复用阶段吞吐判断策略是否真的变快。
-
-后台动作也被分成两类：热点提升是确认复用后的强动作，必要时可以通过价值感知淘汰腾空间；顺序预取和跨 GPU 副本是推测动作，默认只在本地有余量时执行，不为了预测性复制挤掉已有缓存。这样可以降低后台迁移造成的写放大和抖动。
-
-成本模型的结果不能单独证明系统更快，所以当前仓库还提供真实速度入口。当前推荐直接运行统一编排脚本；它默认只接受 NVMe-oF 直连挂载目录，并使用和论文消融一致的策略分类：
-
-| 真实速度对照 | 含义 |
-|---|---|
-| `RemoteOnly` | 不使用本地缓存，全部从远端容量层读取 |
-| `LocalFirst` | 本地够用优先，本地不足溢写远端，不主动淘汰 |
-| `LRU-Local` | 本地不足时淘汰最久未访问数据 |
-| `LFU-Local` | 本地不足时淘汰访问次数最少数据 |
-| `LRU-ReadThrough` | 远端读后也复制回本地，本地满后按 LRU 淘汰，是更强、更公平的 LRU baseline |
-| `LFU-ReadThrough` | 远端读后也复制回本地，本地满后按 LFU 淘汰，是更强、更公平的 LFU baseline |
-| `AURA-no-prefetch` | 保留价值感知与 GPU 亲和副本，关闭顺序预取 |
-| `AURA-no-xgpu` | 保留价值感知与顺序预取，关闭跨 GPU 本地副本 |
-| `AURA-Joint` | 价值感知、GPU 亲和、容量约束和后台动作联合决策 |
-
-早期真实速度表只比较了 `RemoteOnly`、`LocalFirst`、`LRU-Local`、`LFU-Local` 和 `AURA-Joint`。那组结果能说明 AURA 机制有效，但 LRU/LFU baseline 偏弱，因为它们没有远端读后回填本地缓存。当前脚本已经加入 `LRU-ReadThrough` 和 `LFU-ReadThrough`，后续论文主表应优先引用包含这两个强 baseline 的重复实验结果。如果 AURA 在强 baseline 下仍然总耗时最低，结论会更有说服力；如果不是最低，就应诚实报告 AURA 的适用场景，并继续优化后台复制、预取和阈值。
-
-```bash
-TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/lab_single_client_multigpu_experiment.sh
-```
-
-它实际启动 TokenFS，确认远端目录来自 `/dev/nvme*`，运行同一组 token shard workload，再输出：
-
-```text
-reports/latest/paper-experiments/09_real_cn14_nvmeof/
-├── lab_single_client_multigpu_report.md
-├── environment_evidence.txt
-├── 01_environment_gap/storage_gap_summary.csv
-├── 03_repeat_speed/repeat_summary.csv        # 优化前重复实验，保留作历史对照
-├── 05_fast_local_hit_single/strategy_summary.csv
-├── 06_optimized_repeat/repeat_summary.csv    # 5 策略历史结果
-└── 07_fair_readthrough_repeat/repeat_summary.csv # 当前论文主引用结果，包含强 LRU/LFU baseline
-```
-
-`07_fair_readthrough_repeat/repeat_summary.csv` 为历史三轮结果，当前不再推荐作为论文主结论依据。
-
-如果只想单独跑某个阶段，也可以分别运行：
-
-```bash
-TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/nvmeof_gap_diagnostic.sh
-TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/real_speed_benchmark.sh
-TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/real_speed_repeat_benchmark.sh
-```
-
-历史 `cn14` 实验使用 64 MiB shard、512 MiB 配额、3 轮、每轮约 16904 MiB 重复逻辑流量。历史主表曾混入不同批次，现移除手工拼接的表格；原始 CSV 保留。其计时未覆盖全部工作负载间隙，因此不能重新命名成外层 wall-clock。
-
-新实验统一使用 `scripts/evidence_benchmark.py`：独立目录、配对 trace、随机策略顺序、完整外层时间、实际 MiB/s、后台收尾与内容校验。模拟 objective 和命中率均不作为真实加速的替代指标。cn7 结果与旧 cn14 数据分批保存。
-
-主速度实验默认不人为限制后台复制带宽，因为这里要回答的是“策略是否让端到端 workload 更快”。如果要单独研究后台复制对前台 I/O 的干扰，可以设置 `TOKENFS_ABLATION_BACKGROUND_MIB_PER_SEC=256` 之类的限速参数另跑专项实验，不和主速度表混在一起。
-
-这部分直接看 `wall_time_s`、`effective_mib_s`、`read_mib_s`、`avg_read_us` 和 `speedup_vs_baseline`。其中 `speedup_vs_baseline` 的 baseline 是 `RemoteOnly`，表示完整 workload 总耗时是否真的变快；`read_mib_s` 只看读路径吞吐，更接近 KV Cache 获取速度。同时还要看 `steady_reuse_mib_s` 和 `steady_reuse_vs_baseline`，它们只统计热点提升、顺序预取和跨 GPU 副本生效之后的复用读取阶段，用来判断后台策略完成后是否真的减少后续读取代价。`promote_count`、`prefetch_count`、`evict_count`、`cross_gpu_local_replica_hit` 是内部动作统计，用来解释 AURA-Joint 做了什么，不再作为论文主对照组名称。
-
-真实速度是否能明显提高，取决于两个条件同时成立：
-
-1. AURA 确实把后续读请求从远端转到本地，并且后台迁移不阻塞前台请求；
-2. 当前机器里“本地 SSD”和“NVMe-oF 远端 SSD”存在足够明显的物理访问差距。
-
-因此仓库同时提供环境差距诊断：
-
-```bash
-TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/nvmeof_gap_diagnostic.sh
-```
-
-输出：
-
-```text
-reports/latest/paper-experiments/09_real_cn14_nvmeof/01_environment_gap/storage_gap_report.md
-reports/latest/paper-experiments/09_real_cn14_nvmeof/01_environment_gap/storage_gap_summary.csv
-```
-
-如果诊断结果显示本地/远端读吞吐比接近 `1.0x`，说明当前双 VM 或共享宿主机环境过于理想化，策略虽然能减少远端访问，但不容易在总耗时上拉开差距。另一个常见干扰是 Linux page cache：当实验数据集小于内存时，RemoteOnly 的重复读取可能不再访问 NVMe-oF，而是直接命中内存，从而把远端路径伪装得接近本地路径。此时不能通过修改 workload 去“制造胜利”，而应当优先做下面两件事：
-
-- 优化 TokenFS 自身：减少前台路径指标写库、避免同步搬迁、限制后台复制对前台 I/O 的干扰，并用迁移收益门槛减少无效复制；
-- 校准实验环境：用真实 NVMe-oF 直连、真实网络 RTT/带宽、`fio` 基线和环境差距诊断证明远端代价确实存在。
-
-当前真实速度脚本会保留 workload 不变，只改变策略实现和配置门槛。这样得到的结果才是在改系统，而不是改题目。
-
-最新一次实验室真实运行中，远端层挂载证据为 `/dev/nvme3n1 -> /srv/tokenfs/remote0`，Target IP 为老师物理服务器 `28.10.10.13:4420`。这组结果能证明 Linux NVMe/TCP、FUSE、TokenFS 和 AURA 控制链路已经在实验室 NVMe-oF 环境中打通；它仍不能写成多台真实 GPU 物理服务器并发结果，因为 `gpu0/gpu1/gpu2` 目前是同一客户端里的逻辑 GPU。
-
-当前真实 workload 会使用每轮独立的实验命名空间，避免旧的远端文件影响结果，也不会清理已有远端数据。它显式构造：
-
-- 远端 canonical KV Cache：模拟远端容量层已有可共享缓存；
-- 本地冷缓存填满：让后续策略必须面对本地容量约束；
-- 扩展已有本地文件：触发 LRU/LFU/AURA 的淘汰路径；
-- 热点重复读取：触发 AURA 的热点提升；
-- 连续 shard 读取：触发顺序预取；
-- 跨 GPU 共享读取：触发 GPU 亲和本地副本。
-
-为了避免短流程把策略收益淹没，真实速度脚本默认把热点、连续 shard 和跨 GPU 共享读改成同一 loader 进程中的批量重复读取；同时在关键阶段和每次逻辑读计时前请求清理 Linux page cache，并把这些动作记录为 `cache_control` 行。清缓存动作不计入策略读写耗时，它的目的不是改变 workload，而是避免 RemoteOnly 被 DRAM 页缓存免费加速，确保比较对象仍是本地 SSD 路径和远端 NVMe-oF 路径。AURA-Joint 的热点提升和跨 GPU 副本创建默认使用后台异步执行：当前请求仍按现有路径完成，复制动作服务于后续请求，避免把迁移开销直接压到前台读延迟上。
-
-为避免误用，`real_speed_benchmark.sh` 现在默认强制检查 NVMe-oF：
-
-```bash
-cp config/tokenfs.nvmeof.example.yaml config/tokenfs.nvmeof.yaml
-# 填入真实 target_ip、subnqn、device 后连接并挂载
-sudo ./scripts/connect_nvme.sh --config config/tokenfs.nvmeof.yaml --backend remote0 --chown-current
-TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/real_speed_benchmark.sh
-```
-
-如果远端仍是 `/var/lib/tokenfs/remote-sim`，脚本会直接停止，不生成论文级真实速度报告。如果 `nvme_target_ip` 是 `127.0.0.1` 或 `localhost`，脚本也会停止，因为这代表数据路径经过 SSH tunnel 或端口转发。开发时可显式设置 `TOKENFS_REQUIRE_NVMEOF=0` 绕过挂载检查，或设置 `TOKENFS_NVMEOF_PATH_MODE=tunnel` 做功能验证；这两类结果只能用于排查软件逻辑，不能写成直连 NVMe-oF 性能。
+当前 C++ 的 AURA-core 是启发式原型，不能用它的速度表替代完整 Python RobustBenefit 模型的实测。真实推理 TTFT、生产 trace、多物理 GPU、满容量强 SWAP 和复制中断恢复尚未完成对应验证。若一个消融只改善命中率而没有净速度收益，就不作为已验证性能贡献。
 
 ## 7. 常用测试
 
 ```bash
-# AURA-KV 单元测试和模拟器冒烟测试
-./scripts/aura_kv_test.sh
+# Python 与实验证据回归
+python3 -m unittest tests.aura_kv_unit_test tests.evidence_test
 
-# 论文前四项实验
+# Release C++ 回归（包含 GetAttr 竞态）
+ctest --test-dir build --output-on-failure
+
+# 历史模拟/代理实验，不代表真实加速
 python3 scripts/paper_experiments.py
 
-# 真实 TokenFS workload 速度实验，需 Linux/FUSE
+# 历史 TokenFS 速度入口；正式评估使用 evidence_benchmark.py
 TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/real_speed_benchmark.sh
 
-# 更大数据量下重复 3 轮，汇总均值和波动范围
+# 历史三轮入口，不能替代新配对检验
 TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/real_speed_repeat_benchmark.sh
 
 # 检查当前环境本地/远端是否存在足够性能差距
@@ -419,6 +228,6 @@ AURA_LOCAL_READ_DEVICE=/dev/nvme0n1 \
 - [docs/model-and-controller.md](docs/model-and-controller.md)：需求估计、来源代价、EvictionLoss、ReplicaGain、RobustBenefit 和控制器。
 - [docs/experiments.md](docs/experiments.md)：实验设计、指标、结果解释和论文边界。
 - [docs/deployment.md](docs/deployment.md)：配置、脚本和 NVMe-oF 部署。
-- [reports/latest/final-report.md](reports/latest/final-report.md)：最新统一结果报告。
+- [cn7 正式实测报告](reports/latest/paper-experiments/10_real_cn7_evidence/README.md)：最新统一结果报告。
 
 旧的零散编号文档已经合并到上述文档中。以后新增内容优先更新这些最终入口，避免文档再次发散。

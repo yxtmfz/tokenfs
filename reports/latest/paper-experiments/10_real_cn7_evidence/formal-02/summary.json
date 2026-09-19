@@ -1,0 +1,562 @@
+[
+  {
+    "scenario": "mixed",
+    "strategy": "AURA-core",
+    "n": 10,
+    "mean_wall_s": 7.3640110353,
+    "mean_mib_s": 83.10808449476494,
+    "paired_n": 10,
+    "time_ratio_vs_lru": 0.9899344591426686,
+    "ratio_ci95": [
+      0.9801504343372582,
+      0.9990144382262575
+    ],
+    "evictions": 452
+  },
+  {
+    "scenario": "mixed",
+    "strategy": "LFU-equal",
+    "n": 10,
+    "mean_wall_s": 7.3628063755,
+    "mean_mib_s": 83.11983380057958,
+    "paired_n": 10,
+    "time_ratio_vs_lru": 0.9898474074997726,
+    "ratio_ci95": [
+      0.9807336245907481,
+      0.9989470979748397
+    ],
+    "evictions": 499
+  },
+  {
+    "scenario": "mixed",
+    "strategy": "LRU-equal",
+    "n": 10,
+    "mean_wall_s": 7.4332128118,
+    "mean_mib_s": 82.28161958975195,
+    "paired_n": 10,
+    "time_ratio_vs_lru": 1.0,
+    "ratio_ci95": [
+      1.0,
+      1.0
+    ],
+    "evictions": 494
+  },
+  {
+    "scenario": "mixed",
+    "strategy": "RemoteOnly",
+    "n": 10,
+    "mean_wall_s": 7.3553527079,
+    "mean_mib_s": 83.23247210486537,
+    "paired_n": 10,
+    "time_ratio_vs_lru": 0.9884562530245589,
+    "ratio_ci95": [
+      0.973589208543493,
+      1.001384272859369
+    ],
+    "evictions": 0
+  },
+  {
+    "scenario": "mixed",
+    "strategy": "no-value",
+    "n": 10,
+    "mean_wall_s": 7.3985766088,
+    "mean_mib_s": 82.68936235608022,
+    "paired_n": 10,
+    "time_ratio_vs_lru": 0.9950036198535025,
+    "ratio_ci95": [
+      0.9885085050554783,
+      1.0008362883622464
+    ],
+    "evictions": 446
+  },
+  {
+    "scenario": "scan",
+    "strategy": "AURA-core",
+    "n": 10,
+    "mean_wall_s": 4.3942901255999995,
+    "mean_mib_s": 87.4512092478249,
+    "paired_n": 10,
+    "time_ratio_vs_lru": 0.9664240794431415,
+    "ratio_ci95": [
+      0.9458418994365879,
+      0.9879009379573979
+    ],
+    "evictions": 325
+  },
+  {
+    "scenario": "scan",
+    "strategy": "E0A0",
+    "n": 10,
+    "mean_wall_s": 4.6056243057,
+    "mean_mib_s": 83.49919684905798,
+    "paired_n": 10,
+    "time_ratio_vs_lru": 1.0125346645789204,
+    "ratio_ci95": [
+      0.9956530605990734,
+      1.0299274521952972
+    ],
+    "evictions": 393
+  },
+  {
+    "scenario": "scan",
+    "strategy": "LFU-equal",
+    "n": 10,
+    "mean_wall_s": 4.5163847489,
+    "mean_mib_s": 85.14099654962838,
+    "paired_n": 10,
+    "time_ratio_vs_lru": 0.9929650568231257,
+    "ratio_ci95": [
+      0.9699333958061138,
+      1.0157389820889806
+    ],
+    "evictions": 389
+  },
+  {
+    "scenario": "scan",
+    "strategy": "LRU-equal",
+    "n": 10,
+    "mean_wall_s": 4.549946279,
+    "mean_mib_s": 84.5711381694133,
+    "paired_n": 10,
+    "time_ratio_vs_lru": 1.0,
+    "ratio_ci95": [
+      1.0,
+      1.0
+    ],
+    "evictions": 395
+  },
+  {
+    "scenario": "scan",
+    "strategy": "RemoteOnly",
+    "n": 10,
+    "mean_wall_s": 4.7233681076,
+    "mean_mib_s": 81.31811288054581,
+    "paired_n": 10,
+    "time_ratio_vs_lru": 1.0390582777772228,
+    "ratio_ci95": [
+      1.0077619749312012,
+      1.0717756180007167
+    ],
+    "evictions": 0
+  },
+  {
+    "scenario": "scan",
+    "strategy": "no-affinity",
+    "n": 10,
+    "mean_wall_s": 4.4651690476,
+    "mean_mib_s": 86.04779070225146,
+    "paired_n": 10,
+    "time_ratio_vs_lru": 0.9820999068083094,
+    "ratio_ci95": [
+      0.9594156207713448,
+      1.004618323236186
+    ],
+    "evictions": 387
+  },
+  {
+    "scenario": "scan",
+    "strategy": "no-value",
+    "n": 10,
+    "mean_wall_s": 4.5168460456,
+    "mean_mib_s": 85.13667265570282,
+    "paired_n": 10,
+    "time_ratio_vs_lru": 0.9930419251969169,
+    "ratio_ci95": [
+      0.980081136816067,
+      1.0078984634323422
+    ],
+    "evictions": 333
+  },
+  {
+    "scenario": "sequential",
+    "strategy": "AURA-core",
+    "n": 10,
+    "mean_wall_s": 5.451387334,
+    "mean_mib_s": 70.44433616620117,
+    "paired_n": 0,
+    "time_ratio_vs_lru": null,
+    "ratio_ci95": [
+      null,
+      null
+    ],
+    "evictions": 700
+  },
+  {
+    "scenario": "sequential",
+    "strategy": "AURA-prefetch",
+    "n": 10,
+    "mean_wall_s": 5.3673087445,
+    "mean_mib_s": 71.55253443477004,
+    "paired_n": 0,
+    "time_ratio_vs_lru": null,
+    "ratio_ci95": [
+      null,
+      null
+    ],
+    "evictions": 930
+  },
+  {
+    "scenario": "shared_shift",
+    "strategy": "AURA-core",
+    "n": 10,
+    "mean_wall_s": 4.167178017,
+    "mean_mib_s": 92.21750105098236,
+    "paired_n": 10,
+    "time_ratio_vs_lru": 0.9606230156205686,
+    "ratio_ci95": [
+      0.9424848948062428,
+      0.9773038829422471
+    ],
+    "evictions": 213
+  },
+  {
+    "scenario": "shared_shift",
+    "strategy": "E0A0",
+    "n": 10,
+    "mean_wall_s": 4.3207143769,
+    "mean_mib_s": 88.94303207060382,
+    "paired_n": 10,
+    "time_ratio_vs_lru": 0.9960007938111726,
+    "ratio_ci95": [
+      0.9872021743382626,
+      1.0046667611874978
+    ],
+    "evictions": 522
+  },
+  {
+    "scenario": "shared_shift",
+    "strategy": "LFU-equal",
+    "n": 10,
+    "mean_wall_s": 4.1697441539,
+    "mean_mib_s": 92.17333330577897,
+    "paired_n": 10,
+    "time_ratio_vs_lru": 0.9611442902001249,
+    "ratio_ci95": [
+      0.9474653236596697,
+      0.9747640130396454
+    ],
+    "evictions": 520
+  },
+  {
+    "scenario": "shared_shift",
+    "strategy": "LRU-equal",
+    "n": 10,
+    "mean_wall_s": 4.3372207878,
+    "mean_mib_s": 88.56995887899751,
+    "paired_n": 10,
+    "time_ratio_vs_lru": 1.0,
+    "ratio_ci95": [
+      1.0,
+      1.0
+    ],
+    "evictions": 523
+  },
+  {
+    "scenario": "shared_shift",
+    "strategy": "RemoteOnly",
+    "n": 10,
+    "mean_wall_s": 4.7907509618,
+    "mean_mib_s": 80.15519544199557,
+    "paired_n": 10,
+    "time_ratio_vs_lru": 1.104773761065827,
+    "ratio_ci95": [
+      1.0900097411012142,
+      1.1194095190897781
+    ],
+    "evictions": 0
+  },
+  {
+    "scenario": "shared_shift",
+    "strategy": "no-affinity",
+    "n": 10,
+    "mean_wall_s": 4.2148197766,
+    "mean_mib_s": 91.24229183202505,
+    "paired_n": 10,
+    "time_ratio_vs_lru": 0.9712546865659424,
+    "ratio_ci95": [
+      0.9506487972329974,
+      0.9884384060140161
+    ],
+    "evictions": 522
+  },
+  {
+    "scenario": "shared_shift",
+    "strategy": "no-trend",
+    "n": 10,
+    "mean_wall_s": 4.149720644,
+    "mean_mib_s": 92.60372854631251,
+    "paired_n": 10,
+    "time_ratio_vs_lru": 0.9566051686332063,
+    "ratio_ci95": [
+      0.9390881067288359,
+      0.97346989046041
+    ],
+    "evictions": 214
+  },
+  {
+    "scenario": "shared_shift",
+    "strategy": "no-value",
+    "n": 10,
+    "mean_wall_s": 4.2250219578,
+    "mean_mib_s": 90.93831493497754,
+    "paired_n": 10,
+    "time_ratio_vs_lru": 0.9740435010935697,
+    "ratio_ci95": [
+      0.9625503015182074,
+      0.9867642764121625
+    ],
+    "evictions": 222
+  },
+  {
+    "scenario": "shared_shift",
+    "strategy": "no-xgpu",
+    "n": 10,
+    "mean_wall_s": 4.2637066961,
+    "mean_mib_s": 90.10498936584422,
+    "paired_n": 10,
+    "time_ratio_vs_lru": 0.9830052965108537,
+    "ratio_ci95": [
+      0.9663712235991982,
+      1.0027362479770066
+    ],
+    "evictions": 134
+  },
+  {
+    "scenario": "shared_shift",
+    "strategy": "synchronous",
+    "n": 10,
+    "mean_wall_s": 5.0365298329999995,
+    "mean_mib_s": 76.37785664948862,
+    "paired_n": 10,
+    "time_ratio_vs_lru": 1.160430057508211,
+    "ratio_ci95": [
+      1.1355193894788962,
+      1.184866437229881
+    ],
+    "evictions": 235
+  },
+  {
+    "scenario": "stable",
+    "strategy": "AURA-core",
+    "n": 10,
+    "mean_wall_s": 4.2478588096,
+    "mean_mib_s": 90.45985207487244,
+    "paired_n": 10,
+    "time_ratio_vs_lru": 0.9551784221071251,
+    "ratio_ci95": [
+      0.9417498910241466,
+      0.9679666210497487
+    ],
+    "evictions": 409
+  },
+  {
+    "scenario": "stable",
+    "strategy": "LFU-equal",
+    "n": 10,
+    "mean_wall_s": 4.3022174278000005,
+    "mean_mib_s": 89.37911930237405,
+    "paired_n": 10,
+    "time_ratio_vs_lru": 0.9670606050063121,
+    "ratio_ci95": [
+      0.9511538218223359,
+      0.9830136937673392
+    ],
+    "evictions": 435
+  },
+  {
+    "scenario": "stable",
+    "strategy": "LRU-equal",
+    "n": 10,
+    "mean_wall_s": 4.4491826289,
+    "mean_mib_s": 86.44374116643607,
+    "paired_n": 10,
+    "time_ratio_vs_lru": 1.0,
+    "ratio_ci95": [
+      1.0,
+      1.0
+    ],
+    "evictions": 448
+  },
+  {
+    "scenario": "stable",
+    "strategy": "RemoteOnly",
+    "n": 10,
+    "mean_wall_s": 4.7358381622,
+    "mean_mib_s": 81.08891210807747,
+    "paired_n": 10,
+    "time_ratio_vs_lru": 1.065234768746986,
+    "ratio_ci95": [
+      1.035805494053773,
+      1.0923065870436846
+    ],
+    "evictions": 0
+  },
+  {
+    "scenario": "stable",
+    "strategy": "no-affinity",
+    "n": 10,
+    "mean_wall_s": 4.316655881,
+    "mean_mib_s": 89.08713340618313,
+    "paired_n": 10,
+    "time_ratio_vs_lru": 0.9702673486521659,
+    "ratio_ci95": [
+      0.9554176778111564,
+      0.9847220174731243
+    ],
+    "evictions": 431
+  },
+  {
+    "scenario": "stable",
+    "strategy": "no-gain",
+    "n": 10,
+    "mean_wall_s": 4.1877918059,
+    "mean_mib_s": 91.8449995749477,
+    "paired_n": 10,
+    "time_ratio_vs_lru": 0.9412195249417388,
+    "ratio_ci95": [
+      0.9303216181424009,
+      0.951488687520567
+    ],
+    "evictions": 409
+  },
+  {
+    "scenario": "stable",
+    "strategy": "no-trend",
+    "n": 10,
+    "mean_wall_s": 4.2702036142,
+    "mean_mib_s": 90.06096703576634,
+    "paired_n": 10,
+    "time_ratio_vs_lru": 0.9598055136191108,
+    "ratio_ci95": [
+      0.9434489397580914,
+      0.9782037438580365
+    ],
+    "evictions": 409
+  },
+  {
+    "scenario": "stable",
+    "strategy": "no-value",
+    "n": 10,
+    "mean_wall_s": 4.4106970807,
+    "mean_mib_s": 87.21350356860518,
+    "paired_n": 10,
+    "time_ratio_vs_lru": 0.9912666146446935,
+    "ratio_ci95": [
+      0.9819556388572396,
+      1.0012153343384682
+    ],
+    "evictions": 431
+  },
+  {
+    "scenario": "stable",
+    "strategy": "synchronous",
+    "n": 10,
+    "mean_wall_s": 5.5620174927,
+    "mean_mib_s": 69.23589210154668,
+    "paired_n": 10,
+    "time_ratio_vs_lru": 1.2493210464995683,
+    "ratio_ci95": [
+      1.2259342270492777,
+      1.271656430815078
+    ],
+    "evictions": 401
+  },
+  {
+    "scenario": "uniform",
+    "strategy": "AURA-core",
+    "n": 10,
+    "mean_wall_s": 5.1947765522,
+    "mean_mib_s": 73.93333508517485,
+    "paired_n": 10,
+    "time_ratio_vs_lru": 0.9859081901643072,
+    "ratio_ci95": [
+      0.9721347847333731,
+      0.9998837997272456
+    ],
+    "evictions": 538
+  },
+  {
+    "scenario": "uniform",
+    "strategy": "AURA-prefetch",
+    "n": 10,
+    "mean_wall_s": 5.5143314678,
+    "mean_mib_s": 69.65588882908213,
+    "paired_n": 10,
+    "time_ratio_vs_lru": 1.046503263409282,
+    "ratio_ci95": [
+      1.034479646391066,
+      1.0586129821474435
+    ],
+    "evictions": 1189
+  },
+  {
+    "scenario": "uniform",
+    "strategy": "LFU-equal",
+    "n": 10,
+    "mean_wall_s": 5.2410035348,
+    "mean_mib_s": 73.29525156638393,
+    "paired_n": 10,
+    "time_ratio_vs_lru": 0.9945873347169577,
+    "ratio_ci95": [
+      0.9805384111523313,
+      1.007428703102772
+    ],
+    "evictions": 612
+  },
+  {
+    "scenario": "uniform",
+    "strategy": "LRU-equal",
+    "n": 10,
+    "mean_wall_s": 5.2691062574,
+    "mean_mib_s": 72.89257100604323,
+    "paired_n": 10,
+    "time_ratio_vs_lru": 1.0,
+    "ratio_ci95": [
+      1.0,
+      1.0
+    ],
+    "evictions": 614
+  },
+  {
+    "scenario": "uniform",
+    "strategy": "RemoteOnly",
+    "n": 10,
+    "mean_wall_s": 4.7575771675,
+    "mean_mib_s": 80.72357555454022,
+    "paired_n": 10,
+    "time_ratio_vs_lru": 0.9029549469115266,
+    "ratio_ci95": [
+      0.892748336281182,
+      0.913207858583821
+    ],
+    "evictions": 0
+  },
+  {
+    "scenario": "uniform",
+    "strategy": "no-affinity",
+    "n": 10,
+    "mean_wall_s": 5.2614068158,
+    "mean_mib_s": 72.9985868300904,
+    "paired_n": 10,
+    "time_ratio_vs_lru": 0.9985432816684111,
+    "ratio_ci95": [
+      0.9861562785334232,
+      1.0105633412605624
+    ],
+    "evictions": 609
+  },
+  {
+    "scenario": "uniform",
+    "strategy": "no-gain",
+    "n": 10,
+    "mean_wall_s": 5.2026575729,
+    "mean_mib_s": 73.82745984947502,
+    "paired_n": 10,
+    "time_ratio_vs_lru": 0.9873629783713899,
+    "ratio_ci95": [
+      0.9740076316536521,
+      0.9993135228308364
+    ],
+    "evictions": 540
+  }
+]

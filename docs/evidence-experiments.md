@@ -64,14 +64,20 @@ cn7 本地目录与 cn13 loop 后端都不是独占裸 NVMe，目标端可能存
 
 ```bash
 . /home/wjxt/aura-kv-tools/env.sh
+cd /home/wjxt/projects/tokenfs-eval-20260919
+export LIBRARY_PATH="$TOKENFS_TOOLS_ROOT/usr/lib/x86_64-linux-gnu${LIBRARY_PATH:+:$LIBRARY_PATH}"
+cmake -S . -B build-release -G Ninja -DCMAKE_BUILD_TYPE=Release
+cmake --build build-release -j 4
 python3 scripts/evidence_benchmark.py \
+  --binary build-release/tokenfs --profile paper \
   --output /home/wjxt/aura-kv-cn7/evidence/unique-run-id \
   --remote-root /srv/tokenfs/remote-cn7 \
-  --backend-direct --seeds 101 102 103 104 105 106 107 108 109 110 \
-  --scenarios stable scan mixed shared_shift uniform \
-  --strategies RemoteOnly LRU-equal LFU-equal AURA-core \
-  --requests 160 --shard-mib 8 --quota-mib 16
+  --backend-direct --seeds 201 202 203 204 205 206 207 208 209 210 \
+  --scenarios stable scan mixed shared_shift uniform sequential \
+  --requests 96 --shard-mib 4 --quota-mib 8
 ```
+
+该示例重现 formal-02 的固定 trace；它不是为后续调参提供新的未知测试集。正式速度运行前应另用 `--verify` 完成全内容校验，校验批次不能纳入性能统计。
 
 输出包含 manifest（源码/二进制/入口 hash、真实设备身份、配置）、每块 trace 和顺序、每组解析配置/请求/动作/文件快照/结果或失败记录，以及汇总 JSON/CSV。原始报告不能手动拼接；旧 cn14 数据和修复前模拟结果保留为历史资料。
 
