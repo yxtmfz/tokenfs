@@ -1,5 +1,7 @@
 # cn7 客户端迁移记录
 
+> 本页下文是 2026-09-18 的部署快照。2026-09-19 评估在隔离目录 `/home/wjxt/projects/tokenfs-eval-20260919` 进行，使用 `build-release/tokenfs`、每次独立输出/缓存/SQLite；cn8 也已部署用户目录工具并运行正确性验证。当前方案见 [evidence-experiments.md](evidence-experiments.md)。原项目和 cn14 均未作为本轮执行目录。
+
 日期：2026-09-18。用户因 cn14 将被他人占用，要求改用 cn7/cn8。已将主客户端迁至 cn7；cn8 已确认可登录及访问 cn13:4420，作为备用，未部署完整环境。未运行性能或消融实验。
 
 ## 当前拓扑

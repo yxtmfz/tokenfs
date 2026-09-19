@@ -33,7 +33,7 @@ class EvidenceRegression(unittest.TestCase):
             dump(case/"config.json",config_for("AURA-core",case,Path("/remote/eval-fixture/stable-seed-2"),8,True))
             dump(case/"requests.json",trace)
             result=dict(strategy="AURA-core",status="ok",logical_bytes=3*MIB,job_wall_s=1,effective_mib_s=3,
-                        metrics=dict(read_open_count=3,read_bytes=3*MIB,read_remote_bytes=3*MIB),
+                        metrics=dict(read_open_count=3,read_bytes=3*MIB,read_remote_bytes=3*MIB,qos_gpu0_read_bytes=3*MIB),
                         verify_every_request=False,retained_cache_bytes=[0,0,0])
             dump(case/"result.json",result)
             self.assertTrue(audit(root)["passed"])

@@ -59,6 +59,10 @@ def audit(root):
                 if m.get("read_local_bytes",0) + m.get("read_remote_bytes",0) != byte_count:
                     problems.append("source byte accounting")
                 if m.get("read_open_count",0) != len(trace): problems.append("logical opens")
+                for gpu in range(3):
+                    gpu_bytes=sum(e["bytes"] for e in trace if e["caller"] == gpu)
+                    if m.get(f"qos_gpu{gpu}_read_bytes",0) != gpu_bytes:
+                        problems.append(f"GPU {gpu} caller attribution")
                 if m.get("background_submitted",0) != m.get("background_completed",0):
                     problems.append("unfinished background")
                 if any(v for k,v in m.items() if k.endswith("error_count")):

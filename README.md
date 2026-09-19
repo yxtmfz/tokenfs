@@ -2,7 +2,7 @@
 
 > 实验证据修订：历史模拟结果存在首次缺失计账问题，旧真实 `wall_time_s` 是分段耗时和，且基线能力、缓存控制与淘汰触发存在缺口。旧报告保留为历史记录，不能作为当前已验证性能结论。新分类、真实速率口径和验收状态见 [证据驱动实验](docs/evidence-experiments.md)。
 
-> 2026-09-18 环境迁移：后续主客户端改为 **cn7**，cn8 备用；cn13 为远端存储。新客户端使用独立 namespace，配置与验证见 [cn7 迁移记录](docs/client-migration-cn7.md)。下文 cn14 数据仍是历史实验结果，尚未在 cn7 运行新性能实验。
+> 当前评估使用 **cn7 → cn13** 的独立 NVMe/TCP namespace，cn8 承担独立正确性校验，cn14 停用。配置见 [迁移记录](docs/client-migration-cn7.md)，实验分类与未闭合主张见 [证据对应表](docs/claim-evidence-ledger.md)。旧 cn14 表格及失效批次不能用作新结论。
 
 ```text
 面向多 GPU 大模型 KV Cache 的本地 SSD 与 NVMe-oF 远端 SSD 自适应分层缓存系统
@@ -54,7 +54,7 @@ flowchart TD
     Executor --> Meta
 ```
 
-前台路径只负责尽快返回当前请求：本地命中就读本地，本地没有就从 Peer 或远端读取。后台控制器根据访问事件决定后续是否复制、预取或淘汰。这样前台请求不会被大文件迁移直接拖慢。
+上图是目标结构；C++ FUSE 与 Python 完整控制器的接入边界见下表。当前 C++ 在打开文件时记录访问并判断准入/亲和，再将复制交给后台。异步模式不等待整份复制完成，但前台仍承担元数据、布局锁和共享 I/O 的开销，需以完整任务时间验证净收益。
 
 ## 3. 当前完成度
 
@@ -63,13 +63,13 @@ flowchart TD
 | TokenFS FUSE 文件系统 | 已实现 | 支持目录、创建、读写、删除、truncate、fsync 等基础文件操作 |
 | 本地优先与远端溢写 | 已实现 | 本地配额不足时写入远端后端 |
 | SQLite 元数据 | 已实现 | 记录逻辑路径、物理路径、GPU、tier、大小、状态和指标 |
-| 价值感知替换 | 已实现 | 支持需求估计、来源代价、EvictionLoss、收益密度和多 baseline 对比 |
+| 价值感知替换 | 分层实现 | Python 有需求估计/来源代价/EvictionLoss；C++ 是独立的 value_aware 启发式，不能共用已验证性能标签 |
 | 共享副本放置 | 已实现/部分真实 | 模拟层支持跨 GPU/节点副本放置；真实跨机器实验仍需要更多内网计算节点 |
-| 后台任务队列 | 已实现 | SQLite 持久化任务，支持复制、预取、淘汰、SWAP、重试和布局版本检查 |
+| 后台任务队列 | 分层实现 | Python 有 SQLite 队列；C++ 为有界内存队列与退出 join；满容量强 SWAP 和复制中断恢复尚未完整验证 |
 | 动态监控 | 已实现 | 支持事件流、指标快照、布局快照和本地 Dashboard |
 | 真实 TokenFS 速度实验 | 已补充 | 使用实际 FUSE workload 的 wall-clock 时间、吞吐和平均读写延迟验证策略是否真的变快 |
 | 双 VM NVMe-oF | 已验证 | 两台 Ubuntu VM 跑通过 Linux NVMe/TCP Host/Target |
-| 实验室 NVMe-oF 实验 | 已完成单客户端复测 | 已在 `cn14` 客户端直连 `cn13:4420`，远端 `/dev/nvme3n1` 通过 NVMe/TCP 挂载到 `/srv/tokenfs/remote0`，并完成环境差距、单轮消融和三轮重复实验 |
+| 实验室 NVMe-oF 实验 | cn7 重新评估 | 当前独立远端挂载 `/srv/tokenfs/remote-cn7`；正式批次使用优化构建、独立种子和整批审计，历史 cn14 结果仅保留追溯 |
 | 真实 vLLM/SGLang 集成 | 未完成 | 当前结果还不是真实模型 TTFT 结果 |
 
 ## 4. 环境边界
