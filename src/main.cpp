@@ -1316,6 +1316,7 @@ class MetadataStore {
 };
 
 class TokenFS {
+  friend struct TokenFSTestAccess;
  public:
   explicit TokenFS(Config config)
       : config_(std::move(config)), metadata_(config_.metadata_db) {}
@@ -1372,6 +1373,10 @@ class TokenFS {
   }
 
   int GetAttr(const char* cpath, struct stat* stbuf, fuse_file_info*) {
+    // Eviction removes the old cache path before committing the remote layout.
+    // Serialize lookup/stat with that transition so a valid canonical object
+    // cannot transiently become ENOENT in FUSE's lookup before Open is called.
+    std::lock_guard<std::mutex> layout_lock(layout_mu_);
     memset(stbuf, 0, sizeof(*stbuf));
     const std::string path = Normalize(cpath);
     if (path == "/") {

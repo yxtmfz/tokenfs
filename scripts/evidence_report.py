@@ -144,7 +144,12 @@ def analyze(root):
             lines.append(f"| {scenario} | {strategy} | {row['with_drain_s']:.3f} | {row['drain_s']:.3f} | {row['p99_ms']:.2f} | {row['copy_mib']:.1f} | {row['evictions']:.1f} | {row['local_read_fraction']:.1%} |")
     dump(root/"resource-summary.json",resource_rows)
     lines += ["", "含后台完成的配对比与区间见 paired-comparisons.json 的 time_ratio_with_drain / with_drain_ci95；它们是附属分析，主检验仍按预先固定方案。主任务更快但收尾更慢时须同时披露。"]
-    lines += ["", "## 组件协同", "", "四格交互只检验价值淘汰与亲和放置，不能替代完整 RobustBenefit 与 independent 控制器比较。", "", json.dumps(interactions,ensure_ascii=False,indent=2), "",
+    lines += ["", "## 组件协同", "", "四格交互只检验价值淘汰与亲和放置，不能替代完整 RobustBenefit 与 independent 控制器比较。交互项小于零表示有利的时间交互；此处仅为探索性分析。", "",
+              "| 场景 | n | 交互项均值/秒 | 95% 区间/秒 |", "|---|---:|---:|---|"]
+    for r in interactions:
+        ci="未估计" if r["ci95"][0] is None else f"[{r['ci95'][0]:.4f}, {r['ci95'][1]:.4f}]"
+        lines.append(f"| {r['scenario']} | {r['n']} | {r['mean_interaction_s']:.4f} | {ci} |")
+    lines += ["",
               f"失败记录数：{len(failures)}。没有出现的场景/对照不是通过，而是尚无结果。", "",
               "## 解释边界", "", "输入为合成存储 trace，GPU 为逻辑缓存域；本表不证明真实推理 TTFT、真实 GPU 扩展性或完整 Python 联合模型在 C++ 中的性能。"]
     (root/"evidence-report.md").write_text("\n".join(lines)+"\n")

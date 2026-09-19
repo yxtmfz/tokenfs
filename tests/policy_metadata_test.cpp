@@ -3,6 +3,37 @@
 #include "../src/main.cpp"
 #undef main
 #include <cassert>
+#include <future>
+
+namespace {
+struct TokenFSTestAccess {
+  static void lookup_during_eviction(const fs::path& root) {
+    Config cfg; cfg.mount_point=root/"mnt";cfg.metadata_db=root/"lookup.db";
+    cfg.gpus.push_back({0,"/gpu0",root/"local",4096,"remote"});
+    cfg.backends.emplace("remote",BackendConfig{"remote","directory",root/"remote"});
+    TokenFS filesystem(cfg);filesystem.Init();
+    const auto local=root/"local"/"k";
+    const auto remote=root/"remote"/"gpu0"/"k";
+    std::ofstream(local)<<"payload";std::ofstream(remote)<<"payload";
+    FileMeta meta;meta.logical_path="/gpu0/k";meta.gpu_id=0;meta.tier="local";
+    meta.physical_path=local;meta.has_remote_copy=true;meta.state="COMMITTED";
+    filesystem.metadata_.Upsert(meta);
+    std::unique_lock<std::mutex> eviction(filesystem.layout_mu_);
+    fs::remove(local);  // Deterministically hold the unlink -> metadata window open.
+    std::promise<void> entered;
+    auto lookup=std::async(std::launch::async,[&]{
+      entered.set_value();struct stat attributes{};
+      return filesystem.GetAttr("/gpu0/k",&attributes,nullptr);
+    });
+    entered.get_future().wait();
+    assert(lookup.wait_for(std::chrono::milliseconds(100))==std::future_status::timeout);
+    meta.tier="remote";meta.physical_path=remote;filesystem.metadata_.Upsert(meta);
+    eviction.unlock();
+    assert(lookup.wait_for(std::chrono::seconds(2))==std::future_status::ready);
+    assert(lookup.get()==0);
+  }
+};
+}
 
 int main() {
   const fs::path root = fs::temp_directory_path() / ("tokenfs-policy-test-" + std::to_string(getpid()));
@@ -37,6 +68,7 @@ int main() {
     auto newest=std::max_element(candidates.begin(), candidates.end(), [](const auto& a,const auto& b){return a.last_access_at<b.last_access_at;});
     assert(newest->meta.logical_path=="/gpu0/b");
   }
+  TokenFSTestAccess::lookup_during_eviction(root/"lookup-race");
   fs::remove_all(root);
   std::cout << "policy metadata invariants passed\n";
 }

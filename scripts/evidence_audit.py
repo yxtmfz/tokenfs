@@ -14,6 +14,7 @@ def audit(root):
     args = manifest["args"]
     expected = set()
     errors = []
+    if (root / "INVALIDATED.json").exists(): errors.append("batch explicitly invalidated; preserve but do not interpret")
     checked = 0
     total_bytes = 0
     for scenario in args["scenarios"]:
@@ -40,7 +41,7 @@ def audit(root):
                 r = json.loads(path.read_text())
                 cfg = json.loads((case / "config.json").read_text())
                 remote_case = Path(args["output"]) / block.name / strategy
-                remote_data = Path(args["remote_root"]) / ("eval-" + root.name) / block.name
+                remote_data = Path(args["remote_root"]) / ("eval-" + Path(args["output"]).name) / block.name
                 reference = config_for(strategy, remote_case, remote_data, args["quota_mib"], args["backend_direct"])
                 problems = []
                 if cfg != reference: problems.append("configuration differs")
