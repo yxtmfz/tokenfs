@@ -24,3 +24,5 @@
 formal-01 进行期间，独立 cn8 matrix-01 在 stable/LRU-equal 的第47次请求前报 ENOENT。排查与可控制时序的 C++ 回归确认：GetAttr 没有与 unlink→远端元数据提交同步。本批已主动终止并以 INVALIDATED.json 标记；包括成功轮次在内均不进入正式速度结论。
 
 修复仅为 GetAttr 与布局转换共用互斥锁；冻结新的源码与二进制 SHA256。新正式批次命名 formal-02，种子改为 **201–210**，其余400次矩阵、96请求、4 MiB对象、每域8 MiB配额、计时和统计规则保持不变。未依照旧批次输赢调参或选择场景。启动前须通过 C++ 竞态正/负向回归及全变体内容校验；两个版本不能合并，新的正式批次也不能与 pilot 混合。
+
+构建复查发现原默认 CMake 构建未启用优化。因此 formal-02 同时明确统一 **Release** 构建（`cmake -S . -B build-release -DCMAKE_BUILD_TYPE=Release`），正式入口记录 build_type 并拒绝非 Release 的 paper profile；所有策略仍共享同一优化二进制。旧 pilot 仅作为开发排错记录，其绝对速度不能与 Release 批次拼接。该修正于 formal-02 首次运行之前固定，不改变对照和统计家族。

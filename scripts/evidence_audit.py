@@ -15,6 +15,8 @@ def audit(root):
     expected = set()
     errors = []
     if (root / "INVALIDATED.json").exists(): errors.append("batch explicitly invalidated; preserve but do not interpret")
+    if args.get("profile") == "paper" and not args.get("verify") and manifest.get("build_type") != "Release":
+        errors.append("formal performance batch lacks a verified Release build")
     checked = 0
     total_bytes = 0
     for scenario in args["scenarios"]:

@@ -327,6 +327,13 @@ def main():
     if not args.remote_root: parser.error("--remote-root is required")
     if min(args.requests, args.shard_mib, args.quota_mib) <= 0: parser.error("sizes and requests must be positive")
     if len(set(args.seeds)) != len(args.seeds): parser.error("duplicate seed")
+    cache_path = args.binary.resolve().parent / "CMakeCache.txt"
+    build_type = None
+    if cache_path.exists():
+        match = re.search(r"^CMAKE_BUILD_TYPE:STRING=(.*)$", cache_path.read_text(), re.MULTILINE)
+        if match: build_type = match.group(1)
+    if args.profile == "paper" and not args.verify and build_type != "Release":
+        raise RuntimeError("formal paper profile requires a verified CMake Release build")
     # This check makes accidental execution on an unmounted fallback directory fail closed.
     mount = subprocess.check_output(["findmnt", "-J", "--target", str(args.remote_root.resolve())], text=True)
     mount_info = json.loads(mount)["filesystems"][0]
@@ -342,7 +349,8 @@ def main():
     remote_run = args.remote_root.resolve() / ("eval-" + root.name)
     remote_run.mkdir(exist_ok=False)
     dump(root / "manifest.json", {"args": {k: str(v) if isinstance(v, Path) else v for k,v in vars(args).items()},
-                                  "binary_sha256": sha(args.binary), "mount": mount_info, "nvme_identity": identity,
+                                  "binary_sha256": sha(args.binary), "build_type": build_type,
+                                  "mount": mount_info, "nvme_identity": identity,
                                   "source_sha256": sha(Path(__file__).resolve().parents[1] / "src/main.cpp"),
                                   "harness_sha256": sha(__file__),
                                   "kernel": subprocess.check_output(["uname", "-a"], text=True).strip(),
