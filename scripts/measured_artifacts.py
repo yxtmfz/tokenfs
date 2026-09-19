@@ -7,7 +7,7 @@ import json
 import statistics
 from pathlib import Path
 
-from evidence_benchmark import dump, MIB
+from evidence_benchmark import dump, MIB, percentile
 from evidence_report import interval
 from measured_study import report
 
@@ -33,6 +33,7 @@ def generate(root, figures=False):
             events=json.loads((case/'policy-events.json').read_text())
             rows=json.loads((case/'requests.json').read_text())
             by_case[(block['id'],name)]=(result,events)
+            paced=[r for r in rows if 'release_s' in r]
             mechanisms.append(dict(block=block['id'],scenario=block['scenario'],strategy=name,
                 admissions=sum(e['action']=='ADMIT' for e in events),
                 calibrated_admissions=sum(e['action']=='ADMIT' and 'calibrated=1' in e['reason'] for e in events),
@@ -48,11 +49,16 @@ def generate(root, figures=False):
                 with_drain_s=result['completed_with_background_s'],
                 request_p50_ms=result['request_p50_s']*1000,
                 request_p99_ms=result['request_p99_s']*1000,
+                arrival_to_completion_p99_ms=percentile([max(0,r['completed_s']-r['release_s'])*1000 for r in paced],.99) if paced else None,
+                arrival_to_issue_p99_ms=percentile([max(0,r['issued_s']-r['release_s'])*1000 for r in paced],.99) if paced else None,
                 daemon_cpu_s=result['daemon_cpu_s'],daemon_peak_rss_kib=result['daemon_peak_rss_kib']))
             if rows and all('issued_s' in r and 'completed_s' in r for r in rows):
                 for part in range(4):
                     selected=rows[part*len(rows)//4:(part+1)*len(rows)//4]
-                    elapsed=selected[-1]['completed_s']-selected[0]['issued_s']
+                    start_index=part*len(rows)//4
+                    # Include the boundary idle gap, especially in paced replay.
+                    start_time=rows[start_index-1]['completed_s'] if start_index else 0
+                    elapsed=selected[-1]['completed_s']-start_time
                     segments.append(dict(block=block['id'],scenario=block['scenario'],strategy=name,
                         quarter=part+1,requests=len(selected),elapsed_s=elapsed,
                         mib_s=sum(r['bytes'] for r in selected)/MIB/elapsed))
@@ -112,7 +118,7 @@ def generate(root, figures=False):
         lines.append(f"| {row['scenario']} | {row['quota_mib']} | {row['requests']} | {row['strategy']} | {row['n']} | {row['mean_wall_s']:.4f} | {row['mean_mib_s']:.3f} | {row['mean_copy_mib']:.2f} | {row['mean_cpu_s']:.3f} | {row['mean_rss_kib']:.1f} |")
     lines += ['', '## Interpretation', '',
         'The primary family comprises LRU, LFU and RecentLFU comparisons across the scenes in this batch; other families are per-component. Intervals are unadjusted paired bootstrap intervals; p-values use Holm correction within each family. No component is necessary merely because its point estimate is favorable. Inspect mechanisms.json and component-evidence.json for actual activity and changed actions; untriggered components have no identified necessity even if timing differs.', '',
-        'Report paired-comparisons.json with_drain_ratio alongside foreground time. mechanisms.json contains p50/p99, CPU, RSS and copying for every run. segments.json gives descriptive throughput by request-index quarter; quarters are not independent replication units. interactions.json is an exploratory four-cell comparison, not a full RobustBenefit test.', '',
+        'Report paired-comparisons.json with_drain_ratio alongside foreground time. mechanisms.json contains p50/p99 of individual object reads, CPU, RSS and copying for every run. In paced replay it also reports block arrival-to-issue and arrival-to-completion p99, including loader backlog; these are not inference TTFT. segments.json partitions time by request-index quarter, including boundary idle gaps; quarters are not independent replication units. interactions.json is an exploratory four-cell comparison, not a full RobustBenefit test.', '',
         'Foreground timing excludes initialization and post-run verification. Copy payload is not physical wire/disk traffic. Logical cache domains are not physical GPUs. Public traces preserve block identity/order with synthetic normalized bytes; saturated replay is not full inference or the original concurrency. Small-n development/supplementary runs do not support confirmatory claims. Negative and uncertain results are retained.']
     (root/'measured-report.md').write_text('\n'.join(lines)+'\n')
     if figures:
