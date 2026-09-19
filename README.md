@@ -1,5 +1,7 @@
 # AURA-KV / TokenFS
 
+> 实验证据修订：历史模拟结果存在首次缺失计账问题，旧真实 `wall_time_s` 是分段耗时和，且基线能力、缓存控制与淘汰触发存在缺口。旧报告保留为历史记录，不能作为当前已验证性能结论。新分类、真实速率口径和验收状态见 [证据驱动实验](docs/evidence-experiments.md)。
+
 > 2026-09-18 环境迁移：后续主客户端改为 **cn7**，cn8 备用；cn13 为远端存储。新客户端使用独立 namespace，配置与验证见 [cn7 迁移记录](docs/client-migration-cn7.md)。下文 cn14 数据仍是历史实验结果，尚未在 cn7 运行新性能实验。
 
 ```text
@@ -278,7 +280,7 @@ reports/latest/paper-experiments/09_real_cn14_nvmeof/
 └── 07_fair_readthrough_repeat/repeat_summary.csv # 当前论文主引用结果，包含强 LRU/LFU baseline
 ```
 
-其中 `07_fair_readthrough_repeat/repeat_summary.csv` 是论文真实速度实验优先引用的多轮汇总表。`06_optimized_repeat` 是旧的 5 策略结果，能说明 AURA 机制有效，但 LRU/LFU 没有远端读后回填本地缓存，baseline 偏弱；`03_repeat_speed` 是优化前结果，用来说明“只提高命中率还不够，必须降低前台和后台实现开销”。
+`07_fair_readthrough_repeat/repeat_summary.csv` 为历史三轮结果，当前不再推荐作为论文主结论依据。
 
 如果只想单独跑某个阶段，也可以分别运行：
 
@@ -288,28 +290,9 @@ TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/real_speed_benchmark.sh
 TOKENFS_CONFIG=config/tokenfs.nvmeof.yaml ./scripts/real_speed_repeat_benchmark.sh
 ```
 
-当前真实重复实验设置为 `64 MiB` shard、`512 MiB` 本地配额、重复 `3` 轮。每个策略每轮总读写约 `16904 MiB`，比快速验证版本更适合观察稳定性能；脚本会让 shard 大小和本地配额按比例放大，并保留替换缓冲，避免“只放大文件、不放大缓存”或“把缓存压到完全无余量”改变实验含义。它不改变访问形状，只放大数据规模并重复采样。`repeat_summary.csv` 给出每个策略的平均总耗时、平均吞吐、平均加速比、标准差和最小/最大范围。论文里优先使用这张表，而不是只引用某一次单轮结果。
+历史 `cn14` 实验使用 64 MiB shard、512 MiB 配额、3 轮、每轮约 16904 MiB 重复逻辑流量。历史主表曾混入不同批次，现移除手工拼接的表格；原始 CSV 保留。其计时未覆盖全部工作负载间隙，因此不能重新命名成外层 wall-clock。
 
-最新真实 NVMe-oF 三轮平均结果如下：
-
-| 策略 | 平均总耗时 s | 耗时范围 s | 平均有效吞吐 MiB/s | 相对 RemoteOnly | 本地读命中率 | 远端打开读取 |
-|---|---:|---:|---:|---:|---:|---:|
-| `RemoteOnly` | 63.896 | 62.476-65.310 | 264.64 | 1.000x | 0.00% | 260 |
-| `LocalFirst` | 61.293 | 59.474-62.481 | 275.92 | 1.043x | 0.38% | 259 |
-| `LRU-Local` | 61.229 | 60.039-62.136 | 276.14 | 1.044x | 0.38% | 259 |
-| `LFU-Local` | 62.038 | 60.357-63.736 | 272.61 | 1.030x | 0.38% | 259 |
-| `LRU-ReadThrough` | 59.278 | 58.127-60.604 | 285.25 | 1.098x | 73.85% | 68 |
-| `LFU-ReadThrough` | 59.409 | 58.361-61.032 | 284.64 | 1.095x | 73.85% | 68 |
-| `AURA-no-prefetch` | 58.674 | 58.512-58.829 | 288.10 | 1.109x | 91.15% | 23 |
-| `AURA-no-xgpu` | 60.035 | 59.462-60.509 | 281.58 | 1.083x | 71.54% | 74 |
-| `AURA-Joint` | **57.977** | **57.429-58.973** | **291.61** | **1.122x** | **95.25%** | **12.3** |
-
-这组结果说明，优化后的 AURA-Joint 不只是减少远端访问次数，也已经在真实 wall-clock 总耗时上领先。加入强 baseline 后，`LRU-ReadThrough` 和 `LFU-ReadThrough` 的本地读命中率提升到 `73.85%`，不再是弱对照；AURA-Joint 仍然是平均总耗时最低。相比 RemoteOnly 平均快约 `10.87%`，相比 LRU-ReadThrough 快约 `2.20%`，相比 LFU-ReadThrough 快约 `2.41%`。这里的提升来自两个工程修正：
-
-1. **远端权威、本地可重建缓存语义**：远端 NVMe-oF 层保存 canonical 数据，本地副本作为可重建缓存。`durable_local_cache=false` 时，热点提升和跨 GPU 本地副本不再对每个本地缓存副本执行前台强 `fsync`，避免把缓存创建写成持久化事务。
-2. **本地命中快路径**：`fast_local_cache_hit=true` 时，已经存在的本地 READY 副本优先服务前台读，请求不会被同步指标写库、亲和判断和预取判断阻塞；远端 miss 仍会走完整 AURA 决策链路。
-
-这两个改动没有改变 workload，也没有人为制造更适合 AURA 的访问序列，而是把系统实现和项目语义对齐：远端是权威容量层，本地是高速缓存层。论文中可以把旧 `03_repeat_speed`、5 策略 `06_optimized_repeat` 与强 baseline `07_fair_readthrough_repeat` 作为一组逐步补强的对照。
+新实验统一使用 `scripts/evidence_benchmark.py`：独立目录、配对 trace、随机策略顺序、完整外层时间、实际 MiB/s、后台收尾与内容校验。模拟 objective 和命中率均不作为真实加速的替代指标。cn7 结果与旧 cn14 数据分批保存。
 
 主速度实验默认不人为限制后台复制带宽，因为这里要回答的是“策略是否让端到端 workload 更快”。如果要单独研究后台复制对前台 I/O 的干扰，可以设置 `TOKENFS_ABLATION_BACKGROUND_MIB_PER_SEC=256` 之类的限速参数另跑专项实验，不和主速度表混在一起。
 

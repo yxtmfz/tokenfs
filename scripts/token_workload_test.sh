@@ -48,19 +48,24 @@ cleanup() {
 }
 trap cleanup EXIT
 
+if [[ -e "$result_root" ]]; then
+  echo "Refusing to overwrite results: $result_root" >&2
+  exit 1
+fi
+mkdir -p "$result_root"
+
+
 TOKENFS_CONFIG="$config_file" "$project_root/scripts/reset_dev_state.sh" "$mount_point" >/dev/null
 cmake -S "$project_root" -B "$project_root/build" -G Ninja >/dev/null
 cmake --build "$project_root/build" >/dev/null
 "$project_root/scripts/start_tokenfs.sh" "$config_file" "$mount_point" >/dev/null
-
-rm -rf "$result_root"
-mkdir -p "$result_root"
 
 python3 - "$project_root" "$mount_point" "$metadata_db" "$config_file" "$result_root" \
   "$shard_mib" "$remote_hot_shards" "$cold_fill_shards" "$cross_gpu_reads" \
   "$pressure_shard_mib" "$hot_rehit_reads" "$sequential_rehit_reads" "$chunk_mib" \
   "$fadvise_dontneed" "$drop_os_caches" "$drop_os_caches_per_read" <<'PY'
 import csv
+import json
 import os
 import sqlite3
 import subprocess
@@ -257,7 +262,7 @@ def drop_page_cache(stage: str) -> None:
     elapsed = time.perf_counter() - start
     note = "Linux page cache dropped before storage-tier measurement"
     if proc.returncode != 0:
-        note = "requested Linux page cache drop but sudo non-interactive permission was unavailable"
+        raise RuntimeError("cold-cache precondition failed: " + proc.stderr.strip())
     record("cache_control", stage, -1, -1, Path("/proc/sys/vm/drop_caches"), 0.0, elapsed, note)
 
 
@@ -321,7 +326,7 @@ for _ in range(repeats):
             ["sudo", "-n", "sh", "-c", "sync; echo 3 > /proc/sys/vm/drop_caches"],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
-            check=False,
+            check=True,
         )
     start = time.perf_counter()
     with p.open("rb", buffering=0) as f:
@@ -391,6 +396,8 @@ for i in range(remote_hot_shards):
     seed_remote_shard(0, 100 + i, shard_mib, "remote-canonical-hot")
 seed_remote_shard(0, 200, shard_mib, "remote-canonical-cross-gpu", shared_dir)
 
+job_start = time.monotonic_ns()
+
 # 2. 本地缓存先被低价值旧 shard 占满，后续热点提升/预取必须与淘汰协同。
 for i in range(cold_fill_shards):
     write_via_fuse(0, i, shard_mib, "cold-local-cache-fill")
@@ -426,6 +433,8 @@ if cross_gpu_reads > 1:
     time.sleep(1.0)
     drop_page_cache("before-cross-gpu-rehit-after-replica")
     read_many_via_fuse(0, 1, 200, "cross-gpu-rehit-after-replica", cross_gpu_reads - 1, shared_dir)
+
+(result / "timing.json").write_text(json.dumps({"job_wall_s": (time.monotonic_ns() - job_start) / 1e9, "clock": "monotonic", "includes_workload_waits": True}) + "\n")
 
 with (result / "summary.csv").open("w", newline="", encoding="utf-8") as f:
     writer = csv.DictWriter(

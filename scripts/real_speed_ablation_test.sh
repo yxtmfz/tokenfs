@@ -13,7 +13,7 @@ cleanup() {
 }
 trap cleanup EXIT
 
-rm -rf "$result_root"
+if [[ -e "$result_root" ]]; then echo "Refusing to overwrite $result_root" >&2; exit 1; fi
 mkdir -p "$result_root"
 
 make_config() {
@@ -118,8 +118,8 @@ run_case() {
   TOKENFS_SEQUENTIAL_REHIT_READS="${TOKENFS_SEQUENTIAL_REHIT_READS:-64}" \
   TOKENFS_CHUNK_MIB="${TOKENFS_CHUNK_MIB:-1}" \
   TOKENFS_FADVISE_DONTNEED="${TOKENFS_FADVISE_DONTNEED:-1}" \
-  TOKENFS_DROP_OS_CACHES="${TOKENFS_DROP_OS_CACHES:-1}" \
-  TOKENFS_DROP_OS_CACHES_PER_READ="${TOKENFS_DROP_OS_CACHES_PER_READ:-1}" \
+  TOKENFS_DROP_OS_CACHES="${TOKENFS_DROP_OS_CACHES:-0}" \
+  TOKENFS_DROP_OS_CACHES_PER_READ="${TOKENFS_DROP_OS_CACHES_PER_READ:-0}" \
     "$project_root/scripts/token_workload_test.sh" "$out" >/dev/null
 }
 
@@ -156,13 +156,11 @@ def metric(metrics: dict, name: str) -> int:
     return int(metrics.get(name, 0))
 
 def workload_seconds(path: Path) -> float:
-    total = 0.0
-    with path.open("r", encoding="utf-8") as f:
-        for row in csv.DictReader(f):
-            if row["operation"] == "cache_control":
-                continue
-            total += float(row["seconds"])
-    return total
+    # Historical summaries without outer timing must never be relabeled as wall time.
+    timing = json.loads((path.parent / "timing.json").read_text())
+    seconds = float(timing["job_wall_s"])
+    if seconds <= 0: raise ValueError("invalid outer wall time")
+    return seconds
 
 rows = []
 for case in cases:

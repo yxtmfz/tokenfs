@@ -9,7 +9,7 @@ from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 
-from .core import AccessEvent, CacheIdentity, CacheObject, NodeState, Replica
+from .core import AccessEvent, CacheIdentity, CacheObject, NodeState, Replica, ReplicaStatus
 from .policies import (
     AffinityOnlyPolicy,
     AuraKVPolicy,
@@ -49,6 +49,7 @@ class SimulationConfig:
     duplicate_budget_mib: int = 128
     node_duplicate_budget_mib: int = 64
     demand_horizon_seconds: float = 600.0
+    background_bandwidth_mib_s: float = 800.0
 
 
 @dataclass
@@ -123,6 +124,9 @@ class TraceSimulator:
         self.controller_cycle = 0
         self.task_sequence = 0
         self.action_sequence = 0
+        self.now = 0.0
+        self.copy_available_at = 0.0
+        self.pending_copies = {}
 
     @property
     def duplicate_bytes(self) -> int:
@@ -215,144 +219,59 @@ class TraceSimulator:
     def p99_latency(self) -> float:
         return percentile(self.latencies_ms, 99)
 
+    def advance_copies(self, now: float) -> None:
+        self.now = now
+        for (node_id, key), (ready_at, task_id) in list(self.pending_copies.items()):
+            if ready_at > now:
+                continue
+            replica = self.nodes[node_id].replicas.get(key)
+            if replica is not None and replica.status == ReplicaStatus.COPYING:
+                replica.status = ReplicaStatus.READY
+                self.layout_version += 1
+                self.emit("REPLICA_READY", "layout", cache_key=key, node_id=node_id,
+                          task_id=task_id, bytes=replica.size_bytes,
+                          state_before="COPYING", state_after="READY",
+                          reason="simulated copy completed", extra={"ready_at": ready_at})
+                self.emit_task_transition(task_id, "REPLICATE", key, "remote", node_id,
+                                          ["VERIFYING", "COMMITTED"], bytes_value=replica.size_bytes,
+                                          reason="simulated transfer completed")
+            del self.pending_copies[(node_id, key)]
+
     def ensure_space_and_add(self, node_id: str, cache: CacheObject, reason: str, evict: str = "lru") -> bool:
         node = self.nodes[node_id]
-        if node.has_replica(cache.identity.cache_key):
+        key = cache.identity.cache_key
+        if key in node.replicas:
             return True
         node_budget = min(node.local_capacity_bytes, self.config.node_duplicate_budget_mib * MIB)
         if cache.size_bytes > node_budget or cache.size_bytes > self.config.duplicate_budget_mib * MIB:
             return False
         while node.local_used_bytes + cache.size_bytes > node_budget:
             victim = self.choose_victim(node, evict)
-            if victim is None:
-                return False
-            victim_cache = self.caches[victim]
-            self.remove_replica_for_space(node_id, victim, f"node capacity pressure before adding {cache.identity.cache_key}")
+            if victim is None: return False
+            self.remove_replica_for_space(node_id, victim, "capacity for " + key)
         while self.duplicate_bytes + cache.size_bytes > self.config.duplicate_budget_mib * MIB:
             victim = self.choose_global_victim(evict)
-            if victim is None:
-                return False
-            victim_node, victim_key = victim
-            self.remove_replica_for_space(victim_node, victim_key, f"global duplicate budget before adding {cache.identity.cache_key}")
-        replica = Replica(
-            cache_key=cache.identity.cache_key,
-            node_id=node_id,
-            size_bytes=cache.size_bytes,
-            lease_expire_at=cache.last_access_at + 600,
-            utility_at_creation=1.0,
-        )
+            if victim is None: return False
+            self.remove_replica_for_space(*victim, "duplicate budget for " + key)
+        replica = Replica(key, node_id, status=ReplicaStatus.COPYING,
+                          size_bytes=cache.size_bytes, lease_expire_at=self.now + 600)
+        if not node.add_replica(replica): return False
         task_id = self.next_task_id("replicate")
-        self.emit_task_transition(
-            task_id,
-            "REPLICATE",
-            cache.identity.cache_key,
-            "remote",
-            node_id,
-            ["CREATED", "PENDING", "RUNNING"],
-            bytes_value=cache.size_bytes,
-            reason=reason,
-        )
-        self.emit(
-            "REPLICA_COPYING",
-            "layout",
-            cache_key=cache.identity.cache_key,
-            node_id=node_id,
-            source="remote",
-            target=node_id,
-            task_id=task_id,
-            bytes=cache.size_bytes,
-            state_before="ABSENT",
-            state_after="COPYING",
-            reason=reason,
-            extra={"duplicate_bytes": self.duplicate_bytes},
-        )
-        self.emit_task_transition(
-            task_id,
-            "REPLICATE",
-            cache.identity.cache_key,
-            "remote",
-            node_id,
-            ["VERIFYING"],
-            bytes_value=cache.size_bytes,
-            reason="stage progress, not real byte progress",
-        )
-        self.emit(
-            "REPLICA_VERIFYING",
-            "layout",
-            cache_key=cache.identity.cache_key,
-            node_id=node_id,
-            source="remote",
-            target=node_id,
-            task_id=task_id,
-            bytes=cache.size_bytes,
-            state_before="COPYING",
-            state_after="VERIFYING",
-            reason="stage progress, not real byte progress",
-            extra={"duplicate_bytes": self.duplicate_bytes},
-        )
-        if node.add_replica(replica):
-            self.replica_churn += 1
-            self.migration_bytes += cache.size_bytes
-            self.last_replica_change[(cache.identity.cache_key, node_id)] = cache.last_access_at
-            self.layout_version += 1
-            self.emit(
-                "REPLICA_READY",
-                "layout",
-                cache_key=cache.identity.cache_key,
-                node_id=node_id,
-                source="remote",
-                target=node_id,
-                task_id=task_id,
-                bytes=cache.size_bytes,
-                state_before="VERIFYING",
-                state_after="READY",
-                reason=reason,
-                extra={"duplicate_bytes": self.duplicate_bytes},
-            )
-            self.emit_task_transition(
-                task_id,
-                "REPLICATE",
-                cache.identity.cache_key,
-                "remote",
-                node_id,
-                ["COMMITTED"],
-                bytes_value=cache.size_bytes,
-                reason="replica ready",
-            )
-            self.emit(
-                "LAYOUT_VERSION_CHANGED",
-                "layout",
-                cache_key=cache.identity.cache_key,
-                node_id=node_id,
-                task_id=task_id,
-                layout_version=self.layout_version,
-                reason="replica add changed layout",
-                extra={"duplicate_bytes": self.duplicate_bytes},
-            )
-            self.emit_layout_snapshot()
-            self.decisions.append(
-                {
-                    "cache_key": cache.identity.cache_key,
-                    "node_id": node_id,
-                    "action": "ADD_REPLICA",
-                    "reason": reason,
-                    "size_bytes": cache.size_bytes,
-                }
-            )
-            return True
-        self.emit_task_transition(
-            task_id,
-            "REPLICATE",
-            cache.identity.cache_key,
-            "remote",
-            node_id,
-            ["FAILED"],
-            bytes_value=cache.size_bytes,
-            reason="node rejected replica",
-            error_code="NO_LOCAL_CAPACITY",
-            error_message="target node cannot fit replica",
-        )
-        return False
+        delay = self.config.remote_read_p50_ms / 1000 + cache.size_bytes / (max(0.001, self.config.background_bandwidth_mib_s) * MIB)
+        ready_at = max(self.now, self.copy_available_at) + delay
+        self.copy_available_at = ready_at
+        self.pending_copies[(node_id, key)] = (ready_at, task_id)
+        self.replica_churn += 1
+        self.migration_bytes += cache.size_bytes
+        self.last_replica_change[(key, node_id)] = self.now
+        self.emit_task_transition(task_id, "REPLICATE", key, "remote", node_id,
+                                  ["CREATED", "PENDING", "RUNNING"], bytes_value=cache.size_bytes, reason=reason)
+        self.emit("REPLICA_COPYING", "layout", cache_key=key, node_id=node_id, task_id=task_id,
+                  bytes=cache.size_bytes, state_before="ABSENT", state_after="COPYING",
+                  reason=reason, extra={"ready_at": ready_at})
+        self.decisions.append({"cache_key": key, "node_id": node_id, "action": "ADD_REPLICA",
+                               "reason": reason, "size_bytes": cache.size_bytes})
+        return True
 
     def remove_replica_for_space(self, node_id: str, cache_key: str, reason: str) -> None:
         node = self.nodes[node_id]
@@ -419,23 +338,19 @@ class TraceSimulator:
         )
 
     def choose_global_victim(self, evict: str) -> tuple[str, str] | None:
-        candidates = [node for node in self.nodes.values() if node.replicas]
-        if not candidates:
-            return None
-        if evict == "lfu":
-            node = min(candidates, key=lambda item: min(item.lfu_count.get(key, 0) for key in item.replicas))
-            key = min(node.replicas, key=lambda item: node.lfu_count.get(item, 0))
-            return node.node_id, key
-        if evict == "value":
-            def replica_value(item: tuple[NodeState, str]) -> float:
-                node, key = item
-                cache = self.caches[key]
-                reads = self.access_graph.get(key, {}).get(node.node_id, 0.0)
-                return reads * max(1.0, cache.recompute_cost_ms) / max(1.0, cache.size_bytes / MIB)
-            node, key = min(((node, key) for node in candidates for key in node.replicas), key=replica_value)
-            return node.node_id, key
-        node = min(candidates, key=lambda item: min(item.lru_clock.get(key, 0.0) for key in item.replicas))
-        key = min(node.replicas, key=lambda item: node.lru_clock.get(item, 0.0))
+        candidates = [(node, self.choose_victim(node, evict)) for node in self.nodes.values()]
+        candidates = [(node, key) for node, key in candidates if key is not None]
+        if not candidates: return None
+        def score(pair):
+            node, key = pair
+            if evict == "lfu": return node.lfu_count.get(key, 0)
+            if evict == "value" and hasattr(self.policy, "cost_model"):
+                from .layout import LayoutCostEvaluator
+                evaluator = LayoutCostEvaluator(self.policy.cost_model, self.policy.demand_estimator)
+                return evaluator.eviction_loss(self.caches[key], node.node_id, self.nodes,
+                                               self.remote_has(key), self.now, self.config.demand_horizon_seconds).loss_density_ms_per_mib
+            return node.lru_clock.get(key, 0.0)
+        node, key = min(candidates, key=score)
         return node.node_id, key
 
     def next_task_id(self, prefix: str) -> str:
@@ -494,23 +409,29 @@ class TraceSimulator:
         }.get(state, 0)
 
     def choose_victim(self, node: NodeState, evict: str) -> str | None:
-        if not node.replicas:
+        candidates = [key for key, replica in node.replicas.items() if replica.status == ReplicaStatus.READY]
+        if not candidates:
             return None
         if evict == "lfu":
-            return min(node.replicas, key=lambda key: node.lfu_count.get(key, 0))
+            return min(candidates, key=lambda key: node.lfu_count.get(key, 0))
         if evict == "size_aware_lru":
             def size_aware_lru(key: str) -> float:
                 cache = self.caches[key]
                 age = max(0.0, cache.last_access_at - node.lru_clock.get(key, 0.0))
                 return age / max(1.0, cache.size_bytes / MIB)
-            return max(node.replicas, key=size_aware_lru)
+            return max(candidates, key=size_aware_lru)
         if evict == "value":
             def value(key: str) -> float:
-                cache = self.caches[key]
-                reads = self.access_graph.get(key, {}).get(node.node_id, 0.0)
-                return reads * max(1.0, cache.recompute_cost_ms) / max(1.0, cache.size_bytes / MIB)
-            return min(node.replicas, key=value)
-        return min(node.replicas, key=lambda key: node.lru_clock.get(key, 0.0))
+                if not hasattr(self.policy, "cost_model") or not hasattr(self.policy, "demand_estimator"):
+                    cache = self.caches[key]
+                    return self.access_graph.get(key, {}).get(node.node_id, 0) * max(1, cache.recompute_cost_ms) / max(1, cache.size_bytes / MIB)
+                from .layout import LayoutCostEvaluator
+                evaluator = LayoutCostEvaluator(self.policy.cost_model, self.policy.demand_estimator)
+                loss = evaluator.eviction_loss(self.caches[key], node.node_id, self.nodes,
+                                              self.remote_has(key), self.now, self.config.demand_horizon_seconds)
+                return loss.loss_density_ms_per_mib if loss.allowed else float("inf")
+            return min(candidates, key=value)
+        return min(candidates, key=lambda key: node.lru_clock.get(key, 0.0))
 
     def latency_for_source(self, source: str, event: AccessEvent) -> float:
         cache = self.caches[event.cache_key]
@@ -530,6 +451,7 @@ class TraceSimulator:
     def run(self, event_delay_seconds: float = 0.0) -> SimulationResult:
         self.emit_layout_snapshot()
         for event in self.trace:
+            self.advance_copies(event.timestamp)
             cache = self.caches[event.cache_key]
             cache.last_access_at = event.timestamp
             phase = self.workload_phase(event)
@@ -581,7 +503,14 @@ class TraceSimulator:
                 workload_phase=phase,
                 reason="access event updates demand estimator",
             )
-            source, decisions = self.policy.on_access(self, event)
+            available_source = self.source_resolver.resolve(event.cache_key, event.node_id, self.nodes,
+                                                            self.remote_has(event.cache_key), cache.recompute_cost_ms > 0)
+            if available_source.value == "SAME_NODE_REPLICA": source = "local"
+            elif available_source.value == "PEER_NODE_REPLICA": source = "peer"
+            elif available_source.value == "RECOMPUTE": source = "recompute"
+            else: source = "remote"
+            if self.policy.name == "RemoteOnly": source = "remote"
+            _, decisions = self.policy.on_access(self, event)
             for decision in decisions:
                 candidate_id = f"cand-{self.controller_cycle}-{len(self.decisions) + 1}"
                 action_id = self.next_action_id()

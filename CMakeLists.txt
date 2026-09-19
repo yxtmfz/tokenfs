@@ -30,3 +30,12 @@ target_link_libraries(tokenfs PRIVATE
   yaml-cpp
   SQLite::SQLite3
 )
+
+include(CTest)
+if(BUILD_TESTING)
+  add_executable(policy_metadata_test tests/policy_metadata_test.cpp)
+  target_include_directories(policy_metadata_test PRIVATE ${FUSE3_INCLUDE_DIRS})
+  target_compile_options(policy_metadata_test PRIVATE ${FUSE3_CFLAGS_OTHER} -UNDEBUG)
+  target_link_libraries(policy_metadata_test PRIVATE ${FUSE3_LIBRARIES} yaml-cpp SQLite::SQLite3)
+  add_test(NAME policy_metadata COMMAND policy_metadata_test)
+endif()

@@ -175,7 +175,6 @@ class NodeLFUPolicy(SimulationPolicy):
     def on_access(self, sim: "TraceSimulator", event: AccessEvent) -> tuple[str, list[Decision]]:
         cache = sim.caches[event.cache_key]
         node = sim.nodes[event.node_id]
-        node.lfu_count[event.cache_key] = node.lfu_count.get(event.cache_key, 0) + 1
         if node.has_replica(event.cache_key):
             return "local", []
         sim.ensure_space_and_add(event.node_id, cache, "lfu fill", evict="lfu")
@@ -359,14 +358,17 @@ class AuraKVPolicy(SimulationPolicy):
             foreground_slo_gate=False,
         )
         add_constraints = constraints.can_add(cache, node, sim.nodes, require_sharing_allowed=not can_promote_locally)
+        # Capacity is checked after selecting READY victims in the shared executor.
+        admission_allowed = all(value for key, value in add_constraints.checks.items()
+                                if key not in {"node_capacity", "global_duplicate_budget", "node_duplicate_budget"})
         if source == AlternativeSource.NONE:
             action = CacheAction.PIN
             reason = "no safe alternative source"
-        elif can_share and gain.allowed and gain.gain_ms > self.minimum_layout_improvement_ms and add_constraints.allowed:
+        elif can_share and gain.allowed and gain.gain_ms > self.minimum_layout_improvement_ms and admission_allowed:
             action = CacheAction.REPLICATE
             reason = f"replica gain {gain.gain_ms:.3f} ms, state={state.value}"
             sim.ensure_space_and_add(event.node_id, cache, reason, evict="value")
-        elif can_promote_locally and gain.allowed and gain.gain_density_ms_per_mib > 0.05 and add_constraints.allowed:
+        elif can_promote_locally and gain.allowed and gain.gain_density_ms_per_mib > 0.05 and admission_allowed:
             action = CacheAction.PROMOTE
             reason = f"local gain density {gain.gain_density_ms_per_mib:.3f} ms/MiB"
             sim.ensure_space_and_add(event.node_id, cache, reason, evict="value")
