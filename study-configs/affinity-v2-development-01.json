@@ -3,9 +3,74 @@
   "topology": "three private logical domains on one client disk; actual NVMe/TCP",
   "blocks": [
     {
-      "id": "hot_shift-s1702",
-      "scenario": "hot_shift",
+      "id": "uniform-s1702",
+      "scenario": "uniform",
       "seed": 1702,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "P-off",
+        "P-old",
+        "P-new"
+      ]
+    },
+    {
+      "id": "domain_return-s1702",
+      "scenario": "domain_return",
+      "seed": 1702,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "P-off",
+        "P-old",
+        "P-new"
+      ]
+    },
+    {
+      "id": "domain_return-s1701",
+      "scenario": "domain_return",
+      "seed": 1701,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "P-off",
+        "P-old",
+        "P-new"
+      ]
+    },
+    {
+      "id": "coupled-s1701",
+      "scenario": "coupled",
+      "seed": 1701,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "P-off",
+        "P-old",
+        "P-new"
+      ]
+    },
+    {
+      "id": "coupled-s1702",
+      "scenario": "coupled",
+      "seed": 1702,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "P-off",
+        "P-old",
+        "P-new"
+      ]
+    },
+    {
+      "id": "hot_shift-s1701",
+      "scenario": "hot_shift",
+      "seed": 1701,
       "requests": 384,
       "shard_mib": 2,
       "quota_mib": 8,
@@ -6955,6 +7020,19 @@
       }
     },
     {
+      "id": "static_affinity-s1702",
+      "scenario": "static_affinity",
+      "seed": 1702,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "P-off",
+        "P-old",
+        "P-new"
+      ]
+    },
+    {
       "id": "uniform-s1701",
       "scenario": "uniform",
       "seed": 1701,
@@ -6968,8 +7046,47 @@
       ]
     },
     {
-      "id": "caller_shift-s1702",
+      "id": "hot_shift-s1702",
+      "scenario": "hot_shift",
+      "seed": 1702,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "P-off",
+        "P-old",
+        "P-new"
+      ]
+    },
+    {
+      "id": "static_affinity-s1701",
+      "scenario": "static_affinity",
+      "seed": 1701,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "P-off",
+        "P-old",
+        "P-new"
+      ]
+    },
+    {
+      "id": "caller_shift-s1701",
       "scenario": "caller_shift",
+      "seed": 1701,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "P-off",
+        "P-old",
+        "P-new"
+      ]
+    },
+    {
+      "id": "affinity_handover-s1702",
+      "scenario": "affinity_handover",
       "seed": 1702,
       "requests": 384,
       "shard_mib": 2,
@@ -6981,21 +7098,8 @@
       ]
     },
     {
-      "id": "coupled-s1702",
-      "scenario": "coupled",
-      "seed": 1702,
-      "requests": 384,
-      "shard_mib": 2,
-      "quota_mib": 8,
-      "variants": [
-        "P-off",
-        "P-old",
-        "P-new"
-      ]
-    },
-    {
-      "id": "coupled-s1701",
-      "scenario": "coupled",
+      "id": "affinity_handover-s1701",
+      "scenario": "affinity_handover",
       "seed": 1701,
       "requests": 384,
       "shard_mib": 2,
@@ -13946,87 +14050,9 @@
       }
     },
     {
-      "id": "static_affinity-s1701",
-      "scenario": "static_affinity",
-      "seed": 1701,
-      "requests": 384,
-      "shard_mib": 2,
-      "quota_mib": 8,
-      "variants": [
-        "P-off",
-        "P-old",
-        "P-new"
-      ]
-    },
-    {
-      "id": "caller_shift-s1701",
+      "id": "caller_shift-s1702",
       "scenario": "caller_shift",
-      "seed": 1701,
-      "requests": 384,
-      "shard_mib": 2,
-      "quota_mib": 8,
-      "variants": [
-        "P-off",
-        "P-old",
-        "P-new"
-      ]
-    },
-    {
-      "id": "domain_return-s1702",
-      "scenario": "domain_return",
       "seed": 1702,
-      "requests": 384,
-      "shard_mib": 2,
-      "quota_mib": 8,
-      "variants": [
-        "P-off",
-        "P-old",
-        "P-new"
-      ]
-    },
-    {
-      "id": "hot_shift-s1701",
-      "scenario": "hot_shift",
-      "seed": 1701,
-      "requests": 384,
-      "shard_mib": 2,
-      "quota_mib": 8,
-      "variants": [
-        "P-off",
-        "P-old",
-        "P-new"
-      ]
-    },
-    {
-      "id": "uniform-s1702",
-      "scenario": "uniform",
-      "seed": 1702,
-      "requests": 384,
-      "shard_mib": 2,
-      "quota_mib": 8,
-      "variants": [
-        "P-off",
-        "P-old",
-        "P-new"
-      ]
-    },
-    {
-      "id": "static_affinity-s1702",
-      "scenario": "static_affinity",
-      "seed": 1702,
-      "requests": 384,
-      "shard_mib": 2,
-      "quota_mib": 8,
-      "variants": [
-        "P-off",
-        "P-old",
-        "P-new"
-      ]
-    },
-    {
-      "id": "domain_return-s1701",
-      "scenario": "domain_return",
-      "seed": 1701,
       "requests": 384,
       "shard_mib": 2,
       "quota_mib": 8,

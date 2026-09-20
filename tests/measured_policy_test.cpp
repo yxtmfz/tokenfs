@@ -101,12 +101,16 @@ int main(){
   assert(transfer.Plan(1,{"shared",100,1},{},0,100,off).reason=="no_reuse");
   auto borrowed=transfer.Plan(1,{"shared",100,1},{},0,100,recent);
   assert(borrowed.allowed && borrowed.affinity_adjusted_items==1 && borrowed.affinity_incoming_count>1);
-  // A cold object and a stable resident are not inflated by caller handover.
+  // A cold object and an unrelated resident are not inflated by caller handover.
   transfer.Observe(1,"cold",recent);
   assert(!transfer.Plan(1,{"cold",100,1},{},0,100,recent).allowed);
   auto resident_on=transfer.Plan(1,{"shared",100,1},{{"a",100,0}},100,100,recent);
   auto resident_off=transfer.Plan(1,{"shared",100,1},{{"a",100,0}},100,100,off);
   assert(resident_on.displaced_us==resident_off.displaced_us);
+  // A just-copied object must retain the same predicted reuse as an arrival.
+  // Arrival-only boosting would make this equal-value replacement look profitable.
+  auto symmetric=transfer.Plan(1,{"shared",100,1},{{"shared",100,0}},100,100,recent);
+  assert(symmetric.incoming_us==symmetric.displaced_us && !symmetric.allowed);
   transfer.ReadSample(false,100,100);transfer.ReadSample(true,100,20);transfer.CopySample(100,100000);
   Options costly=recent;costly.cost=true;
   assert(transfer.Plan(1,{"shared",100,1},{},0,100,costly).reason=="copy_cost");

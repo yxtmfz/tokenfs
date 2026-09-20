@@ -3,8 +3,8 @@
   "topology": "three private logical domains on one client disk; actual NVMe/TCP",
   "blocks": [
     {
-      "id": "hot_shift-s1691",
-      "scenario": "hot_shift",
+      "id": "uniform-s1691",
+      "scenario": "uniform",
       "seed": 1691,
       "requests": 96,
       "shard_mib": 1,
@@ -16,8 +16,8 @@
       ]
     },
     {
-      "id": "static_affinity-s1691",
-      "scenario": "static_affinity",
+      "id": "hot_shift-s1691",
+      "scenario": "hot_shift",
       "seed": 1691,
       "requests": 96,
       "shard_mib": 1,
@@ -920,32 +920,6 @@
       }
     },
     {
-      "id": "caller_shift-s1691",
-      "scenario": "caller_shift",
-      "seed": 1691,
-      "requests": 96,
-      "shard_mib": 1,
-      "quota_mib": 4,
-      "variants": [
-        "P-off",
-        "P-old",
-        "P-new"
-      ]
-    },
-    {
-      "id": "uniform-s1691",
-      "scenario": "uniform",
-      "seed": 1691,
-      "requests": 96,
-      "shard_mib": 1,
-      "quota_mib": 4,
-      "variants": [
-        "P-off",
-        "P-old",
-        "P-new"
-      ]
-    },
-    {
       "id": "domain_return-s1691",
       "scenario": "domain_return",
       "seed": 1691,
@@ -959,8 +933,47 @@
       ]
     },
     {
+      "id": "affinity_handover-s1691",
+      "scenario": "affinity_handover",
+      "seed": 1691,
+      "requests": 384,
+      "shard_mib": 1,
+      "quota_mib": 4,
+      "variants": [
+        "P-off",
+        "P-old",
+        "P-new"
+      ]
+    },
+    {
       "id": "coupled-s1691",
       "scenario": "coupled",
+      "seed": 1691,
+      "requests": 96,
+      "shard_mib": 1,
+      "quota_mib": 4,
+      "variants": [
+        "P-off",
+        "P-old",
+        "P-new"
+      ]
+    },
+    {
+      "id": "caller_shift-s1691",
+      "scenario": "caller_shift",
+      "seed": 1691,
+      "requests": 96,
+      "shard_mib": 1,
+      "quota_mib": 4,
+      "variants": [
+        "P-off",
+        "P-old",
+        "P-new"
+      ]
+    },
+    {
+      "id": "static_affinity-s1691",
+      "scenario": "static_affinity",
       "seed": 1691,
       "requests": 96,
       "shard_mib": 1,

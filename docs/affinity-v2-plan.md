@@ -18,15 +18,22 @@ and was rejected: gains were small and uniform/public results regressed. Its 42
 runs and per-host correctness checks are retained separately as development A.
 There has been NO held-out confirmation access.
 
-The final candidate replaces the relative veto with **handover-aware reuse
-transfer** for the incoming object only. In the last four observed accesses, the
+The second development candidate borrowed demand for incoming objects only. In
+the additional handover case it was 7.05% slower than disabled affinity and copied
+116 versus 64 MiB per run: newly admitted replicas immediately became cheap
+victims under their smaller local counts. All 48 development runs and 48 content
+checks of this candidate B are retained. No confirmation was run.
+
+The final candidate C replaces the relative veto with **handover-aware reuse
+transfer** consistently for incoming and resident objects. In the last four observed accesses, the
 current domain must account for at least three and have at least twice its share
 in the long 128-event window. The object must have at least eight observations
 in that long window, with other-domain count at least twice the current domain's
 count. Only then may incoming reuse borrow global object demand multiplied by
 the newly observed destination share. Use the maximum of this estimate and the
-original local estimate. Every resident retains its original value, avoiding the
-extra replacement churn seen in development A. Copy cost, summed victim loss,
+original local estimate. Apply the same forecast to the incoming object and eligible residents, avoiding
+the valuation discontinuity seen in B. Objects removed from domain history by
+aging or hotspot reset cannot be resurrected by global evidence. Copy cost, summed victim loss,
 capacity and execution-time rechecks remain unchanged. No speculative prefetch:
 only the object actually requested is eligible. No workload phase labels or
 future requests enter this decision.
@@ -50,8 +57,8 @@ The new scenario uses caller sequence 0,1,2,0 across four phases: a caller retur
 after inactivity with a different six-object hot set under four-object capacity.
 A separate handover scenario adds eight phases in four pairs: each pair retains a four-object hot set while the caller changes, and later destinations already have a different resident set. This fills a coverage gap: re-entry with entirely new objects cannot test reuse transfer. It was added during development BEFORE any confirmation access; all seven existing scenarios remain. All methods receive the same trace; policy decisions never see phase labels.
 
-Final-candidate development B: seeds 1701,1702, 42 original plus 6 handover speed runs, separate
-from the rejected candidate A using the same development-only traces. Correctness: 21 original plus 3 handover cases per host,
+Final-candidate development C: seeds 1701,1702, 48 speed runs in one batch,
+separate from rejected A and B using the same development-only traces. Correctness: 24 cases per host,
 cn7 actual NVMe/TCP and cn8 directory backend. Intended development acceptance:
 at least one meaningful improvement against disabled affinity, with particular
 attention to re-entry, and no renewed caller-handover regression. If development

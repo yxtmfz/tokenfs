@@ -123,6 +123,8 @@ class MeasuredPolicy {
     result.incoming_count=frequency;
     result.affinity_incoming_count=EffectiveCount(gpu,incoming.key,o,true);
     result.affinity_adjusted_items=result.affinity_incoming_count!=frequency;
+    for(const auto& resident:residents)
+      result.affinity_adjusted_items+=EffectiveCount(gpu,resident.key,o,false)!=Count(gpu,resident.key);
     result.costs_calibrated=remote_.n && local_.n && copy_.n;
     if(o.admission && result.affinity_incoming_count<2){result.reason="no_reuse";return result;}
     if(o.admission && o.affinity_gate && !o.affinity_recent_demand) {
@@ -170,9 +172,10 @@ class MeasuredPolicy {
   }
   uint64_t EffectiveCount(int gpu,const std::string& key,const Options& o,bool incoming) const {
     const auto domain_count=Count(gpu,key);
-    if(!incoming || !o.affinity_gate || !o.affinity_recent_demand)return domain_count;
+    (void)incoming;
+    if(!o.affinity_gate || !o.affinity_recent_demand)return domain_count;
     const auto object=affinity_counts_.find(key);
-    if(object==affinity_counts_.end())return domain_count;
+    if(!domain_count || object==affinity_counts_.end())return domain_count;
     uint64_t total=0,own=0;
     for(const auto& [node,count]:object->second){total+=count;if(node==gpu)own=count;}
     constexpr size_t short_window=4;
@@ -183,7 +186,9 @@ class MeasuredPolicy {
     // Borrow reuse only after observed destination activity becomes concentrated
     // AND at least doubles its long-window share. The object must already have
     // strong reuse elsewhere. No workload labels, future accesses or prefetch.
-    // Stable/balanced domains and every resident retain their original estimate.
+    // Use the SAME estimate for an arrival and a resident: newly copied hot
+    // replicas must not immediately become artificially cheap eviction victims.
+    // Stable/balanced domains retain their original estimate.
     if(short_own*4<3*short_window || short_own*affinity_history_.size()<2*short_window*long_own)return domain_count;
     return std::max(domain_count,total*short_own/short_window);
   }

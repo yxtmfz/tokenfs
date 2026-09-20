@@ -23,7 +23,7 @@ def verify(data,source):
     require(m['nvme_identity']['transport']=='tcp' and m['nvme_identity']['subsysnqn']=='nqn.2026-09.local.aura-kv:remote-cn7'
             and 'traddr=28.10.10.13' in m['nvme_identity']['address'].split(','),'remote identity changed')
     batches=[]
-    for host,names in [('cn7',[('correctness',21),('development',42),('confirmation',252)]),('cn8',[('correctness',21)])]:
+    for host,names in [('cn7',[('correctness',24),('development',48),('confirmation',288)]),('cn8',[('correctness',24)])]:
         final=read(data/host/'final-context.json')
         require(final['binary_sha256']==f['binary_sha256'] and final['source_hashes']==f['source_hashes'],'final artifact changed')
         require(not final['remaining_mounts'],'active test mount remained')
@@ -58,7 +58,7 @@ def verify(data,source):
     finally:
         for n,v in saved.items():(main/(n+'.json')).write_text(v)
     require(original['summary']==reproduced['summary'],'summary differs');rounding=[]
-    require(len(original['comparisons'])==len(reproduced['comparisons'])==14,'comparison matrix incomplete')
+    require(len(original['comparisons'])==len(reproduced['comparisons'])==16,'comparison matrix incomplete')
     for index,(a,b) in enumerate(zip(original['comparisons'],reproduced['comparisons'])):
         require(a.keys()==b.keys(),'comparison fields differ')
         for field,value in a.items():
@@ -91,7 +91,7 @@ def verify(data,source):
             path.write_text(json.dumps(value));rejected=not study.core.audit(scratch)['passed'];path.write_text(text)
             require(rejected,'tampering accepted');negatives.append(dict(kind=kind,rejected=True))
         require(study.core.audit(scratch)['passed'],'negative fixture restoration failed')
-    return dict(passed=True,performance_runs=252,content_cases=42,development_runs=42,batches=batches,public_windows=checked,independent_comparisons=14,rounding_differences=rounding,negative_checks=negatives,binary_sha256=f['binary_sha256'],algorithm_revision=f['algorithm_revision'])
+    return dict(passed=True,performance_runs=288,content_cases=48,development_runs=48,batches=batches,public_windows=checked,independent_comparisons=16,rounding_differences=rounding,negative_checks=negatives,binary_sha256=f['binary_sha256'],algorithm_revision=f['algorithm_revision'])
 
 if __name__=='__main__':
     p=argparse.ArgumentParser();p.add_argument('--data-root',type=Path,required=True);p.add_argument('--public-source',type=Path,required=True);p.add_argument('--output',type=Path,required=True);a=p.parse_args();r=verify(a.data_root,a.public_source);a.output.write_text(json.dumps(r,ensure_ascii=False,indent=2)+'\n');print(json.dumps(r))
