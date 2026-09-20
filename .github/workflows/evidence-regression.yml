@@ -30,4 +30,4 @@ jobs:
       - name: Test real metadata and lookup eviction synchronization
         run: ctest --test-dir build-release --output-on-failure
       - name: Test policy accounting and evidence audits
-        run: python3 -m unittest tests.aura_kv_unit_test tests.evidence_test tests.measured_study_test
+        run: python3 -m unittest tests.aura_kv_unit_test tests.evidence_test tests.measured_study_test tests.affinity_joint_test

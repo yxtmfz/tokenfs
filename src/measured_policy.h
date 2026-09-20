@@ -24,6 +24,10 @@ struct Options {
   bool frequency_admission=false;
   bool shift_reset=false;
   size_t shift_window=8;
+  bool track_affinity=false;
+  bool affinity_gate=false;
+  bool joint_admission=true;
+  size_t affinity_window=128;
 };
 struct Decision {
   bool allowed=false;
@@ -39,6 +43,15 @@ class MeasuredPolicy {
   bool Observe(int gpu,const std::string& key,const Options& o,bool local_hit=false) {
     std::lock_guard<std::mutex> lock(mu_);
     auto& d=domains_[gpu];++d.counts[key];d.history.push_back(key);
+    if(o.track_affinity) {
+      affinity_history_.emplace_back(key,gpu);++affinity_counts_[key][gpu];
+      while(affinity_history_.size()>std::max<size_t>(2,o.affinity_window)) {
+        const auto old=affinity_history_.front();affinity_history_.pop_front();
+        auto& counts=affinity_counts_.at(old.first);
+        if(--counts.at(old.second)==0)counts.erase(old.second);
+        if(counts.empty())affinity_counts_.erase(old.first);
+      }
+    }
     d.misses=local_hit?0:d.misses+1;
     bool reset=false;
     const size_t k=std::max<size_t>(4,o.shift_window);
@@ -104,6 +117,16 @@ class MeasuredPolicy {
     result.incoming_count=frequency;
     result.costs_calibrated=remote_.n && local_.n && copy_.n;
     if(o.admission && frequency<2){result.reason="no_reuse";return result;}
+    if(o.admission && o.affinity_gate) {
+      const auto found=affinity_counts_.find(incoming.key);
+      uint64_t own=0,peak=0;
+      if(found!=affinity_counts_.end())for(const auto& [node,n]:found->second) {
+        peak=std::max(peak,n);if(node==gpu)own=n;
+      }
+      // Equal sharing permits replicas; incidental readers of a strongly
+      // concentrated object do not pollute their private cache. No phase oracle.
+      if(!own || own*2<peak){result.reason="affinity";return result;}
+    }
     Sort(gpu,residents,o);
     uint64_t freed=0;const auto needed=used>quota ? used-quota+incoming.bytes : (incoming.bytes>quota-used ? incoming.bytes-(quota-used) : 0);
     for(const auto& victim:residents) {
@@ -117,11 +140,12 @@ class MeasuredPolicy {
     // half its service time as potential savings. This prior is recorded, then
     // replaced by online measurements; no synthetic delay is injected.
     result.copy_us=o.cost ? incoming.bytes*(copy_.n?copy_.mean:(remote_.n?remote_.mean:0.01)) : 0;
-    if(o.admission && result.incoming_us<=result.displaced_us+result.copy_us) {
+    const double charged_loss=o.joint_admission?result.displaced_us:0;
+    if(o.admission && result.incoming_us<=charged_loss+result.copy_us) {
       result.reason=result.incoming_us<=result.copy_us?"copy_cost":"victim_loss";
       return result;
     }
-    result.allowed=true;result.reason="net_gain";return result;
+    result.allowed=true;result.reason=o.joint_admission?"net_gain":"independent_gain";return result;
   }
  private:
   struct Rate {double mean=0;uint64_t n=0;};
@@ -158,6 +182,8 @@ class MeasuredPolicy {
   }
   mutable std::mutex mu_;
   std::unordered_map<int,Domain> domains_;
+  std::deque<std::pair<std::string,int>> affinity_history_;
+  std::unordered_map<std::string,std::unordered_map<int,uint64_t>> affinity_counts_;
   Rate local_,remote_,copy_;
 };
 }
