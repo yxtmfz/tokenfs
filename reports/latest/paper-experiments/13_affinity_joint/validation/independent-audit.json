@@ -1,0 +1,94 @@
+{
+  "passed": true,
+  "batches": [
+    {
+      "host": "cn7",
+      "batch": "correctness-01",
+      "checked": 54,
+      "passed": true
+    },
+    {
+      "host": "cn7",
+      "batch": "correctness-02",
+      "checked": 12,
+      "passed": true
+    },
+    {
+      "host": "cn7",
+      "batch": "development-01",
+      "checked": 54,
+      "passed": true
+    },
+    {
+      "host": "cn7",
+      "batch": "development-02",
+      "checked": 18,
+      "passed": true
+    },
+    {
+      "host": "cn7",
+      "batch": "confirmation-01",
+      "checked": 576,
+      "passed": true
+    },
+    {
+      "host": "cn8",
+      "batch": "correctness-01",
+      "checked": 54,
+      "passed": true
+    },
+    {
+      "host": "cn8",
+      "batch": "correctness-02",
+      "checked": 12,
+      "passed": true
+    }
+  ],
+  "performance_cases": 576,
+  "content_cases": 132,
+  "development_cases": 72,
+  "frozen_public_windows": 12,
+  "exact_statistics_json": [
+    "summary.json",
+    "interactions.json"
+  ],
+  "comparisons_equal_within_absolute_1e_12": true,
+  "comparison_rounding_differences": [
+    {
+      "row": 18,
+      "scenario": "hot_shift",
+      "baseline": "LRU",
+      "field": "time_ratio",
+      "server": 1.043845843936919,
+      "local": 1.0438458439369187,
+      "absolute_difference": 2.220446049250313e-16
+    },
+    {
+      "row": 18,
+      "scenario": "hot_shift",
+      "baseline": "LRU",
+      "field": "throughput_change_pct",
+      "server": -4.200413709705641,
+      "local": -4.20041370970562,
+      "absolute_difference": 2.1316282072803006e-14
+    }
+  ],
+  "mechanism_records_equal_after_canonical_order": true,
+  "independent_paired_ratios": 42,
+  "negative_checks": [
+    {
+      "case": "bytes",
+      "rejected": true
+    },
+    {
+      "case": "configuration",
+      "rejected": true
+    },
+    {
+      "case": "timeline",
+      "rejected": true
+    }
+  ],
+  "algorithm_revision": "0674af80d12246fa7de861f765b69d5d3738e269",
+  "binary_sha256": "0aa0c5d5dee97b82d6cbd8dfb0facfd2d16670fe67fb343914c6fd9a63943e38"
+}

@@ -1,0 +1,557 @@
+{
+  "drain_direction_reversals": [
+    {
+      "family": "hotspot",
+      "scenario": "uniform",
+      "baseline": "J-no-H",
+      "foreground_ratio": 0.9998838525902386,
+      "with_drain_ratio": 1.0000750175292914
+    },
+    {
+      "family": "overall",
+      "scenario": "uniform",
+      "baseline": "RecentLFU",
+      "foreground_ratio": 0.9998701759548045,
+      "with_drain_ratio": 1.0000520984321708
+    }
+  ],
+  "confirmed_elapsed_reduction_at_least_5pct": [
+    {
+      "family": "overall",
+      "scenario": "caller_shift",
+      "baseline": "RemoteOnly",
+      "elapsed_reduction_pct": 29.00401352215134
+    },
+    {
+      "family": "joint",
+      "scenario": "coupled",
+      "baseline": "I",
+      "elapsed_reduction_pct": 6.751885043966954
+    },
+    {
+      "family": "overall",
+      "scenario": "coupled",
+      "baseline": "RemoteOnly",
+      "elapsed_reduction_pct": 8.728882266171434
+    },
+    {
+      "family": "overall",
+      "scenario": "coupled",
+      "baseline": "LRU",
+      "elapsed_reduction_pct": 7.469484283976691
+    },
+    {
+      "family": "overall",
+      "scenario": "coupled",
+      "baseline": "LFU",
+      "elapsed_reduction_pct": 8.278149552340475
+    },
+    {
+      "family": "hotspot",
+      "scenario": "hot_shift",
+      "baseline": "J-no-H",
+      "elapsed_reduction_pct": 6.7117158837329605
+    },
+    {
+      "family": "joint",
+      "scenario": "hot_shift",
+      "baseline": "I",
+      "elapsed_reduction_pct": 7.053568976099234
+    },
+    {
+      "family": "overall",
+      "scenario": "hot_shift",
+      "baseline": "RemoteOnly",
+      "elapsed_reduction_pct": 9.253151312815211
+    },
+    {
+      "family": "overall",
+      "scenario": "hot_shift",
+      "baseline": "LFU",
+      "elapsed_reduction_pct": 9.17103108750591
+    },
+    {
+      "family": "overall",
+      "scenario": "hot_shift",
+      "baseline": "RecentLFU",
+      "elapsed_reduction_pct": 5.361070537567258
+    },
+    {
+      "family": "joint",
+      "scenario": "public_toolagent",
+      "baseline": "I",
+      "elapsed_reduction_pct": 5.519094577872208
+    },
+    {
+      "family": "overall",
+      "scenario": "public_toolagent",
+      "baseline": "LRU",
+      "elapsed_reduction_pct": 6.909849449708405
+    },
+    {
+      "family": "overall",
+      "scenario": "public_toolagent",
+      "baseline": "LFU",
+      "elapsed_reduction_pct": 6.52372575150304
+    },
+    {
+      "family": "overall",
+      "scenario": "static_affinity",
+      "baseline": "RemoteOnly",
+      "elapsed_reduction_pct": 35.138473128591116
+    },
+    {
+      "family": "overall",
+      "scenario": "static_affinity",
+      "baseline": "LRU",
+      "elapsed_reduction_pct": 12.427911968066441
+    },
+    {
+      "family": "overall",
+      "scenario": "static_affinity",
+      "baseline": "LFU",
+      "elapsed_reduction_pct": 5.803026866635285
+    },
+    {
+      "family": "joint",
+      "scenario": "uniform",
+      "baseline": "I",
+      "elapsed_reduction_pct": 5.440282311744815
+    },
+    {
+      "family": "overall",
+      "scenario": "uniform",
+      "baseline": "LRU",
+      "elapsed_reduction_pct": 6.695901481766853
+    },
+    {
+      "family": "overall",
+      "scenario": "uniform",
+      "baseline": "LFU",
+      "elapsed_reduction_pct": 6.049233118990049
+    }
+  ],
+  "beats_three_cache_baselines_at_least_5pct": [],
+  "resource_descriptions": [
+    {
+      "family": "hotspot",
+      "scenario": "caller_shift",
+      "baseline": "J-no-H",
+      "mean_empirical_p99_change_pct": -0.29432842077392607,
+      "treatment_cpu_s": 2.3425,
+      "baseline_cpu_s": 2.3075,
+      "treatment_copy_mib": 26.833333333333332,
+      "baseline_copy_mib": 26.666666666666668
+    },
+    {
+      "family": "affinity",
+      "scenario": "caller_shift",
+      "baseline": "J-no-P",
+      "mean_empirical_p99_change_pct": 1.4057560633895516,
+      "treatment_cpu_s": 2.3425,
+      "baseline_cpu_s": 2.3033333333333332,
+      "treatment_copy_mib": 26.833333333333332,
+      "baseline_copy_mib": 25.0
+    },
+    {
+      "family": "joint",
+      "scenario": "caller_shift",
+      "baseline": "I",
+      "mean_empirical_p99_change_pct": -5.159135295991202,
+      "treatment_cpu_s": 2.3425,
+      "baseline_cpu_s": 2.6983333333333333,
+      "treatment_copy_mib": 26.833333333333332,
+      "baseline_copy_mib": 66.16666666666667
+    },
+    {
+      "family": "overall",
+      "scenario": "caller_shift",
+      "baseline": "RemoteOnly",
+      "mean_empirical_p99_change_pct": 23.419711443526325,
+      "treatment_cpu_s": 2.3425,
+      "baseline_cpu_s": 2.0175,
+      "treatment_copy_mib": 26.833333333333332,
+      "baseline_copy_mib": 0.0
+    },
+    {
+      "family": "overall",
+      "scenario": "caller_shift",
+      "baseline": "LRU",
+      "mean_empirical_p99_change_pct": -9.905900790926559,
+      "treatment_cpu_s": 2.3425,
+      "baseline_cpu_s": 2.825,
+      "treatment_copy_mib": 26.833333333333332,
+      "baseline_copy_mib": 94.5
+    },
+    {
+      "family": "overall",
+      "scenario": "caller_shift",
+      "baseline": "LFU",
+      "mean_empirical_p99_change_pct": -9.210007122048246,
+      "treatment_cpu_s": 2.3425,
+      "baseline_cpu_s": 2.6708333333333334,
+      "treatment_copy_mib": 26.833333333333332,
+      "baseline_copy_mib": 73.66666666666667
+    },
+    {
+      "family": "overall",
+      "scenario": "caller_shift",
+      "baseline": "RecentLFU",
+      "mean_empirical_p99_change_pct": 1.9441129984094419,
+      "treatment_cpu_s": 2.3425,
+      "baseline_cpu_s": 2.2841666666666667,
+      "treatment_copy_mib": 26.833333333333332,
+      "baseline_copy_mib": 25.0
+    },
+    {
+      "family": "hotspot",
+      "scenario": "coupled",
+      "baseline": "J-no-H",
+      "mean_empirical_p99_change_pct": 1.2546358795987311,
+      "treatment_cpu_s": 2.715,
+      "baseline_cpu_s": 2.7666666666666666,
+      "treatment_copy_mib": 63.333333333333336,
+      "baseline_copy_mib": 59.833333333333336
+    },
+    {
+      "family": "affinity",
+      "scenario": "coupled",
+      "baseline": "J-no-P",
+      "mean_empirical_p99_change_pct": 0.5601940181156673,
+      "treatment_cpu_s": 2.715,
+      "baseline_cpu_s": 2.7641666666666667,
+      "treatment_copy_mib": 63.333333333333336,
+      "baseline_copy_mib": 60.5
+    },
+    {
+      "family": "joint",
+      "scenario": "coupled",
+      "baseline": "I",
+      "mean_empirical_p99_change_pct": -10.090826951148557,
+      "treatment_cpu_s": 2.715,
+      "baseline_cpu_s": 4.328333333333333,
+      "treatment_copy_mib": 63.333333333333336,
+      "baseline_copy_mib": 312.1666666666667
+    },
+    {
+      "family": "overall",
+      "scenario": "coupled",
+      "baseline": "RemoteOnly",
+      "mean_empirical_p99_change_pct": 44.39856208725328,
+      "treatment_cpu_s": 2.715,
+      "baseline_cpu_s": 2.035,
+      "treatment_copy_mib": 63.333333333333336,
+      "baseline_copy_mib": 0.0
+    },
+    {
+      "family": "overall",
+      "scenario": "coupled",
+      "baseline": "LRU",
+      "mean_empirical_p99_change_pct": -8.182915344313413,
+      "treatment_cpu_s": 2.715,
+      "baseline_cpu_s": 4.195833333333334,
+      "treatment_copy_mib": 63.333333333333336,
+      "baseline_copy_mib": 308.8333333333333
+    },
+    {
+      "family": "overall",
+      "scenario": "coupled",
+      "baseline": "LFU",
+      "mean_empirical_p99_change_pct": -6.80422383814615,
+      "treatment_cpu_s": 2.715,
+      "baseline_cpu_s": 4.378333333333333,
+      "treatment_copy_mib": 63.333333333333336,
+      "baseline_copy_mib": 343.5
+    },
+    {
+      "family": "overall",
+      "scenario": "coupled",
+      "baseline": "RecentLFU",
+      "mean_empirical_p99_change_pct": 1.0180361618859601,
+      "treatment_cpu_s": 2.715,
+      "baseline_cpu_s": 2.7708333333333335,
+      "treatment_copy_mib": 63.333333333333336,
+      "baseline_copy_mib": 63.833333333333336
+    },
+    {
+      "family": "hotspot",
+      "scenario": "hot_shift",
+      "baseline": "J-no-H",
+      "mean_empirical_p99_change_pct": 5.055950862781766,
+      "treatment_cpu_s": 3.1475,
+      "baseline_cpu_s": 2.7275,
+      "treatment_copy_mib": 83.33333333333333,
+      "baseline_copy_mib": 48.5
+    },
+    {
+      "family": "affinity",
+      "scenario": "hot_shift",
+      "baseline": "J-no-P",
+      "mean_empirical_p99_change_pct": -1.0222873955224254,
+      "treatment_cpu_s": 3.1475,
+      "baseline_cpu_s": 3.11,
+      "treatment_copy_mib": 83.33333333333333,
+      "baseline_copy_mib": 83.33333333333333
+    },
+    {
+      "family": "joint",
+      "scenario": "hot_shift",
+      "baseline": "I",
+      "mean_empirical_p99_change_pct": -4.192308863690696,
+      "treatment_cpu_s": 3.1475,
+      "baseline_cpu_s": 4.5424999999999995,
+      "treatment_copy_mib": 83.33333333333333,
+      "baseline_copy_mib": 294.6666666666667
+    },
+    {
+      "family": "overall",
+      "scenario": "hot_shift",
+      "baseline": "RemoteOnly",
+      "mean_empirical_p99_change_pct": 55.64921478007345,
+      "treatment_cpu_s": 3.1475,
+      "baseline_cpu_s": 2.0441666666666665,
+      "treatment_copy_mib": 83.33333333333333,
+      "baseline_copy_mib": 0.0
+    },
+    {
+      "family": "overall",
+      "scenario": "hot_shift",
+      "baseline": "LRU",
+      "mean_empirical_p99_change_pct": -1.5705129333395407,
+      "treatment_cpu_s": 3.1475,
+      "baseline_cpu_s": 3.7925,
+      "treatment_copy_mib": 83.33333333333333,
+      "baseline_copy_mib": 182.66666666666666
+    },
+    {
+      "family": "overall",
+      "scenario": "hot_shift",
+      "baseline": "LFU",
+      "mean_empirical_p99_change_pct": -2.779991946866711,
+      "treatment_cpu_s": 3.1475,
+      "baseline_cpu_s": 4.628333333333334,
+      "treatment_copy_mib": 83.33333333333333,
+      "baseline_copy_mib": 352.5
+    },
+    {
+      "family": "overall",
+      "scenario": "hot_shift",
+      "baseline": "RecentLFU",
+      "mean_empirical_p99_change_pct": 5.0014584282429775,
+      "treatment_cpu_s": 3.1475,
+      "baseline_cpu_s": 2.8116666666666665,
+      "treatment_copy_mib": 83.33333333333333,
+      "baseline_copy_mib": 52.5
+    },
+    {
+      "family": "hotspot",
+      "scenario": "public_toolagent",
+      "baseline": "J-no-H",
+      "mean_empirical_p99_change_pct": -4.492742051001731,
+      "treatment_cpu_s": 3.0566666666666666,
+      "baseline_cpu_s": 3.131666666666667,
+      "treatment_copy_mib": 51.0,
+      "baseline_copy_mib": 49.916666666666664
+    },
+    {
+      "family": "affinity",
+      "scenario": "public_toolagent",
+      "baseline": "J-no-P",
+      "mean_empirical_p99_change_pct": -4.182898166081339,
+      "treatment_cpu_s": 3.0566666666666666,
+      "baseline_cpu_s": 3.2316666666666665,
+      "treatment_copy_mib": 51.0,
+      "baseline_copy_mib": 49.833333333333336
+    },
+    {
+      "family": "joint",
+      "scenario": "public_toolagent",
+      "baseline": "I",
+      "mean_empirical_p99_change_pct": -8.441868044438895,
+      "treatment_cpu_s": 3.0566666666666666,
+      "baseline_cpu_s": 3.8891666666666667,
+      "treatment_copy_mib": 51.0,
+      "baseline_copy_mib": 138.41666666666666
+    },
+    {
+      "family": "overall",
+      "scenario": "public_toolagent",
+      "baseline": "RemoteOnly",
+      "mean_empirical_p99_change_pct": 30.1395509979149,
+      "treatment_cpu_s": 3.0566666666666666,
+      "baseline_cpu_s": 2.6866666666666665,
+      "treatment_copy_mib": 51.0,
+      "baseline_copy_mib": 0.0
+    },
+    {
+      "family": "overall",
+      "scenario": "public_toolagent",
+      "baseline": "LRU",
+      "mean_empirical_p99_change_pct": -2.916524941979526,
+      "treatment_cpu_s": 3.0566666666666666,
+      "baseline_cpu_s": 3.964166666666667,
+      "treatment_copy_mib": 51.0,
+      "baseline_copy_mib": 184.66666666666666
+    },
+    {
+      "family": "overall",
+      "scenario": "public_toolagent",
+      "baseline": "LFU",
+      "mean_empirical_p99_change_pct": -4.011738664214359,
+      "treatment_cpu_s": 3.0566666666666666,
+      "baseline_cpu_s": 3.904166666666667,
+      "treatment_copy_mib": 51.0,
+      "baseline_copy_mib": 183.08333333333334
+    },
+    {
+      "family": "overall",
+      "scenario": "public_toolagent",
+      "baseline": "RecentLFU",
+      "mean_empirical_p99_change_pct": -8.324517010571263,
+      "treatment_cpu_s": 3.0566666666666666,
+      "baseline_cpu_s": 3.3041666666666667,
+      "treatment_copy_mib": 51.0,
+      "baseline_copy_mib": 60.75
+    },
+    {
+      "family": "hotspot",
+      "scenario": "static_affinity",
+      "baseline": "J-no-H",
+      "mean_empirical_p99_change_pct": 0.9739921029377374,
+      "treatment_cpu_s": 2.39,
+      "baseline_cpu_s": 2.3775,
+      "treatment_copy_mib": 26.0,
+      "baseline_copy_mib": 26.0
+    },
+    {
+      "family": "affinity",
+      "scenario": "static_affinity",
+      "baseline": "J-no-P",
+      "mean_empirical_p99_change_pct": -1.676284034938258,
+      "treatment_cpu_s": 2.39,
+      "baseline_cpu_s": 2.3475,
+      "treatment_copy_mib": 26.0,
+      "baseline_copy_mib": 26.333333333333332
+    },
+    {
+      "family": "joint",
+      "scenario": "static_affinity",
+      "baseline": "I",
+      "mean_empirical_p99_change_pct": 0.7781408955756186,
+      "treatment_cpu_s": 2.39,
+      "baseline_cpu_s": 2.4408333333333334,
+      "treatment_copy_mib": 26.0,
+      "baseline_copy_mib": 35.0
+    },
+    {
+      "family": "overall",
+      "scenario": "static_affinity",
+      "baseline": "RemoteOnly",
+      "mean_empirical_p99_change_pct": 34.29849381936716,
+      "treatment_cpu_s": 2.39,
+      "baseline_cpu_s": 2.033333333333333,
+      "treatment_copy_mib": 26.0,
+      "baseline_copy_mib": 0.0
+    },
+    {
+      "family": "overall",
+      "scenario": "static_affinity",
+      "baseline": "LRU",
+      "mean_empirical_p99_change_pct": -5.642464740853126,
+      "treatment_cpu_s": 2.39,
+      "baseline_cpu_s": 3.1466666666666665,
+      "treatment_copy_mib": 26.0,
+      "baseline_copy_mib": 160.66666666666666
+    },
+    {
+      "family": "overall",
+      "scenario": "static_affinity",
+      "baseline": "LFU",
+      "mean_empirical_p99_change_pct": -4.319007507490413,
+      "treatment_cpu_s": 2.39,
+      "baseline_cpu_s": 2.88,
+      "treatment_copy_mib": 26.0,
+      "baseline_copy_mib": 118.83333333333333
+    },
+    {
+      "family": "overall",
+      "scenario": "static_affinity",
+      "baseline": "RecentLFU",
+      "mean_empirical_p99_change_pct": 1.3621626397615882,
+      "treatment_cpu_s": 2.39,
+      "baseline_cpu_s": 2.3008333333333333,
+      "treatment_copy_mib": 26.0,
+      "baseline_copy_mib": 26.5
+    },
+    {
+      "family": "hotspot",
+      "scenario": "uniform",
+      "baseline": "J-no-H",
+      "mean_empirical_p99_change_pct": 1.5832588248777313,
+      "treatment_cpu_s": 2.715,
+      "baseline_cpu_s": 2.734166666666667,
+      "treatment_copy_mib": 56.0,
+      "baseline_copy_mib": 53.333333333333336
+    },
+    {
+      "family": "affinity",
+      "scenario": "uniform",
+      "baseline": "J-no-P",
+      "mean_empirical_p99_change_pct": -0.44009962282822723,
+      "treatment_cpu_s": 2.715,
+      "baseline_cpu_s": 2.6725,
+      "treatment_copy_mib": 56.0,
+      "baseline_copy_mib": 54.833333333333336
+    },
+    {
+      "family": "joint",
+      "scenario": "uniform",
+      "baseline": "I",
+      "mean_empirical_p99_change_pct": -10.786767571187216,
+      "treatment_cpu_s": 2.715,
+      "baseline_cpu_s": 4.570833333333333,
+      "treatment_copy_mib": 56.0,
+      "baseline_copy_mib": 318.5
+    },
+    {
+      "family": "overall",
+      "scenario": "uniform",
+      "baseline": "RemoteOnly",
+      "mean_empirical_p99_change_pct": 40.162133362364,
+      "treatment_cpu_s": 2.715,
+      "baseline_cpu_s": 1.9641666666666666,
+      "treatment_copy_mib": 56.0,
+      "baseline_copy_mib": 0.0
+    },
+    {
+      "family": "overall",
+      "scenario": "uniform",
+      "baseline": "LRU",
+      "mean_empirical_p99_change_pct": -12.38433703596039,
+      "treatment_cpu_s": 2.715,
+      "baseline_cpu_s": 4.8133333333333335,
+      "treatment_copy_mib": 56.0,
+      "baseline_copy_mib": 398.1666666666667
+    },
+    {
+      "family": "overall",
+      "scenario": "uniform",
+      "baseline": "LFU",
+      "mean_empirical_p99_change_pct": -11.244068875966018,
+      "treatment_cpu_s": 2.715,
+      "baseline_cpu_s": 4.751666666666667,
+      "treatment_copy_mib": 56.0,
+      "baseline_copy_mib": 397.6666666666667
+    },
+    {
+      "family": "overall",
+      "scenario": "uniform",
+      "baseline": "RecentLFU",
+      "mean_empirical_p99_change_pct": -1.2114056220759117,
+      "treatment_cpu_s": 2.715,
+      "baseline_cpu_s": 2.816666666666667,
+      "treatment_copy_mib": 56.0,
+      "baseline_copy_mib": 58.333333333333336
+    }
+  ]
+}

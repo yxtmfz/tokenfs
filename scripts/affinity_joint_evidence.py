@@ -71,12 +71,29 @@ def verify(data,source):
         checked_public+=1
     require(checked_public==12,'public window count')
 
-    originals={name:read(root/(name+'.json')) for name in ['summary','comparisons','interactions','activity']}
-    report(root)
-    for name in ['summary','comparisons','interactions']:
-        require(read(root/(name+'.json'))==originals[name],'server/local statistic mismatch: '+name)
+    saved={name:(root/(name+'.json')).read_text() for name in ['summary','comparisons','interactions','activity']}
+    originals={name:json.loads(value) for name,value in saved.items()}
+    try:
+        report(root)
+        reproduced={name:read(root/(name+'.json')) for name in saved}
+    finally:
+        for name,value in saved.items():(root/(name+'.json')).write_text(value)
+    for name in ['summary','interactions']:
+        require(reproduced[name]==originals[name],'server/local statistic mismatch: '+name)
+    rounding=[]
+    require(len(reproduced['comparisons'])==len(originals['comparisons']),'comparison count changed')
+    for index,(a,b) in enumerate(zip(originals['comparisons'],reproduced['comparisons'])):
+        require(a.keys()==b.keys(),'comparison fields changed')
+        for field,value in a.items():
+            if value==b[field]:continue
+            require(field in ['time_ratio','throughput_change_pct','with_drain_ratio']
+                    and isinstance(value,float) and isinstance(b[field],float)
+                    and math.isfinite(value) and math.isfinite(b[field])
+                    and abs(value-b[field])<=1e-12,'server/local comparison mismatch: '+field)
+            rounding.append(dict(row=index,scenario=a['scenario'],baseline=a['baseline'],field=field,
+                server=value,local=b[field],absolute_difference=abs(value-b[field])))
     key=lambda r:(r['block'],r['strategy'])
-    require(sorted(read(root/'activity.json'),key=key)==sorted(originals['activity'],key=key),'mechanism records mismatch')
+    require(sorted(reproduced['activity'],key=key)==sorted(originals['activity'],key=key),'mechanism records mismatch')
     for row in originals['comparisons']:
         logs=[]
         for b in m['spec']['blocks']:
@@ -104,7 +121,8 @@ def verify(data,source):
             require(rejected,'tampering accepted: '+kind);negatives.append(dict(case=kind,rejected=True))
         require(audit(scratch)['passed'],'negative fixture did not restore')
     return dict(passed=True,batches=batches,performance_cases=576,content_cases=132,development_cases=72,
-        frozen_public_windows=checked_public,exact_statistics_json=['summary.json','comparisons.json','interactions.json'],
+        frozen_public_windows=checked_public,exact_statistics_json=['summary.json','interactions.json'],
+        comparisons_equal_within_absolute_1e_12=True,comparison_rounding_differences=rounding,
         mechanism_records_equal_after_canonical_order=True,independent_paired_ratios=42,
         negative_checks=negatives,algorithm_revision=f['algorithm_revision'],binary_sha256=f['binary_sha256'])
 

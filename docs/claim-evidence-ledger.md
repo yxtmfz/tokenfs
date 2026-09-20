@@ -2,7 +2,7 @@
 
 依据为本仓库 README、system-design.md、model-and-controller.md、experiments.md，不假设另有未提供的论文内容。验证允许否定原主张；未支持的主张必须收窄或删除，不能以命中率替代速度收益。
 
-最终写作状态见 [实验收口](../reports/latest/paper-experiments/12_paper_closeout/README.md) 和 [机器可读主张清单](../reports/latest/paper-experiments/12_paper_closeout/claims.json)。B3 原始归档离线重审通过；实际执行路径绕过旧亲和状态准入与副本协调，不包含独立亲和开关对照。不能拼接旧版亲和数据与新版热点数据，宣称同一完整策略的两个创新均已成立。
+上一轮 B3 写作状态见 [实验收口](../reports/latest/paper-experiments/12_paper_closeout/README.md) 和 [机器可读主张清单](../reports/latest/paper-experiments/12_paper_closeout/claims.json)。B3 原始归档离线重审通过；实际执行路径绕过旧亲和状态准入与副本协调，不包含独立亲和开关对照。不能拼接旧版亲和数据与新版热点数据，宣称同一完整策略的两个创新均已成立。
 
 ## 第一轮 AURA-core 消融对象
 
@@ -92,3 +92,12 @@ LRU-equal/LFU-equal 的基础准入为同一 read-through 门槛2次、同一异
 当前成本项对所有对象共用每字节服务率；no-cost 同时去掉服务收益与复制扣项且改变变长对象的价值字节权重，因此不能单独声称在线成本校准或逐对象成本预测有效。no-aging 同时去掉滑窗与重置，no-shift 才是额外重置的单项消融。
 
 第二轮没有补齐：完整 Python 联合/鲁棒优化、强 SWAP 与崩溃恢复、临时/打开已删除文件的物理峰值空间、真实多 GPU 推理、独占裸 NVMe、完整 W-TinyLFU/S3-FIFO 等现代算法对比。上述主张仍应标为设计或后续工作。不能因为所有预定运行完成，就把全部原始论文主张标为成立。
+
+
+## 第三轮：同版本逐项关闭与整体速度
+
+本轮完成 **576 次正式实测、132 项内容验证**，按热点、访问亲和、联合净收益和整体速度给出四张表。组件采用完整策略逐项关闭的对照，实际 MiB/s 与配对统计决定结论；未确定、未触发和退化结果全部保留。范围为三个私有逻辑缓存域与真实 NVMe/TCP 远端，不是物理 GPU 推理，也不代表完整 Python RobustBenefit 已接入。
+
+完整结论见 [本轮四表](../reports/latest/paper-experiments/13_affinity_joint/README.md) 和其中的 `verdict.json`，不将第一、二轮的优势拼接为同一版本的证明。快速热点重置、访问份额亲和准入、联合 victim 损失计算各自都有单独开关；三者的理论完整性与性能适用场景仍应按报告限定。
+
+本轮冻结策略不随正式结果调参；55 项 Python 与 2 项 Release C++ 回归、132 项全内容检查用于功能验证，576 次不进行全内容哈希的回放用于速度评价，72 次开发诊断不计入正式样本。公开回放为构造调用域，未测真实 GPU 拓扑、模型 tokens/s 或 TTFT。

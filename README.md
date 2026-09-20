@@ -1,6 +1,8 @@
 # AURA-KV / TokenFS
 
-> 论文收口：已从原始归档重新审计 756 次性能与 169 项内容验证记录，统计复算一致。当前可支撑的性能贡献是**热点变化下的缓存准入与历史自适应**；GPU 亲和放置仍未获得新版的独立性能验证，measured 路径绕过旧亲和状态门槛。见 [最终结果、可写结论与剩余缺口](reports/latest/paper-experiments/12_paper_closeout/README.md)。预定实验完成不等于两个原始创新点均成立。
+> 当前四表入口：本轮完成 **576 次正式实测、132 项内容验证**，按热点、访问亲和、联合净收益和整体速度给出四张表。组件采用完整策略逐项关闭的对照，实际 MiB/s 与配对统计决定结论；未确定、未触发和退化结果全部保留。范围为三个私有逻辑缓存域与真实 NVMe/TCP 远端，不是物理 GPU 推理，也不代表完整 Python RobustBenefit 已接入。见 [三项机制与整体速度](reports/latest/paper-experiments/13_affinity_joint/README.md)。
+
+> 上一轮 B3 收口：已从原始归档重新审计 756 次性能与 169 项内容验证记录，统计复算一致。当前可支撑的性能贡献是**热点变化下的缓存准入与历史自适应**；GPU 亲和放置仍未获得新版的独立性能验证，measured 路径绕过旧亲和状态门槛。见 [最终结果、可写结论与剩余缺口](reports/latest/paper-experiments/12_paper_closeout/README.md)。预定实验完成不等于两个原始创新点均成立。
 
 > 实验证据修订：历史模拟结果存在首次缺失计账问题，旧真实 `wall_time_s` 是分段耗时和，且基线能力、缓存控制与淘汰触发存在缺口。旧报告保留为历史记录，不能作为当前已验证性能结论。新分类、真实速率口径和验收状态见 [证据驱动实验](docs/evidence-experiments.md)。
 
@@ -20,7 +22,7 @@ AURA-KV 是研究控制层，TokenFS 是可挂载的 FUSE 文件系统原型。�
 |---|---|---|
 | 代码 | `src/`、`aura_kv/`、`scripts/`、`tests/` | FUSE 原型、AURA-KV 控制器、实验脚本和测试 |
 | 说明文档 | [docs/README.md](docs/README.md) | 项目设计、模型公式、实验方法和部署说明 |
-| 数据结果 | [第二轮实测与消融报告](reports/latest/paper-experiments/11_measured_admission/README.md) | 756 次冻结速度实验、完整负结果与写作边界 |
+| 数据结果 | [三项机制与整体速度四表](reports/latest/paper-experiments/13_affinity_joint/README.md) | 576 次新拓扑冻结速度实验、完整负结果与写作边界 |
 
 ## 1. 当前项目定位
 
@@ -33,10 +35,11 @@ AURA-KV 是研究控制层，TokenFS 是可挂载的 FUSE 文件系统原型。�
 复制、预取和淘汰如何不阻塞前台请求？
 ```
 
-原始设计保留两个研究重点（不代表两项均已获得性能验证）：
+原始设计的两个研究重点，以及本轮单独评估的联合决策，必须区分设计新颖性与实测收益：
 
 1. **价值感知本地缓存管理**：不只按 LRU/LFU 删除缓存，而是估计删除某个本地副本后未来会多付出的访问代价。
 2. **多 GPU 共享副本放置**：远端保存权威副本，本地保存热点副本；系统根据访问分布、节点亲和和复制收益决定副本复制到哪里。
+3. **联合净收益控制**：同时考虑新副本收益、复制成本与所选旧副本的淘汰损失。本轮仅验证实际 C++ 净收益准入及独立决策对照，不能据此声称完整鲁棒控制器或超加性协同成立。
 
 多 GPU QoS、公共前缀去重和 P99 驱动迁移不再作为当前主要创新点。跨层迁移一致性作为文件系统必要工程能力保留。
 
@@ -142,7 +145,9 @@ cat /mnt/tokenfs/gpu0/demo/a.tokens
 
 ## 6. 论文实验入口
 
-当前实际速度以 [cn7 正式实测报告](reports/latest/paper-experiments/10_real_cn7_evidence/README.md) 为入口。冻结矩阵按实际 C++ 实现划分：整体对照、价值淘汰、亲和放置、价值×亲和交互、趋势、收益准入、预取、异步执行。每项都用相同 trace/字节/配额下的外层任务耗时和 MiB/s 判定；内部命中率和复制量只作解释。
+当前实际速度先读 [三项机制与整体速度四表](reports/latest/paper-experiments/13_affinity_joint/README.md)，方案见 [本轮冻结确认方案](docs/affinity-joint-confirmation-plan.md)。上一轮 B3 与本轮访问拓扑不同，结果不合并。
+
+第一轮 [cn7 正式实测报告](reports/latest/paper-experiments/10_real_cn7_evidence/README.md) 的冻结矩阵按实际 C++ 实现划分：整体对照、价值淘汰、亲和放置、价值×亲和交互、趋势、收益准入、预取、异步执行。每项都用相同 trace/字节/配额下的外层任务耗时和 MiB/s 判定；内部命中率和复制量只作解释。
 
 ```bash
 # Linux/FUSE；先按 docs/evidence-experiments.md 建立独立数据目录并运行完整批次
