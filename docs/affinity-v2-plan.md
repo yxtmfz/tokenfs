@@ -13,15 +13,29 @@ the object more often. After caller handover, the old domain stays dominant in
 the 128-event global history. Meanwhile the base value estimate uses 128 accesses
 PER DOMAIN: it stops aging during inactivity and can overvalue obsolete residents.
 
-The revision replaces the relative veto with an absolute domain/object demand
-estimate in the SAME global observation window. Global object count times domain
-share is exactly the domain/object count in that window. Effective reuse is the
-minimum of this count and the existing domain history, preserving any H reset.
-The same estimate feeds incoming benefit, victim ranking and summed victim loss;
-copy cost and joint admission remain unchanged. Profitable minority replicas are
-allowed, and traffic elsewhere ages stale affinity even while a domain is idle.
-It is not physical GPU topology optimization and does not change the read route.
-The legacy mode remains available for reproducibility; all new behavior is opt-in.
+The initial common-window count revision was tested only on the development set
+and was rejected: gains were small and uniform/public results regressed. Its 42
+runs and per-host correctness checks are retained separately as development A.
+There has been NO held-out confirmation access.
+
+The final candidate replaces the relative veto with **handover-aware reuse
+transfer** for the incoming object only. In the last four observed accesses, the
+current domain must account for at least three and have at least twice its share
+in the long 128-event window. The object must have at least eight observations
+in that long window, with other-domain count at least twice the current domain's
+count. Only then may incoming reuse borrow global object demand multiplied by
+the newly observed destination share. Use the maximum of this estimate and the
+original local estimate. Every resident retains its original value, avoiding the
+extra replacement churn seen in development A. Copy cost, summed victim loss,
+capacity and execution-time rechecks remain unchanged. No speculative prefetch:
+only the object actually requested is eligible. No workload phase labels or
+future requests enter this decision.
+
+Stationary, balanced and single-domain access retain the baseline estimate.
+Profitable minority readers no longer face a relative-popularity veto. This does
+not solve every idle-domain history issue; the domain re-entry case remains as a
+boundary check. The legacy share gate remains available. Behavior is opt-in and
+the same recent-demand option selects this final implementation in the new binary.
 
 ## Fixed comparisons and workloads
 
@@ -36,7 +50,8 @@ The new scenario uses caller sequence 0,1,2,0 across four phases: a caller retur
 after inactivity with a different six-object hot set under four-object capacity.
 All methods receive the same trace; policy decisions never see phase labels.
 
-Development: seeds 1701,1702, 42 actual speed runs. Correctness: 21 cases per host,
+Final-candidate development B: seeds 1701,1702, 42 actual speed runs, separate
+from the rejected candidate A using the same development-only traces. Correctness: 21 cases per host,
 cn7 actual NVMe/TCP and cn8 directory backend. Intended development acceptance:
 at least one meaningful improvement against disabled affinity, with particular
 attention to re-entry, and no renewed caller-handover regression. If development

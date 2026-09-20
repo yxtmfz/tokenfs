@@ -91,16 +91,29 @@ int main(){
   Options legacy=recent;legacy.affinity_recent_demand=false;
   assert(minority.Plan(1,{"shared",100,0},{},0,100,legacy).reason=="affinity");
   assert(minority.Plan(1,{"shared",100,0},{},0,100,recent).allowed);
-  // Traffic in other domains ages the affinity of an idle domain. Re-entry may
-  // replace stale residents without resetting hotspot history or using the future.
-  MeasuredPolicy reentry;
-  for(int i=0;i<20;i++)reentry.Observe(0,"stale",recent);
-  for(int i=0;i<32;i++)reentry.Observe(1,"elsewhere",recent);
-  for(int i=0;i<3;i++)reentry.Observe(0,"new",recent);
+  // After a concentrated caller handover, borrow only established reuse of a
+  // globally hot object. The existing copy-cost and victim-loss tests still apply.
+  MeasuredPolicy transfer;recent.affinity_window=128;
+  for(int i=0;i<24;i++)transfer.Observe(0,"shared",recent);
+  transfer.Observe(1,"a",recent);transfer.Observe(1,"b",recent);
+  transfer.Observe(1,"shared",recent);
   Options off=recent;off.affinity_gate=false;
-  assert(reentry.Plan(0,{"new",100,1},{{"stale",100,0}},100,100,off).reason=="victim_loss");
-  auto fresh=reentry.Plan(0,{"new",100,1},{{"stale",100,0}},100,100,recent);
-  assert(fresh.allowed && fresh.displaced_us==0 && fresh.affinity_adjusted_items==1);
+  assert(transfer.Plan(1,{"shared",100,1},{},0,100,off).reason=="no_reuse");
+  auto borrowed=transfer.Plan(1,{"shared",100,1},{},0,100,recent);
+  assert(borrowed.allowed && borrowed.affinity_adjusted_items==1 && borrowed.affinity_incoming_count>1);
+  // A cold object and a stable resident are not inflated by caller handover.
+  transfer.Observe(1,"cold",recent);
+  assert(!transfer.Plan(1,{"cold",100,1},{},0,100,recent).allowed);
+  auto resident_on=transfer.Plan(1,{"shared",100,1},{{"a",100,0}},100,100,recent);
+  auto resident_off=transfer.Plan(1,{"shared",100,1},{{"a",100,0}},100,100,off);
+  assert(resident_on.displaced_us==resident_off.displaced_us);
+  transfer.ReadSample(false,100,100);transfer.ReadSample(true,100,20);transfer.CopySample(100,100000);
+  Options costly=recent;costly.cost=true;
+  assert(transfer.Plan(1,{"shared",100,1},{},0,100,costly).reason=="copy_cost");
+  // Execution rechecks cannot keep borrowing after the observed destination shifts.
+  for(int i=0;i<8;i++)transfer.Observe(2,"other",recent);
+  assert(transfer.AdmissionFrequency(1,"shared",recent)==1);
+  assert(transfer.Plan(1,{"shared",100,1},{},0,100,recent).reason=="no_reuse");
   // With one caller and equal windows, the new affinity model is identical to
   // the domain-only estimate; it must not be a hidden single-domain reset.
   MeasuredPolicy single;recent.window=recent.affinity_window=8;off=recent;off.affinity_gate=false;
@@ -111,8 +124,5 @@ int main(){
     assert(on_plan.allowed==off_plan.allowed && on_plan.incoming_us==off_plan.incoming_us);
     assert(on_plan.affinity_adjusted_items==0);
   }
-  // Old per-domain reuse alone cannot admit a new one-off visit after long idle.
-  reentry.Observe(0,"stale",recent);
-  assert(!reentry.Plan(0,{"stale",100,0},{},0,100,recent).allowed);
  std::cout<<"measured admission invariants passed\n";
 }

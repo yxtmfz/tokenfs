@@ -109,6 +109,9 @@ class MeasuredPolicy {
   uint64_t Frequency(int gpu,const std::string& key) const {
     std::lock_guard<std::mutex> lock(mu_);return Count(gpu,key);
   }
+  uint64_t AdmissionFrequency(int gpu,const std::string& key,const Options& o) const {
+    std::lock_guard<std::mutex> lock(mu_);return EffectiveCount(gpu,key,o,true);
+  }
   std::vector<Item> Ranked(int gpu,std::vector<Item> items,const Options& o) const {
     std::lock_guard<std::mutex> lock(mu_);Sort(gpu,items,o);return items;
   }
@@ -118,12 +121,10 @@ class MeasuredPolicy {
     if(incoming.bytes>quota){result.reason="oversize";return result;}
     const auto frequency=Count(gpu,incoming.key);
     result.incoming_count=frequency;
-    result.affinity_incoming_count=EffectiveCount(gpu,incoming.key,o);
+    result.affinity_incoming_count=EffectiveCount(gpu,incoming.key,o,true);
     result.affinity_adjusted_items=result.affinity_incoming_count!=frequency;
-    for(const auto& resident:residents)
-      result.affinity_adjusted_items+=EffectiveCount(gpu,resident.key,o)!=Count(gpu,resident.key);
     result.costs_calibrated=remote_.n && local_.n && copy_.n;
-    if(o.admission && frequency<2){result.reason="no_reuse";return result;}
+    if(o.admission && result.affinity_incoming_count<2){result.reason="no_reuse";return result;}
     if(o.admission && o.affinity_gate && !o.affinity_recent_demand) {
       const auto found=affinity_counts_.find(incoming.key);
       uint64_t own=0,peak=0;
@@ -167,22 +168,27 @@ class MeasuredPolicy {
     const double local=local_.n?local_.mean:remote*0.5;
     return std::max(0.0,remote-local);
   }
-  uint64_t EffectiveCount(int gpu,const std::string& key,const Options& o) const {
+  uint64_t EffectiveCount(int gpu,const std::string& key,const Options& o,bool incoming) const {
     const auto domain_count=Count(gpu,key);
-    if(!o.affinity_gate || !o.affinity_recent_demand)return domain_count;
+    if(!incoming || !o.affinity_gate || !o.affinity_recent_demand)return domain_count;
     const auto object=affinity_counts_.find(key);
-    if(object==affinity_counts_.end())return 0;
-    const auto caller=object->second.find(gpu);
-    if(caller==object->second.end())return 0;
-    // Global object demand times this domain's access share equals its count
-    // in a COMMON recent window. Other domains advance this clock even while
-    // this one is idle. Never resurrect demand removed by hotspot adaptation.
-    // No relative-popularity veto: profitable minority readers may get replicas.
-    return std::min(domain_count,caller->second);
+    if(object==affinity_counts_.end())return domain_count;
+    uint64_t total=0,own=0;
+    for(const auto& [node,count]:object->second){total+=count;if(node==gpu)own=count;}
+    constexpr size_t short_window=4;
+    if(!own || total<8 || total-own<2*own || affinity_history_.size()<short_window)return domain_count;
+    uint64_t short_own=0,long_own=0;size_t index=0;
+    for(auto it=affinity_history_.rbegin();it!=affinity_history_.rend();++it,++index)
+      if(it->second==gpu){++long_own;if(index<short_window)++short_own;}
+    // Borrow reuse only after observed destination activity becomes concentrated
+    // AND at least doubles its long-window share. The object must already have
+    // strong reuse elsewhere. No workload labels, future accesses or prefetch.
+    // Stable/balanced domains and every resident retain their original estimate.
+    if(short_own*4<3*short_window || short_own*affinity_history_.size()<2*short_window*long_own)return domain_count;
+    return std::max(domain_count,total*short_own/short_window);
   }
   double Value(int gpu,const Item& item,const Options& o,bool incoming) const {
-    double repeats=double(EffectiveCount(gpu,item.key,o));
-    (void)incoming;
+    double repeats=double(EffectiveCount(gpu,item.key,o,incoming));
     // Use the same repeat-evidence estimate for arrivals and residents. Charging
     // resident frequency in full while subtracting one only from the incoming
     // object would add an unintended incumbent preference to the cost ablation.

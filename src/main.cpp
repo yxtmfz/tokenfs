@@ -2235,7 +2235,7 @@ class TokenFS {
   bool MeasuredMayAdmit(const FileMeta& incoming,int gpu_id) {
     const auto* gpu=GpuById(gpu_id);if(!gpu)return false;
     if(incoming.size_bytes>gpu->local_quota_bytes){AddBufferedMetric("measured_precheck_oversize",1);return false;}
-    if(config_.measured_admission && measured_.Frequency(gpu_id,incoming.logical_path)<2){AddBufferedMetric("measured_precheck_no_reuse",1);return false;}
+    if(config_.measured_admission && measured_.AdmissionFrequency(gpu_id,incoming.logical_path,MeasuredOptions())<2){AddBufferedMetric("measured_precheck_no_reuse",1);return false;}
     const auto plan=MeasuredPlan(*gpu,incoming);
     AddBufferedMetric("measured_precheck_"+plan.reason,1);
     return plan.allowed;
