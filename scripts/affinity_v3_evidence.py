@@ -14,6 +14,10 @@ def require(condition,message):
 def verify(data,source):
     study.activate();repo=Path(__file__).resolve().parents[1]
     freeze_path=repo/'study-configs/affinity-v3-freeze-01.json';f=read(freeze_path)
+    prior=repo/f['previous_failed_confirmation']/'confirmation/comparisons.json'
+    require(f['per_study_family_alpha']==0.025 and f['maximum_confirmation_studies_in_this_task']==2,'confirmation multiplicity rule changed')
+    require(sha(prior)==f['previous_confirmation_comparisons_sha256'],'previous failed confirmation changed')
+    require(not any(x['verdict']=='faster' for x in read(prior) if x['baseline']=='P-off'),'previous study unexpectedly claims an independent gain')
     main=data/'cn7/affinity-v3-confirmation-01';m=read(main/'manifest.json');context=read(data/'cn7/confirmation-launch-context.json')
     require(context['freeze']==f and context['freeze_sha256']==sha(freeze_path),'launch freeze changed')
     require(m['source_hashes']==f['source_hashes'] and m['binary_sha256']==f['binary_sha256'],'runtime changed')
