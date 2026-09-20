@@ -1,5 +1,7 @@
 # AURA-KV / TokenFS 文档导航
 
+准备论文时先读 [实验收口与论文可用结论](../reports/latest/paper-experiments/12_paper_closeout/README.md)：它区分已支持的热点自适应收益、尚未成立的 GPU 亲和贡献，并给出可直接引用的结果表和独立离线复核入口。
+
 当前真实评估迁移到 cn7→cn13；cn14 保持停用。优先阅读 [第二轮策略与消融对象](measured-admission-study.md)、[冻结确认方案](measured-confirmation-plan.md) 和 [第二轮完整结果](../reports/latest/paper-experiments/11_measured_admission/README.md)。第一轮方案仍见 [证据实验方案](evidence-experiments.md) 与 [预先固定方案](evidence-preregistration.md)。历史模拟和 cn14 表格不能替代修复后的真实速度证据。
 
 阅读顺序建议如下：

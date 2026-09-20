@@ -1,0 +1,32 @@
+{
+  "review_kind": "manual control-flow review with verified frozen source identity; not a performance test",
+  "source_sha256": "96970a8b161c3d94a667c13d1fb9359932b35f8a081472020ce68caa0c3395bb",
+  "evidence": [
+    {
+      "label": "owner_promotion",
+      "file": "src/main.cpp",
+      "line": 2385,
+      "excerpt": "    if(config_.measured_policy) return config_.promote_on_read && gpu_id==meta.gpu_id && MeasuredMayAdmit(meta,gpu_id);\n    if (!config_.promote_on_read &&"
+    },
+    {
+      "label": "cross_domain_creation",
+      "file": "src/main.cpp",
+      "line": 2446,
+      "excerpt": "  bool ShouldCreateCrossGpuReplica(const FileMeta& meta, int caller_gpu_id) {\n    if (!config_.cross_gpu_local_cache || caller_gpu_id == meta.gpu_id ||\n        meta.state != \"COMMITTED\" || !meta.has_remote_copy) return false;\n    if(config_.measured_policy) {\n      // An already readable owner-local copy saves the same remote read in this\n      // shared-host architecture; do not consume another domain just to duplicate it.\n      if(meta.tier==\"local\")return false;\n      return MeasuredMayAdmit(meta,caller_gpu_id);\n    }\n    if (config_.read_through_cache) return meta.read_count >= config_.read_through_min_reads;\n    if (config_.affinity_placement) {\n      if (meta.target_local_replica_count == 0) return false;"
+    },
+    {
+      "label": "legacy_replica_cap",
+      "file": "src/main.cpp",
+      "line": 2492,
+      "excerpt": "    if (!config_.measured_policy && !config_.read_through_cache && config_.affinity_placement &&\n        metadata_.LocalReplicas(meta.logical_path).size() >= meta.target_local_replica_count) {"
+    },
+    {
+      "label": "legacy_replica_reconciliation",
+      "file": "src/main.cpp",
+      "line": 2616,
+      "excerpt": "    if (config_.measured_policy || config_.read_through_cache || !config_.affinity_placement) return;\n    auto replicas = metadata_.LocalReplicas(meta.logical_path);"
+    }
+  ],
+  "conclusion": "B3 measured-policy promotion and cross-domain admission bypass legacy affinity-state gates; legacy replica cap and reconciliation are disabled on this path. Per-domain demand and replica support remain. The new batch contains no independent affinity on/off comparison.",
+  "implication": "Do not describe B3 storage-speed evidence as validation of legacy affinity placement or physical GPU locality."
+}

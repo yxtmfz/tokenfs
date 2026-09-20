@@ -1,5 +1,7 @@
 # 实验与结果
 
+> 最终写作入口：[实验收口与论文可用结论](../reports/latest/paper-experiments/12_paper_closeout/README.md)。756 次预定性能运行完成，热点变化的速度优势得到支持；GPU 亲和独立收益尚未建立。收口报告附完整主表、有效消融、负结果和复核记录，不新增或改写已测数据。
+
 > 历史结果警示：此页旧数字尚未按修复后的统一计账、对等基线和外层计时重跑，不能视为当前性能证据。见 `docs/evidence-experiments.md`（仓库根目录相对路径）。
 
 当前数字以 [第二轮 756 次实测报告](../reports/latest/paper-experiments/11_measured_admission/README.md) 为准；[第一轮 400 次报告](../reports/latest/paper-experiments/10_real_cn7_evidence/README.md) 独立保留。`reports/latest/final-report.md` 及本页下方的旧表格均为历史记录，不是最新验收结论。

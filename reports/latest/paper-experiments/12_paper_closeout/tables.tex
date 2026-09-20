@@ -1,0 +1,49 @@
+% Generated from the frozen B3 statistics; requires booktabs.
+% Geometric paired changes differ from ratios of arithmetic throughput means.
+\begin{table}[t]
+\centering
+\small
+\caption{Storage replay throughput (MiB/s). Each main condition has 12 paired runs.}
+\begin{tabular}{lrrrrr}
+\toprule
+Workload & RemoteOnly & LRU & LFU & RecentLFU & AURA \\
+\midrule
+Stable & 76.63 & 115.73 & 120.26 & 130.66 & 130.84 \\
+Shifting & 76.41 & 103.64 & 84.05 & 90.68 & 113.25 \\
+Scan & 76.31 & 101.28 & 105.25 & 113.62 & 113.59 \\
+Variable size & 82.21 & 78.87 & 79.22 & 85.32 & 85.15 \\
+Uniform & 76.35 & 69.21 & 69.47 & 74.85 & 74.69 \\
+Conversation & 68.27 & 69.21 & 69.01 & 69.65 & 69.61 \\
+Tool agent & 69.09 & 74.08 & 78.72 & 80.57 & 79.03 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\centering
+\small
+\caption{Shifting-hotspot comparisons. Time ratio is AURA/reference; CIs are unadjusted paired bootstrap intervals. Holm correction covers 21 primary comparisons.}
+\begin{tabular}{lrrrr}
+\toprule
+Reference & Time ratio & 95\% CI & Throughput gain & Holm $p$ \\
+\midrule
+LRU & 0.9149 & [0.8972, 0.9350] & 9.30\% & 0.010254 \\
+LFU & 0.7423 & [0.7280, 0.7575] & 34.72\% & 0.010254 \\
+RecentLFU & 0.8010 & [0.7859, 0.8167] & 24.85\% & 0.010254 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[t]
+\centering
+\small
+\caption{Shifting-hotspot ablations. No-shift removes only the extra reset; no-aging removes both expiration and reset.}
+\begin{tabular}{lrrr}
+\toprule
+Reference & Time ratio & 95\% CI & Time reduction \\
+\midrule
+No-shift & 0.7907 & [0.7774, 0.8065] & 20.93\% \\
+No-aging & 0.7331 & [0.7204, 0.7477] & 26.69\% \\
+\bottomrule
+\end{tabular}
+\end{table}

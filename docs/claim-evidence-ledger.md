@@ -2,6 +2,8 @@
 
 依据为本仓库 README、system-design.md、model-and-controller.md、experiments.md，不假设另有未提供的论文内容。验证允许否定原主张；未支持的主张必须收窄或删除，不能以命中率替代速度收益。
 
+最终写作状态见 [实验收口](../reports/latest/paper-experiments/12_paper_closeout/README.md) 和 [机器可读主张清单](../reports/latest/paper-experiments/12_paper_closeout/claims.json)。B3 原始归档离线重审通过；实际执行路径绕过旧亲和状态准入与副本协调，不包含独立亲和开关对照。不能拼接旧版亲和数据与新版热点数据，宣称同一完整策略的两个创新均已成立。
+
 ## 第一轮 AURA-core 消融对象
 
 | 文档主张 | 真实对照 | 触发条件/必要证据 | 当前可评价范围 |
