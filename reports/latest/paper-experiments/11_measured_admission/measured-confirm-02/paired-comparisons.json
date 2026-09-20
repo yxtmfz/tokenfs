@@ -1,0 +1,942 @@
+[
+  {
+    "scenario": "uniform",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "RemoteOnly",
+    "n": 12,
+    "time_ratio": 1.022266461453745,
+    "ci95": [
+      1.0091748613352778,
+      1.0346476501291735
+    ],
+    "p_raw": 0.00830078125,
+    "p_holm": 0.00830078125,
+    "family": "RemoteOnly",
+    "with_drain_ratio": 1.0233200765852595,
+    "verdict": "slower"
+  },
+  {
+    "scenario": "uniform",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "LRU-equal",
+    "n": 12,
+    "time_ratio": 0.926670331460137,
+    "ci95": [
+      0.9133757749743704,
+      0.9385863238508447
+    ],
+    "p_raw": 0.00048828125,
+    "p_holm": 0.01025390625,
+    "family": "primary",
+    "with_drain_ratio": 0.9276443627297969,
+    "verdict": "faster"
+  },
+  {
+    "scenario": "uniform",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "LFU-equal",
+    "n": 12,
+    "time_ratio": 0.930126328329754,
+    "ci95": [
+      0.9209535495638804,
+      0.9388103093169349
+    ],
+    "p_raw": 0.00048828125,
+    "p_holm": 0.01025390625,
+    "family": "primary",
+    "with_drain_ratio": 0.9309321546706578,
+    "verdict": "faster"
+  },
+  {
+    "scenario": "uniform",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "RecentLFU-admit",
+    "n": 12,
+    "time_ratio": 1.0021036653948492,
+    "ci95": [
+      0.9900809271356288,
+      1.0142555290250534
+    ],
+    "p_raw": 0.67724609375,
+    "p_holm": 1,
+    "family": "primary",
+    "with_drain_ratio": 1.0026293512940299,
+    "verdict": "uncertain"
+  },
+  {
+    "scenario": "uniform",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "AURA-no-admission",
+    "n": 12,
+    "time_ratio": 0.9099255777661737,
+    "ci95": [
+      0.9026801015807782,
+      0.9163022919127924
+    ],
+    "p_raw": 0.00048828125,
+    "p_holm": 0.00146484375,
+    "family": "AURA-no-admission",
+    "with_drain_ratio": 0.9108678472087978,
+    "verdict": "faster"
+  },
+  {
+    "scenario": "uniform",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "AURA-no-cost",
+    "n": 12,
+    "time_ratio": 0.9994969978782423,
+    "ci95": [
+      0.9933262211976551,
+      1.0058467736302534
+    ],
+    "p_raw": 0.89599609375,
+    "p_holm": 1,
+    "family": "AURA-no-cost",
+    "with_drain_ratio": 1.0000190712574653,
+    "verdict": "uncertain"
+  },
+  {
+    "scenario": "uniform",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "AURA-no-shift",
+    "n": 12,
+    "time_ratio": 1.002369140992691,
+    "ci95": [
+      0.9940963769926546,
+      1.0110779281568278
+    ],
+    "p_raw": 0.61572265625,
+    "p_holm": 0.61572265625,
+    "family": "AURA-no-shift",
+    "with_drain_ratio": 1.002544762152178,
+    "verdict": "uncertain"
+  },
+  {
+    "scenario": "stable",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "RemoteOnly",
+    "n": 12,
+    "time_ratio": 0.585663902422221,
+    "ci95": [
+      0.5804489528931326,
+      0.5908090236974967
+    ],
+    "p_raw": 0.00048828125,
+    "p_holm": 0.00341796875,
+    "family": "RemoteOnly",
+    "with_drain_ratio": 0.5857351426357474,
+    "verdict": "faster"
+  },
+  {
+    "scenario": "stable",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "LRU-equal",
+    "n": 12,
+    "time_ratio": 0.8839104032523352,
+    "ci95": [
+      0.8618091244839512,
+      0.9065371541260981
+    ],
+    "p_raw": 0.00048828125,
+    "p_holm": 0.01025390625,
+    "family": "primary",
+    "with_drain_ratio": 0.8839440698435403,
+    "verdict": "faster"
+  },
+  {
+    "scenario": "stable",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "LFU-equal",
+    "n": 12,
+    "time_ratio": 0.9189952791885297,
+    "ci95": [
+      0.904108455925046,
+      0.9327680514109034
+    ],
+    "p_raw": 0.00048828125,
+    "p_holm": 0.01025390625,
+    "family": "primary",
+    "with_drain_ratio": 0.9190125281903471,
+    "verdict": "faster"
+  },
+  {
+    "scenario": "stable",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "RecentLFU-admit",
+    "n": 12,
+    "time_ratio": 0.9985128040389782,
+    "ci95": [
+      0.9877204279585742,
+      1.008389217002119
+    ],
+    "p_raw": 0.8037109375,
+    "p_holm": 1,
+    "family": "primary",
+    "with_drain_ratio": 0.998524874263894,
+    "verdict": "uncertain"
+  },
+  {
+    "scenario": "stable",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "AURA-no-admission",
+    "n": 12,
+    "time_ratio": 0.8360956675930906,
+    "ci95": [
+      0.821714935176933,
+      0.8492397067888366
+    ],
+    "p_raw": 0.00048828125,
+    "p_holm": 0.00146484375,
+    "family": "AURA-no-admission",
+    "with_drain_ratio": 0.8353198005874656,
+    "verdict": "faster"
+  },
+  {
+    "scenario": "stable",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "AURA-no-value",
+    "n": 12,
+    "time_ratio": 0.9962359185230085,
+    "ci95": [
+      0.9815174068904411,
+      1.0125677588989352
+    ],
+    "p_raw": 0.66650390625,
+    "p_holm": 1,
+    "family": "AURA-no-value",
+    "with_drain_ratio": 0.9962565301869647,
+    "verdict": "uncertain"
+  },
+  {
+    "scenario": "stable",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "AURA-no-joint",
+    "n": 12,
+    "time_ratio": 0.7575115285996779,
+    "ci95": [
+      0.7464565444192276,
+      0.7682330172328458
+    ],
+    "p_raw": 0.00048828125,
+    "p_holm": 0.0009765625,
+    "family": "AURA-no-joint",
+    "with_drain_ratio": 0.7566956342796038,
+    "verdict": "faster"
+  },
+  {
+    "scenario": "stable",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "AURA-synchronous",
+    "n": 12,
+    "time_ratio": 0.9939197297659532,
+    "ci95": [
+      0.9791706966533129,
+      1.0107453803347297
+    ],
+    "p_raw": 0.4853515625,
+    "p_holm": 0.4853515625,
+    "family": "AURA-synchronous",
+    "with_drain_ratio": 0.9939096404978576,
+    "verdict": "uncertain"
+  },
+  {
+    "scenario": "stable",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "AURA-no-shift",
+    "n": 12,
+    "time_ratio": 0.9914891915370702,
+    "ci95": [
+      0.9808810905937138,
+      1.0012984729700667
+    ],
+    "p_raw": 0.15771484375,
+    "p_holm": 0.3154296875,
+    "family": "AURA-no-shift",
+    "with_drain_ratio": 0.9914490919734242,
+    "verdict": "uncertain"
+  },
+  {
+    "scenario": "stable",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "AURA-no-aging",
+    "n": 12,
+    "time_ratio": 0.9938683927261551,
+    "ci95": [
+      0.9776121916692465,
+      1.0113281119765203
+    ],
+    "p_raw": 0.5107421875,
+    "p_holm": 0.5107421875,
+    "family": "AURA-no-aging",
+    "with_drain_ratio": 0.993878402766833,
+    "verdict": "uncertain"
+  },
+  {
+    "scenario": "shift",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "RemoteOnly",
+    "n": 12,
+    "time_ratio": 0.674990493882186,
+    "ci95": [
+      0.6609029000820966,
+      0.6876885955190057
+    ],
+    "p_raw": 0.00048828125,
+    "p_holm": 0.00341796875,
+    "family": "RemoteOnly",
+    "with_drain_ratio": 0.6750415769683809,
+    "verdict": "faster"
+  },
+  {
+    "scenario": "shift",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "LRU-equal",
+    "n": 12,
+    "time_ratio": 0.914883460721245,
+    "ci95": [
+      0.8972085843119649,
+      0.9349657988656338
+    ],
+    "p_raw": 0.00048828125,
+    "p_holm": 0.01025390625,
+    "family": "primary",
+    "with_drain_ratio": 0.914435731170316,
+    "verdict": "faster"
+  },
+  {
+    "scenario": "shift",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "LFU-equal",
+    "n": 12,
+    "time_ratio": 0.7422722985910343,
+    "ci95": [
+      0.7280465015183951,
+      0.7575055743864755
+    ],
+    "p_raw": 0.00048828125,
+    "p_holm": 0.01025390625,
+    "family": "primary",
+    "with_drain_ratio": 0.7421656986879362,
+    "verdict": "faster"
+  },
+  {
+    "scenario": "shift",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "RecentLFU-admit",
+    "n": 12,
+    "time_ratio": 0.8009683983270459,
+    "ci95": [
+      0.7858533436967615,
+      0.8167436607685606
+    ],
+    "p_raw": 0.00048828125,
+    "p_holm": 0.01025390625,
+    "family": "primary",
+    "with_drain_ratio": 0.8009871374784786,
+    "verdict": "faster"
+  },
+  {
+    "scenario": "shift",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "AURA-no-aging",
+    "n": 12,
+    "time_ratio": 0.7331404699259778,
+    "ci95": [
+      0.7203682938635267,
+      0.747702605969676
+    ],
+    "p_raw": 0.00048828125,
+    "p_holm": 0.0009765625,
+    "family": "AURA-no-aging",
+    "with_drain_ratio": 0.7330282603994424,
+    "verdict": "faster"
+  },
+  {
+    "scenario": "shift",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "AURA-no-shift",
+    "n": 12,
+    "time_ratio": 0.7907173153325793,
+    "ci95": [
+      0.7774144446329212,
+      0.806470634274643
+    ],
+    "p_raw": 0.00048828125,
+    "p_holm": 0.00146484375,
+    "family": "AURA-no-shift",
+    "with_drain_ratio": 0.7907462338015107,
+    "verdict": "faster"
+  },
+  {
+    "scenario": "shift",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "AURA-no-cost",
+    "n": 12,
+    "time_ratio": 1.005571057274661,
+    "ci95": [
+      0.9924298466441063,
+      1.014491632531811
+    ],
+    "p_raw": 0.42578125,
+    "p_holm": 1,
+    "family": "AURA-no-cost",
+    "with_drain_ratio": 1.0055230894841358,
+    "verdict": "uncertain"
+  },
+  {
+    "scenario": "mooncake_toolagent",
+    "quota_mib": 16,
+    "paced": false,
+    "requests": 2048,
+    "shard_mib": 1,
+    "window": 128,
+    "baseline": "RemoteOnly",
+    "n": 12,
+    "time_ratio": 0.8750059759471324,
+    "ci95": [
+      0.8547117064787245,
+      0.8926478778481837
+    ],
+    "p_raw": 0.00048828125,
+    "p_holm": 0.00341796875,
+    "family": "RemoteOnly",
+    "with_drain_ratio": 0.8750197678034257,
+    "verdict": "faster"
+  },
+  {
+    "scenario": "mooncake_toolagent",
+    "quota_mib": 16,
+    "paced": false,
+    "requests": 2048,
+    "shard_mib": 1,
+    "window": 128,
+    "baseline": "LRU-equal",
+    "n": 12,
+    "time_ratio": 0.937949033867965,
+    "ci95": [
+      0.9218460242295434,
+      0.9532230873089663
+    ],
+    "p_raw": 0.00048828125,
+    "p_holm": 0.01025390625,
+    "family": "primary",
+    "with_drain_ratio": 0.9379027951151813,
+    "verdict": "faster"
+  },
+  {
+    "scenario": "mooncake_toolagent",
+    "quota_mib": 16,
+    "paced": false,
+    "requests": 2048,
+    "shard_mib": 1,
+    "window": 128,
+    "baseline": "LFU-equal",
+    "n": 12,
+    "time_ratio": 0.995934104022642,
+    "ci95": [
+      0.9872013760636911,
+      1.0043605689712407
+    ],
+    "p_raw": 0.42626953125,
+    "p_holm": 1,
+    "family": "primary",
+    "with_drain_ratio": 0.9959380075851303,
+    "verdict": "uncertain"
+  },
+  {
+    "scenario": "mooncake_toolagent",
+    "quota_mib": 16,
+    "paced": false,
+    "requests": 2048,
+    "shard_mib": 1,
+    "window": 128,
+    "baseline": "RecentLFU-admit",
+    "n": 12,
+    "time_ratio": 1.018012548486753,
+    "ci95": [
+      1.0032808267791453,
+      1.0401831668679504
+    ],
+    "p_raw": 0.02490234375,
+    "p_holm": 0.19921875,
+    "family": "primary",
+    "with_drain_ratio": 1.0180133746997244,
+    "verdict": "uncertain"
+  },
+  {
+    "scenario": "mooncake_toolagent",
+    "quota_mib": 16,
+    "paced": false,
+    "requests": 2048,
+    "shard_mib": 1,
+    "window": 128,
+    "baseline": "AURA-no-cost",
+    "n": 12,
+    "time_ratio": 1.0037595075531554,
+    "ci95": [
+      0.9950551400631117,
+      1.0121324999228933
+    ],
+    "p_raw": 0.4267578125,
+    "p_holm": 1,
+    "family": "AURA-no-cost",
+    "with_drain_ratio": 1.0037607338826369,
+    "verdict": "uncertain"
+  },
+  {
+    "scenario": "mixed_fit",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "RemoteOnly",
+    "n": 12,
+    "time_ratio": 0.9656278661599926,
+    "ci95": [
+      0.9546313495956112,
+      0.9761233849424275
+    ],
+    "p_raw": 0.00048828125,
+    "p_holm": 0.00341796875,
+    "family": "RemoteOnly",
+    "with_drain_ratio": 0.9656341283022126,
+    "verdict": "faster"
+  },
+  {
+    "scenario": "mixed_fit",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "LRU-equal",
+    "n": 12,
+    "time_ratio": 0.9264200397375282,
+    "ci95": [
+      0.9155210291039879,
+      0.936134483264185
+    ],
+    "p_raw": 0.00048828125,
+    "p_holm": 0.01025390625,
+    "family": "primary",
+    "with_drain_ratio": 0.9258929960955626,
+    "verdict": "faster"
+  },
+  {
+    "scenario": "mixed_fit",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "LFU-equal",
+    "n": 12,
+    "time_ratio": 0.9304747485962329,
+    "ci95": [
+      0.9210829757804616,
+      0.9388238214725514
+    ],
+    "p_raw": 0.00048828125,
+    "p_holm": 0.01025390625,
+    "family": "primary",
+    "with_drain_ratio": 0.9298754310787442,
+    "verdict": "faster"
+  },
+  {
+    "scenario": "mixed_fit",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "RecentLFU-admit",
+    "n": 12,
+    "time_ratio": 1.0022074640122558,
+    "ci95": [
+      0.9869501507040329,
+      1.0148178234628593
+    ],
+    "p_raw": 0.78076171875,
+    "p_holm": 1,
+    "family": "primary",
+    "with_drain_ratio": 1.0022007731826967,
+    "verdict": "uncertain"
+  },
+  {
+    "scenario": "mixed_fit",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "AURA-no-size",
+    "n": 12,
+    "time_ratio": 0.9942374323516411,
+    "ci95": [
+      0.9879981831115588,
+      0.9997368190701242
+    ],
+    "p_raw": 0.09765625,
+    "p_holm": 0.09765625,
+    "family": "AURA-no-size",
+    "with_drain_ratio": 0.9942360455268022,
+    "verdict": "uncertain"
+  },
+  {
+    "scenario": "mixed_fit",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "AURA-no-cost",
+    "n": 12,
+    "time_ratio": 1.0054392895463156,
+    "ci95": [
+      0.9921409129107094,
+      1.0181754207254121
+    ],
+    "p_raw": 0.4580078125,
+    "p_holm": 1,
+    "family": "AURA-no-cost",
+    "with_drain_ratio": 1.0054309116818019,
+    "verdict": "uncertain"
+  },
+  {
+    "scenario": "mixed_fit",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "AURA-no-value",
+    "n": 12,
+    "time_ratio": 0.9947160567631969,
+    "ci95": [
+      0.9886075319400331,
+      1.0007267294348614
+    ],
+    "p_raw": 0.13720703125,
+    "p_holm": 0.41162109375,
+    "family": "AURA-no-value",
+    "with_drain_ratio": 0.9947043264115782,
+    "verdict": "uncertain"
+  },
+  {
+    "scenario": "scan",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "RemoteOnly",
+    "n": 12,
+    "time_ratio": 0.6719657457418408,
+    "ci95": [
+      0.6604370523450678,
+      0.6814686621358199
+    ],
+    "p_raw": 0.00048828125,
+    "p_holm": 0.00341796875,
+    "family": "RemoteOnly",
+    "with_drain_ratio": 0.6720133528708515,
+    "verdict": "faster"
+  },
+  {
+    "scenario": "scan",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "LRU-equal",
+    "n": 12,
+    "time_ratio": 0.8917822371456384,
+    "ci95": [
+      0.8757906199502241,
+      0.904771967928549
+    ],
+    "p_raw": 0.00048828125,
+    "p_holm": 0.01025390625,
+    "family": "primary",
+    "with_drain_ratio": 0.8909684233469969,
+    "verdict": "faster"
+  },
+  {
+    "scenario": "scan",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "LFU-equal",
+    "n": 12,
+    "time_ratio": 0.9268147255121492,
+    "ci95": [
+      0.9096063638892907,
+      0.9417118332487668
+    ],
+    "p_raw": 0.00048828125,
+    "p_holm": 0.01025390625,
+    "family": "primary",
+    "with_drain_ratio": 0.926363658335254,
+    "verdict": "faster"
+  },
+  {
+    "scenario": "scan",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "RecentLFU-admit",
+    "n": 12,
+    "time_ratio": 1.000434455621379,
+    "ci95": [
+      0.9826537599175976,
+      1.0172159634088411
+    ],
+    "p_raw": 0.96826171875,
+    "p_holm": 1,
+    "family": "primary",
+    "with_drain_ratio": 1.0004102278930365,
+    "verdict": "uncertain"
+  },
+  {
+    "scenario": "scan",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "AURA-no-admission",
+    "n": 12,
+    "time_ratio": 0.9191132963950516,
+    "ci95": [
+      0.8960411498238917,
+      0.9417880667769756
+    ],
+    "p_raw": 0.0009765625,
+    "p_holm": 0.00146484375,
+    "family": "AURA-no-admission",
+    "with_drain_ratio": 0.9080822860945845,
+    "verdict": "faster"
+  },
+  {
+    "scenario": "scan",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "AURA-no-value",
+    "n": 12,
+    "time_ratio": 0.9950539338604226,
+    "ci95": [
+      0.9746954951613632,
+      1.0128161071571478
+    ],
+    "p_raw": 0.62255859375,
+    "p_holm": 1,
+    "family": "AURA-no-value",
+    "with_drain_ratio": 0.9950709730009774,
+    "verdict": "uncertain"
+  },
+  {
+    "scenario": "scan",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "AURA-no-joint",
+    "n": 12,
+    "time_ratio": 0.8359374857508912,
+    "ci95": [
+      0.8201870425634267,
+      0.8494161338525071
+    ],
+    "p_raw": 0.00048828125,
+    "p_holm": 0.0009765625,
+    "family": "AURA-no-joint",
+    "with_drain_ratio": 0.8255716600768819,
+    "verdict": "faster"
+  },
+  {
+    "scenario": "mooncake_conversation",
+    "quota_mib": 16,
+    "paced": false,
+    "requests": 2048,
+    "shard_mib": 1,
+    "window": 128,
+    "baseline": "RemoteOnly",
+    "n": 12,
+    "time_ratio": 0.9807766755342257,
+    "ci95": [
+      0.9752758195581618,
+      0.9850753035514411
+    ],
+    "p_raw": 0.00048828125,
+    "p_holm": 0.00341796875,
+    "family": "RemoteOnly",
+    "with_drain_ratio": 0.980780241136888,
+    "verdict": "faster"
+  },
+  {
+    "scenario": "mooncake_conversation",
+    "quota_mib": 16,
+    "paced": false,
+    "requests": 2048,
+    "shard_mib": 1,
+    "window": 128,
+    "baseline": "LRU-equal",
+    "n": 12,
+    "time_ratio": 0.9942278432806362,
+    "ci95": [
+      0.9850699897808771,
+      1.0019180503592364
+    ],
+    "p_raw": 0.25341796875,
+    "p_holm": 1,
+    "family": "primary",
+    "with_drain_ratio": 0.9942252889777247,
+    "verdict": "uncertain"
+  },
+  {
+    "scenario": "mooncake_conversation",
+    "quota_mib": 16,
+    "paced": false,
+    "requests": 2048,
+    "shard_mib": 1,
+    "window": 128,
+    "baseline": "LFU-equal",
+    "n": 12,
+    "time_ratio": 0.9913323491368102,
+    "ci95": [
+      0.9843581030488242,
+      0.9967750822379737
+    ],
+    "p_raw": 0.0078125,
+    "p_holm": 0.0703125,
+    "family": "primary",
+    "with_drain_ratio": 0.9913326413438034,
+    "verdict": "uncertain"
+  },
+  {
+    "scenario": "mooncake_conversation",
+    "quota_mib": 16,
+    "paced": false,
+    "requests": 2048,
+    "shard_mib": 1,
+    "window": 128,
+    "baseline": "RecentLFU-admit",
+    "n": 12,
+    "time_ratio": 1.0006542325569079,
+    "ci95": [
+      0.9960492300689262,
+      1.0056480897025277
+    ],
+    "p_raw": 0.81201171875,
+    "p_holm": 1,
+    "family": "primary",
+    "with_drain_ratio": 1.0006512284150073,
+    "verdict": "uncertain"
+  }
+]

@@ -1,0 +1,279 @@
+{
+  "frozen_utc": "2026-09-19T09:52:28.389249+00:00",
+  "algorithm_and_runner_commit": "199d74da8b3af47640960e6e5ad1567e1559c78d",
+  "plan_commit": "edcc0f1",
+  "hashes": {
+    "build-measured-b2/tokenfs": "c1bda5856614d8fa2fc28b000d6b0f8c55c1f41f5e57eb100a4656ad08f5d974",
+    "src/main.cpp": "96970a8b161c3d94a667c13d1fb9359932b35f8a081472020ce68caa0c3395bb",
+    "src/measured_policy.h": "513cf993c6a2fc5d28c91fb0eb689ab7c19cb5b2df8de72d2b500adca51464b7",
+    "scripts/measured_study.py": "3ee5c676f63a5216862d7a1e1e0304003cc24929e454a4cc1909baa1a70df0ad",
+    "scripts/evidence_benchmark.py": "c1faf9b0a0ccea4404c3a5f5957b03889513d3959bfc541d434f919ae78770fc",
+    "CMakeLists.txt": "318ec8686092a72cef878882114803cabcb39cb1f0c29a2600f17605b40dda77"
+  },
+  "specifications": {
+    "measured-confirm-01": {
+      "sha256": "08ca92454ee049d163aafc5544b8fe331e5155ae8339c39cc46bcd82f688d4e3",
+      "canonical_sha256": "b8a143c152aa373b68b754d7a53879a547e0d541f194754bc9cd74481988f6f5",
+      "runs": 648
+    },
+    "measured-supplement-01": {
+      "sha256": "187222dc09572fb07c34315f0f0345e9bf9f58e8096297ac950cde185308e1b2",
+      "canonical_sha256": "59bc3cde21f15a506420b57f0965affacf58d6ce16d8a186f4a6e3f15ece8b4e",
+      "runs": 96
+    }
+  },
+  "public_windows": [
+    {
+      "block": "mooncake_toolagent-s502",
+      "source": "toolagent_trace.jsonl",
+      "first_source_request": 6294,
+      "last_source_request": 6405,
+      "trace_sha256": "46355d4f73d6a00b6b874256b1cf1e1a736b87b60d7c46d04894e2c98aaa9eef",
+      "source_sha256": "48a2db1a13d3bc05e6330140c64f604ba366df20d3c9e128b5c35a01c1fa5f71"
+    },
+    {
+      "block": "mooncake_toolagent-s503",
+      "source": "toolagent_trace.jsonl",
+      "first_source_request": 7867,
+      "last_source_request": 7986,
+      "trace_sha256": "068cc1f32ddd9597cfc98c5840aaa9e0f4309d1c26f85f00d9e52110a704c22d",
+      "source_sha256": "48a2db1a13d3bc05e6330140c64f604ba366df20d3c9e128b5c35a01c1fa5f71"
+    },
+    {
+      "block": "mooncake_conversation-s502",
+      "source": "conversation_trace.jsonl",
+      "first_source_request": 3208,
+      "last_source_request": 3289,
+      "trace_sha256": "b87f66b58231f87b683e8247fe1d9f8617367b053421206e1ddcb3723bdd5a6a",
+      "source_sha256": "b8cbb061a85206d729d91cdc2981f43c9e0d99209dce588d3af5f7934408b9df"
+    },
+    {
+      "block": "mooncake_conversation-s508",
+      "source": "conversation_trace.jsonl",
+      "first_source_request": 8020,
+      "last_source_request": 8112,
+      "trace_sha256": "c18dac278aed855df1d3904125e94d2c1943a9ec355caeb3fe5573e17c0fd78a",
+      "source_sha256": "b8cbb061a85206d729d91cdc2981f43c9e0d99209dce588d3af5f7934408b9df"
+    },
+    {
+      "block": "mooncake_toolagent-s512",
+      "source": "toolagent_trace.jsonl",
+      "first_source_request": 22024,
+      "last_source_request": 22149,
+      "trace_sha256": "f147b4bf0c10786caf13d55880bbede809a1317cb4947af43c54ae1c63c50505",
+      "source_sha256": "48a2db1a13d3bc05e6330140c64f604ba366df20d3c9e128b5c35a01c1fa5f71"
+    },
+    {
+      "block": "mooncake_conversation-s511",
+      "source": "conversation_trace.jsonl",
+      "first_source_request": 10426,
+      "last_source_request": 10510,
+      "trace_sha256": "1ffb3ad36f7df49c490f02bdc5280787b9fa36247f7dcf2cd6e26402140d8ed9",
+      "source_sha256": "b8cbb061a85206d729d91cdc2981f43c9e0d99209dce588d3af5f7934408b9df"
+    },
+    {
+      "block": "mooncake_toolagent-s511",
+      "source": "toolagent_trace.jsonl",
+      "first_source_request": 20451,
+      "last_source_request": 20561,
+      "trace_sha256": "bc3cf4808d89c73f108431064c787d21ebe262265b051687e3a1257a3a3bf5e1",
+      "source_sha256": "48a2db1a13d3bc05e6330140c64f604ba366df20d3c9e128b5c35a01c1fa5f71"
+    },
+    {
+      "block": "mooncake_toolagent-s505",
+      "source": "toolagent_trace.jsonl",
+      "first_source_request": 11013,
+      "last_source_request": 11109,
+      "trace_sha256": "767fd4c9582ae445a95d3e6c6fb6d2adfc625420ecba825b53194cda4b45b082",
+      "source_sha256": "48a2db1a13d3bc05e6330140c64f604ba366df20d3c9e128b5c35a01c1fa5f71"
+    },
+    {
+      "block": "mooncake_conversation-s512",
+      "source": "conversation_trace.jsonl",
+      "first_source_request": 11228,
+      "last_source_request": 11322,
+      "trace_sha256": "5611360f5c75902fac9ab3662ad34c11c4a6753792aca9fa95177a464fcbd778",
+      "source_sha256": "b8cbb061a85206d729d91cdc2981f43c9e0d99209dce588d3af5f7934408b9df"
+    },
+    {
+      "block": "mooncake_toolagent-s509",
+      "source": "toolagent_trace.jsonl",
+      "first_source_request": 17305,
+      "last_source_request": 17426,
+      "trace_sha256": "30a078c5926bfd5375192d5583cec52944c1ec1ece6776bb4e884744823e034b",
+      "source_sha256": "48a2db1a13d3bc05e6330140c64f604ba366df20d3c9e128b5c35a01c1fa5f71"
+    },
+    {
+      "block": "mooncake_conversation-s504",
+      "source": "conversation_trace.jsonl",
+      "first_source_request": 4812,
+      "last_source_request": 4898,
+      "trace_sha256": "2c5fa0db6b90efb4167a6d50f7b15182c6c018ae1c6d6b99b9e29d0ad0befe6e",
+      "source_sha256": "b8cbb061a85206d729d91cdc2981f43c9e0d99209dce588d3af5f7934408b9df"
+    },
+    {
+      "block": "mooncake_toolagent-s506",
+      "source": "toolagent_trace.jsonl",
+      "first_source_request": 12586,
+      "last_source_request": 12726,
+      "trace_sha256": "f4fd4796b5318c71522f7f221de73246132bca30755046e03f9424f0594278f8",
+      "source_sha256": "48a2db1a13d3bc05e6330140c64f604ba366df20d3c9e128b5c35a01c1fa5f71"
+    },
+    {
+      "block": "mooncake_conversation-s501",
+      "source": "conversation_trace.jsonl",
+      "first_source_request": 2406,
+      "last_source_request": 2504,
+      "trace_sha256": "a0f86ec2ea4bc0c5176da19ad3f17825816eb7de55e1d703415382f7f385b072",
+      "source_sha256": "b8cbb061a85206d729d91cdc2981f43c9e0d99209dce588d3af5f7934408b9df"
+    },
+    {
+      "block": "mooncake_toolagent-s501",
+      "source": "toolagent_trace.jsonl",
+      "first_source_request": 4721,
+      "last_source_request": 4808,
+      "trace_sha256": "3aba7f6eaa855d61d1a15f0c17808336c6b63ecd6a8eacecc33acfeee176ab71",
+      "source_sha256": "48a2db1a13d3bc05e6330140c64f604ba366df20d3c9e128b5c35a01c1fa5f71"
+    },
+    {
+      "block": "mooncake_conversation-s503",
+      "source": "conversation_trace.jsonl",
+      "first_source_request": 4010,
+      "last_source_request": 4100,
+      "trace_sha256": "b49e166bc34f25285c49ac7a0a94db8ae5e7e2df3dd9369820a53b3a214f10aa",
+      "source_sha256": "b8cbb061a85206d729d91cdc2981f43c9e0d99209dce588d3af5f7934408b9df"
+    },
+    {
+      "block": "mooncake_toolagent-s508",
+      "source": "toolagent_trace.jsonl",
+      "first_source_request": 15732,
+      "last_source_request": 15886,
+      "trace_sha256": "645ce39e614c796c70c703e98403c128cb939f5b1a51ee9f1cbb3f0c0e615405",
+      "source_sha256": "48a2db1a13d3bc05e6330140c64f604ba366df20d3c9e128b5c35a01c1fa5f71"
+    },
+    {
+      "block": "mooncake_conversation-s509",
+      "source": "conversation_trace.jsonl",
+      "first_source_request": 8822,
+      "last_source_request": 8905,
+      "trace_sha256": "11b64888c82995c018e9743eeea4e55e4379d97849afbe187f69e425dbbd12f0",
+      "source_sha256": "b8cbb061a85206d729d91cdc2981f43c9e0d99209dce588d3af5f7934408b9df"
+    },
+    {
+      "block": "mooncake_conversation-s506",
+      "source": "conversation_trace.jsonl",
+      "first_source_request": 6416,
+      "last_source_request": 6501,
+      "trace_sha256": "02319e7a39824c5ac1f7cc78c727a42ecd9071960cce9c668d8c382ddb893ae6",
+      "source_sha256": "b8cbb061a85206d729d91cdc2981f43c9e0d99209dce588d3af5f7934408b9df"
+    },
+    {
+      "block": "mooncake_toolagent-s507",
+      "source": "toolagent_trace.jsonl",
+      "first_source_request": 14159,
+      "last_source_request": 14284,
+      "trace_sha256": "fc976fc009b7d0fe7d18eb756b067239c8251384ae72a0b4f1775848362f5586",
+      "source_sha256": "48a2db1a13d3bc05e6330140c64f604ba366df20d3c9e128b5c35a01c1fa5f71"
+    },
+    {
+      "block": "mooncake_conversation-s510",
+      "source": "conversation_trace.jsonl",
+      "first_source_request": 9624,
+      "last_source_request": 9717,
+      "trace_sha256": "a50a0d0fe9acd27f6ddbefc350d3184777f6ef9faf974896e00c29d34f43ac7d",
+      "source_sha256": "b8cbb061a85206d729d91cdc2981f43c9e0d99209dce588d3af5f7934408b9df"
+    },
+    {
+      "block": "mooncake_conversation-s507",
+      "source": "conversation_trace.jsonl",
+      "first_source_request": 7218,
+      "last_source_request": 7305,
+      "trace_sha256": "24eebd837eccbbb5bec51dbfa33354a02d6366ab208f2c2a761145906f4df256",
+      "source_sha256": "b8cbb061a85206d729d91cdc2981f43c9e0d99209dce588d3af5f7934408b9df"
+    },
+    {
+      "block": "mooncake_toolagent-s510",
+      "source": "toolagent_trace.jsonl",
+      "first_source_request": 18878,
+      "last_source_request": 18979,
+      "trace_sha256": "7df7d6da95196a48bd273c90343803d5a8c05b6168e85082adaf719a0b113228",
+      "source_sha256": "48a2db1a13d3bc05e6330140c64f604ba366df20d3c9e128b5c35a01c1fa5f71"
+    },
+    {
+      "block": "mooncake_toolagent-s504",
+      "source": "toolagent_trace.jsonl",
+      "first_source_request": 9440,
+      "last_source_request": 9567,
+      "trace_sha256": "b2b7b22b954601809a6c4571eb222443db437e1d2f1e1336db43adc92de8211b",
+      "source_sha256": "48a2db1a13d3bc05e6330140c64f604ba366df20d3c9e128b5c35a01c1fa5f71"
+    },
+    {
+      "block": "mooncake_conversation-s505",
+      "source": "conversation_trace.jsonl",
+      "first_source_request": 5614,
+      "last_source_request": 5719,
+      "trace_sha256": "3b86fad7d46fa1c397d760b1a9d888c0b796b18c83a3674693e91deb59fecf36",
+      "source_sha256": "b8cbb061a85206d729d91cdc2981f43c9e0d99209dce588d3af5f7934408b9df"
+    },
+    {
+      "block": "mooncake_conversation-paced-s601",
+      "source": "conversation_trace.jsonl",
+      "first_source_request": 2706,
+      "last_source_request": 2743,
+      "trace_sha256": "df0871213b79ed1ea76f69864a5e1962da68e6cb0c5147bfc7ce33cda27e7046",
+      "source_sha256": "b8cbb061a85206d729d91cdc2981f43c9e0d99209dce588d3af5f7934408b9df"
+    },
+    {
+      "block": "mooncake_toolagent-paced-s602",
+      "source": "toolagent_trace.jsonl",
+      "first_source_request": 6621,
+      "last_source_request": 6668,
+      "trace_sha256": "bf097819d17ee9143c243caf34b364c0cfe5d876918cca530b1e3d763792bf89",
+      "source_sha256": "48a2db1a13d3bc05e6330140c64f604ba366df20d3c9e128b5c35a01c1fa5f71"
+    },
+    {
+      "block": "mooncake_toolagent-paced-s601",
+      "source": "toolagent_trace.jsonl",
+      "first_source_request": 5021,
+      "last_source_request": 5086,
+      "trace_sha256": "19c097aac5e83f6d5cb6aaa2a2cf630ef61d935499d638b09d7e77a8b074d043",
+      "source_sha256": "48a2db1a13d3bc05e6330140c64f604ba366df20d3c9e128b5c35a01c1fa5f71"
+    },
+    {
+      "block": "mooncake_conversation-paced-s602",
+      "source": "conversation_trace.jsonl",
+      "first_source_request": 4306,
+      "last_source_request": 4352,
+      "trace_sha256": "d34cd44be258096620df9c10792eeb9e5d4d8cc5d5ed0b1de3d65e711272cb39",
+      "source_sha256": "b8cbb061a85206d729d91cdc2981f43c9e0d99209dce588d3af5f7934408b9df"
+    },
+    {
+      "block": "mooncake_toolagent-paced-s603",
+      "source": "toolagent_trace.jsonl",
+      "first_source_request": 8221,
+      "last_source_request": 8284,
+      "trace_sha256": "979464fea19b879c521486aa536cb0d420e7784932d41bcfa9622ce46f4b19b1",
+      "source_sha256": "48a2db1a13d3bc05e6330140c64f604ba366df20d3c9e128b5c35a01c1fa5f71"
+    },
+    {
+      "block": "mooncake_conversation-paced-s603",
+      "source": "conversation_trace.jsonl",
+      "first_source_request": 5906,
+      "last_source_request": 5963,
+      "trace_sha256": "4c34dd96179dd6ecfd1d73c950f4be9448f836ff1cf96fa2fbe6f02b8b840064",
+      "source_sha256": "b8cbb061a85206d729d91cdc2981f43c9e0d99209dce588d3af5f7934408b9df"
+    }
+  ],
+  "correctness": {
+    "cn7": {
+      "passed": true,
+      "runs": 65
+    },
+    "cn8": {
+      "passed": true,
+      "runs": 65
+    }
+  },
+  "decision": "Keep B2 parameters fixed. Complete dev-04 and dev-05 for diagnostics, then run this unchanged confirmation. Neither pending development outcomes nor confirmation outcomes are used for further tuning of this version.",
+  "gate": "All dev-03/04/05 runs must complete and audit successfully; otherwise do not start confirmation."
+}

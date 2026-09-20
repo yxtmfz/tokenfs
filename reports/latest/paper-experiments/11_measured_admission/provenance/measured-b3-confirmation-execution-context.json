@@ -1,0 +1,29 @@
+{
+  "created_utc": "2026-09-19T10:26:20Z",
+  "host": "cn7",
+  "kernel": "6.8.0-31-generic",
+  "python_version": "3.12.3",
+  "freeze_sha256": "c13ddcd2e02c6021e360d716705da63724ea6c1b46bd8ba19ad05865bc0bcf6f",
+  "frozen_hashes": {
+    "build-release/tokenfs": "c62a05c796bfcb4f0d2cd39ead078493ee4438dc79188bbbda012bbbe6f2d75e",
+    "src/main.cpp": "96970a8b161c3d94a667c13d1fb9359932b35f8a081472020ce68caa0c3395bb",
+    "src/measured_policy.h": "7b39951cdb3fa2245ca90c98f1d74f495dac09d6d72a70f62d3cf16bcfbac691",
+    "scripts/measured_study.py": "3ee5c676f63a5216862d7a1e1e0304003cc24929e454a4cc1909baa1a70df0ad",
+    "scripts/evidence_benchmark.py": "c1faf9b0a0ccea4404c3a5f5957b03889513d3959bfc541d434f919ae78770fc",
+    "CMakeLists.txt": "318ec8686092a72cef878882114803cabcb39cb1f0c29a2600f17605b40dda77",
+    "scripts/measured_domain_study.py": "c7394ff719a713eb8edc3c6752e17c0b089825da10e295125ff1b16db74b2cf6",
+    "scripts/evidence_report.py": "2ff27f63d198f9e2a6c1657f653759734b060ff4b08b9e4c350e7935bb6e3475",
+    "scripts/evidence_audit.py": "12b63f993c1d9882086357199c6d97069f010ebca006cae13778b8b6b7863573"
+  },
+  "mount": {
+    "target": "/srv/tokenfs/remote-cn7",
+    "source": "/dev/nvme1n1",
+    "fstype": "ext4",
+    "options": "rw,nosuid,nodev,relatime"
+  },
+  "nvme_identity": {
+    "transport": "tcp",
+    "address": "traddr=28.10.10.13,trsvcid=4420,src_addr=28.10.10.7",
+    "subsysnqn": "nqn.2026-09.local.aura-kv:remote-cn7"
+  }
+}

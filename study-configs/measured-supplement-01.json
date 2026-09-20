@@ -1,0 +1,487 @@
+{
+  "stage": "confirmation",
+  "name": "measured-supplement-01",
+  "role": "descriptive supplementary; n=3, not powered for confirmation",
+  "blocks": [
+    {
+      "id": "mixed_fit-w256-s603",
+      "scenario": "mixed_fit",
+      "seed": 603,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "window": 256,
+      "variants": [
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "stable-long-s602",
+      "scenario": "stable",
+      "seed": 602,
+      "requests": 4096,
+      "shard_mib": 1,
+      "quota_mib": 4,
+      "variants": [
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "mixed_fit-q32-s603",
+      "scenario": "mixed_fit",
+      "seed": 603,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 32,
+      "variants": [
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "stable-long-s601",
+      "scenario": "stable",
+      "seed": 601,
+      "requests": 4096,
+      "shard_mib": 1,
+      "quota_mib": 4,
+      "variants": [
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "shift-w64-s603",
+      "scenario": "shift",
+      "seed": 603,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "window": 64,
+      "variants": [
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "shift-w64-s601",
+      "scenario": "shift",
+      "seed": 601,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "window": 64,
+      "variants": [
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "mooncake_conversation-paced-s601",
+      "scenario": "mooncake_conversation",
+      "seed": 601,
+      "requests": 1024,
+      "shard_mib": 1,
+      "quota_mib": 16,
+      "source_offset": 300,
+      "paced": true,
+      "variants": [
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "shift-w256-s603",
+      "scenario": "shift",
+      "seed": 603,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "window": 256,
+      "variants": [
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "mixed_fit-q16-s603",
+      "scenario": "mixed_fit",
+      "seed": 603,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 16,
+      "variants": [
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "shift-long-s601",
+      "scenario": "shift",
+      "seed": 601,
+      "requests": 4096,
+      "shard_mib": 1,
+      "quota_mib": 4,
+      "variants": [
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "mooncake_toolagent-paced-s602",
+      "scenario": "mooncake_toolagent",
+      "seed": 602,
+      "requests": 1024,
+      "shard_mib": 1,
+      "quota_mib": 16,
+      "source_offset": 1900,
+      "paced": true,
+      "variants": [
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "shift-w64-s602",
+      "scenario": "shift",
+      "seed": 602,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "window": 64,
+      "variants": [
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "shift-long-s602",
+      "scenario": "shift",
+      "seed": 602,
+      "requests": 4096,
+      "shard_mib": 1,
+      "quota_mib": 4,
+      "variants": [
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "stable-q32-s603",
+      "scenario": "stable",
+      "seed": 603,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 32,
+      "variants": [
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "mixed_fit-q32-s601",
+      "scenario": "mixed_fit",
+      "seed": 601,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 32,
+      "variants": [
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "mixed_fit-q16-s601",
+      "scenario": "mixed_fit",
+      "seed": 601,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 16,
+      "variants": [
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "shift-long-s603",
+      "scenario": "shift",
+      "seed": 603,
+      "requests": 4096,
+      "shard_mib": 1,
+      "quota_mib": 4,
+      "variants": [
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "stable-long-s603",
+      "scenario": "stable",
+      "seed": 603,
+      "requests": 4096,
+      "shard_mib": 1,
+      "quota_mib": 4,
+      "variants": [
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "mixed_fit-w256-s601",
+      "scenario": "mixed_fit",
+      "seed": 601,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "window": 256,
+      "variants": [
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "mixed_fit-q16-s602",
+      "scenario": "mixed_fit",
+      "seed": 602,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 16,
+      "variants": [
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "mooncake_toolagent-paced-s601",
+      "scenario": "mooncake_toolagent",
+      "seed": 601,
+      "requests": 1024,
+      "shard_mib": 1,
+      "quota_mib": 16,
+      "source_offset": 300,
+      "paced": true,
+      "variants": [
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "mooncake_conversation-paced-s602",
+      "scenario": "mooncake_conversation",
+      "seed": 602,
+      "requests": 1024,
+      "shard_mib": 1,
+      "quota_mib": 16,
+      "source_offset": 1900,
+      "paced": true,
+      "variants": [
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "mixed_fit-w256-s602",
+      "scenario": "mixed_fit",
+      "seed": 602,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "window": 256,
+      "variants": [
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "stable-q16-s601",
+      "scenario": "stable",
+      "seed": 601,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 16,
+      "variants": [
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "stable-q16-s602",
+      "scenario": "stable",
+      "seed": 602,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 16,
+      "variants": [
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "stable-q16-s603",
+      "scenario": "stable",
+      "seed": 603,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 16,
+      "variants": [
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "mixed_fit-w64-s601",
+      "scenario": "mixed_fit",
+      "seed": 601,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "window": 64,
+      "variants": [
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "mooncake_toolagent-paced-s603",
+      "scenario": "mooncake_toolagent",
+      "seed": 603,
+      "requests": 1024,
+      "shard_mib": 1,
+      "quota_mib": 16,
+      "source_offset": 3500,
+      "paced": true,
+      "variants": [
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "stable-q32-s601",
+      "scenario": "stable",
+      "seed": 601,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 32,
+      "variants": [
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "shift-w256-s602",
+      "scenario": "shift",
+      "seed": 602,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "window": 256,
+      "variants": [
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "mixed_fit-w64-s603",
+      "scenario": "mixed_fit",
+      "seed": 603,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "window": 64,
+      "variants": [
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "mixed_fit-w64-s602",
+      "scenario": "mixed_fit",
+      "seed": 602,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "window": 64,
+      "variants": [
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "stable-q32-s602",
+      "scenario": "stable",
+      "seed": 602,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 32,
+      "variants": [
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "shift-w256-s601",
+      "scenario": "shift",
+      "seed": 601,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "window": 256,
+      "variants": [
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "mooncake_conversation-paced-s603",
+      "scenario": "mooncake_conversation",
+      "seed": 603,
+      "requests": 1024,
+      "shard_mib": 1,
+      "quota_mib": 16,
+      "source_offset": 3500,
+      "paced": true,
+      "variants": [
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "mixed_fit-q32-s602",
+      "scenario": "mixed_fit",
+      "seed": 602,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 32,
+      "variants": [
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    }
+  ]
+}

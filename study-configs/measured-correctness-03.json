@@ -1,0 +1,120 @@
+{
+  "stage": "correctness",
+  "blocks": [
+    {
+      "id": "stable-q8-s313",
+      "scenario": "stable",
+      "seed": 313,
+      "requests": 96,
+      "shard_mib": 1,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-admission",
+        "AURA-no-aging",
+        "AURA-no-shift",
+        "AURA-no-value",
+        "AURA-no-size",
+        "AURA-no-cost",
+        "AURA-no-joint",
+        "AURA-synchronous"
+      ]
+    },
+    {
+      "id": "shift-q8-s313",
+      "scenario": "shift",
+      "seed": 313,
+      "requests": 96,
+      "shard_mib": 1,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-admission",
+        "AURA-no-aging",
+        "AURA-no-shift",
+        "AURA-no-value",
+        "AURA-no-size",
+        "AURA-no-cost",
+        "AURA-no-joint",
+        "AURA-synchronous"
+      ]
+    },
+    {
+      "id": "scan-q8-s313",
+      "scenario": "scan",
+      "seed": 313,
+      "requests": 96,
+      "shard_mib": 1,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-admission",
+        "AURA-no-aging",
+        "AURA-no-shift",
+        "AURA-no-value",
+        "AURA-no-size",
+        "AURA-no-cost",
+        "AURA-no-joint",
+        "AURA-synchronous"
+      ]
+    },
+    {
+      "id": "mixed_fit-q8-s313",
+      "scenario": "mixed_fit",
+      "seed": 313,
+      "requests": 96,
+      "shard_mib": 1,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-admission",
+        "AURA-no-aging",
+        "AURA-no-shift",
+        "AURA-no-value",
+        "AURA-no-size",
+        "AURA-no-cost",
+        "AURA-no-joint",
+        "AURA-synchronous"
+      ]
+    },
+    {
+      "id": "uniform-q8-s313",
+      "scenario": "uniform",
+      "seed": 313,
+      "requests": 96,
+      "shard_mib": 1,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive",
+        "AURA-no-admission",
+        "AURA-no-aging",
+        "AURA-no-shift",
+        "AURA-no-value",
+        "AURA-no-size",
+        "AURA-no-cost",
+        "AURA-no-joint",
+        "AURA-synchronous"
+      ]
+    }
+  ]
+}

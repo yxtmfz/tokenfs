@@ -1,0 +1,37 @@
+{
+  "stage": "development",
+  "blocks": [
+    {
+      "id": "mooncake_conversation-q16-s302",
+      "scenario": "mooncake_conversation",
+      "seed": 302,
+      "source_offset": 0,
+      "requests": 2048,
+      "shard_mib": 1,
+      "quota_mib": 16,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "mooncake_toolagent-q16-s302",
+      "scenario": "mooncake_toolagent",
+      "seed": 302,
+      "source_offset": 0,
+      "requests": 2048,
+      "shard_mib": 1,
+      "quota_mib": 16,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,402 @@
+[
+  {
+    "scenario": "stable",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "RemoteOnly",
+    "n": 2,
+    "time_ratio": 0.5890869977447764,
+    "ci95": [
+      0.5793978946059224,
+      0.5989381289484704
+    ],
+    "p_raw": 0.5,
+    "p_holm": 1,
+    "family": "RemoteOnly",
+    "with_drain_ratio": 0.5891663459123998,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "stable",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "LRU-equal",
+    "n": 2,
+    "time_ratio": 0.8868783934989712,
+    "ci95": [
+      0.8709516317879207,
+      0.9030964018525934
+    ],
+    "p_raw": 0.5,
+    "p_holm": 1,
+    "family": "primary",
+    "with_drain_ratio": 0.8841213111261511,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "stable",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "LFU-equal",
+    "n": 2,
+    "time_ratio": 0.9366681212122566,
+    "ci95": [
+      0.9281261959280219,
+      0.9452886613312859
+    ],
+    "p_raw": 0.5,
+    "p_holm": 1,
+    "family": "primary",
+    "with_drain_ratio": 0.9350657958372299,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "stable",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "RecentLFU-admit",
+    "n": 2,
+    "time_ratio": 1.034399336490303,
+    "ci95": [
+      1.011183106434191,
+      1.058148598926593
+    ],
+    "p_raw": 0.5,
+    "p_holm": 1,
+    "family": "primary",
+    "with_drain_ratio": 1.0343030913350593,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "shift",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "RemoteOnly",
+    "n": 2,
+    "time_ratio": 0.6750498741939155,
+    "ci95": [
+      0.66993788295892,
+      0.6802008727086176
+    ],
+    "p_raw": 0.5,
+    "p_holm": 1,
+    "family": "RemoteOnly",
+    "with_drain_ratio": 0.6750735598003961,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "shift",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "LRU-equal",
+    "n": 2,
+    "time_ratio": 0.9214440807513129,
+    "ci95": [
+      0.9209581860341983,
+      0.9219302318249913
+    ],
+    "p_raw": 0.5,
+    "p_holm": 1,
+    "family": "primary",
+    "with_drain_ratio": 0.9213652254827402,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "shift",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "LFU-equal",
+    "n": 2,
+    "time_ratio": 0.7577816097465336,
+    "ci95": [
+      0.7456616228750198,
+      0.7700985949310346
+    ],
+    "p_raw": 0.5,
+    "p_holm": 1,
+    "family": "primary",
+    "with_drain_ratio": 0.7577999145643055,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "shift",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "RecentLFU-admit",
+    "n": 2,
+    "time_ratio": 0.8089059902683259,
+    "ci95": [
+      0.7895217541539702,
+      0.8287661456436268
+    ],
+    "p_raw": 0.5,
+    "p_holm": 1,
+    "family": "primary",
+    "with_drain_ratio": 0.8089102638686264,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "scan",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "RemoteOnly",
+    "n": 2,
+    "time_ratio": 0.6760368994416365,
+    "ci95": [
+      0.6709464544493648,
+      0.6811659654446423
+    ],
+    "p_raw": 0.5,
+    "p_holm": 1,
+    "family": "RemoteOnly",
+    "with_drain_ratio": 0.6760893151628424,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "scan",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "LRU-equal",
+    "n": 2,
+    "time_ratio": 0.8955489903547895,
+    "ci95": [
+      0.8934224852300546,
+      0.8976805569416213
+    ],
+    "p_raw": 0.5,
+    "p_holm": 1,
+    "family": "primary",
+    "with_drain_ratio": 0.8942575337543242,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "scan",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "LFU-equal",
+    "n": 2,
+    "time_ratio": 0.9357830993060492,
+    "ci95": [
+      0.9330894633599243,
+      0.9384845112210337
+    ],
+    "p_raw": 0.5,
+    "p_holm": 1,
+    "family": "primary",
+    "with_drain_ratio": 0.9357443892170131,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "scan",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "RecentLFU-admit",
+    "n": 2,
+    "time_ratio": 1.0045057227378407,
+    "ci95": [
+      0.9983837695898028,
+      1.0106652148678694
+    ],
+    "p_raw": 1.0,
+    "p_holm": 1,
+    "family": "primary",
+    "with_drain_ratio": 1.0044151865771798,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "mixed_fit",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "RemoteOnly",
+    "n": 2,
+    "time_ratio": 0.9578049392433529,
+    "ci95": [
+      0.9328013070080614,
+      0.9834787909779747
+    ],
+    "p_raw": 0.5,
+    "p_holm": 1,
+    "family": "RemoteOnly",
+    "with_drain_ratio": 0.9577998238512772,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "mixed_fit",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "LRU-equal",
+    "n": 2,
+    "time_ratio": 0.929249061772457,
+    "ci95": [
+      0.924969897787358,
+      0.9335480223416992
+    ],
+    "p_raw": 0.5,
+    "p_holm": 1,
+    "family": "primary",
+    "with_drain_ratio": 0.9292191476058772,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "mixed_fit",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "LFU-equal",
+    "n": 2,
+    "time_ratio": 0.919209315559602,
+    "ci95": [
+      0.902352307004556,
+      0.9363812329758755
+    ],
+    "p_raw": 0.5,
+    "p_holm": 1,
+    "family": "primary",
+    "with_drain_ratio": 0.9191901001642258,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "mixed_fit",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "RecentLFU-admit",
+    "n": 2,
+    "time_ratio": 1.0045033997316792,
+    "ci95": [
+      0.978722158536316,
+      1.0309637635889504
+    ],
+    "p_raw": 1.0,
+    "p_holm": 1,
+    "family": "primary",
+    "with_drain_ratio": 1.004498761836587,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "uniform",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "RemoteOnly",
+    "n": 2,
+    "time_ratio": 1.0095398953560584,
+    "ci95": [
+      0.9986525085182683,
+      1.0205459773266847
+    ],
+    "p_raw": 1.0,
+    "p_holm": 1,
+    "family": "RemoteOnly",
+    "with_drain_ratio": 1.0094692846084572,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "uniform",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "LRU-equal",
+    "n": 2,
+    "time_ratio": 0.910769780343784,
+    "ci95": [
+      0.9083191178766288,
+      0.9132270547454561
+    ],
+    "p_raw": 0.5,
+    "p_holm": 1,
+    "family": "primary",
+    "with_drain_ratio": 0.9107036102734998,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "uniform",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "LFU-equal",
+    "n": 2,
+    "time_ratio": 0.9446586528053945,
+    "ci95": [
+      0.9422947279849473,
+      0.9470285079790431
+    ],
+    "p_raw": 0.5,
+    "p_holm": 1,
+    "family": "primary",
+    "with_drain_ratio": 0.9446073267783526,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "uniform",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "RecentLFU-admit",
+    "n": 2,
+    "time_ratio": 0.9956993742976464,
+    "ci95": [
+      0.9940075115186752,
+      0.9973941167325858
+    ],
+    "p_raw": 0.5,
+    "p_holm": 1,
+    "family": "primary",
+    "with_drain_ratio": 0.9956470351709245,
+    "verdict": "development / no confirmatory claim"
+  }
+]

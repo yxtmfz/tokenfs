@@ -1,6 +1,8 @@
 # AURA-KV / TokenFS 文档导航
 
-当前真实评估迁移到 cn7→cn13；cn14 保持停用。优先阅读 [证据实验方案](evidence-experiments.md) 与 [正式批次预先固定方案](evidence-preregistration.md)。历史模拟和 cn14 表格不能替代修复后的真实速度证据。
+准备论文时先读 [实验收口与论文可用结论](../reports/latest/paper-experiments/12_paper_closeout/README.md)：它区分已支持的热点自适应收益、尚未成立的 GPU 亲和贡献，并给出可直接引用的结果表和独立离线复核入口。
+
+当前真实评估迁移到 cn7→cn13；cn14 保持停用。优先阅读 [第二轮策略与消融对象](measured-admission-study.md)、[冻结确认方案](measured-confirmation-plan.md) 和 [第二轮完整结果](../reports/latest/paper-experiments/11_measured_admission/README.md)。第一轮方案仍见 [证据实验方案](evidence-experiments.md) 与 [预先固定方案](evidence-preregistration.md)。历史模拟和 cn14 表格不能替代修复后的真实速度证据。
 
 阅读顺序建议如下：
 
@@ -11,12 +13,14 @@
 | 3 | [model-and-controller.md](model-and-controller.md) | 价值感知缓存管理、多 GPU 副本放置和联合控制器 |
 | 4 | [experiments.md](experiments.md) | 实验设计、指标、已有结果和论文边界 |
 | 5 | [deployment.md](deployment.md) | Ubuntu、FUSE、NVMe-oF、脚本和配置说明 |
-| 6 | [cn7 正式实测报告](../reports/latest/paper-experiments/10_real_cn7_evidence/README.md) | 最新统一实验结果 |
+| 6 | [第二轮完整实测报告](../reports/latest/paper-experiments/11_measured_admission/README.md) | 756 次速度实验与全部消融结果 |
 
-仓库不再保留大量 `01_xxx.md` 到 `15_xxx.md` 的分散文档；对应内容已经合并到上面四份核心文档里。之后继续优化时，也优先更新这些文件。
+核心设计集中在上述系统、模型、实验和部署文档；各轮冻结方案与审计证据单独保留版本，避免把旧结果改写成新结论。
 
 当前结果按证据级别阅读：
 
 - 策略模型历史结果：`reports/latest/paper-experiments/01_trace_replay/` 和 `05_performance_summary/`。修复前在途复制、容量和统计问题影响这些结果，不能直接沿用旧优势结论。
 - 旧真实结果：`reports/latest/paper-experiments/09_real_cn14_nvmeof/`，保留用于追溯；旧计时口径和基线差异尚不足以支持新的公平性能比较。
-- 当前真实入口：cn7 上运行 `scripts/evidence_benchmark.py`；统一使用实际 NVMe/TCP 路径、相同任务字节、完整任务耗时、配对种子和独立输出目录。`evidence_audit.py` 先审计整批完整性，`evidence_report.py` 再生成速度优先的结论。
+- 第一轮真实入口：cn7 上运行 `scripts/evidence_benchmark.py`；统一使用实际 NVMe/TCP 路径、相同任务字节、完整任务耗时、配对种子和独立输出目录。`evidence_audit.py` 先审计整批完整性，`evidence_report.py` 再生成速度优先的结论。
+
+- 第二轮入口：`scripts/measured_study.py`、`scripts/measured_domain_study.py`；离线使用 `measured_artifacts.py` 和 `measured_freeze_audit.py`。原始数据与复算方法见 [第二轮证据索引](../reports/latest/paper-experiments/11_measured_admission/EVIDENCE-INDEX.md)。

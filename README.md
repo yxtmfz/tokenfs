@@ -1,8 +1,12 @@
 # AURA-KV / TokenFS
 
+> 论文收口：已从原始归档重新审计 756 次性能与 169 项内容验证记录，统计复算一致。当前可支撑的性能贡献是**热点变化下的缓存准入与历史自适应**；GPU 亲和放置仍未获得新版的独立性能验证，measured 路径绕过旧亲和状态门槛。见 [最终结果、可写结论与剩余缺口](reports/latest/paper-experiments/12_paper_closeout/README.md)。预定实验完成不等于两个原始创新点均成立。
+
 > 实验证据修订：历史模拟结果存在首次缺失计账问题，旧真实 `wall_time_s` 是分段耗时和，且基线能力、缓存控制与淘汰触发存在缺口。旧报告保留为历史记录，不能作为当前已验证性能结论。新分类、真实速率口径和验收状态见 [证据驱动实验](docs/evidence-experiments.md)。
 
 > 当前评估使用 **cn7 → cn13** 的独立 NVMe/TCP namespace，cn8 承担独立正确性校验，cn14 停用。配置见 [迁移记录](docs/client-migration-cn7.md)，实验分类与未闭合主张见 [证据对应表](docs/claim-evidence-ledger.md)。旧 cn14 表格及失效批次不能用作新结论。
+
+> 第二轮已完成 **756/756** 次预先固定的速度实验。当前可执行策略是显式启用的 **AURA-adaptive / measured_policy**，默认旧 AURA-core 保留；它是近期需求与实测成本的 C++ 启发式，不等于完整 Python RobustBenefit，也未验证真实多 GPU 推理收益。读 [第二轮完整报告](reports/latest/paper-experiments/11_measured_admission/README.md) 和 [第一轮 400 次结果](reports/latest/paper-experiments/10_real_cn7_evidence/README.md) 时请分开解释，不能跨批次直接比较速度。
 
 ```text
 面向多 GPU 大模型 KV Cache 的本地 SSD 与 NVMe-oF 远端 SSD 自适应分层缓存系统
@@ -16,7 +20,7 @@ AURA-KV 是研究控制层，TokenFS 是可挂载的 FUSE 文件系统原型。�
 |---|---|---|
 | 代码 | `src/`、`aura_kv/`、`scripts/`、`tests/` | FUSE 原型、AURA-KV 控制器、实验脚本和测试 |
 | 说明文档 | [docs/README.md](docs/README.md) | 项目设计、模型公式、实验方法和部署说明 |
-| 数据结果 | [cn7 正式实测报告](reports/latest/paper-experiments/10_real_cn7_evidence/README.md) | 最新统一结果报告和论文实验结果 |
+| 数据结果 | [第二轮实测与消融报告](reports/latest/paper-experiments/11_measured_admission/README.md) | 756 次冻结速度实验、完整负结果与写作边界 |
 
 ## 1. 当前项目定位
 
@@ -29,7 +33,7 @@ AURA-KV 是研究控制层，TokenFS 是可挂载的 FUSE 文件系统原型。�
 复制、预取和淘汰如何不阻塞前台请求？
 ```
 
-当前保留两个研究重点：
+原始设计保留两个研究重点（不代表两项均已获得性能验证）：
 
 1. **价值感知本地缓存管理**：不只按 LRU/LFU 删除缓存，而是估计删除某个本地副本后未来会多付出的访问代价。
 2. **多 GPU 共享副本放置**：远端保存权威副本，本地保存热点副本；系统根据访问分布、节点亲和和复制收益决定副本复制到哪里。

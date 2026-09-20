@@ -1,0 +1,21 @@
+scenario,quota_mib,paced,requests,shard_mib,window,baseline,n,time_ratio,ci95,p_raw,p_holm,family,with_drain_ratio,verdict
+stable,8,False,384,2,128,RemoteOnly,2,0.5890869977447764,"[0.5793978946059224, 0.5989381289484704]",0.5,1,RemoteOnly,0.5891663459123998,development / no confirmatory claim
+stable,8,False,384,2,128,LRU-equal,2,0.8868783934989712,"[0.8709516317879207, 0.9030964018525934]",0.5,1,primary,0.8841213111261511,development / no confirmatory claim
+stable,8,False,384,2,128,LFU-equal,2,0.9366681212122566,"[0.9281261959280219, 0.9452886613312859]",0.5,1,primary,0.9350657958372299,development / no confirmatory claim
+stable,8,False,384,2,128,RecentLFU-admit,2,1.034399336490303,"[1.011183106434191, 1.058148598926593]",0.5,1,primary,1.0343030913350593,development / no confirmatory claim
+shift,8,False,384,2,128,RemoteOnly,2,0.6750498741939155,"[0.66993788295892, 0.6802008727086176]",0.5,1,RemoteOnly,0.6750735598003961,development / no confirmatory claim
+shift,8,False,384,2,128,LRU-equal,2,0.9214440807513129,"[0.9209581860341983, 0.9219302318249913]",0.5,1,primary,0.9213652254827402,development / no confirmatory claim
+shift,8,False,384,2,128,LFU-equal,2,0.7577816097465336,"[0.7456616228750198, 0.7700985949310346]",0.5,1,primary,0.7577999145643055,development / no confirmatory claim
+shift,8,False,384,2,128,RecentLFU-admit,2,0.8089059902683259,"[0.7895217541539702, 0.8287661456436268]",0.5,1,primary,0.8089102638686264,development / no confirmatory claim
+scan,8,False,384,2,128,RemoteOnly,2,0.6760368994416365,"[0.6709464544493648, 0.6811659654446423]",0.5,1,RemoteOnly,0.6760893151628424,development / no confirmatory claim
+scan,8,False,384,2,128,LRU-equal,2,0.8955489903547895,"[0.8934224852300546, 0.8976805569416213]",0.5,1,primary,0.8942575337543242,development / no confirmatory claim
+scan,8,False,384,2,128,LFU-equal,2,0.9357830993060492,"[0.9330894633599243, 0.9384845112210337]",0.5,1,primary,0.9357443892170131,development / no confirmatory claim
+scan,8,False,384,2,128,RecentLFU-admit,2,1.0045057227378407,"[0.9983837695898028, 1.0106652148678694]",1.0,1,primary,1.0044151865771798,development / no confirmatory claim
+mixed_fit,8,False,384,2,128,RemoteOnly,2,0.9578049392433529,"[0.9328013070080614, 0.9834787909779747]",0.5,1,RemoteOnly,0.9577998238512772,development / no confirmatory claim
+mixed_fit,8,False,384,2,128,LRU-equal,2,0.929249061772457,"[0.924969897787358, 0.9335480223416992]",0.5,1,primary,0.9292191476058772,development / no confirmatory claim
+mixed_fit,8,False,384,2,128,LFU-equal,2,0.919209315559602,"[0.902352307004556, 0.9363812329758755]",0.5,1,primary,0.9191901001642258,development / no confirmatory claim
+mixed_fit,8,False,384,2,128,RecentLFU-admit,2,1.0045033997316792,"[0.978722158536316, 1.0309637635889504]",1.0,1,primary,1.004498761836587,development / no confirmatory claim
+uniform,8,False,384,2,128,RemoteOnly,2,1.0095398953560584,"[0.9986525085182683, 1.0205459773266847]",1.0,1,RemoteOnly,1.0094692846084572,development / no confirmatory claim
+uniform,8,False,384,2,128,LRU-equal,2,0.910769780343784,"[0.9083191178766288, 0.9132270547454561]",0.5,1,primary,0.9107036102734998,development / no confirmatory claim
+uniform,8,False,384,2,128,LFU-equal,2,0.9446586528053945,"[0.9422947279849473, 0.9470285079790431]",0.5,1,primary,0.9446073267783526,development / no confirmatory claim
+uniform,8,False,384,2,128,RecentLFU-admit,2,0.9956993742976464,"[0.9940075115186752, 0.9973941167325858]",0.5,1,primary,0.9956470351709245,development / no confirmatory claim

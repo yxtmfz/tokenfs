@@ -1,0 +1,9 @@
+scenario,quota_mib,paced,requests,shard_mib,window,baseline,n,time_ratio,ci95,p_raw,p_holm,family,with_drain_ratio,verdict
+mooncake_conversation,16,False,2048,1,128,RemoteOnly,1,0.9847912925061558,"[None, None]",,,RemoteOnly,0.9847855170779243,development / no confirmatory claim
+mooncake_conversation,16,False,2048,1,128,LRU-equal,1,0.9853084822131591,"[None, None]",,,primary,0.9853077735235941,development / no confirmatory claim
+mooncake_conversation,16,False,2048,1,128,LFU-equal,1,0.9812806677893285,"[None, None]",,,primary,0.9812788069027081,development / no confirmatory claim
+mooncake_conversation,16,False,2048,1,128,RecentLFU-admit,1,1.0590662425022104,"[None, None]",,,primary,1.059057741211575,development / no confirmatory claim
+mooncake_toolagent,16,False,2048,1,128,RemoteOnly,1,0.9015535126394558,"[None, None]",,,RemoteOnly,0.9015442876140006,development / no confirmatory claim
+mooncake_toolagent,16,False,2048,1,128,LRU-equal,1,0.9381119688758671,"[None, None]",,,primary,0.9380923324953725,development / no confirmatory claim
+mooncake_toolagent,16,False,2048,1,128,LFU-equal,1,0.9573871736899698,"[None, None]",,,primary,0.9573691443053528,development / no confirmatory claim
+mooncake_toolagent,16,False,2048,1,128,RecentLFU-admit,1,0.97773930712723,"[None, None]",,,primary,0.9777359759969758,development / no confirmatory claim

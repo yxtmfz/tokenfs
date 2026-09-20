@@ -1,0 +1,28 @@
+[
+  {
+    "scenario": "domain_stable",
+    "n": 3,
+    "aura_mib_s": 117.82100482963519,
+    "reference_mib_s": 120.43256415339044,
+    "time_ratio": 1.0221868358722308,
+    "ci95": [
+      1.0174790180329951,
+      1.0291961546050008
+    ],
+    "with_drain_ratio": 1.0221451680512095,
+    "verdict": "descriptive n=3; three logical callers share one host/disk; not physical multi-GPU or original-trace concurrency"
+  },
+  {
+    "scenario": "domain_shift",
+    "n": 3,
+    "aura_mib_s": 92.32574866422173,
+    "reference_mib_s": 80.76737105233195,
+    "time_ratio": 0.8748194236946787,
+    "ci95": [
+      0.8644036655279462,
+      0.8803291436472946
+    ],
+    "with_drain_ratio": 0.8748439919190891,
+    "verdict": "descriptive n=3; three logical callers share one host/disk; not physical multi-GPU or original-trace concurrency"
+  }
+]

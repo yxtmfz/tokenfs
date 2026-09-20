@@ -1,0 +1,211 @@
+{
+  "stage": "development",
+  "blocks": [
+    {
+      "id": "mooncake_conversation-q16-s305",
+      "scenario": "mooncake_conversation",
+      "seed": 305,
+      "requests": 2048,
+      "shard_mib": 1,
+      "quota_mib": 16,
+      "source_offset": 0,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "mooncake_toolagent-q16-s305",
+      "scenario": "mooncake_toolagent",
+      "seed": 305,
+      "requests": 2048,
+      "shard_mib": 1,
+      "quota_mib": 16,
+      "source_offset": 0,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "mooncake_conversation-q16-s306",
+      "scenario": "mooncake_conversation",
+      "seed": 306,
+      "requests": 2048,
+      "shard_mib": 1,
+      "quota_mib": 16,
+      "source_offset": 1200,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "mooncake_toolagent-q16-s306",
+      "scenario": "mooncake_toolagent",
+      "seed": 306,
+      "requests": 2048,
+      "shard_mib": 1,
+      "quota_mib": 16,
+      "source_offset": 1200,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "stable-q16-s305",
+      "scenario": "stable",
+      "seed": 305,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 16,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "stable-q32-s305",
+      "scenario": "stable",
+      "seed": 305,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 32,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "mixed_fit-q16-s305",
+      "scenario": "mixed_fit",
+      "seed": 305,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 16,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "mixed_fit-q32-s305",
+      "scenario": "mixed_fit",
+      "seed": 305,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 32,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "stable-long-s305",
+      "scenario": "stable",
+      "seed": 305,
+      "requests": 4096,
+      "shard_mib": 1,
+      "quota_mib": 4,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "shift-long-s305",
+      "scenario": "shift",
+      "seed": 305,
+      "requests": 4096,
+      "shard_mib": 1,
+      "quota_mib": 4,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "shift-w64-s305",
+      "scenario": "shift",
+      "seed": 305,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "window": 64,
+      "variants": [
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "shift-w256-s305",
+      "scenario": "shift",
+      "seed": 305,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "window": 256,
+      "variants": [
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "mixed_fit-w64-s305",
+      "scenario": "mixed_fit",
+      "seed": 305,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "window": 64,
+      "variants": [
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "mixed_fit-w256-s305",
+      "scenario": "mixed_fit",
+      "seed": 305,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "window": 256,
+      "variants": [
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    }
+  ]
+}

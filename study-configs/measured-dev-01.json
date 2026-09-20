@@ -1,0 +1,80 @@
+{
+  "stage": "development",
+  "blocks": [
+    {
+      "id": "stable-q8-s301",
+      "scenario": "stable",
+      "seed": 301,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "shift-q8-s301",
+      "scenario": "shift",
+      "seed": 301,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "scan-q8-s301",
+      "scenario": "scan",
+      "seed": 301,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "mixed_fit-q8-s301",
+      "scenario": "mixed_fit",
+      "seed": 301,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    },
+    {
+      "id": "uniform-q8-s301",
+      "scenario": "uniform",
+      "seed": 301,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "RemoteOnly",
+        "LRU-equal",
+        "LFU-equal",
+        "RecentLFU-admit",
+        "AURA-adaptive"
+      ]
+    }
+  ]
+}

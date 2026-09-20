@@ -1,0 +1,282 @@
+[
+  {
+    "scenario": "stable",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "AURA-no-cost",
+    "n": 2,
+    "time_ratio": 0.9988537092207198,
+    "ci95": [
+      0.9839299926726602,
+      1.0140037806083162
+    ],
+    "p_raw": 1.0,
+    "p_holm": 1,
+    "family": "AURA-no-cost",
+    "with_drain_ratio": 0.9987776550624259,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "stable",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "AURA-no-shift",
+    "n": 2,
+    "time_ratio": 0.9948881220961214,
+    "ci95": [
+      0.9912913490471035,
+      0.9984979455731278
+    ],
+    "p_raw": 0.5,
+    "p_holm": 1,
+    "family": "AURA-no-shift",
+    "with_drain_ratio": 0.9948188438605527,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "stable",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "RecentLFU-admit",
+    "n": 2,
+    "time_ratio": 1.0049962935083467,
+    "ci95": [
+      1.0000419222736165,
+      1.0099752095084362
+    ],
+    "p_raw": 0.5,
+    "p_holm": 1,
+    "family": "primary",
+    "with_drain_ratio": 1.0049794509866885,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "shift",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "AURA-no-cost",
+    "n": 2,
+    "time_ratio": 1.03429238093099,
+    "ci95": [
+      1.0088046486581137,
+      1.0604240679053818
+    ],
+    "p_raw": 0.5,
+    "p_holm": 1,
+    "family": "AURA-no-cost",
+    "with_drain_ratio": 1.0342647531671225,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "shift",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "AURA-no-shift",
+    "n": 2,
+    "time_ratio": 0.7724866857420332,
+    "ci95": [
+      0.7721091343015206,
+      0.7728644218003464
+    ],
+    "p_raw": 0.5,
+    "p_holm": 1,
+    "family": "AURA-no-shift",
+    "with_drain_ratio": 0.7725442518344394,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "shift",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "RecentLFU-admit",
+    "n": 2,
+    "time_ratio": 0.7807499095591247,
+    "ci95": [
+      0.7803560093376638,
+      0.7811440086095595
+    ],
+    "p_raw": 0.5,
+    "p_holm": 1,
+    "family": "primary",
+    "with_drain_ratio": 0.7808146507112055,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "mixed_fit",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "AURA-no-cost",
+    "n": 2,
+    "time_ratio": 1.029424934629876,
+    "ci95": [
+      1.0131130243954318,
+      1.0459994793474328
+    ],
+    "p_raw": 0.5,
+    "p_holm": 1,
+    "family": "AURA-no-cost",
+    "with_drain_ratio": 1.0294041830764316,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "mixed_fit",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "AURA-no-shift",
+    "n": 2,
+    "time_ratio": 1.022726563012113,
+    "ci95": [
+      1.0084746037183705,
+      1.0371799337672463
+    ],
+    "p_raw": 0.5,
+    "p_holm": 1,
+    "family": "AURA-no-shift",
+    "with_drain_ratio": 1.0227174278552802,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "mixed_fit",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "RecentLFU-admit",
+    "n": 2,
+    "time_ratio": 1.034658321025435,
+    "ci95": [
+      1.0241320637248965,
+      1.045292769541425
+    ],
+    "p_raw": 0.5,
+    "p_holm": 1,
+    "family": "primary",
+    "with_drain_ratio": 1.0346520487302542,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "uniform",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "AURA-no-cost",
+    "n": 2,
+    "time_ratio": 1.0176899918921323,
+    "ci95": [
+      1.0027708819296874,
+      1.0328310666583846
+    ],
+    "p_raw": 0.5,
+    "p_holm": 1,
+    "family": "AURA-no-cost",
+    "with_drain_ratio": 1.0176919279639656,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "uniform",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "AURA-no-shift",
+    "n": 2,
+    "time_ratio": 0.9979986187297094,
+    "ci95": [
+      0.9942801731891767,
+      1.0017309706495612
+    ],
+    "p_raw": 1.0,
+    "p_holm": 1,
+    "family": "AURA-no-shift",
+    "with_drain_ratio": 0.9980497992615402,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "uniform",
+    "quota_mib": 8,
+    "paced": false,
+    "requests": 384,
+    "shard_mib": 2,
+    "window": 128,
+    "baseline": "RecentLFU-admit",
+    "n": 2,
+    "time_ratio": 1.0171648557252082,
+    "ci95": [
+      1.0002843504103691,
+      1.0343302314967004
+    ],
+    "p_raw": 0.5,
+    "p_holm": 1,
+    "family": "primary",
+    "with_drain_ratio": 1.0171311954572377,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "mooncake_conversation",
+    "quota_mib": 16,
+    "paced": false,
+    "requests": 2048,
+    "shard_mib": 1,
+    "window": 128,
+    "baseline": "AURA-no-cost",
+    "n": 2,
+    "time_ratio": 1.008726791838157,
+    "ci95": [
+      1.000286499234234,
+      1.0172383025773788
+    ],
+    "p_raw": 0.5,
+    "p_holm": 1,
+    "family": "AURA-no-cost",
+    "with_drain_ratio": 1.0087412205526327,
+    "verdict": "development / no confirmatory claim"
+  },
+  {
+    "scenario": "mooncake_toolagent",
+    "quota_mib": 16,
+    "paced": false,
+    "requests": 2048,
+    "shard_mib": 1,
+    "window": 128,
+    "baseline": "AURA-no-cost",
+    "n": 2,
+    "time_ratio": 1.0201698570063384,
+    "ci95": [
+      1.008764026813443,
+      1.031704649928803
+    ],
+    "p_raw": 0.5,
+    "p_holm": 1,
+    "family": "AURA-no-cost",
+    "with_drain_ratio": 1.0201720615338103,
+    "verdict": "development / no confirmatory claim"
+  }
+]

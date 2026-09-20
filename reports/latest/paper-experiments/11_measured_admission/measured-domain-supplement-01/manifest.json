@@ -1,0 +1,104 @@
+{
+  "spec": {
+    "stage": "descriptive-supplement",
+    "generator": "domain-v1",
+    "blocks": [
+      {
+        "id": "domain_stable-s701",
+        "scenario": "domain_stable",
+        "seed": 701,
+        "requests": 384,
+        "shard_mib": 2,
+        "quota_mib": 8,
+        "variants": [
+          "RecentLFU-admit",
+          "AURA-adaptive"
+        ]
+      },
+      {
+        "id": "domain_shift-s701",
+        "scenario": "domain_shift",
+        "seed": 701,
+        "requests": 384,
+        "shard_mib": 2,
+        "quota_mib": 8,
+        "variants": [
+          "RecentLFU-admit",
+          "AURA-adaptive"
+        ]
+      },
+      {
+        "id": "domain_stable-s702",
+        "scenario": "domain_stable",
+        "seed": 702,
+        "requests": 384,
+        "shard_mib": 2,
+        "quota_mib": 8,
+        "variants": [
+          "RecentLFU-admit",
+          "AURA-adaptive"
+        ]
+      },
+      {
+        "id": "domain_shift-s702",
+        "scenario": "domain_shift",
+        "seed": 702,
+        "requests": 384,
+        "shard_mib": 2,
+        "quota_mib": 8,
+        "variants": [
+          "RecentLFU-admit",
+          "AURA-adaptive"
+        ]
+      },
+      {
+        "id": "domain_stable-s703",
+        "scenario": "domain_stable",
+        "seed": 703,
+        "requests": 384,
+        "shard_mib": 2,
+        "quota_mib": 8,
+        "variants": [
+          "RecentLFU-admit",
+          "AURA-adaptive"
+        ]
+      },
+      {
+        "id": "domain_shift-s703",
+        "scenario": "domain_shift",
+        "seed": 703,
+        "requests": 384,
+        "shard_mib": 2,
+        "quota_mib": 8,
+        "variants": [
+          "RecentLFU-admit",
+          "AURA-adaptive"
+        ]
+      }
+    ]
+  },
+  "spec_sha256": "4d81baffb180b6e58ed4c46067581959fd8d137fee66eb6d3ab4d9880ad5610d",
+  "stage": "descriptive-supplement",
+  "binary_sha256": "c62a05c796bfcb4f0d2cd39ead078493ee4438dc79188bbbda012bbbe6f2d75e",
+  "script_sha256": "c7394ff719a713eb8edc3c6752e17c0b089825da10e295125ff1b16db74b2cf6",
+  "source_hashes": {
+    "src/main.cpp": "96970a8b161c3d94a667c13d1fb9359932b35f8a081472020ce68caa0c3395bb",
+    "src/measured_policy.h": "7b39951cdb3fa2245ca90c98f1d74f495dac09d6d72a70f62d3cf16bcfbac691",
+    "scripts/measured_study.py": "3ee5c676f63a5216862d7a1e1e0304003cc24929e454a4cc1909baa1a70df0ad",
+    "scripts/evidence_benchmark.py": "c1faf9b0a0ccea4404c3a5f5957b03889513d3959bfc541d434f919ae78770fc"
+  },
+  "reference_sha256": "6c57bd9399847ecfe8908806f87ac32a807a7bad815ec8fac64b53f794cf6a95",
+  "output": "/home/wjxt/aura-kv-cn7/evidence/measured-domain-supplement-01",
+  "remote_data": "/srv/tokenfs/remote-cn7/domain-measured-domain-supplement-01",
+  "mount": {
+    "target": "/srv/tokenfs/remote-cn7",
+    "source": "/dev/nvme1n1",
+    "fstype": "ext4",
+    "options": "rw,nosuid,nodev,relatime"
+  },
+  "nvme_identity": {
+    "transport": "tcp",
+    "address": "traddr=28.10.10.13,trsvcid=4420,src_addr=28.10.10.7",
+    "subsysnqn": "nqn.2026-09.local.aura-kv:remote-cn7"
+  }
+}
