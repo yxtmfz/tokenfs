@@ -1,0 +1,26 @@
+{
+  "host": "cn7",
+  "binary_sha256": "dca9ef638c343b21c402560dcac07600aeb79a9050ceb246e2e753d747dde71d",
+  "source_hashes": {
+    "src/main.cpp": "eb9549b2f68106efb8ee92e10bbdee37186992191172bd8a4cd63bdc2b0c059f",
+    "src/measured_policy.h": "ad41c32b358d2f4a46c30a3d178b10256f9081297745a6e953d332eec4b71257",
+    "scripts/affinity_joint_study.py": "43eb9c6c523890d8bd7441586f4a98e115952a3e9fd5501a2e857d9a942cb6f7",
+    "scripts/evidence_benchmark.py": "c1faf9b0a0ccea4404c3a5f5957b03889513d3959bfc541d434f919ae78770fc",
+    "scripts/evidence_report.py": "2ff27f63d198f9e2a6c1657f653759734b060ff4b08b9e4c350e7935bb6e3475",
+    "scripts/evidence_audit.py": "12b63f993c1d9882086357199c6d97069f010ebca006cae13778b8b6b7863573",
+    "scripts/measured_study.py": "3ee5c676f63a5216862d7a1e1e0304003cc24929e454a4cc1909baa1a70df0ad",
+    "scripts/affinity_v2_study.py": "d14d9b3f5282c3172bafca79b8886419ec2810de185dcf145071d02ce1f69a24"
+  },
+  "remaining_mounts": [],
+  "local": {
+    "returncode": 0,
+    "stdout": "{\n   \"filesystems\": [\n      {\n         \"target\": \"/home\",\n         \"source\": \"/dev/mapper/ubuntu--vg-lv--0\",\n         \"fstype\": \"ext4\",\n         \"options\": \"rw,relatime\"\n      }\n   ]\n}\n",
+    "stderr": ""
+  },
+  "kernel": "6.8.0-31-generic",
+  "remote": {
+    "returncode": 0,
+    "stdout": "{\n   \"filesystems\": [\n      {\n         \"target\": \"/srv/tokenfs/remote-cn7\",\n         \"source\": \"/dev/nvme1n1\",\n         \"fstype\": \"ext4\",\n         \"options\": \"rw,nosuid,nodev,relatime\"\n      }\n   ]\n}\n",
+    "stderr": ""
+  }
+}

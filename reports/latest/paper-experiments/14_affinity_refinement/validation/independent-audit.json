@@ -1,0 +1,59 @@
+{
+  "passed": true,
+  "performance_runs": 288,
+  "content_cases": 48,
+  "development_runs": 48,
+  "batches": [
+    {
+      "host": "cn7",
+      "batch": "affinity-v2-correctness-01",
+      "cases": 24,
+      "passed": true
+    },
+    {
+      "host": "cn7",
+      "batch": "affinity-v2-development-01",
+      "cases": 48,
+      "passed": true
+    },
+    {
+      "host": "cn7",
+      "batch": "affinity-v2-confirmation-01",
+      "cases": 288,
+      "passed": true
+    },
+    {
+      "host": "cn8",
+      "batch": "affinity-v2-correctness-01",
+      "cases": 24,
+      "passed": true
+    }
+  ],
+  "public_windows": 12,
+  "independent_comparisons": 16,
+  "rounding_differences": [
+    {
+      "row": 6,
+      "field": "with_drain_ratio",
+      "server": 0.9989523852369193,
+      "local": 0.9989523852369194,
+      "absolute_difference": 1.1102230246251565e-16
+    }
+  ],
+  "negative_checks": [
+    {
+      "kind": "bytes",
+      "rejected": true
+    },
+    {
+      "kind": "configuration",
+      "rejected": true
+    },
+    {
+      "kind": "timeline",
+      "rejected": true
+    }
+  ],
+  "binary_sha256": "dca9ef638c343b21c402560dcac07600aeb79a9050ceb246e2e753d747dde71d",
+  "algorithm_revision": "6aa9d7b6776a34b0e592d19a143f515ee7556eb8"
+}

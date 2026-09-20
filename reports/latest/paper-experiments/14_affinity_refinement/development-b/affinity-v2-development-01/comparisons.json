@@ -1,0 +1,282 @@
+[
+  {
+    "scenario": "static_affinity",
+    "baseline": "P-off",
+    "treatment": "P-new",
+    "family": "new_vs_disabled",
+    "n": 2,
+    "time_ratio": 0.996413205554369,
+    "ci95": [
+      0.9767661768165165,
+      1.01645542174587
+    ],
+    "p_raw": 1.0,
+    "p_holm": 1,
+    "with_drain_ratio": 0.9963884144958627,
+    "baseline_mib_s": 116.36255883281031,
+    "new_mib_s": 116.76460621781968,
+    "mechanism_active_pairs": 0,
+    "throughput_change_pct": 0.35997058505818913,
+    "verdict": "development"
+  },
+  {
+    "scenario": "static_affinity",
+    "baseline": "P-old",
+    "treatment": "P-new",
+    "family": "new_vs_legacy",
+    "n": 2,
+    "time_ratio": 1.0355138273736508,
+    "ci95": [
+      1.0089461945881018,
+      1.0627810406874916
+    ],
+    "p_raw": 0.5,
+    "p_holm": 1,
+    "with_drain_ratio": 1.0356155019094861,
+    "baseline_mib_s": 120.9436502349907,
+    "new_mib_s": 116.76460621781968,
+    "mechanism_active_pairs": 0,
+    "throughput_change_pct": -3.4295850460755006,
+    "verdict": "development"
+  },
+  {
+    "scenario": "caller_shift",
+    "baseline": "P-off",
+    "treatment": "P-new",
+    "family": "new_vs_disabled",
+    "n": 2,
+    "time_ratio": 0.9785486895813758,
+    "ci95": [
+      0.9529434981114024,
+      1.004841881789602
+    ],
+    "p_raw": 1.0,
+    "p_holm": 1,
+    "with_drain_ratio": 0.9785406946469671,
+    "baseline_mib_s": 116.16843688114744,
+    "new_mib_s": 118.78365959461397,
+    "mechanism_active_pairs": 2,
+    "throughput_change_pct": 2.192155653266581,
+    "verdict": "development"
+  },
+  {
+    "scenario": "caller_shift",
+    "baseline": "P-old",
+    "treatment": "P-new",
+    "family": "new_vs_legacy",
+    "n": 2,
+    "time_ratio": 0.8906804988013655,
+    "ci95": [
+      0.8404033800724746,
+      0.9439654453515355
+    ],
+    "p_raw": 0.5,
+    "p_holm": 1,
+    "with_drain_ratio": 0.8907466433805346,
+    "baseline_mib_s": 105.761379711368,
+    "new_mib_s": 118.78365959461397,
+    "mechanism_active_pairs": 2,
+    "throughput_change_pct": 12.273705480893703,
+    "verdict": "development"
+  },
+  {
+    "scenario": "hot_shift",
+    "baseline": "P-off",
+    "treatment": "P-new",
+    "family": "new_vs_disabled",
+    "n": 2,
+    "time_ratio": 0.9427921589772646,
+    "ci95": [
+      0.9279748302336968,
+      0.9578460816713814
+    ],
+    "p_raw": 0.5,
+    "p_holm": 1,
+    "with_drain_ratio": 0.9428170213572847,
+    "baseline_mib_s": 80.05391627884819,
+    "new_mib_s": 84.95735713314252,
+    "mechanism_active_pairs": 0,
+    "throughput_change_pct": 6.067916505032667,
+    "verdict": "development"
+  },
+  {
+    "scenario": "hot_shift",
+    "baseline": "P-old",
+    "treatment": "P-new",
+    "family": "new_vs_legacy",
+    "n": 2,
+    "time_ratio": 0.991229363310894,
+    "ci95": [
+      0.9621556151055891,
+      1.0211816417886774
+    ],
+    "p_raw": 1.0,
+    "p_holm": 1,
+    "with_drain_ratio": 0.9912678982418541,
+    "baseline_mib_s": 84.14429524468153,
+    "new_mib_s": 84.95735713314252,
+    "mechanism_active_pairs": 0,
+    "throughput_change_pct": 0.8848241399760814,
+    "verdict": "development"
+  },
+  {
+    "scenario": "coupled",
+    "baseline": "P-off",
+    "treatment": "P-new",
+    "family": "new_vs_disabled",
+    "n": 2,
+    "time_ratio": 1.0065655753128369,
+    "ci95": [
+      0.9788959737341436,
+      1.0350172894673977
+    ],
+    "p_raw": 1.0,
+    "p_holm": 1,
+    "with_drain_ratio": 1.0053829376567245,
+    "baseline_mib_s": 83.10928780541192,
+    "new_mib_s": 82.58905127222607,
+    "mechanism_active_pairs": 0,
+    "throughput_change_pct": -0.6522749708379738,
+    "verdict": "development"
+  },
+  {
+    "scenario": "coupled",
+    "baseline": "P-old",
+    "treatment": "P-new",
+    "family": "new_vs_legacy",
+    "n": 2,
+    "time_ratio": 0.9561170524421739,
+    "ci95": [
+      0.9125949460760625,
+      1.001714749683172
+    ],
+    "p_raw": 1.0,
+    "p_holm": 1,
+    "with_drain_ratio": 0.9561659639657784,
+    "baseline_mib_s": 78.96427517300879,
+    "new_mib_s": 82.58905127222607,
+    "mechanism_active_pairs": 0,
+    "throughput_change_pct": 4.58970451847267,
+    "verdict": "development"
+  },
+  {
+    "scenario": "public_toolagent",
+    "baseline": "P-off",
+    "treatment": "P-new",
+    "family": "new_vs_disabled",
+    "n": 2,
+    "time_ratio": 1.004619172540614,
+    "ci95": [
+      0.9888495255854524,
+      1.0206403054485478
+    ],
+    "p_raw": 1.0,
+    "p_holm": 1,
+    "with_drain_ratio": 1.0046196870159745,
+    "baseline_mib_s": 67.47306435988165,
+    "new_mib_s": 67.16111866324235,
+    "mechanism_active_pairs": 1,
+    "throughput_change_pct": -0.459793389064278,
+    "verdict": "development"
+  },
+  {
+    "scenario": "public_toolagent",
+    "baseline": "P-old",
+    "treatment": "P-new",
+    "family": "new_vs_legacy",
+    "n": 2,
+    "time_ratio": 0.999759932965574,
+    "ci95": [
+      0.986806075294258,
+      1.0128838366396151
+    ],
+    "p_raw": 1.0,
+    "p_holm": 1,
+    "with_drain_ratio": 0.9997579565830914,
+    "baseline_mib_s": 67.14518668697544,
+    "new_mib_s": 67.16111866324235,
+    "mechanism_active_pairs": 1,
+    "throughput_change_pct": 0.024012468044598556,
+    "verdict": "development"
+  },
+  {
+    "scenario": "uniform",
+    "baseline": "P-off",
+    "treatment": "P-new",
+    "family": "new_vs_disabled",
+    "n": 2,
+    "time_ratio": 1.0063415188970706,
+    "ci95": [
+      1.0050494141024362,
+      1.0076352848386863
+    ],
+    "p_raw": 0.5,
+    "p_holm": 1,
+    "with_drain_ratio": 1.0063246065856628,
+    "baseline_mib_s": 72.8779638801419,
+    "new_mib_s": 72.41853136314305,
+    "mechanism_active_pairs": 0,
+    "throughput_change_pct": -0.6301557451411477,
+    "verdict": "development"
+  },
+  {
+    "scenario": "uniform",
+    "baseline": "P-old",
+    "treatment": "P-new",
+    "family": "new_vs_legacy",
+    "n": 2,
+    "time_ratio": 1.0044248056583458,
+    "ci95": [
+      0.9997728974417586,
+      1.009098359040661
+    ],
+    "p_raw": 1.0,
+    "p_holm": 1,
+    "with_drain_ratio": 1.0044412694629243,
+    "baseline_mib_s": 72.73928825367288,
+    "new_mib_s": 72.41853136314305,
+    "mechanism_active_pairs": 0,
+    "throughput_change_pct": -0.4405313004437028,
+    "verdict": "development"
+  },
+  {
+    "scenario": "domain_return",
+    "baseline": "P-off",
+    "treatment": "P-new",
+    "family": "new_vs_disabled",
+    "n": 2,
+    "time_ratio": 1.0157575831007646,
+    "ci95": [
+      0.9940817908114202,
+      1.0379060125269257
+    ],
+    "p_raw": 1.0,
+    "p_holm": 1,
+    "with_drain_ratio": 1.015758927696192,
+    "baseline_mib_s": 94.45313532052737,
+    "new_mib_s": 92.98349925043212,
+    "mechanism_active_pairs": 0,
+    "throughput_change_pct": -1.5513133608771157,
+    "verdict": "development"
+  },
+  {
+    "scenario": "domain_return",
+    "baseline": "P-old",
+    "treatment": "P-new",
+    "family": "new_vs_legacy",
+    "n": 2,
+    "time_ratio": 1.0041391715277064,
+    "ci95": [
+      1.0027986400811195,
+      1.0054814949836632
+    ],
+    "p_raw": 0.5,
+    "p_holm": 1,
+    "with_drain_ratio": 1.0041928141725842,
+    "baseline_mib_s": 93.36953055367428,
+    "new_mib_s": 92.98349925043212,
+    "mechanism_active_pairs": 0,
+    "throughput_change_pct": -0.41221094098031763,
+    "verdict": "development"
+  }
+]
