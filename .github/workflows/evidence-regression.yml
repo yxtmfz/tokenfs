@@ -32,4 +32,4 @@ jobs:
       - name: Test policy accounting and evidence audits
         run: python3 -m unittest tests.aura_kv_unit_test tests.evidence_test tests.measured_study_test tests.affinity_joint_test
       - name: Test affinity-demand study controls
-        run: python3 -m unittest tests.affinity_v2_test
+        run: python3 -m unittest tests.affinity_v2_test tests.affinity_v3_test

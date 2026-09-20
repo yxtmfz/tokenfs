@@ -73,6 +73,7 @@ struct Config {
   bool measured_track_affinity = false;
   bool measured_affinity_gate = false;
   bool measured_affinity_recent_demand = false;
+  bool measured_affinity_handover_epoch = false;
   bool measured_joint_admission = true;
   uint64_t measured_affinity_window = 128;
   uint64_t measured_shift_window = 8;
@@ -1603,8 +1604,10 @@ class TokenFS {
           AddBufferedMetric("cross_gpu_local_replica_hit", 1);
         }
       }
-      if((config_.measured_policy || config_.measured_track_affinity) && measured_.Observe(caller_gpu_id,path,MeasuredOptions(),meta.tier=="local"))
+      bool affinity_reset=false;
+      if((config_.measured_policy || config_.measured_track_affinity) && measured_.Observe(caller_gpu_id,path,MeasuredOptions(),meta.tier=="local",&affinity_reset))
         AddBufferedMetric("measured_shift_resets",1);
+      if(affinity_reset)AddBufferedMetric("measured_affinity_context_resets",1);
       AddBufferedMetric("read_open_count", 1);
       AddBufferedMetric(meta.tier == "local" ? "local_read_open_count" : "remote_read_open_count", 1);
     }
@@ -2214,7 +2217,7 @@ class TokenFS {
     return {static_cast<size_t>(config_.measured_window),config_.measured_aging,
             config_.measured_admission,config_.measured_cost,
             config_.measured_value_victim,config_.measured_size_aware,config_.measured_frequency_admission,config_.measured_shift_reset,static_cast<size_t>(config_.measured_shift_window),
-            config_.measured_track_affinity,config_.measured_affinity_gate,config_.measured_joint_admission,static_cast<size_t>(config_.measured_affinity_window),config_.measured_affinity_recent_demand};
+            config_.measured_track_affinity,config_.measured_affinity_gate,config_.measured_joint_admission,static_cast<size_t>(config_.measured_affinity_window),config_.measured_affinity_recent_demand,config_.measured_affinity_handover_epoch};
   }
 
   tokenfs_policy::Decision MeasuredPlan(const GpuConfig& gpu,const FileMeta& incoming) {
@@ -3562,6 +3565,7 @@ Config LoadConfig(const fs::path& path) {
   if(root["policy"] && root["policy"]["measured_track_affinity"]) config.measured_track_affinity=root["policy"]["measured_track_affinity"].as<bool>();
   if(root["policy"] && root["policy"]["measured_affinity_gate"]) config.measured_affinity_gate=root["policy"]["measured_affinity_gate"].as<bool>();
   if(root["policy"] && root["policy"]["measured_affinity_recent_demand"]) config.measured_affinity_recent_demand=root["policy"]["measured_affinity_recent_demand"].as<bool>();
+  if(root["policy"] && root["policy"]["measured_affinity_handover_epoch"]) config.measured_affinity_handover_epoch=root["policy"]["measured_affinity_handover_epoch"].as<bool>();
   if(config.measured_affinity_recent_demand && config.measured_affinity_gate && !config.measured_track_affinity)
     throw std::runtime_error("recent affinity demand requires affinity tracking");
   if(root["policy"] && root["policy"]["measured_joint_admission"]) config.measured_joint_admission=root["policy"]["measured_joint_admission"].as<bool>();

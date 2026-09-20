@@ -136,5 +136,29 @@ int main(){
     assert(on_plan.allowed==off_plan.allowed && on_plan.incoming_us==off_plan.incoming_us);
     assert(on_plan.affinity_adjusted_items==0);
   }
+ // Returning destinations may discard stale local popularity only with an
+ // observed hot-object handover; ordinary inactivity alone is insufficient.
+ MeasuredPolicy epochs;Options epoch=recent;epoch.affinity_window=epoch.window=128;
+ epoch.affinity_handover_epoch=true;epoch.shift_reset=false;epoch.cost=false;
+ for(int i=0;i<24;i++)epochs.Observe(1,"old-task",epoch);
+ for(int i=0;i<64;i++)epochs.Observe(0,"new-task",epoch);
+ bool context_reset=false;
+ epochs.Observe(1,"x",epoch,false,&context_reset);assert(!context_reset);
+ epochs.Observe(1,"y",epoch,false,&context_reset);assert(!context_reset);
+ epochs.Observe(1,"new-task",epoch,false,&context_reset);assert(context_reset);
+ assert(epochs.Frequency(1,"old-task")==0 && epochs.Frequency(1,"x")==1);
+ auto epoch_admit=epochs.Plan(1,{"new-task",100,1},{{"old-task",100,0}},100,100,epoch);
+ assert(epoch_admit.allowed && epoch_admit.displaced_us==0);
+ MeasuredPolicy epoch_off;Options disabled_epoch=epoch;disabled_epoch.affinity_gate=false;
+ for(int i=0;i<24;i++)epoch_off.Observe(1,"old-task",disabled_epoch);
+ for(int i=0;i<64;i++)epoch_off.Observe(0,"new-task",disabled_epoch);
+ epoch_off.Observe(1,"x",disabled_epoch);epoch_off.Observe(1,"y",disabled_epoch);
+ epoch_off.Observe(1,"new-task",disabled_epoch,false,&context_reset);assert(!context_reset);
+ assert(epoch_off.Frequency(1,"old-task")==24);
+ MeasuredPolicy no_transfer;
+ for(int i=0;i<24;i++)no_transfer.Observe(1,"old-task",epoch);
+ for(int i=0;i<64;i++)no_transfer.Observe(0,"unrelated",epoch);
+ for(int i=0;i<4;i++){no_transfer.Observe(1,"cold-new",epoch,false,&context_reset);assert(!context_reset);}
+ assert(no_transfer.Frequency(1,"old-task")==24);
  std::cout<<"measured admission invariants passed\n";
 }
