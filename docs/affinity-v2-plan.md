@@ -24,7 +24,12 @@ the additional handover case it was 7.05% slower than disabled affinity and copi
 victims under their smaller local counts. All 48 development runs and 48 content
 checks of this candidate B are retained. No confirmation was run.
 
-The final candidate C replaces the relative veto with **handover-aware reuse
+Candidate C made incoming and resident estimates symmetric but still regressed
+by 2.28% in handover (70 versus 65 MiB copied). The detector stopped borrowing
+abruptly as local share caught up, causing another value discontinuity. Its
+48 development and 48 content checks are retained; no confirmation was run.
+
+The final candidate D replaces the relative veto with **handover-aware reuse
 transfer** consistently for incoming and resident objects. In the last four observed accesses, the
 current domain must account for at least three and have at least twice its share
 in the long 128-event window. The object must have at least eight observations
@@ -34,7 +39,11 @@ the newly observed destination share. Use the maximum of this estimate and the
 original local estimate. Apply the same forecast to the incoming object and eligible residents, avoiding
 the valuation discontinuity seen in B. Objects removed from domain history by
 aging or hotspot reset cannot be resurrected by global evidence. Copy cost, summed victim loss,
-capacity and execution-time rechecks remain unchanged. No speculative prefetch:
+Borrowed forecasts now decay linearly over one global affinity window instead of
+disappearing when the short-window detector turns off. They are refreshed only
+by observed handover evidence, erased when local history removes the object, and
+ignored after expiry. P-off tracks the same forecasts but does not apply them.
+Capacity and execution-time rechecks remain unchanged. No speculative prefetch:
 only the object actually requested is eligible. No workload phase labels or
 future requests enter this decision.
 
@@ -57,8 +66,8 @@ The new scenario uses caller sequence 0,1,2,0 across four phases: a caller retur
 after inactivity with a different six-object hot set under four-object capacity.
 A separate handover scenario adds eight phases in four pairs: each pair retains a four-object hot set while the caller changes, and later destinations already have a different resident set. This fills a coverage gap: re-entry with entirely new objects cannot test reuse transfer. It was added during development BEFORE any confirmation access; all seven existing scenarios remain. All methods receive the same trace; policy decisions never see phase labels.
 
-Final-candidate development C: seeds 1701,1702, 48 speed runs in one batch,
-separate from rejected A and B using the same development-only traces. Correctness: 24 cases per host,
+Final-candidate development D: seeds 1701,1702, 48 speed runs in one batch,
+separate from rejected A, B and C using the same development-only traces. Correctness: 24 cases per host,
 cn7 actual NVMe/TCP and cn8 directory backend. Intended development acceptance:
 at least one meaningful improvement against disabled affinity, with particular
 attention to re-entry, and no renewed caller-handover regression. If development

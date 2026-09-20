@@ -114,8 +114,16 @@ int main(){
   transfer.ReadSample(false,100,100);transfer.ReadSample(true,100,20);transfer.CopySample(100,100000);
   Options costly=recent;costly.cost=true;
   assert(transfer.Plan(1,{"shared",100,1},{},0,100,costly).reason=="copy_cost");
-  // Execution rechecks cannot keep borrowing after the observed destination shifts.
+  // The forecast decays instead of disappearing when the short-window detector
+  // turns off. Both arrival and resident retain equal value throughout decay.
+  const auto before_decay=transfer.AdmissionFrequency(1,"shared",recent);
   for(int i=0;i<8;i++)transfer.Observe(2,"other",recent);
+  const auto after_decay=transfer.AdmissionFrequency(1,"shared",recent);
+  assert(after_decay>1 && after_decay<before_decay);
+  auto decayed=transfer.Plan(1,{"shared",100,1},{{"shared",100,0}},100,100,recent);
+  assert(decayed.incoming_us==decayed.displaced_us);
+  // Execution rechecks cannot use expired global evidence.
+  for(int i=0;i<128;i++)transfer.Observe(2,"other",recent);
   assert(transfer.AdmissionFrequency(1,"shared",recent)==1);
   assert(transfer.Plan(1,{"shared",100,1},{},0,100,recent).reason=="no_reuse");
   // With one caller and equal windows, the new affinity model is identical to
