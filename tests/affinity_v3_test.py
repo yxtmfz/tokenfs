@@ -3,6 +3,12 @@ from pathlib import Path
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]/'scripts'))
 from affinity_v3_study import configuration,trace
 class AffinityV3Test(unittest.TestCase):
+    def test_numeric_reproduction_allowance(self):
+        from affinity_v3_evidence import derived_matches
+        self.assertTrue(derived_matches('ci95',[.95,1.01],[.95,1.0100000000000002]))
+        self.assertFalse(derived_matches('ci95',[.95,1.01],[.95,1.01001]))
+        self.assertFalse(derived_matches('p_holm',.01,.0100000000000002))
+        self.assertFalse(derived_matches('ci95',[.95,1.01],[.95,float('nan')]))
     def test_exact_affinity_toggle(self):
         a=configuration('P-new',Path('/case'),Path('/remote'),8,True)
         b=configuration('P-off',Path('/case'),Path('/remote'),8,True)

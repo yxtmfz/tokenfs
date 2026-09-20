@@ -11,6 +11,13 @@ def sha(p):return hashlib.sha256(p.read_bytes()).hexdigest()
 def require(condition,message):
     if not condition:raise ValueError(message)
 
+def derived_matches(field,left,right):
+    def close(a,b):
+        return isinstance(a,float) and isinstance(b,float) and math.isfinite(a) and math.isfinite(b) and abs(a-b)<=1e-12
+    if field=='ci95':
+        return isinstance(left,list) and isinstance(right,list) and len(left)==len(right)==2 and all(close(a,b) for a,b in zip(left,right))
+    return field in ['time_ratio','throughput_change_pct','with_drain_ratio'] and close(left,right)
+
 def verify(data,source):
     study.activate();repo=Path(__file__).resolve().parents[1]
     freeze_path=repo/'study-configs/affinity-v3-freeze-01.json';f=read(freeze_path)
@@ -68,8 +75,10 @@ def verify(data,source):
         require(a.keys()==b.keys(),'comparison fields differ')
         for field,value in a.items():
             if value==b[field]:continue
-            require(field in ['time_ratio','throughput_change_pct','with_drain_ratio'] and isinstance(value,float) and isinstance(b[field],float) and math.isfinite(value) and math.isfinite(b[field]) and abs(value-b[field])<=1e-12,'statistical reproduction differs: '+field)
-            rounding.append(dict(row=index,field=field,server=value,local=b[field],absolute_difference=abs(value-b[field])))
+            require(derived_matches(field,value,b[field]),'statistical reproduction differs: '+field)
+            components=list(enumerate(zip(value,b[field]))) if field=='ci95' else [(None,(value,b[field]))]
+            for component,(x,y) in components:
+                if x!=y:rounding.append(dict(row=index,field=field if component is None else f'{field}[{component}]',server=x,local=y,absolute_difference=abs(x-y)))
         logs=[]
         for block in m['spec']['blocks']:
             if block['scenario']!=a['scenario']:continue

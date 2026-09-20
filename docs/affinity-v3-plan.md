@@ -65,3 +65,23 @@ reset counts, forecast activity, CPU, empirical p99 and queue-drain time. Byte,
 caller, source, timing, configuration, quotas and content audits must pass. Publish
 one complete eight-row table, including any lack of improvement. Measurements
 concern logical domains on one client disk, not physical GPU/inference performance.
+
+## Statistical interpretation clarification
+
+The stricter .025 reporting cutoff does not retroactively make the full adaptive
+development process a preregistered two-test procedure. The first study used its
+original .05 rule and had no positive primary result at either cutoff. Report the
+second study at its frozen .025 rule, preserve both, and do not claim a global
+FWER guarantee over all development/confirmation attempts. This clarification
+changes no sample, runtime, stopping rule, threshold or data interpretation code.
+
+## Completed second confirmation
+
+All 288 cases and 48 content checks passed independent audit. Handover throughput
+was +3.3583% versus disabled decisions, with time ratio 0.9675081 and unadjusted
+95% interval [0.9537047,0.9861981]. Raw p=0.00683594; Holm p=0.0546875 does NOT
+pass the frozen .025 rule. There are no confirmed positive primary comparisons.
+Caller shift was -1.9666% on average. The 5% time-reduction target was not met.
+No samples were added or removed, and no third confirmation or post-confirmation
+policy tuning was performed. Keep the opt-in mode experimental. Report 15 contains
+the complete table, prior failures, resource diagnostics and interpretation limits.

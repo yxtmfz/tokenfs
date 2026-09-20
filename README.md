@@ -1,5 +1,7 @@
 # AURA-KV / TokenFS
 
+> 最新亲和结果：第二轮 288 次正式实测与 48 项内容检查完成。热点跨域交接平均吞吐 +3.36%，但多重比较检验未通过；未证明稳定独立提速，新机制仍为实验性显式选项。见 [创新点二最终实测速率表](reports/latest/paper-experiments/15_affinity_handover/README.md)。前一轮失败确认与所有开发负结果完整保留。
+
 > 亲和修正首轮确认：288 次冻结实测与 48 项内容检查完成。旧版退化得到修复，但新亲和相对关闭亲和尚无确认的独立提速；保留所有负结果，见 [亲和修正与独立验证](reports/latest/paper-experiments/14_affinity_refinement/README.md)。
 
 > 上一轮综合四表：本轮完成 **576 次正式实测、132 项内容验证**，按热点、访问亲和、联合净收益和整体速度给出四张表。组件采用完整策略逐项关闭的对照，实际 MiB/s 与配对统计决定结论；未确定、未触发和退化结果全部保留。范围为三个私有逻辑缓存域与真实 NVMe/TCP 远端，不是物理 GPU 推理，也不代表完整 Python RobustBenefit 已接入。见 [三项机制与整体速度](reports/latest/paper-experiments/13_affinity_joint/README.md)。
