@@ -1,0 +1,38 @@
+-- The CXX compiler identification is GNU 13.3.0
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Found PkgConfig: /home/wjxt/tokenfs-eval-tools-20260919/root/usr/bin/pkg-config (found version "1.8.1") 
+-- Checking for module 'fuse3'
+--   Found fuse3, version 3.14.0
+-- Found SQLite3: /home/wjxt/tokenfs-eval-tools-20260919/root/usr/include (found version "3.45.1") 
+-- Configuring done (0.3s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/wjxt/projects/tokenfs-affinity-v2d-20260920/build-release
+[1/6] Building CXX object CMakeFiles/measured_policy_test.dir/tests/measured_policy_test.cpp.o
+[2/6] Linking CXX executable measured_policy_test
+[3/6] Building CXX object CMakeFiles/tokenfs.dir/src/main.cpp.o
+[4/6] Linking CXX executable tokenfs
+[5/6] Building CXX object CMakeFiles/policy_metadata_test.dir/tests/policy_metadata_test.cpp.o
+[6/6] Linking CXX executable policy_metadata_test
+Internal ctest changing into directory: /home/wjxt/projects/tokenfs-affinity-v2d-20260920/build-release
+Test project /home/wjxt/projects/tokenfs-affinity-v2d-20260920/build-release
+    Start 1: policy_metadata
+1/2 Test #1: policy_metadata ..................   Passed    0.75 sec
+    Start 2: measured_policy
+2/2 Test #2: measured_policy ..................   Passed    0.00 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Total Test time (real) =   0.75 sec
+..........................................................
+----------------------------------------------------------------------
+Ran 58 tests in 3.512s
+
+OK
+dca9ef638c343b21c402560dcac07600aeb79a9050ceb246e2e753d747dde71d  build-release/tokenfs
+eb9549b2f68106efb8ee92e10bbdee37186992191172bd8a4cd63bdc2b0c059f  src/main.cpp
+ad41c32b358d2f4a46c30a3d178b10256f9081297745a6e953d332eec4b71257  src/measured_policy.h
+d14d9b3f5282c3172bafca79b8886419ec2810de185dcf145071d02ce1f69a24  scripts/affinity_v2_study.py

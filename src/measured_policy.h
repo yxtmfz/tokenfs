@@ -28,6 +28,8 @@ struct Options {
   bool affinity_gate=false;
   bool joint_admission=true;
   size_t affinity_window=128;
+  bool affinity_recent_demand=false;
+  bool affinity_handover_epoch=false;
 };
 struct Decision {
   bool allowed=false;
@@ -35,14 +37,23 @@ struct Decision {
   double incoming_us=0, displaced_us=0, copy_us=0;
   bool costs_calibrated=false;
   uint64_t incoming_count=0;
+  uint64_t affinity_incoming_count=0;
+  uint64_t affinity_adjusted_items=0;
   std::vector<std::string> victims;
 };
 
 class MeasuredPolicy {
  public:
-  bool Observe(int gpu,const std::string& key,const Options& o,bool local_hit=false) {
+  bool Observe(int gpu,const std::string& key,const Options& o,bool local_hit=false,bool* affinity_reset=nullptr) {
     std::lock_guard<std::mutex> lock(mu_);
-    auto& d=domains_[gpu];++d.counts[key];d.history.push_back(key);
+    if(affinity_reset)*affinity_reset=false;
+    ++observations_;
+    auto& d=domains_[gpu];
+    if(d.last_observation && observations_-d.last_observation>=std::max<size_t>(8,o.affinity_window/4)) {
+      d.epoch_reads=0;d.epoch_pending=true;
+    }
+    d.last_observation=observations_;++d.epoch_reads;
+    ++d.counts[key];d.history.push_back(key);
     if(o.track_affinity) {
       affinity_history_.emplace_back(key,gpu);++affinity_counts_[key][gpu];
       while(affinity_history_.size()>std::max<size_t>(2,o.affinity_window)) {
@@ -72,7 +83,7 @@ class MeasuredPolicy {
         if(stale_peak>=k && stale_peak>2*current_peak) {
           while(d.history.size()>k) {
             auto found=d.counts.find(d.history.front());
-            if(--found->second==0)d.counts.erase(found);
+            if(--found->second==0){d.forecasts.erase(found->first);d.counts.erase(found);}
             d.history.pop_front();
           }
           d.misses=0;reset=true;
@@ -81,12 +92,39 @@ class MeasuredPolicy {
     }
     if(o.aging) while(d.history.size()>std::max<size_t>(2,o.window)) {
       auto found=d.counts.find(d.history.front());
-      if(--found->second==0)d.counts.erase(found);
+      if(--found->second==0){d.forecasts.erase(found->first);d.counts.erase(found);}
       d.history.pop_front();
     }
     // No-aging is an explicit ablation using cumulative frequencies. Avoid an
     // additional unbounded event log; its per-key counters are reported separately.
     if(!o.aging)d.history.clear();
+    if(o.track_affinity && o.affinity_recent_demand && o.affinity_handover_epoch && d.epoch_pending) {
+      if(d.epoch_reads>8)d.epoch_pending=false;
+      else if(HandoverCount(gpu,key,o)>Count(gpu,key)) {
+        d.epoch_pending=false;
+        // A returning destination now requests an established hot object from
+        // another domain. Retain all observations since this activation, but
+        // do not let a prior task's local popularity block the transferred task.
+        // The disabled comparator records the same epoch boundaries.
+        if(o.affinity_gate && d.history.size()>d.epoch_reads) {
+          while(d.history.size()>d.epoch_reads) {
+            auto found=d.counts.find(d.history.front());
+            if(--found->second==0){d.forecasts.erase(found->first);d.counts.erase(found);}
+            d.history.pop_front();
+          }
+          d.misses=0;
+          if(affinity_reset)*affinity_reset=true;
+        }
+      }
+    }
+    if(o.track_affinity && o.affinity_recent_demand) {
+      const auto estimate=HandoverCount(gpu,key,o);
+      if(estimate>Count(gpu,key))d.forecasts[key]={estimate,observations_};
+      for(auto it=d.forecasts.begin();it!=d.forecasts.end();) {
+        if(observations_-it->second.at>=std::max<size_t>(2,o.affinity_window))it=d.forecasts.erase(it);
+        else ++it;
+      }
+    }
     return reset;
   }
   void ReadSample(bool local,uint64_t bytes,uint64_t micros) {
@@ -106,6 +144,9 @@ class MeasuredPolicy {
   uint64_t Frequency(int gpu,const std::string& key) const {
     std::lock_guard<std::mutex> lock(mu_);return Count(gpu,key);
   }
+  uint64_t AdmissionFrequency(int gpu,const std::string& key,const Options& o) const {
+    std::lock_guard<std::mutex> lock(mu_);return EffectiveCount(gpu,key,o,true);
+  }
   std::vector<Item> Ranked(int gpu,std::vector<Item> items,const Options& o) const {
     std::lock_guard<std::mutex> lock(mu_);Sort(gpu,items,o);return items;
   }
@@ -115,9 +156,13 @@ class MeasuredPolicy {
     if(incoming.bytes>quota){result.reason="oversize";return result;}
     const auto frequency=Count(gpu,incoming.key);
     result.incoming_count=frequency;
+    result.affinity_incoming_count=EffectiveCount(gpu,incoming.key,o,true);
+    result.affinity_adjusted_items=result.affinity_incoming_count!=frequency;
+    for(const auto& resident:residents)
+      result.affinity_adjusted_items+=EffectiveCount(gpu,resident.key,o,false)!=Count(gpu,resident.key);
     result.costs_calibrated=remote_.n && local_.n && copy_.n;
-    if(o.admission && frequency<2){result.reason="no_reuse";return result;}
-    if(o.admission && o.affinity_gate) {
+    if(o.admission && result.affinity_incoming_count<2){result.reason="no_reuse";return result;}
+    if(o.admission && o.affinity_gate && !o.affinity_recent_demand) {
       const auto found=affinity_counts_.find(incoming.key);
       uint64_t own=0,peak=0;
       if(found!=affinity_counts_.end())for(const auto& [node,n]:found->second) {
@@ -149,7 +194,8 @@ class MeasuredPolicy {
   }
  private:
   struct Rate {double mean=0;uint64_t n=0;};
-  struct Domain {size_t misses=0;std::deque<std::string> history;std::unordered_map<std::string,uint64_t> counts;};
+  struct Forecast {uint64_t count=0,at=0;};
+  struct Domain {uint64_t last_observation=0,epoch_reads=0;bool epoch_pending=false;std::unordered_map<std::string,Forecast> forecasts;size_t misses=0;std::deque<std::string> history;std::unordered_map<std::string,uint64_t> counts;};
   static void Update(Rate& r,double value) {r.mean=r.n?0.95*r.mean+0.05*value:value;++r.n;}
   uint64_t Count(int gpu,const std::string& key) const {
     const auto domain=domains_.find(gpu);if(domain==domains_.end())return 0;
@@ -160,9 +206,41 @@ class MeasuredPolicy {
     const double local=local_.n?local_.mean:remote*0.5;
     return std::max(0.0,remote-local);
   }
-  double Value(int gpu,const Item& item,const Options& o,bool incoming) const {
-    double repeats=double(Count(gpu,item.key));
+  uint64_t EffectiveCount(int gpu,const std::string& key,const Options& o,bool incoming) const {
+    const auto domain_count=Count(gpu,key);
     (void)incoming;
+    if(!o.affinity_gate || !o.affinity_recent_demand)return domain_count;
+    const auto domain=domains_.find(gpu);
+    if(!domain_count || domain==domains_.end())return domain_count;
+    const auto forecast=domain->second.forecasts.find(key);
+    if(forecast==domain->second.forecasts.end())return domain_count;
+    const uint64_t lifetime=std::max<size_t>(2,o.affinity_window);
+    const auto age=observations_-forecast->second.at;
+    return age>=lifetime?domain_count:std::max(domain_count,forecast->second.count*(lifetime-age)/lifetime);
+  }
+  uint64_t HandoverCount(int gpu,const std::string& key,const Options& o) const {
+    (void)o;
+    const auto domain_count=Count(gpu,key);
+    const auto object=affinity_counts_.find(key);
+    if(!domain_count || object==affinity_counts_.end())return domain_count;
+    uint64_t total=0,own=0;
+    for(const auto& [node,count]:object->second){total+=count;if(node==gpu)own=count;}
+    constexpr size_t short_window=4;
+    if(!own || total<8 || total-own<2*own || affinity_history_.size()<short_window)return domain_count;
+    uint64_t short_own=0,long_own=0;size_t index=0;
+    for(auto it=affinity_history_.rbegin();it!=affinity_history_.rend();++it,++index)
+      if(it->second==gpu){++long_own;if(index<short_window)++short_own;}
+    // Borrow reuse only after observed destination activity becomes concentrated
+    // AND at least doubles its long-window share. The object must already have
+    // strong reuse elsewhere. No workload labels, future accesses or prefetch.
+    // Use the SAME estimate for an arrival and a resident: newly copied hot
+    // replicas must not immediately become artificially cheap eviction victims.
+    // Stable/balanced domains retain their original estimate.
+    if(short_own*4<3*short_window || short_own*affinity_history_.size()<2*short_window*long_own)return domain_count;
+    return std::max(domain_count,total*short_own/short_window);
+  }
+  double Value(int gpu,const Item& item,const Options& o,bool incoming) const {
+    double repeats=double(EffectiveCount(gpu,item.key,o,incoming));
     // Use the same repeat-evidence estimate for arrivals and residents. Charging
     // resident frequency in full while subtracting one only from the incoming
     // object would add an unintended incumbent preference to the cost ablation.
@@ -184,6 +262,7 @@ class MeasuredPolicy {
   std::unordered_map<int,Domain> domains_;
   std::deque<std::pair<std::string,int>> affinity_history_;
   std::unordered_map<std::string,std::unordered_map<int,uint64_t>> affinity_counts_;
+  uint64_t observations_=0;
   Rate local_,remote_,copy_;
 };
 }

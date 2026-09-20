@@ -1,0 +1,38 @@
+-- The CXX compiler identification is GNU 13.3.0
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Found PkgConfig: /home/wjxt/aura-kv-tools/root/usr/bin/pkg-config (found version "1.8.1") 
+-- Checking for module 'fuse3'
+--   Found fuse3, version 3.14.0
+-- Found SQLite3: /home/wjxt/aura-kv-tools/root/usr/include (found version "3.45.1") 
+-- Configuring done (0.3s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/wjxt/projects/tokenfs-affinity-v3e-20260920/build-release
+[1/6] Building CXX object CMakeFiles/measured_policy_test.dir/tests/measured_policy_test.cpp.o
+[2/6] Linking CXX executable measured_policy_test
+[3/6] Building CXX object CMakeFiles/tokenfs.dir/src/main.cpp.o
+[4/6] Linking CXX executable tokenfs
+[5/6] Building CXX object CMakeFiles/policy_metadata_test.dir/tests/policy_metadata_test.cpp.o
+[6/6] Linking CXX executable policy_metadata_test
+Internal ctest changing into directory: /home/wjxt/projects/tokenfs-affinity-v3e-20260920/build-release
+Test project /home/wjxt/projects/tokenfs-affinity-v3e-20260920/build-release
+    Start 1: policy_metadata
+1/2 Test #1: policy_metadata ..................   Passed    0.13 sec
+    Start 2: measured_policy
+2/2 Test #2: measured_policy ..................   Passed    0.00 sec
+
+100% tests passed, 0 tests failed out of 2
+
+Total Test time (real) =   0.13 sec
+.............................................................
+----------------------------------------------------------------------
+Ran 61 tests in 0.940s
+
+OK
+3182f49c1d71dde7efa41b09f83f46da495f9c7b101b0155d0821b83e9bccdb6  build-release/tokenfs
+f9d298c52469c579349ad7ccdfcbf7557b5a88b12d37fdee7d3a8e1675f4e8ed  src/main.cpp
+fac148cc5910fe5dbe56268f60aa9b0ba9155298e4560d3ad8b4a5991b1e9229  src/measured_policy.h
+90e5f499b949853d1f59be5bf46adbe6da58a7280c06f428385fba797951f570  scripts/affinity_v3_study.py

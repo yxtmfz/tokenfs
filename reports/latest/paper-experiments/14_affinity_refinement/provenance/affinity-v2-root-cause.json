@@ -1,0 +1,142 @@
+{
+  "kind": "causal trace replay of old share threshold; potential vetoes, not all actual cache misses",
+  "rows": [
+    {
+      "block": "caller_shift-s1601",
+      "hot_reads_blocked_by_share_rule": [
+        9,
+        33,
+        32,
+        35
+      ],
+      "total": 109
+    },
+    {
+      "block": "caller_shift-s1602",
+      "hot_reads_blocked_by_share_rule": [
+        11,
+        30,
+        32,
+        30
+      ],
+      "total": 103
+    },
+    {
+      "block": "caller_shift-s1603",
+      "hot_reads_blocked_by_share_rule": [
+        9,
+        30,
+        31,
+        28
+      ],
+      "total": 98
+    },
+    {
+      "block": "caller_shift-s1604",
+      "hot_reads_blocked_by_share_rule": [
+        10,
+        32,
+        33,
+        35
+      ],
+      "total": 110
+    },
+    {
+      "block": "caller_shift-s1605",
+      "hot_reads_blocked_by_share_rule": [
+        10,
+        32,
+        33,
+        34
+      ],
+      "total": 109
+    },
+    {
+      "block": "caller_shift-s1606",
+      "hot_reads_blocked_by_share_rule": [
+        7,
+        32,
+        30,
+        36
+      ],
+      "total": 105
+    },
+    {
+      "block": "caller_shift-s1607",
+      "hot_reads_blocked_by_share_rule": [
+        8,
+        30,
+        32,
+        27
+      ],
+      "total": 97
+    },
+    {
+      "block": "caller_shift-s1608",
+      "hot_reads_blocked_by_share_rule": [
+        11,
+        21,
+        33,
+        29
+      ],
+      "total": 94
+    },
+    {
+      "block": "caller_shift-s1609",
+      "hot_reads_blocked_by_share_rule": [
+        7,
+        32,
+        28,
+        28
+      ],
+      "total": 95
+    },
+    {
+      "block": "caller_shift-s1610",
+      "hot_reads_blocked_by_share_rule": [
+        4,
+        31,
+        34,
+        27
+      ],
+      "total": 96
+    },
+    {
+      "block": "caller_shift-s1611",
+      "hot_reads_blocked_by_share_rule": [
+        5,
+        29,
+        30,
+        29
+      ],
+      "total": 93
+    },
+    {
+      "block": "caller_shift-s1612",
+      "hot_reads_blocked_by_share_rule": [
+        3,
+        30,
+        32,
+        32
+      ],
+      "total": 97
+    }
+  ],
+  "mean": 100.5,
+  "actual_round3_means": {
+    "J": {
+      "n": 12,
+      "mib_s": 106.77562088081494,
+      "remote_mib": 285.3333333333333,
+      "copy_mib": 26.833333333333332,
+      "share_vetoes": 55.75
+    },
+    "J-no-P": {
+      "n": 12,
+      "mib_s": 118.87179887839268,
+      "remote_mib": 176.33333333333334,
+      "copy_mib": 25.0,
+      "share_vetoes": 0
+    }
+  }
+}

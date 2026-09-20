@@ -84,5 +84,81 @@ int main(){
   assert(placed.Plan(1,{"shared",100,0},{},0,100,affinity).allowed);
   for(int i=0;i<32;i++)placed.Observe(1,"shared",affinity);
   assert(placed.Plan(0,{"shared",100,0},{},0,100,affinity).reason=="affinity");
+  // A profitable minority caller must not wait to outvote an old dominant one.
+  MeasuredPolicy minority;Options recent=affinity;recent.affinity_recent_demand=true;
+  for(int i=0;i<20;i++)minority.Observe(0,"shared",recent);
+  for(int i=0;i<4;i++)minority.Observe(1,"shared",recent);
+  Options legacy=recent;legacy.affinity_recent_demand=false;
+  assert(minority.Plan(1,{"shared",100,0},{},0,100,legacy).reason=="affinity");
+  assert(minority.Plan(1,{"shared",100,0},{},0,100,recent).allowed);
+  // After a concentrated caller handover, borrow only established reuse of a
+  // globally hot object. The existing copy-cost and victim-loss tests still apply.
+  MeasuredPolicy transfer;recent.affinity_window=128;
+  for(int i=0;i<24;i++)transfer.Observe(0,"shared",recent);
+  transfer.Observe(1,"a",recent);transfer.Observe(1,"b",recent);
+  transfer.Observe(1,"shared",recent);
+  Options off=recent;off.affinity_gate=false;
+  assert(transfer.Plan(1,{"shared",100,1},{},0,100,off).reason=="no_reuse");
+  auto borrowed=transfer.Plan(1,{"shared",100,1},{},0,100,recent);
+  assert(borrowed.allowed && borrowed.affinity_adjusted_items==1 && borrowed.affinity_incoming_count>1);
+  // A cold object and an unrelated resident are not inflated by caller handover.
+  transfer.Observe(1,"cold",recent);
+  assert(!transfer.Plan(1,{"cold",100,1},{},0,100,recent).allowed);
+  auto resident_on=transfer.Plan(1,{"shared",100,1},{{"a",100,0}},100,100,recent);
+  auto resident_off=transfer.Plan(1,{"shared",100,1},{{"a",100,0}},100,100,off);
+  assert(resident_on.displaced_us==resident_off.displaced_us);
+  // A just-copied object must retain the same predicted reuse as an arrival.
+  // Arrival-only boosting would make this equal-value replacement look profitable.
+  auto symmetric=transfer.Plan(1,{"shared",100,1},{{"shared",100,0}},100,100,recent);
+  assert(symmetric.incoming_us==symmetric.displaced_us && !symmetric.allowed);
+  transfer.ReadSample(false,100,100);transfer.ReadSample(true,100,20);transfer.CopySample(100,100000);
+  Options costly=recent;costly.cost=true;
+  assert(transfer.Plan(1,{"shared",100,1},{},0,100,costly).reason=="copy_cost");
+  // The forecast decays instead of disappearing when the short-window detector
+  // turns off. Both arrival and resident retain equal value throughout decay.
+  const auto before_decay=transfer.AdmissionFrequency(1,"shared",recent);
+  for(int i=0;i<8;i++)transfer.Observe(2,"other",recent);
+  const auto after_decay=transfer.AdmissionFrequency(1,"shared",recent);
+  assert(after_decay>1 && after_decay<before_decay);
+  auto decayed=transfer.Plan(1,{"shared",100,1},{{"shared",100,0}},100,100,recent);
+  assert(decayed.incoming_us==decayed.displaced_us);
+  // Execution rechecks cannot use expired global evidence.
+  for(int i=0;i<128;i++)transfer.Observe(2,"other",recent);
+  assert(transfer.AdmissionFrequency(1,"shared",recent)==1);
+  assert(transfer.Plan(1,{"shared",100,1},{},0,100,recent).reason=="no_reuse");
+  // With one caller and equal windows, the new affinity model is identical to
+  // the domain-only estimate; it must not be a hidden single-domain reset.
+  MeasuredPolicy single;recent.window=recent.affinity_window=8;off=recent;off.affinity_gate=false;
+  for(int i=0;i<40;i++) {
+    auto key=std::to_string(i%3);single.Observe(0,key,recent);
+    auto on_plan=single.Plan(0,{key,100,1},{{"0",100,0}},100,200,recent);
+    auto off_plan=single.Plan(0,{key,100,1},{{"0",100,0}},100,200,off);
+    assert(on_plan.allowed==off_plan.allowed && on_plan.incoming_us==off_plan.incoming_us);
+    assert(on_plan.affinity_adjusted_items==0);
+  }
+ // Returning destinations may discard stale local popularity only with an
+ // observed hot-object handover; ordinary inactivity alone is insufficient.
+ MeasuredPolicy epochs;Options epoch=recent;epoch.affinity_window=epoch.window=128;
+ epoch.affinity_handover_epoch=true;epoch.shift_reset=false;epoch.cost=false;
+ for(int i=0;i<24;i++)epochs.Observe(1,"old-task",epoch);
+ for(int i=0;i<64;i++)epochs.Observe(0,"new-task",epoch);
+ bool context_reset=false;
+ epochs.Observe(1,"x",epoch,false,&context_reset);assert(!context_reset);
+ epochs.Observe(1,"y",epoch,false,&context_reset);assert(!context_reset);
+ epochs.Observe(1,"new-task",epoch,false,&context_reset);assert(context_reset);
+ assert(epochs.Frequency(1,"old-task")==0 && epochs.Frequency(1,"x")==1);
+ auto epoch_admit=epochs.Plan(1,{"new-task",100,1},{{"old-task",100,0}},100,100,epoch);
+ assert(epoch_admit.allowed && epoch_admit.displaced_us==0);
+ MeasuredPolicy epoch_off;Options disabled_epoch=epoch;disabled_epoch.affinity_gate=false;
+ for(int i=0;i<24;i++)epoch_off.Observe(1,"old-task",disabled_epoch);
+ for(int i=0;i<64;i++)epoch_off.Observe(0,"new-task",disabled_epoch);
+ epoch_off.Observe(1,"x",disabled_epoch);epoch_off.Observe(1,"y",disabled_epoch);
+ epoch_off.Observe(1,"new-task",disabled_epoch,false,&context_reset);assert(!context_reset);
+ assert(epoch_off.Frequency(1,"old-task")==24);
+ MeasuredPolicy no_transfer;
+ for(int i=0;i<24;i++)no_transfer.Observe(1,"old-task",epoch);
+ for(int i=0;i<64;i++)no_transfer.Observe(0,"unrelated",epoch);
+ for(int i=0;i<4;i++){no_transfer.Observe(1,"cold-new",epoch,false,&context_reset);assert(!context_reset);}
+ assert(no_transfer.Frequency(1,"old-task")==24);
  std::cout<<"measured admission invariants passed\n";
 }

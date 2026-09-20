@@ -72,6 +72,8 @@ struct Config {
   bool private_cache_domains = false;
   bool measured_track_affinity = false;
   bool measured_affinity_gate = false;
+  bool measured_affinity_recent_demand = false;
+  bool measured_affinity_handover_epoch = false;
   bool measured_joint_admission = true;
   uint64_t measured_affinity_window = 128;
   uint64_t measured_shift_window = 8;
@@ -1602,8 +1604,10 @@ class TokenFS {
           AddBufferedMetric("cross_gpu_local_replica_hit", 1);
         }
       }
-      if((config_.measured_policy || config_.measured_track_affinity) && measured_.Observe(caller_gpu_id,path,MeasuredOptions(),meta.tier=="local"))
+      bool affinity_reset=false;
+      if((config_.measured_policy || config_.measured_track_affinity) && measured_.Observe(caller_gpu_id,path,MeasuredOptions(),meta.tier=="local",&affinity_reset))
         AddBufferedMetric("measured_shift_resets",1);
+      if(affinity_reset)AddBufferedMetric("measured_affinity_context_resets",1);
       AddBufferedMetric("read_open_count", 1);
       AddBufferedMetric(meta.tier == "local" ? "local_read_open_count" : "remote_read_open_count", 1);
     }
@@ -2213,7 +2217,7 @@ class TokenFS {
     return {static_cast<size_t>(config_.measured_window),config_.measured_aging,
             config_.measured_admission,config_.measured_cost,
             config_.measured_value_victim,config_.measured_size_aware,config_.measured_frequency_admission,config_.measured_shift_reset,static_cast<size_t>(config_.measured_shift_window),
-            config_.measured_track_affinity,config_.measured_affinity_gate,config_.measured_joint_admission,static_cast<size_t>(config_.measured_affinity_window)};
+            config_.measured_track_affinity,config_.measured_affinity_gate,config_.measured_joint_admission,static_cast<size_t>(config_.measured_affinity_window),config_.measured_affinity_recent_demand,config_.measured_affinity_handover_epoch};
   }
 
   tokenfs_policy::Decision MeasuredPlan(const GpuConfig& gpu,const FileMeta& incoming) {
@@ -2222,14 +2226,19 @@ class TokenFS {
       if(!IsOpenLogicalPath(c.meta.logical_path))
         residents.push_back({c.meta.logical_path,c.meta.size_bytes,c.last_access_at});
     }
-    return measured_.Plan(gpu.gpu_id,{incoming.logical_path,incoming.size_bytes,0},
+    const auto plan=measured_.Plan(gpu.gpu_id,{incoming.logical_path,incoming.size_bytes,0},
         std::move(residents),DirectoryBytes(gpu.local_root),gpu.local_quota_bytes,MeasuredOptions());
+    if(plan.affinity_adjusted_items) {
+      AddBufferedMetric("measured_affinity_reweighted_plans",1);
+      AddBufferedMetric("measured_affinity_reweighted_items",plan.affinity_adjusted_items);
+    }
+    return plan;
   }
 
   bool MeasuredMayAdmit(const FileMeta& incoming,int gpu_id) {
     const auto* gpu=GpuById(gpu_id);if(!gpu)return false;
     if(incoming.size_bytes>gpu->local_quota_bytes){AddBufferedMetric("measured_precheck_oversize",1);return false;}
-    if(config_.measured_admission && measured_.Frequency(gpu_id,incoming.logical_path)<2){AddBufferedMetric("measured_precheck_no_reuse",1);return false;}
+    if(config_.measured_admission && measured_.AdmissionFrequency(gpu_id,incoming.logical_path,MeasuredOptions())<2){AddBufferedMetric("measured_precheck_no_reuse",1);return false;}
     const auto plan=MeasuredPlan(*gpu,incoming);
     AddBufferedMetric("measured_precheck_"+plan.reason,1);
     return plan.allowed;
@@ -2259,7 +2268,9 @@ class TokenFS {
       std::ostringstream detail;
       detail << plan.reason << ";incoming=" << plan.incoming_us
              << ";displaced=" << plan.displaced_us << ";copy=" << plan.copy_us
-             << ";frequency=" << plan.incoming_count << ";calibrated=" << plan.costs_calibrated;
+             << ";frequency=" << plan.incoming_count << ";calibrated=" << plan.costs_calibrated
+             << ";affinity_count=" << plan.affinity_incoming_count
+             << ";affinity_adjusted_items=" << plan.affinity_adjusted_items;
       metadata_.RecordPolicyEvent("ADMIT",protected_logical_path,gpu.gpu_id,required_size,
           detail.str(),plan.incoming_us-plan.displaced_us-plan.copy_us);
     }
@@ -3553,6 +3564,10 @@ Config LoadConfig(const fs::path& path) {
   if(root["policy"] && root["policy"]["private_cache_domains"]) config.private_cache_domains=root["policy"]["private_cache_domains"].as<bool>();
   if(root["policy"] && root["policy"]["measured_track_affinity"]) config.measured_track_affinity=root["policy"]["measured_track_affinity"].as<bool>();
   if(root["policy"] && root["policy"]["measured_affinity_gate"]) config.measured_affinity_gate=root["policy"]["measured_affinity_gate"].as<bool>();
+  if(root["policy"] && root["policy"]["measured_affinity_recent_demand"]) config.measured_affinity_recent_demand=root["policy"]["measured_affinity_recent_demand"].as<bool>();
+  if(root["policy"] && root["policy"]["measured_affinity_handover_epoch"]) config.measured_affinity_handover_epoch=root["policy"]["measured_affinity_handover_epoch"].as<bool>();
+  if(config.measured_affinity_recent_demand && config.measured_affinity_gate && !config.measured_track_affinity)
+    throw std::runtime_error("recent affinity demand requires affinity tracking");
   if(root["policy"] && root["policy"]["measured_joint_admission"]) config.measured_joint_admission=root["policy"]["measured_joint_admission"].as<bool>();
   if(root["policy"] && root["policy"]["measured_affinity_window"]) config.measured_affinity_window=root["policy"]["measured_affinity_window"].as<uint64_t>();
   if(root["policy"] && root["policy"]["measured_shift_reset"]) config.measured_shift_reset=root["policy"]["measured_shift_reset"].as<bool>();

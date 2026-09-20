@@ -1,0 +1,32 @@
+{
+  "stage": "development",
+  "topology": "same private domains; observed handover under cache pressure",
+  "blocks": [
+    {
+      "id": "affinity_handover-s1701",
+      "scenario": "affinity_handover",
+      "seed": 1701,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "P-off",
+        "P-old",
+        "P-new"
+      ]
+    },
+    {
+      "id": "affinity_handover-s1702",
+      "scenario": "affinity_handover",
+      "seed": 1702,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "P-off",
+        "P-old",
+        "P-new"
+      ]
+    }
+  ]
+}

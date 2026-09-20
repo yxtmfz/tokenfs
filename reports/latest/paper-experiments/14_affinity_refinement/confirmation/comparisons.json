@@ -1,0 +1,322 @@
+[
+  {
+    "scenario": "static_affinity",
+    "baseline": "P-off",
+    "treatment": "P-new",
+    "family": "new_vs_disabled",
+    "n": 12,
+    "time_ratio": 0.9945800310517162,
+    "ci95": [
+      0.9845382762907781,
+      1.0036406778584177
+    ],
+    "p_raw": 0.3583984375,
+    "p_holm": 1,
+    "with_drain_ratio": 0.9945959200803913,
+    "baseline_mib_s": 116.25749576042311,
+    "new_mib_s": 116.89618049650207,
+    "mechanism_active_pairs": 0,
+    "throughput_change_pct": 0.5449505096691398,
+    "verdict": "uncertain"
+  },
+  {
+    "scenario": "static_affinity",
+    "baseline": "P-old",
+    "treatment": "P-new",
+    "family": "new_vs_legacy",
+    "n": 12,
+    "time_ratio": 1.003580691719363,
+    "ci95": [
+      0.9934743711247603,
+      1.0124542715588218
+    ],
+    "p_raw": 0.498046875,
+    "p_holm": 1,
+    "with_drain_ratio": 1.0035744740399206,
+    "baseline_mib_s": 117.31967048176375,
+    "new_mib_s": 116.89618049650207,
+    "mechanism_active_pairs": 0,
+    "throughput_change_pct": -0.35679161116864977,
+    "verdict": "uncertain"
+  },
+  {
+    "scenario": "caller_shift",
+    "baseline": "P-off",
+    "treatment": "P-new",
+    "family": "new_vs_disabled",
+    "n": 12,
+    "time_ratio": 0.991665933247012,
+    "ci95": [
+      0.9798085293304103,
+      1.0032336016673056
+    ],
+    "p_raw": 0.21728515625,
+    "p_holm": 1,
+    "with_drain_ratio": 0.9916667229736794,
+    "baseline_mib_s": 119.17099306686136,
+    "new_mib_s": 120.1725207689316,
+    "mechanism_active_pairs": 12,
+    "throughput_change_pct": 0.8404107142916395,
+    "verdict": "uncertain"
+  },
+  {
+    "scenario": "caller_shift",
+    "baseline": "P-old",
+    "treatment": "P-new",
+    "family": "new_vs_legacy",
+    "n": 12,
+    "time_ratio": 0.8900438428098892,
+    "ci95": [
+      0.8761751579468502,
+      0.9044374898446155
+    ],
+    "p_raw": 0.00048828125,
+    "p_holm": 0.00390625,
+    "with_drain_ratio": 0.890061832727229,
+    "baseline_mib_s": 106.95727530548673,
+    "new_mib_s": 120.1725207689316,
+    "mechanism_active_pairs": 12,
+    "throughput_change_pct": 12.354015824993137,
+    "verdict": "faster"
+  },
+  {
+    "scenario": "hot_shift",
+    "baseline": "P-off",
+    "treatment": "P-new",
+    "family": "new_vs_disabled",
+    "n": 12,
+    "time_ratio": 0.9887299595599253,
+    "ci95": [
+      0.958239431139972,
+      1.0150814810687214
+    ],
+    "p_raw": 0.51025390625,
+    "p_holm": 1,
+    "with_drain_ratio": 0.9887223068571844,
+    "baseline_mib_s": 82.69641293890939,
+    "new_mib_s": 83.67144987648622,
+    "mechanism_active_pairs": 0,
+    "throughput_change_pct": 1.1398502018782786,
+    "verdict": "uncertain"
+  },
+  {
+    "scenario": "hot_shift",
+    "baseline": "P-old",
+    "treatment": "P-new",
+    "family": "new_vs_legacy",
+    "n": 12,
+    "time_ratio": 1.0068553284432018,
+    "ci95": [
+      0.9876083114166722,
+      1.0277144327125003
+    ],
+    "p_raw": 0.54248046875,
+    "p_holm": 1,
+    "with_drain_ratio": 1.00684743092698,
+    "baseline_mib_s": 84.21647225457988,
+    "new_mib_s": 83.67144987648622,
+    "mechanism_active_pairs": 0,
+    "throughput_change_pct": -0.6808652891375666,
+    "verdict": "uncertain"
+  },
+  {
+    "scenario": "coupled",
+    "baseline": "P-off",
+    "treatment": "P-new",
+    "family": "new_vs_disabled",
+    "n": 12,
+    "time_ratio": 0.99877401440435,
+    "ci95": [
+      0.9950753732149641,
+      1.0026545409174272
+    ],
+    "p_raw": 0.54736328125,
+    "p_holm": 1,
+    "with_drain_ratio": 0.9989523852369193,
+    "baseline_mib_s": 81.55572659794566,
+    "new_mib_s": 81.65664802009849,
+    "mechanism_active_pairs": 2,
+    "throughput_change_pct": 0.12274904812987764,
+    "verdict": "uncertain"
+  },
+  {
+    "scenario": "coupled",
+    "baseline": "P-old",
+    "treatment": "P-new",
+    "family": "new_vs_legacy",
+    "n": 12,
+    "time_ratio": 0.9974193374688024,
+    "ci95": [
+      0.9919443982846238,
+      1.0030699557004326
+    ],
+    "p_raw": 0.38232421875,
+    "p_holm": 1,
+    "with_drain_ratio": 0.9972248572134602,
+    "baseline_mib_s": 81.44549647300268,
+    "new_mib_s": 81.65664802009849,
+    "mechanism_active_pairs": 2,
+    "throughput_change_pct": 0.2587339581511028,
+    "verdict": "uncertain"
+  },
+  {
+    "scenario": "public_toolagent",
+    "baseline": "P-off",
+    "treatment": "P-new",
+    "family": "new_vs_disabled",
+    "n": 12,
+    "time_ratio": 1.0114346463610322,
+    "ci95": [
+      1.0009575336093746,
+      1.0218925096311553
+    ],
+    "p_raw": 0.06591796875,
+    "p_holm": 0.52734375,
+    "with_drain_ratio": 1.0114146272907008,
+    "baseline_mib_s": 67.70646422539963,
+    "new_mib_s": 66.931955365253,
+    "mechanism_active_pairs": 3,
+    "throughput_change_pct": -1.1305373414063014,
+    "verdict": "uncertain"
+  },
+  {
+    "scenario": "public_toolagent",
+    "baseline": "P-old",
+    "treatment": "P-new",
+    "family": "new_vs_legacy",
+    "n": 12,
+    "time_ratio": 1.0082447592530817,
+    "ci95": [
+      0.9992884246759373,
+      1.017436511049531
+    ],
+    "p_raw": 0.1201171875,
+    "p_holm": 0.720703125,
+    "with_drain_ratio": 1.0082292491675606,
+    "baseline_mib_s": 67.49096943749731,
+    "new_mib_s": 66.931955365253,
+    "mechanism_active_pairs": 3,
+    "throughput_change_pct": -0.8177339061191335,
+    "verdict": "uncertain"
+  },
+  {
+    "scenario": "uniform",
+    "baseline": "P-off",
+    "treatment": "P-new",
+    "family": "new_vs_disabled",
+    "n": 12,
+    "time_ratio": 1.0047619478952927,
+    "ci95": [
+      0.9908430484260657,
+      1.019062109354934
+    ],
+    "p_raw": 0.564453125,
+    "p_holm": 1,
+    "with_drain_ratio": 1.0047494023322274,
+    "baseline_mib_s": 73.5496408934606,
+    "new_mib_s": 73.19806196709057,
+    "mechanism_active_pairs": 1,
+    "throughput_change_pct": -0.47393792183986205,
+    "verdict": "uncertain"
+  },
+  {
+    "scenario": "uniform",
+    "baseline": "P-old",
+    "treatment": "P-new",
+    "family": "new_vs_legacy",
+    "n": 12,
+    "time_ratio": 0.9960331954354767,
+    "ci95": [
+      0.9870681895798772,
+      1.0040692444451118
+    ],
+    "p_raw": 0.40966796875,
+    "p_holm": 1,
+    "with_drain_ratio": 0.9960217513678497,
+    "baseline_mib_s": 72.90228882427564,
+    "new_mib_s": 73.19806196709057,
+    "mechanism_active_pairs": 1,
+    "throughput_change_pct": 0.398260277137541,
+    "verdict": "uncertain"
+  },
+  {
+    "scenario": "domain_return",
+    "baseline": "P-off",
+    "treatment": "P-new",
+    "family": "new_vs_disabled",
+    "n": 12,
+    "time_ratio": 1.003831255905969,
+    "ci95": [
+      0.9926143176182994,
+      1.0151851242355592
+    ],
+    "p_raw": 0.5341796875,
+    "p_holm": 1,
+    "with_drain_ratio": 1.0038083127694704,
+    "baseline_mib_s": 92.25198296369514,
+    "new_mib_s": 91.90896275115342,
+    "mechanism_active_pairs": 0,
+    "throughput_change_pct": -0.38166334066886964,
+    "verdict": "uncertain"
+  },
+  {
+    "scenario": "domain_return",
+    "baseline": "P-old",
+    "treatment": "P-new",
+    "family": "new_vs_legacy",
+    "n": 12,
+    "time_ratio": 1.0016383776715094,
+    "ci95": [
+      0.9880936914196968,
+      1.0158242166504456
+    ],
+    "p_raw": 0.82861328125,
+    "p_holm": 1,
+    "with_drain_ratio": 1.0016125532808537,
+    "baseline_mib_s": 92.07584865959954,
+    "new_mib_s": 91.90896275115342,
+    "mechanism_active_pairs": 0,
+    "throughput_change_pct": -0.16356977807880924,
+    "verdict": "uncertain"
+  },
+  {
+    "scenario": "affinity_handover",
+    "baseline": "P-off",
+    "treatment": "P-new",
+    "family": "new_vs_disabled",
+    "n": 12,
+    "time_ratio": 1.0091151547444235,
+    "ci95": [
+      0.9916906762898171,
+      1.0258113128783226
+    ],
+    "p_raw": 0.32177734375,
+    "p_holm": 1,
+    "with_drain_ratio": 1.0090916550850777,
+    "baseline_mib_s": 102.45299077106553,
+    "new_mib_s": 101.49579572122038,
+    "mechanism_active_pairs": 12,
+    "throughput_change_pct": -0.9032819199640385,
+    "verdict": "uncertain"
+  },
+  {
+    "scenario": "affinity_handover",
+    "baseline": "P-old",
+    "treatment": "P-new",
+    "family": "new_vs_legacy",
+    "n": 12,
+    "time_ratio": 0.9239578469525257,
+    "ci95": [
+      0.9109666268061664,
+      0.9385932317526857
+    ],
+    "p_raw": 0.00048828125,
+    "p_holm": 0.00390625,
+    "with_drain_ratio": 0.9239519793866802,
+    "baseline_mib_s": 93.76267394438096,
+    "new_mib_s": 101.49579572122038,
+    "mechanism_active_pairs": 12,
+    "throughput_change_pct": 8.230045699409638,
+    "verdict": "faster"
+  }
+]
