@@ -1,6 +1,8 @@
 # AURA-KV / TokenFS
 
-> 当前四表入口：本轮完成 **576 次正式实测、132 项内容验证**，按热点、访问亲和、联合净收益和整体速度给出四张表。组件采用完整策略逐项关闭的对照，实际 MiB/s 与配对统计决定结论；未确定、未触发和退化结果全部保留。范围为三个私有逻辑缓存域与真实 NVMe/TCP 远端，不是物理 GPU 推理，也不代表完整 Python RobustBenefit 已接入。见 [三项机制与整体速度](reports/latest/paper-experiments/13_affinity_joint/README.md)。
+> 亲和修正首轮确认：288 次冻结实测与 48 项内容检查完成。旧版退化得到修复，但新亲和相对关闭亲和尚无确认的独立提速；保留所有负结果，见 [亲和修正与独立验证](reports/latest/paper-experiments/14_affinity_refinement/README.md)。
+
+> 上一轮综合四表：本轮完成 **576 次正式实测、132 项内容验证**，按热点、访问亲和、联合净收益和整体速度给出四张表。组件采用完整策略逐项关闭的对照，实际 MiB/s 与配对统计决定结论；未确定、未触发和退化结果全部保留。范围为三个私有逻辑缓存域与真实 NVMe/TCP 远端，不是物理 GPU 推理，也不代表完整 Python RobustBenefit 已接入。见 [三项机制与整体速度](reports/latest/paper-experiments/13_affinity_joint/README.md)。
 
 > 上一轮 B3 收口：已从原始归档重新审计 756 次性能与 169 项内容验证记录，统计复算一致。当前可支撑的性能贡献是**热点变化下的缓存准入与历史自适应**；GPU 亲和放置仍未获得新版的独立性能验证，measured 路径绕过旧亲和状态门槛。见 [最终结果、可写结论与剩余缺口](reports/latest/paper-experiments/12_paper_closeout/README.md)。预定实验完成不等于两个原始创新点均成立。
 

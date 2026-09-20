@@ -16,7 +16,7 @@ PER DOMAIN: it stops aging during inactivity and can overvalue obsolete resident
 The initial common-window count revision was tested only on the development set
 and was rejected: gains were small and uniform/public results regressed. Its 42
 runs and per-host correctness checks are retained separately as development A.
-There has been NO held-out confirmation access.
+At that development checkpoint there had been no held-out confirmation access.
 
 The second development candidate borrowed demand for incoming objects only. In
 the additional handover case it was 7.05% slower than disabled affinity and copied
@@ -47,7 +47,7 @@ Capacity and execution-time rechecks remain unchanged. No speculative prefetch:
 only the object actually requested is eligible. No workload phase labels or
 future requests enter this decision.
 
-Stationary, balanced and single-domain access retain the baseline estimate.
+Without a prior unexpired handover forecast, stationary, balanced and single-domain access retain the baseline estimate.
 Profitable minority readers no longer face a relative-popularity veto. This does
 not solve every idle-domain history issue; the domain re-entry case remains as a
 boundary check. The legacy share gate remains available. Behavior is opt-in and
@@ -93,3 +93,12 @@ Freeze exact source, binary, specs and public-window hashes after development an
 both-host content checks. Audit every case, request/byte/source/caller count,
 content check, quota, queue completion, monotonic timeline and paired statistic.
 Do not combine different revisions or reuse the old formal samples as fresh tests.
+
+## Completed confirmation
+
+All 288 frozen runs and 48 content checks passed the independent evidence audit.
+No primary new/disabled comparison met the predefined significance rule. Caller
+shift was +0.84% and handover -0.90%; these are uncertain point estimates, not
+confirmed gains. The legacy repair was supported in caller shift and handover.
+Do not use this batch to claim an independent affinity speed contribution or
+retune and relabel the same samples. Results: report 14_affinity_refinement.
