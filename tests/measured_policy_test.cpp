@@ -84,5 +84,35 @@ int main(){
   assert(placed.Plan(1,{"shared",100,0},{},0,100,affinity).allowed);
   for(int i=0;i<32;i++)placed.Observe(1,"shared",affinity);
   assert(placed.Plan(0,{"shared",100,0},{},0,100,affinity).reason=="affinity");
+  // A profitable minority caller must not wait to outvote an old dominant one.
+  MeasuredPolicy minority;Options recent=affinity;recent.affinity_recent_demand=true;
+  for(int i=0;i<20;i++)minority.Observe(0,"shared",recent);
+  for(int i=0;i<4;i++)minority.Observe(1,"shared",recent);
+  Options legacy=recent;legacy.affinity_recent_demand=false;
+  assert(minority.Plan(1,{"shared",100,0},{},0,100,legacy).reason=="affinity");
+  assert(minority.Plan(1,{"shared",100,0},{},0,100,recent).allowed);
+  // Traffic in other domains ages the affinity of an idle domain. Re-entry may
+  // replace stale residents without resetting hotspot history or using the future.
+  MeasuredPolicy reentry;
+  for(int i=0;i<20;i++)reentry.Observe(0,"stale",recent);
+  for(int i=0;i<32;i++)reentry.Observe(1,"elsewhere",recent);
+  for(int i=0;i<3;i++)reentry.Observe(0,"new",recent);
+  Options off=recent;off.affinity_gate=false;
+  assert(reentry.Plan(0,{"new",100,1},{{"stale",100,0}},100,100,off).reason=="victim_loss");
+  auto fresh=reentry.Plan(0,{"new",100,1},{{"stale",100,0}},100,100,recent);
+  assert(fresh.allowed && fresh.displaced_us==0 && fresh.affinity_adjusted_items==1);
+  // With one caller and equal windows, the new affinity model is identical to
+  // the domain-only estimate; it must not be a hidden single-domain reset.
+  MeasuredPolicy single;recent.window=recent.affinity_window=8;off=recent;off.affinity_gate=false;
+  for(int i=0;i<40;i++) {
+    auto key=std::to_string(i%3);single.Observe(0,key,recent);
+    auto on_plan=single.Plan(0,{key,100,1},{{"0",100,0}},100,200,recent);
+    auto off_plan=single.Plan(0,{key,100,1},{{"0",100,0}},100,200,off);
+    assert(on_plan.allowed==off_plan.allowed && on_plan.incoming_us==off_plan.incoming_us);
+    assert(on_plan.affinity_adjusted_items==0);
+  }
+  // Old per-domain reuse alone cannot admit a new one-off visit after long idle.
+  reentry.Observe(0,"stale",recent);
+  assert(!reentry.Plan(0,{"stale",100,0},{},0,100,recent).allowed);
  std::cout<<"measured admission invariants passed\n";
 }

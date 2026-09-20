@@ -28,6 +28,7 @@ struct Options {
   bool affinity_gate=false;
   bool joint_admission=true;
   size_t affinity_window=128;
+  bool affinity_recent_demand=false;
 };
 struct Decision {
   bool allowed=false;
@@ -35,6 +36,8 @@ struct Decision {
   double incoming_us=0, displaced_us=0, copy_us=0;
   bool costs_calibrated=false;
   uint64_t incoming_count=0;
+  uint64_t affinity_incoming_count=0;
+  uint64_t affinity_adjusted_items=0;
   std::vector<std::string> victims;
 };
 
@@ -115,9 +118,13 @@ class MeasuredPolicy {
     if(incoming.bytes>quota){result.reason="oversize";return result;}
     const auto frequency=Count(gpu,incoming.key);
     result.incoming_count=frequency;
+    result.affinity_incoming_count=EffectiveCount(gpu,incoming.key,o);
+    result.affinity_adjusted_items=result.affinity_incoming_count!=frequency;
+    for(const auto& resident:residents)
+      result.affinity_adjusted_items+=EffectiveCount(gpu,resident.key,o)!=Count(gpu,resident.key);
     result.costs_calibrated=remote_.n && local_.n && copy_.n;
     if(o.admission && frequency<2){result.reason="no_reuse";return result;}
-    if(o.admission && o.affinity_gate) {
+    if(o.admission && o.affinity_gate && !o.affinity_recent_demand) {
       const auto found=affinity_counts_.find(incoming.key);
       uint64_t own=0,peak=0;
       if(found!=affinity_counts_.end())for(const auto& [node,n]:found->second) {
@@ -160,8 +167,21 @@ class MeasuredPolicy {
     const double local=local_.n?local_.mean:remote*0.5;
     return std::max(0.0,remote-local);
   }
+  uint64_t EffectiveCount(int gpu,const std::string& key,const Options& o) const {
+    const auto domain_count=Count(gpu,key);
+    if(!o.affinity_gate || !o.affinity_recent_demand)return domain_count;
+    const auto object=affinity_counts_.find(key);
+    if(object==affinity_counts_.end())return 0;
+    const auto caller=object->second.find(gpu);
+    if(caller==object->second.end())return 0;
+    // Global object demand times this domain's access share equals its count
+    // in a COMMON recent window. Other domains advance this clock even while
+    // this one is idle. Never resurrect demand removed by hotspot adaptation.
+    // No relative-popularity veto: profitable minority readers may get replicas.
+    return std::min(domain_count,caller->second);
+  }
   double Value(int gpu,const Item& item,const Options& o,bool incoming) const {
-    double repeats=double(Count(gpu,item.key));
+    double repeats=double(EffectiveCount(gpu,item.key,o));
     (void)incoming;
     // Use the same repeat-evidence estimate for arrivals and residents. Charging
     // resident frequency in full while subtracting one only from the incoming

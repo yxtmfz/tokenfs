@@ -1,0 +1,975 @@
+{
+  "stage": "correctness",
+  "topology": "three private logical domains on one client disk; actual NVMe/TCP",
+  "blocks": [
+    {
+      "id": "hot_shift-s1691",
+      "scenario": "hot_shift",
+      "seed": 1691,
+      "requests": 96,
+      "shard_mib": 1,
+      "quota_mib": 4,
+      "variants": [
+        "P-off",
+        "P-old",
+        "P-new"
+      ]
+    },
+    {
+      "id": "static_affinity-s1691",
+      "scenario": "static_affinity",
+      "seed": 1691,
+      "requests": 96,
+      "shard_mib": 1,
+      "quota_mib": 4,
+      "variants": [
+        "P-off",
+        "P-old",
+        "P-new"
+      ]
+    },
+    {
+      "id": "public_toolagent-s1691",
+      "scenario": "public_toolagent",
+      "seed": 1691,
+      "requests": 96,
+      "shard_mib": 1,
+      "quota_mib": 4,
+      "variants": [
+        "P-off",
+        "P-old",
+        "P-new"
+      ],
+      "events": [
+        {
+          "index": 0,
+          "key": 0,
+          "caller": 1,
+          "bytes": 1048576,
+          "source_request": 100,
+          "source_hash": "0",
+          "source_arrival_ms": 0
+        },
+        {
+          "index": 1,
+          "key": 1,
+          "caller": 1,
+          "bytes": 1048576,
+          "source_request": 100,
+          "source_hash": "1476",
+          "source_arrival_ms": 0
+        },
+        {
+          "index": 2,
+          "key": 2,
+          "caller": 1,
+          "bytes": 1048576,
+          "source_request": 100,
+          "source_hash": "1477",
+          "source_arrival_ms": 0
+        },
+        {
+          "index": 3,
+          "key": 3,
+          "caller": 1,
+          "bytes": 1048576,
+          "source_request": 100,
+          "source_hash": "1478",
+          "source_arrival_ms": 0
+        },
+        {
+          "index": 4,
+          "key": 4,
+          "caller": 1,
+          "bytes": 1048576,
+          "source_request": 100,
+          "source_hash": "1479",
+          "source_arrival_ms": 0
+        },
+        {
+          "index": 5,
+          "key": 0,
+          "caller": 2,
+          "bytes": 1048576,
+          "source_request": 101,
+          "source_hash": "0",
+          "source_arrival_ms": 0
+        },
+        {
+          "index": 6,
+          "key": 5,
+          "caller": 2,
+          "bytes": 1048576,
+          "source_request": 101,
+          "source_hash": "1480",
+          "source_arrival_ms": 0
+        },
+        {
+          "index": 7,
+          "key": 0,
+          "caller": 0,
+          "bytes": 1048576,
+          "source_request": 102,
+          "source_hash": "0",
+          "source_arrival_ms": 0
+        },
+        {
+          "index": 8,
+          "key": 6,
+          "caller": 0,
+          "bytes": 1048576,
+          "source_request": 102,
+          "source_hash": "1481",
+          "source_arrival_ms": 0
+        },
+        {
+          "index": 9,
+          "key": 7,
+          "caller": 0,
+          "bytes": 1048576,
+          "source_request": 102,
+          "source_hash": "1482",
+          "source_arrival_ms": 0
+        },
+        {
+          "index": 10,
+          "key": 8,
+          "caller": 0,
+          "bytes": 1048576,
+          "source_request": 102,
+          "source_hash": "1483",
+          "source_arrival_ms": 0
+        },
+        {
+          "index": 11,
+          "key": 9,
+          "caller": 0,
+          "bytes": 1048576,
+          "source_request": 102,
+          "source_hash": "1484",
+          "source_arrival_ms": 0
+        },
+        {
+          "index": 12,
+          "key": 10,
+          "caller": 0,
+          "bytes": 1048576,
+          "source_request": 102,
+          "source_hash": "1485",
+          "source_arrival_ms": 0
+        },
+        {
+          "index": 13,
+          "key": 11,
+          "caller": 0,
+          "bytes": 1048576,
+          "source_request": 102,
+          "source_hash": "1486",
+          "source_arrival_ms": 0
+        },
+        {
+          "index": 14,
+          "key": 12,
+          "caller": 0,
+          "bytes": 1048576,
+          "source_request": 102,
+          "source_hash": "1487",
+          "source_arrival_ms": 0
+        },
+        {
+          "index": 15,
+          "key": 13,
+          "caller": 0,
+          "bytes": 1048576,
+          "source_request": 102,
+          "source_hash": "1488",
+          "source_arrival_ms": 0
+        },
+        {
+          "index": 16,
+          "key": 14,
+          "caller": 0,
+          "bytes": 1048576,
+          "source_request": 102,
+          "source_hash": "1489",
+          "source_arrival_ms": 0
+        },
+        {
+          "index": 17,
+          "key": 15,
+          "caller": 0,
+          "bytes": 1048576,
+          "source_request": 102,
+          "source_hash": "1490",
+          "source_arrival_ms": 0
+        },
+        {
+          "index": 18,
+          "key": 16,
+          "caller": 0,
+          "bytes": 1048576,
+          "source_request": 102,
+          "source_hash": "1491",
+          "source_arrival_ms": 0
+        },
+        {
+          "index": 19,
+          "key": 17,
+          "caller": 0,
+          "bytes": 1048576,
+          "source_request": 102,
+          "source_hash": "1492",
+          "source_arrival_ms": 0
+        },
+        {
+          "index": 20,
+          "key": 18,
+          "caller": 0,
+          "bytes": 1048576,
+          "source_request": 102,
+          "source_hash": "1493",
+          "source_arrival_ms": 0
+        },
+        {
+          "index": 21,
+          "key": 19,
+          "caller": 0,
+          "bytes": 1048576,
+          "source_request": 102,
+          "source_hash": "1494",
+          "source_arrival_ms": 0
+        },
+        {
+          "index": 22,
+          "key": 20,
+          "caller": 0,
+          "bytes": 1048576,
+          "source_request": 102,
+          "source_hash": "1495",
+          "source_arrival_ms": 0
+        },
+        {
+          "index": 23,
+          "key": 21,
+          "caller": 0,
+          "bytes": 1048576,
+          "source_request": 102,
+          "source_hash": "1496",
+          "source_arrival_ms": 0
+        },
+        {
+          "index": 24,
+          "key": 22,
+          "caller": 0,
+          "bytes": 1048576,
+          "source_request": 102,
+          "source_hash": "1497",
+          "source_arrival_ms": 0
+        },
+        {
+          "index": 25,
+          "key": 23,
+          "caller": 0,
+          "bytes": 1048576,
+          "source_request": 102,
+          "source_hash": "1498",
+          "source_arrival_ms": 0
+        },
+        {
+          "index": 26,
+          "key": 24,
+          "caller": 0,
+          "bytes": 1048576,
+          "source_request": 102,
+          "source_hash": "1499",
+          "source_arrival_ms": 0
+        },
+        {
+          "index": 27,
+          "key": 25,
+          "caller": 0,
+          "bytes": 1048576,
+          "source_request": 102,
+          "source_hash": "1500",
+          "source_arrival_ms": 0
+        },
+        {
+          "index": 28,
+          "key": 26,
+          "caller": 0,
+          "bytes": 1048576,
+          "source_request": 102,
+          "source_hash": "1501",
+          "source_arrival_ms": 0
+        },
+        {
+          "index": 29,
+          "key": 27,
+          "caller": 0,
+          "bytes": 1048576,
+          "source_request": 102,
+          "source_hash": "1502",
+          "source_arrival_ms": 0
+        },
+        {
+          "index": 30,
+          "key": 28,
+          "caller": 0,
+          "bytes": 1048576,
+          "source_request": 102,
+          "source_hash": "1503",
+          "source_arrival_ms": 0
+        },
+        {
+          "index": 31,
+          "key": 29,
+          "caller": 0,
+          "bytes": 1048576,
+          "source_request": 102,
+          "source_hash": "1504",
+          "source_arrival_ms": 0
+        },
+        {
+          "index": 32,
+          "key": 30,
+          "caller": 0,
+          "bytes": 1048576,
+          "source_request": 102,
+          "source_hash": "1505",
+          "source_arrival_ms": 0
+        },
+        {
+          "index": 33,
+          "key": 31,
+          "caller": 0,
+          "bytes": 1048576,
+          "source_request": 102,
+          "source_hash": "1506",
+          "source_arrival_ms": 0
+        },
+        {
+          "index": 34,
+          "key": 32,
+          "caller": 0,
+          "bytes": 1048576,
+          "source_request": 102,
+          "source_hash": "1507",
+          "source_arrival_ms": 0
+        },
+        {
+          "index": 35,
+          "key": 0,
+          "caller": 1,
+          "bytes": 1048576,
+          "source_request": 103,
+          "source_hash": "0",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 36,
+          "key": 33,
+          "caller": 1,
+          "bytes": 1048576,
+          "source_request": 103,
+          "source_hash": "1508",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 37,
+          "key": 34,
+          "caller": 1,
+          "bytes": 1048576,
+          "source_request": 103,
+          "source_hash": "1509",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 38,
+          "key": 35,
+          "caller": 1,
+          "bytes": 1048576,
+          "source_request": 103,
+          "source_hash": "1510",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 39,
+          "key": 36,
+          "caller": 1,
+          "bytes": 1048576,
+          "source_request": 103,
+          "source_hash": "1511",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 40,
+          "key": 37,
+          "caller": 1,
+          "bytes": 1048576,
+          "source_request": 103,
+          "source_hash": "1512",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 41,
+          "key": 38,
+          "caller": 1,
+          "bytes": 1048576,
+          "source_request": 103,
+          "source_hash": "1513",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 42,
+          "key": 39,
+          "caller": 1,
+          "bytes": 1048576,
+          "source_request": 103,
+          "source_hash": "1514",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 43,
+          "key": 40,
+          "caller": 1,
+          "bytes": 1048576,
+          "source_request": 103,
+          "source_hash": "1515",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 44,
+          "key": 41,
+          "caller": 1,
+          "bytes": 1048576,
+          "source_request": 103,
+          "source_hash": "1516",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 45,
+          "key": 42,
+          "caller": 1,
+          "bytes": 1048576,
+          "source_request": 103,
+          "source_hash": "1517",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 46,
+          "key": 43,
+          "caller": 1,
+          "bytes": 1048576,
+          "source_request": 103,
+          "source_hash": "1518",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 47,
+          "key": 44,
+          "caller": 1,
+          "bytes": 1048576,
+          "source_request": 103,
+          "source_hash": "1519",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 48,
+          "key": 45,
+          "caller": 1,
+          "bytes": 1048576,
+          "source_request": 103,
+          "source_hash": "1520",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 49,
+          "key": 46,
+          "caller": 1,
+          "bytes": 1048576,
+          "source_request": 103,
+          "source_hash": "1521",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 50,
+          "key": 47,
+          "caller": 1,
+          "bytes": 1048576,
+          "source_request": 103,
+          "source_hash": "1522",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 51,
+          "key": 0,
+          "caller": 2,
+          "bytes": 1048576,
+          "source_request": 104,
+          "source_hash": "0",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 52,
+          "key": 48,
+          "caller": 2,
+          "bytes": 1048576,
+          "source_request": 104,
+          "source_hash": "1523",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 53,
+          "key": 49,
+          "caller": 2,
+          "bytes": 1048576,
+          "source_request": 104,
+          "source_hash": "1524",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 54,
+          "key": 50,
+          "caller": 2,
+          "bytes": 1048576,
+          "source_request": 104,
+          "source_hash": "1525",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 55,
+          "key": 51,
+          "caller": 2,
+          "bytes": 1048576,
+          "source_request": 104,
+          "source_hash": "1526",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 56,
+          "key": 52,
+          "caller": 2,
+          "bytes": 1048576,
+          "source_request": 104,
+          "source_hash": "1527",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 57,
+          "key": 53,
+          "caller": 2,
+          "bytes": 1048576,
+          "source_request": 104,
+          "source_hash": "1528",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 58,
+          "key": 54,
+          "caller": 2,
+          "bytes": 1048576,
+          "source_request": 104,
+          "source_hash": "1529",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 59,
+          "key": 55,
+          "caller": 2,
+          "bytes": 1048576,
+          "source_request": 104,
+          "source_hash": "1530",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 60,
+          "key": 56,
+          "caller": 2,
+          "bytes": 1048576,
+          "source_request": 104,
+          "source_hash": "1531",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 61,
+          "key": 57,
+          "caller": 2,
+          "bytes": 1048576,
+          "source_request": 104,
+          "source_hash": "1532",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 62,
+          "key": 58,
+          "caller": 2,
+          "bytes": 1048576,
+          "source_request": 104,
+          "source_hash": "1533",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 63,
+          "key": 59,
+          "caller": 2,
+          "bytes": 1048576,
+          "source_request": 104,
+          "source_hash": "1534",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 64,
+          "key": 60,
+          "caller": 2,
+          "bytes": 1048576,
+          "source_request": 104,
+          "source_hash": "1535",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 65,
+          "key": 61,
+          "caller": 2,
+          "bytes": 1048576,
+          "source_request": 104,
+          "source_hash": "1536",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 66,
+          "key": 62,
+          "caller": 2,
+          "bytes": 1048576,
+          "source_request": 104,
+          "source_hash": "1537",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 67,
+          "key": 63,
+          "caller": 2,
+          "bytes": 1048576,
+          "source_request": 104,
+          "source_hash": "1538",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 68,
+          "key": 64,
+          "caller": 2,
+          "bytes": 1048576,
+          "source_request": 104,
+          "source_hash": "1539",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 69,
+          "key": 65,
+          "caller": 2,
+          "bytes": 1048576,
+          "source_request": 104,
+          "source_hash": "1540",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 70,
+          "key": 66,
+          "caller": 2,
+          "bytes": 1048576,
+          "source_request": 104,
+          "source_hash": "1541",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 71,
+          "key": 67,
+          "caller": 2,
+          "bytes": 1048576,
+          "source_request": 104,
+          "source_hash": "1542",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 72,
+          "key": 68,
+          "caller": 2,
+          "bytes": 1048576,
+          "source_request": 104,
+          "source_hash": "1543",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 73,
+          "key": 69,
+          "caller": 2,
+          "bytes": 1048576,
+          "source_request": 104,
+          "source_hash": "1544",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 74,
+          "key": 70,
+          "caller": 2,
+          "bytes": 1048576,
+          "source_request": 104,
+          "source_hash": "1545",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 75,
+          "key": 71,
+          "caller": 2,
+          "bytes": 1048576,
+          "source_request": 104,
+          "source_hash": "1546",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 76,
+          "key": 72,
+          "caller": 2,
+          "bytes": 1048576,
+          "source_request": 104,
+          "source_hash": "1547",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 77,
+          "key": 73,
+          "caller": 2,
+          "bytes": 1048576,
+          "source_request": 104,
+          "source_hash": "1548",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 78,
+          "key": 74,
+          "caller": 2,
+          "bytes": 1048576,
+          "source_request": 104,
+          "source_hash": "1549",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 79,
+          "key": 75,
+          "caller": 0,
+          "bytes": 1048576,
+          "source_request": 105,
+          "source_hash": "46",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 80,
+          "key": 76,
+          "caller": 0,
+          "bytes": 1048576,
+          "source_request": 105,
+          "source_hash": "47",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 81,
+          "key": 77,
+          "caller": 0,
+          "bytes": 1048576,
+          "source_request": 105,
+          "source_hash": "48",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 82,
+          "key": 78,
+          "caller": 0,
+          "bytes": 1048576,
+          "source_request": 105,
+          "source_hash": "49",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 83,
+          "key": 79,
+          "caller": 0,
+          "bytes": 1048576,
+          "source_request": 105,
+          "source_hash": "50",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 84,
+          "key": 80,
+          "caller": 0,
+          "bytes": 1048576,
+          "source_request": 105,
+          "source_hash": "51",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 85,
+          "key": 81,
+          "caller": 0,
+          "bytes": 1048576,
+          "source_request": 105,
+          "source_hash": "52",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 86,
+          "key": 82,
+          "caller": 0,
+          "bytes": 1048576,
+          "source_request": 105,
+          "source_hash": "53",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 87,
+          "key": 83,
+          "caller": 0,
+          "bytes": 1048576,
+          "source_request": 105,
+          "source_hash": "54",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 88,
+          "key": 84,
+          "caller": 0,
+          "bytes": 1048576,
+          "source_request": 105,
+          "source_hash": "55",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 89,
+          "key": 85,
+          "caller": 0,
+          "bytes": 1048576,
+          "source_request": 105,
+          "source_hash": "56",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 90,
+          "key": 86,
+          "caller": 0,
+          "bytes": 1048576,
+          "source_request": 105,
+          "source_hash": "57",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 91,
+          "key": 87,
+          "caller": 0,
+          "bytes": 1048576,
+          "source_request": 105,
+          "source_hash": "1550",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 92,
+          "key": 75,
+          "caller": 1,
+          "bytes": 1048576,
+          "source_request": 106,
+          "source_hash": "46",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 93,
+          "key": 76,
+          "caller": 1,
+          "bytes": 1048576,
+          "source_request": 106,
+          "source_hash": "47",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 94,
+          "key": 77,
+          "caller": 1,
+          "bytes": 1048576,
+          "source_request": 106,
+          "source_hash": "48",
+          "source_arrival_ms": 3000
+        },
+        {
+          "index": 95,
+          "key": 78,
+          "caller": 1,
+          "bytes": 1048576,
+          "source_request": 106,
+          "source_hash": "49",
+          "source_arrival_ms": 3000
+        }
+      ],
+      "public_origin": {
+        "kind": "Mooncake-FAST25",
+        "file": "toolagent_trace.jsonl",
+        "sha256": "48a2db1a13d3bc05e6330140c64f604ba366df20d3c9e128b5c35a01c1fa5f71",
+        "split": "development",
+        "source_request_offset": 100,
+        "source_requests_used": 7,
+        "block_count": 96,
+        "block_tokens": 512,
+        "payload": "normalized synthetic bytes per original block identity; not a model KV byte-size claim",
+        "arrival_mode": "order-preserving saturated block replay; original arrivals retained but not paced"
+      }
+    },
+    {
+      "id": "caller_shift-s1691",
+      "scenario": "caller_shift",
+      "seed": 1691,
+      "requests": 96,
+      "shard_mib": 1,
+      "quota_mib": 4,
+      "variants": [
+        "P-off",
+        "P-old",
+        "P-new"
+      ]
+    },
+    {
+      "id": "uniform-s1691",
+      "scenario": "uniform",
+      "seed": 1691,
+      "requests": 96,
+      "shard_mib": 1,
+      "quota_mib": 4,
+      "variants": [
+        "P-off",
+        "P-old",
+        "P-new"
+      ]
+    },
+    {
+      "id": "domain_return-s1691",
+      "scenario": "domain_return",
+      "seed": 1691,
+      "requests": 96,
+      "shard_mib": 1,
+      "quota_mib": 4,
+      "variants": [
+        "P-off",
+        "P-old",
+        "P-new"
+      ]
+    },
+    {
+      "id": "coupled-s1691",
+      "scenario": "coupled",
+      "seed": 1691,
+      "requests": 96,
+      "shard_mib": 1,
+      "quota_mib": 4,
+      "variants": [
+        "P-off",
+        "P-old",
+        "P-new"
+      ]
+    }
+  ]
+}
