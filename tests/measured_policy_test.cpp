@@ -59,6 +59,30 @@ int main(){
    assert(!warming.Observe(0,key,adapt,false));
    eventually_admitted=eventually_admitted || warming.Plan(0,{key,100,0},{},0,400,adapt).allowed;
  }
- assert(eventually_admitted);
+  assert(eventually_admitted);
+  // Joint admission must charge the loss of the selected victims. The independent
+  // comparator keeps the same victim ordering and physical capacity protection.
+  MeasuredPolicy coupled;Options joint;o=Options{};joint.cost=false;
+  for(int i=0;i<10;i++)coupled.Observe(0,"resident",joint);
+  for(int i=0;i<3;i++)coupled.Observe(0,"incoming",joint);
+  auto reject=coupled.Plan(0,{"incoming",100,2},{{"resident",100,1}},100,100,joint);
+  assert(!reject.allowed && reject.reason=="victim_loss");
+  joint.joint_admission=false;
+  auto accept=coupled.Plan(0,{"incoming",100,2},{{"resident",100,1}},100,100,joint);
+  assert(accept.allowed && accept.displaced_us==reject.displaced_us);
+  assert(!coupled.Plan(0,{"incoming",101,2},{},0,100,joint).allowed);
+  // Affinity is derived from past global observations; balanced sharing remains
+  // admissible, and an old dominant caller disappears after the fixed window.
+  MeasuredPolicy placed;Options affinity;affinity.cost=false;affinity.track_affinity=true;
+  affinity.affinity_gate=true;affinity.affinity_window=32;
+  for(int i=0;i<12;i++)placed.Observe(0,"shared",affinity);
+  for(int i=0;i<3;i++)placed.Observe(1,"shared",affinity);
+  assert(placed.Plan(1,{"shared",100,0},{},0,100,affinity).reason=="affinity");
+  Options ungated=affinity;ungated.affinity_gate=false;
+  assert(placed.Plan(1,{"shared",100,0},{},0,100,ungated).allowed);
+  for(int i=0;i<3;i++)placed.Observe(1,"shared",affinity);
+  assert(placed.Plan(1,{"shared",100,0},{},0,100,affinity).allowed);
+  for(int i=0;i<32;i++)placed.Observe(1,"shared",affinity);
+  assert(placed.Plan(0,{"shared",100,0},{},0,100,affinity).reason=="affinity");
  std::cout<<"measured admission invariants passed\n";
 }

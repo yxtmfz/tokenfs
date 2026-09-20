@@ -1,10 +1,12 @@
 # 实验与结果
 
-> 最终写作入口：[实验收口与论文可用结论](../reports/latest/paper-experiments/12_paper_closeout/README.md)。756 次预定性能运行完成，热点变化的速度优势得到支持；GPU 亲和独立收益尚未建立。收口报告附完整主表、有效消融、负结果和复核记录，不新增或改写已测数据。
+> 当前结果：[三项机制与整体速度四表](../reports/latest/paper-experiments/13_affinity_joint/README.md)。本轮完成 **576 次正式实测、132 项内容验证**，按热点、访问亲和、联合净收益和整体速度给出四张表。组件采用完整策略逐项关闭的对照，实际 MiB/s 与配对统计决定结论；未确定、未触发和退化结果全部保留。范围为三个私有逻辑缓存域与真实 NVMe/TCP 远端，不是物理 GPU 推理，也不代表完整 Python RobustBenefit 已接入。
+
+> 上一轮 B3 写作入口：[实验收口与论文可用结论](../reports/latest/paper-experiments/12_paper_closeout/README.md)。756 次预定性能运行完成，热点变化的速度优势得到支持；GPU 亲和独立收益尚未建立。收口报告附完整主表、有效消融、负结果和复核记录，不新增或改写已测数据。
 
 > 历史结果警示：此页旧数字尚未按修复后的统一计账、对等基线和外层计时重跑，不能视为当前性能证据。见 `docs/evidence-experiments.md`（仓库根目录相对路径）。
 
-当前数字以 [第二轮 756 次实测报告](../reports/latest/paper-experiments/11_measured_admission/README.md) 为准；[第一轮 400 次报告](../reports/latest/paper-experiments/10_real_cn7_evidence/README.md) 独立保留。`reports/latest/final-report.md` 及本页下方的旧表格均为历史记录，不是最新验收结论。
+上一轮数字以 [第二轮 756 次实测报告](../reports/latest/paper-experiments/11_measured_admission/README.md) 为准；[第一轮 400 次报告](../reports/latest/paper-experiments/10_real_cn7_evidence/README.md) 独立保留。`reports/latest/final-report.md` 及本页下方的旧表格均为历史记录，不是最新验收结论。
 
 ## 1. 实验层次
 

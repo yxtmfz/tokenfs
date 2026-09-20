@@ -69,6 +69,11 @@ struct Config {
   bool measured_size_aware = true;
   bool measured_frequency_admission = false;
   bool measured_shift_reset = false;
+  bool private_cache_domains = false;
+  bool measured_track_affinity = false;
+  bool measured_affinity_gate = false;
+  bool measured_joint_admission = true;
+  uint64_t measured_affinity_window = 128;
   uint64_t measured_shift_window = 8;
   bool adaptive_migration = false;
   uint64_t adaptive_remote_promote_us = 10000;
@@ -1579,6 +1584,14 @@ class TokenFS {
           config_.affinity_trend_min_reads, config_.affinity_hot_read_threshold,
           config_.affinity_warm_read_threshold, config_.max_local_replicas_per_file);
       meta = *metadata_.Get(path);
+      // Optional isolated access-domain topology: another domain's canonical
+      // local copy is not addressable. Every compared policy uses this routing.
+      if(config_.private_cache_domains && caller_gpu_id!=gpu->gpu_id) {
+        if(meta.tier=="local")AddBufferedMetric("private_domain_owner_copy_bypassed",1);
+        meta.tier="remote";meta.backend_id=gpu->remote_backend;
+        meta.physical_path=RemotePath(*gpu,rel);
+        AddBufferedMetric("private_domain_read_count",1);
+      }
       if (caller_gpu_id != gpu->gpu_id) {
         if (auto replica = metadata_.GetLocalReplica(path, caller_gpu_id);
             replica && replica->state == "READY" && fs::exists(replica->physical_path)) {
@@ -1589,7 +1602,7 @@ class TokenFS {
           AddBufferedMetric("cross_gpu_local_replica_hit", 1);
         }
       }
-      if(config_.measured_policy && measured_.Observe(caller_gpu_id,path,MeasuredOptions(),meta.tier=="local"))
+      if((config_.measured_policy || config_.measured_track_affinity) && measured_.Observe(caller_gpu_id,path,MeasuredOptions(),meta.tier=="local"))
         AddBufferedMetric("measured_shift_resets",1);
       AddBufferedMetric("read_open_count", 1);
       AddBufferedMetric(meta.tier == "local" ? "local_read_open_count" : "remote_read_open_count", 1);
@@ -1675,7 +1688,7 @@ class TokenFS {
     const uint64_t latency_us = ElapsedMicros(start);
     RecordLatency("read", handle->tier, latency_us);
     if (n > 0) {
-      if(config_.measured_policy) measured_.ReadSample(handle->tier=="local",static_cast<uint64_t>(n),latency_us);
+      if(config_.measured_policy || config_.measured_track_affinity) measured_.ReadSample(handle->tier=="local",static_cast<uint64_t>(n),latency_us);
       MaybeAdaptivePromote(*handle, latency_us);
     }
     return static_cast<int>(n);
@@ -2199,7 +2212,8 @@ class TokenFS {
   tokenfs_policy::Options MeasuredOptions() const {
     return {static_cast<size_t>(config_.measured_window),config_.measured_aging,
             config_.measured_admission,config_.measured_cost,
-            config_.measured_value_victim,config_.measured_size_aware,config_.measured_frequency_admission,config_.measured_shift_reset,static_cast<size_t>(config_.measured_shift_window)};
+            config_.measured_value_victim,config_.measured_size_aware,config_.measured_frequency_admission,config_.measured_shift_reset,static_cast<size_t>(config_.measured_shift_window),
+            config_.measured_track_affinity,config_.measured_affinity_gate,config_.measured_joint_admission,static_cast<size_t>(config_.measured_affinity_window)};
   }
 
   tokenfs_policy::Decision MeasuredPlan(const GpuConfig& gpu,const FileMeta& incoming) {
@@ -2389,6 +2403,8 @@ class TokenFS {
       return false;
     }
     if (config_.read_through_cache) {
+      if(config_.private_cache_domains && config_.measured_track_affinity)
+        read_count=measured_.Frequency(gpu_id,meta.logical_path);
       if (gpu_id != meta.gpu_id) {
         metadata_.AddMetric("read_through_skip_cross_gpu", 1);
         return false;
@@ -2449,10 +2465,11 @@ class TokenFS {
     if(config_.measured_policy) {
       // An already readable owner-local copy saves the same remote read in this
       // shared-host architecture; do not consume another domain just to duplicate it.
-      if(meta.tier=="local")return false;
+      if(meta.tier=="local" && !config_.private_cache_domains)return false;
       return MeasuredMayAdmit(meta,caller_gpu_id);
     }
-    if (config_.read_through_cache) return meta.read_count >= config_.read_through_min_reads;
+    if (config_.read_through_cache) return
+        (config_.private_cache_domains && config_.measured_track_affinity ? measured_.Frequency(caller_gpu_id,meta.logical_path) : meta.read_count) >= config_.read_through_min_reads;
     if (config_.affinity_placement) {
       if (meta.target_local_replica_count == 0) return false;
       if (meta.affinity_state != "REMOTE_SHARED_HOT" && meta.affinity_state != "AFFINITY_SHIFTING" &&
@@ -3533,6 +3550,11 @@ uint64_t MiBToBytes(uint64_t mib) { return mib * 1024ULL * 1024ULL; }
 Config LoadConfig(const fs::path& path) {
   YAML::Node root = YAML::LoadFile(path.string());
   Config config;
+  if(root["policy"] && root["policy"]["private_cache_domains"]) config.private_cache_domains=root["policy"]["private_cache_domains"].as<bool>();
+  if(root["policy"] && root["policy"]["measured_track_affinity"]) config.measured_track_affinity=root["policy"]["measured_track_affinity"].as<bool>();
+  if(root["policy"] && root["policy"]["measured_affinity_gate"]) config.measured_affinity_gate=root["policy"]["measured_affinity_gate"].as<bool>();
+  if(root["policy"] && root["policy"]["measured_joint_admission"]) config.measured_joint_admission=root["policy"]["measured_joint_admission"].as<bool>();
+  if(root["policy"] && root["policy"]["measured_affinity_window"]) config.measured_affinity_window=root["policy"]["measured_affinity_window"].as<uint64_t>();
   if(root["policy"] && root["policy"]["measured_shift_reset"]) config.measured_shift_reset=root["policy"]["measured_shift_reset"].as<bool>();
   if(root["policy"] && root["policy"]["measured_shift_window"]) config.measured_shift_window=root["policy"]["measured_shift_window"].as<uint64_t>();
   if(root["policy"] && root["policy"]["measured_frequency_admission"]) config.measured_frequency_admission=root["policy"]["measured_frequency_admission"].as<bool>();

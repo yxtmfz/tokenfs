@@ -1,0 +1,82 @@
+{
+  "performance_runs": 576,
+  "content_cases": 132,
+  "development_cases": 72,
+  "algorithm_revision": "0674af80d12246fa7de861f765b69d5d3738e269",
+  "binary_sha256": "0aa0c5d5dee97b82d6cbd8dfb0facfd2d16670fe67fb343914c6fd9a63943e38",
+  "supported_scenes": {
+    "hotspot": [
+      "hot_shift"
+    ],
+    "affinity": [],
+    "joint": [
+      "caller_shift",
+      "coupled",
+      "hot_shift",
+      "public_toolagent",
+      "uniform"
+    ]
+  },
+  "physical_gpu_performance_verified": false,
+  "full_python_robust_controller_verified": false,
+  "overall_confirmed_comparisons": [
+    {
+      "scenario": "caller_shift",
+      "baseline": "RemoteOnly"
+    },
+    {
+      "scenario": "coupled",
+      "baseline": "RemoteOnly"
+    },
+    {
+      "scenario": "coupled",
+      "baseline": "LRU"
+    },
+    {
+      "scenario": "coupled",
+      "baseline": "LFU"
+    },
+    {
+      "scenario": "hot_shift",
+      "baseline": "RemoteOnly"
+    },
+    {
+      "scenario": "hot_shift",
+      "baseline": "LFU"
+    },
+    {
+      "scenario": "hot_shift",
+      "baseline": "RecentLFU"
+    },
+    {
+      "scenario": "public_toolagent",
+      "baseline": "LRU"
+    },
+    {
+      "scenario": "public_toolagent",
+      "baseline": "LFU"
+    },
+    {
+      "scenario": "static_affinity",
+      "baseline": "RemoteOnly"
+    },
+    {
+      "scenario": "static_affinity",
+      "baseline": "LRU"
+    },
+    {
+      "scenario": "static_affinity",
+      "baseline": "LFU"
+    },
+    {
+      "scenario": "uniform",
+      "baseline": "LRU"
+    },
+    {
+      "scenario": "uniform",
+      "baseline": "LFU"
+    }
+  ],
+  "all_scenarios_faster": false,
+  "scope": "logical-domain storage replay; not GPU inference or physical topology"
+}

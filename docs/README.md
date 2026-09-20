@@ -1,8 +1,10 @@
 # AURA-KV / TokenFS 文档导航
 
-准备论文时先读 [实验收口与论文可用结论](../reports/latest/paper-experiments/12_paper_closeout/README.md)：它区分已支持的热点自适应收益、尚未成立的 GPU 亲和贡献，并给出可直接引用的结果表和独立离线复核入口。
+当前先读 [三项机制与整体速度四表](../reports/latest/paper-experiments/13_affinity_joint/README.md)，以及 [本轮预先固定方案](affinity-joint-confirmation-plan.md)。本轮完成 **576 次正式实测、132 项内容验证**，按热点、访问亲和、联合净收益和整体速度给出四张表。组件采用完整策略逐项关闭的对照，实际 MiB/s 与配对统计决定结论；未确定、未触发和退化结果全部保留。范围为三个私有逻辑缓存域与真实 NVMe/TCP 远端，不是物理 GPU 推理，也不代表完整 Python RobustBenefit 已接入。
 
-当前真实评估迁移到 cn7→cn13；cn14 保持停用。优先阅读 [第二轮策略与消融对象](measured-admission-study.md)、[冻结确认方案](measured-confirmation-plan.md) 和 [第二轮完整结果](../reports/latest/paper-experiments/11_measured_admission/README.md)。第一轮方案仍见 [证据实验方案](evidence-experiments.md) 与 [预先固定方案](evidence-preregistration.md)。历史模拟和 cn14 表格不能替代修复后的真实速度证据。
+上一轮 B3 的论文边界见 [实验收口与论文可用结论](../reports/latest/paper-experiments/12_paper_closeout/README.md)：它区分已支持的热点自适应收益、尚未成立的 GPU 亲和贡献，并给出可直接引用的结果表和独立离线复核入口。
+
+各轮真实评估迁移到 cn7→cn13；cn14 保持停用。优先阅读 [第二轮策略与消融对象](measured-admission-study.md)、[冻结确认方案](measured-confirmation-plan.md) 和 [第二轮完整结果](../reports/latest/paper-experiments/11_measured_admission/README.md)。第一轮方案仍见 [证据实验方案](evidence-experiments.md) 与 [预先固定方案](evidence-preregistration.md)。历史模拟和 cn14 表格不能替代修复后的真实速度证据。
 
 阅读顺序建议如下：
 
