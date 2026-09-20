@@ -13,4 +13,11 @@ class AffinityV2Test(unittest.TestCase):
         b=dict(scenario='domain_return',seed=1701,requests=384,shard_mib=2)
         rows=trace(b);self.assertEqual(rows,trace(b));self.assertEqual(sum(e['bytes'] for e in rows),768*1048576)
         for i in range(4):self.assertEqual({e['caller'] for e in rows[i*96:(i+1)*96]},{i%3})
+    def test_handover_keeps_objects_within_task_pair(self):
+        b=dict(scenario='affinity_handover',seed=1701,requests=384,shard_mib=2)
+        rows=trace(b);self.assertEqual(rows,trace(b))
+        for phase in range(8):
+            group=(phase//2)%3;part=rows[phase*48:(phase+1)*48]
+            self.assertEqual({e['caller'] for e in part},{(phase//2+phase%2)%3})
+            self.assertTrue(all(group*4<=e['key']<group*4+4 or e['key']>=32 for e in part))
 if __name__=='__main__':unittest.main()

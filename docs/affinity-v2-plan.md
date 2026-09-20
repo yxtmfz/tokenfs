@@ -44,20 +44,20 @@ select the new recent-demand mode. P-old enables the preserved legacy share gate
 The primary comparison is P-new/P-off. P-new/P-old is a separate repair comparison:
 beating a defective old policy alone is insufficient to demonstrate affinity value.
 
-Seven scenarios: the six prior semantic categories (static affinity, caller shift,
-hot shift, coupled changes, public toolagent, uniform) plus domain re-entry.
+Eight scenarios: the six prior semantic categories (static affinity, caller shift,
+hot shift, coupled changes, public toolagent, uniform) plus domain re-entry and affinity handover under cache pressure.
 The new scenario uses caller sequence 0,1,2,0 across four phases: a caller returns
 after inactivity with a different six-object hot set under four-object capacity.
-All methods receive the same trace; policy decisions never see phase labels.
+A separate handover scenario adds eight phases in four pairs: each pair retains a four-object hot set while the caller changes, and later destinations already have a different resident set. This fills a coverage gap: re-entry with entirely new objects cannot test reuse transfer. It was added during development BEFORE any confirmation access; all seven existing scenarios remain. All methods receive the same trace; policy decisions never see phase labels.
 
-Final-candidate development B: seeds 1701,1702, 42 actual speed runs, separate
-from the rejected candidate A using the same development-only traces. Correctness: 21 cases per host,
+Final-candidate development B: seeds 1701,1702, 42 original plus 6 handover speed runs, separate
+from the rejected candidate A using the same development-only traces. Correctness: 21 original plus 3 handover cases per host,
 cn7 actual NVMe/TCP and cn8 directory backend. Intended development acceptance:
 at least one meaningful improvement against disabled affinity, with particular
 attention to re-entry, and no renewed caller-handover regression. If development
 fails, preserve it and revise BEFORE freezing the held-out batch.
 
-Confirmation is 7 scenarios × 3 variants × 12 new paired seeds 1801–1812 = 252
+Confirmation is 8 scenarios × 3 variants × 12 new paired seeds 1801–1812 = 288
 runs, 768 MiB of actual logical reads per run, 8 MiB per-domain quota. Public
 windows are disjoint from B3 and round 3 and one another, outside the development
 prefix. Caller IDs remain constructed source-request-index modulo 3; replay is
@@ -65,11 +65,11 @@ serialized storage access, not model serving. Empty application caches and rando
 strategy/block order are used, with the prior measured hardware/cache limitations.
 
 Use paired geometric time ratios, 5000 paired bootstrap samples and exact
-sign-flip p-values. Holm correct the seven primary comparisons together and the
-seven repair comparisons separately. A confirmed benefit requires twelve pairs,
+sign-flip p-values. Holm correct the eight primary comparisons together and the
+eight repair comparisons separately. A confirmed benefit requires twelve pairs,
 95% interval below 1, Holm p<.05 and actual new-mechanism activity. Report absolute
 MiB/s, paired speed change, copied/read-remote bytes, queue-drain ratios, CPU and
-per-run p99. Report all seven scenarios, including negatives and uncertain rows.
+per-run p99. Report all eight scenarios, including negatives and uncertain rows.
 Five-percent elapsed reduction is a practical target, not a guaranteed outcome.
 No significance-driven extension or policy change on the held-out confirmation.
 

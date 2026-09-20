@@ -7,7 +7,7 @@ import affinity_joint_study as core
 from evidence_benchmark import dump
 from evidence_report import interval,paired_p,holm
 VARIANTS=['P-off','P-old','P-new']
-SCENES=core.SCENES+['domain_return']
+SCENES=core.SCENES+['domain_return','affinity_handover']
 SOURCES=core.SOURCES+['scripts/affinity_v2_study.py']
 original_config=core.configuration
 original_trace=core.trace
@@ -18,6 +18,14 @@ def configuration(name,case,remote,quota,direct):
     return cfg
 
 def trace(block):
+    if block['scenario']=='affinity_handover':
+        rng=random.Random(block['seed']);events=[]
+        for i in range(block['requests']):
+            phase=min(7,8*i//block['requests']);pair=phase//2
+            caller=(pair+phase%2)%3
+            key=(pair%3)*4+rng.randrange(4) if rng.random()<.9 else rng.randrange(32,64)
+            events.append(dict(index=i,key=key,caller=caller,bytes=block['shard_mib']*1048576))
+        return events
     if block['scenario']!='domain_return':return original_trace(block)
     rng=random.Random(block['seed']);events=[]
     for i in range(block['requests']):
