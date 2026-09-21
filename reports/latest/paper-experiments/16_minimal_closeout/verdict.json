@@ -1,0 +1,156 @@
+{
+  "performance_runs": 336,
+  "content_cases": 56,
+  "development_runs": 28,
+  "sensitivity_runs": 12,
+  "primary_comparisons": 16,
+  "primary_faster": [
+    {
+      "scenario": "hot_shift",
+      "baseline": "RecentLFU",
+      "change_pct": 6.6104151054486415
+    },
+    {
+      "scenario": "public_toolagent",
+      "baseline": "LRU",
+      "change_pct": 33.24914823916703
+    },
+    {
+      "scenario": "public_toolagent",
+      "baseline": "SIEVE",
+      "change_pct": 30.68686969751342
+    },
+    {
+      "scenario": "public_toolagent",
+      "baseline": "SIEVE-2hit",
+      "change_pct": 5.350094290232832
+    },
+    {
+      "scenario": "static_affinity",
+      "baseline": "LRU",
+      "change_pct": 20.644988293309098
+    },
+    {
+      "scenario": "static_affinity",
+      "baseline": "SIEVE",
+      "change_pct": 15.641484126816273
+    },
+    {
+      "scenario": "static_affinity",
+      "baseline": "SIEVE-2hit",
+      "change_pct": 12.24460811868533
+    },
+    {
+      "scenario": "uniform",
+      "baseline": "LRU",
+      "change_pct": 9.057646284525855
+    },
+    {
+      "scenario": "uniform",
+      "baseline": "SIEVE",
+      "change_pct": 8.595248963815006
+    },
+    {
+      "scenario": "uniform",
+      "baseline": "SIEVE-2hit",
+      "change_pct": 6.18652785995184
+    }
+  ],
+  "primary_slower": [
+    {
+      "scenario": "hot_shift",
+      "baseline": "LRU",
+      "change_pct": -3.8573574907041386
+    },
+    {
+      "scenario": "hot_shift",
+      "baseline": "SIEVE",
+      "change_pct": -5.9816426111240055
+    },
+    {
+      "scenario": "hot_shift",
+      "baseline": "SIEVE-2hit",
+      "change_pct": -5.065058476309137
+    }
+  ],
+  "primary_uncertain": [
+    {
+      "scenario": "public_toolagent",
+      "baseline": "RecentLFU"
+    },
+    {
+      "scenario": "static_affinity",
+      "baseline": "RecentLFU"
+    },
+    {
+      "scenario": "uniform",
+      "baseline": "RecentLFU"
+    }
+  ],
+  "mechanisms": [
+    {
+      "scenario": "hot_shift",
+      "family": "mechanism",
+      "treatment": "Full",
+      "baseline": "no-H",
+      "n": 12,
+      "time_ratio": 0.9259513581790159,
+      "throughput_change_pct": 7.997033663475461,
+      "ci95": [
+        0.9083456272443954,
+        0.9453996697360735
+      ],
+      "p_raw": 0.00048828125,
+      "p_holm": 0.00146484375,
+      "mechanism_active_pairs": 12,
+      "different_action_pairs": 12,
+      "with_drain_ratio": 0.9257899543873498,
+      "verdict": "faster"
+    },
+    {
+      "scenario": "hot_shift",
+      "family": "mechanism",
+      "treatment": "Full",
+      "baseline": "no-J",
+      "n": 12,
+      "time_ratio": 0.9386232350076249,
+      "throughput_change_pct": 6.539020418760089,
+      "ci95": [
+        0.9124799479445729,
+        0.9671335314285018
+      ],
+      "p_raw": 0.00390625,
+      "p_holm": 0.00390625,
+      "mechanism_active_pairs": 11,
+      "different_action_pairs": 12,
+      "with_drain_ratio": 0.9387914840225161,
+      "verdict": "faster"
+    },
+    {
+      "scenario": "public_toolagent",
+      "family": "mechanism",
+      "treatment": "Full",
+      "baseline": "no-J",
+      "n": 12,
+      "time_ratio": 0.9558295753613192,
+      "throughput_change_pct": 4.62116111253239,
+      "ci95": [
+        0.9377028238960804,
+        0.9750910141508053
+      ],
+      "p_raw": 0.001953125,
+      "p_holm": 0.00390625,
+      "mechanism_active_pairs": 12,
+      "different_action_pairs": 12,
+      "with_drain_ratio": 0.9556969170024598,
+      "verdict": "faster"
+    }
+  ],
+  "all_baselines_faster_scenes": [],
+  "original_three_contribution_claim_supported": false,
+  "physical_gpu_verified": false,
+  "real_inference_verified": false,
+  "affinity_independent_gain_confirmed": false,
+  "algorithm_revision": "ec4afcec4d0e7c3e79e8129679c25197ed454c04",
+  "binary_sha256": "2f3642866c6515771b6c94e188695f6a17e22d0e67fbaafcc9d7265479038a5d"
+}

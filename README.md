@@ -1,5 +1,7 @@
 # AURA-KV / TokenFS
 
+> 最新最小补实验：[同版本整体速度、H/J 消融与论文边界](reports/latest/paper-experiments/16_minimal_closeout/README.md)。完成 336 次正式测速、56 项内容检查、28 次开发测速和 12 次描述性边界测速；16 项整体缓存比较中，确认提速 10 项、确认变慢 3 项、未确定 3 项。五个实验亲和开关关闭，共享旧元数据统计仍保留。下方历次结果按各自版本解释，不混算；GPU 亲和和真实推理收益仍未证实。
+
 > 最新亲和结果：第二轮 288 次正式实测与 48 项内容检查完成。热点跨域交接平均吞吐 +3.36%，但多重比较检验未通过；未证明稳定独立提速，新机制仍为实验性显式选项。见 [创新点二最终实测速率表](reports/latest/paper-experiments/15_affinity_handover/README.md)。前一轮失败确认与所有开发负结果完整保留。
 
 > 亲和修正首轮确认：288 次冻结实测与 48 项内容检查完成。旧版退化得到修复，但新亲和相对关闭亲和尚无确认的独立提速；保留所有负结果，见 [亲和修正与独立验证](reports/latest/paper-experiments/14_affinity_refinement/README.md)。
@@ -241,6 +243,6 @@ AURA_LOCAL_READ_DEVICE=/dev/nvme0n1 \
 - [docs/model-and-controller.md](docs/model-and-controller.md)：需求估计、来源代价、EvictionLoss、ReplicaGain、RobustBenefit 和控制器。
 - [docs/experiments.md](docs/experiments.md)：实验设计、指标、结果解释和论文边界。
 - [docs/deployment.md](docs/deployment.md)：配置、脚本和 NVMe-oF 部署。
-- [cn7 正式实测报告](reports/latest/paper-experiments/10_real_cn7_evidence/README.md)：最新统一结果报告。
+- [cn7 正式实测报告](reports/latest/paper-experiments/10_real_cn7_evidence/README.md)：第一轮历史结果报告。
 
 旧的零散编号文档已经合并到上述文档中。以后新增内容优先更新这些最终入口，避免文档再次发散。

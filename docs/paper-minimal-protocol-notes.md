@@ -11,7 +11,7 @@ clarifications.
 All five experimental affinity flags are false in every arm:
 `measured_track_affinity`, `measured_affinity_gate`,
 `measured_affinity_recent_demand`, `measured_affinity_handover_epoch`, and
-`affinity_placement`. Thus the measured controller's affinity history, weighting,
+`affinity_placement`. Thus the measured controller's cross-domain affinity history, weighting,
 handover reset and placement decisions are disabled.
 
 The frozen plan's phrase “all affinity tracking/decisions off” is too broad if
@@ -20,10 +20,12 @@ interpreted as removing every legacy metadata update. `TokenFS::Open` still call
 access order, counts, the legacy event table and `UpdateAffinityLocked`. These
 legacy statistics remain in **every** tested strategy, including RemoteOnly and
 LRU. They do not enable the disabled affinity policy, but their CPU/metadata cost
-is still part of the measured storage implementation.
+is still part of the measured storage implementation. In strategies that invoke
+`MeasuredPolicy::Observe`, per-domain activation/epoch bookkeeping also remains
+even when affinity decisions are disabled; no zero-bookkeeping claim is made.
 
 The valid claim is therefore “H/J without enabled affinity decisions and without
-measured-controller affinity tracking, on a shared TokenFS metadata path.” This
+measured-controller cross-domain affinity-history tracking, on a shared TokenFS metadata path.” This
 round does **not** measure a zero-affinity-metadata implementation, prove that all
 affinity collection costs have been eliminated, or add independent affinity
 performance evidence. Keeping this common path preserves the declared fair

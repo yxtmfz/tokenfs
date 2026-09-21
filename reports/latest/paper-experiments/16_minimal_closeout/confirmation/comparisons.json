@@ -1,0 +1,439 @@
+[
+  {
+    "scenario": "hot_shift",
+    "family": "overall",
+    "treatment": "Full",
+    "baseline": "LRU",
+    "n": 12,
+    "time_ratio": 1.04012119274058,
+    "throughput_change_pct": -3.8573574907041386,
+    "ci95": [
+      1.0203101146229427,
+      1.0631641073522335
+    ],
+    "p_raw": 0.0009765625,
+    "p_holm": 0.0078125,
+    "mechanism_active_pairs": null,
+    "different_action_pairs": null,
+    "with_drain_ratio": 1.0402895538347487,
+    "verdict": "slower"
+  },
+  {
+    "scenario": "hot_shift",
+    "family": "overall",
+    "treatment": "Full",
+    "baseline": "SIEVE",
+    "n": 12,
+    "time_ratio": 1.0636220710215443,
+    "throughput_change_pct": -5.9816426111240055,
+    "ci95": [
+      1.0426679600074376,
+      1.085214608298181
+    ],
+    "p_raw": 0.00048828125,
+    "p_holm": 0.0078125,
+    "mechanism_active_pairs": null,
+    "different_action_pairs": null,
+    "with_drain_ratio": 1.0637997917053994,
+    "verdict": "slower"
+  },
+  {
+    "scenario": "hot_shift",
+    "family": "overall",
+    "treatment": "Full",
+    "baseline": "SIEVE-2hit",
+    "n": 12,
+    "time_ratio": 1.0533529424995238,
+    "throughput_change_pct": -5.065058476309137,
+    "ci95": [
+      1.0281794280024805,
+      1.0823594649207158
+    ],
+    "p_raw": 0.001953125,
+    "p_holm": 0.0078125,
+    "mechanism_active_pairs": null,
+    "different_action_pairs": null,
+    "with_drain_ratio": 1.0533161998251275,
+    "verdict": "slower"
+  },
+  {
+    "scenario": "hot_shift",
+    "family": "overall",
+    "treatment": "Full",
+    "baseline": "RecentLFU",
+    "n": 12,
+    "time_ratio": 0.9379946593500245,
+    "throughput_change_pct": 6.6104151054486415,
+    "ci95": [
+      0.9180148884884581,
+      0.9610669855960828
+    ],
+    "p_raw": 0.00146484375,
+    "p_holm": 0.0078125,
+    "mechanism_active_pairs": null,
+    "different_action_pairs": null,
+    "with_drain_ratio": 0.9378448048399682,
+    "verdict": "faster"
+  },
+  {
+    "scenario": "hot_shift",
+    "family": "remote_reference",
+    "treatment": "Full",
+    "baseline": "RemoteOnly",
+    "n": 12,
+    "time_ratio": 0.9062322367012217,
+    "throughput_change_pct": 10.346990484481399,
+    "ci95": [
+      0.8863168855422122,
+      0.9277058535757658
+    ],
+    "p_raw": 0.00048828125,
+    "p_holm": 0.001953125,
+    "mechanism_active_pairs": null,
+    "different_action_pairs": null,
+    "with_drain_ratio": 0.906428276650545,
+    "verdict": "faster"
+  },
+  {
+    "scenario": "hot_shift",
+    "family": "mechanism",
+    "treatment": "Full",
+    "baseline": "no-H",
+    "n": 12,
+    "time_ratio": 0.9259513581790159,
+    "throughput_change_pct": 7.997033663475461,
+    "ci95": [
+      0.9083456272443954,
+      0.9453996697360735
+    ],
+    "p_raw": 0.00048828125,
+    "p_holm": 0.00146484375,
+    "mechanism_active_pairs": 12,
+    "different_action_pairs": 12,
+    "with_drain_ratio": 0.9257899543873498,
+    "verdict": "faster"
+  },
+  {
+    "scenario": "hot_shift",
+    "family": "mechanism",
+    "treatment": "Full",
+    "baseline": "no-J",
+    "n": 12,
+    "time_ratio": 0.9386232350076249,
+    "throughput_change_pct": 6.539020418760089,
+    "ci95": [
+      0.9124799479445729,
+      0.9671335314285018
+    ],
+    "p_raw": 0.00390625,
+    "p_holm": 0.00390625,
+    "mechanism_active_pairs": 11,
+    "different_action_pairs": 12,
+    "with_drain_ratio": 0.9387914840225161,
+    "verdict": "faster"
+  },
+  {
+    "scenario": "public_toolagent",
+    "family": "overall",
+    "treatment": "Full",
+    "baseline": "LRU",
+    "n": 12,
+    "time_ratio": 0.7504738403318827,
+    "throughput_change_pct": 33.24914823916703,
+    "ci95": [
+      0.7424469133935265,
+      0.7587904667982053
+    ],
+    "p_raw": 0.00048828125,
+    "p_holm": 0.0078125,
+    "mechanism_active_pairs": null,
+    "different_action_pairs": null,
+    "with_drain_ratio": 0.690302229436028,
+    "verdict": "faster"
+  },
+  {
+    "scenario": "public_toolagent",
+    "family": "overall",
+    "treatment": "Full",
+    "baseline": "SIEVE",
+    "n": 12,
+    "time_ratio": 0.7651878129108077,
+    "throughput_change_pct": 30.68686969751342,
+    "ci95": [
+      0.7586418234370228,
+      0.7725221157912115
+    ],
+    "p_raw": 0.00048828125,
+    "p_holm": 0.0078125,
+    "mechanism_active_pairs": null,
+    "different_action_pairs": null,
+    "with_drain_ratio": 0.7013680440974819,
+    "verdict": "faster"
+  },
+  {
+    "scenario": "public_toolagent",
+    "family": "overall",
+    "treatment": "Full",
+    "baseline": "SIEVE-2hit",
+    "n": 12,
+    "time_ratio": 0.9492160464945227,
+    "throughput_change_pct": 5.350094290232832,
+    "ci95": [
+      0.9350467351009627,
+      0.9642050103296138
+    ],
+    "p_raw": 0.0009765625,
+    "p_holm": 0.0078125,
+    "mechanism_active_pairs": null,
+    "different_action_pairs": null,
+    "with_drain_ratio": 0.9490920958486406,
+    "verdict": "faster"
+  },
+  {
+    "scenario": "public_toolagent",
+    "family": "overall",
+    "treatment": "Full",
+    "baseline": "RecentLFU",
+    "n": 12,
+    "time_ratio": 1.0000410394238983,
+    "throughput_change_pct": -0.004103773973307412,
+    "ci95": [
+      0.9942841421490265,
+      1.0059099682863022
+    ],
+    "p_raw": 0.98876953125,
+    "p_holm": 0.98876953125,
+    "mechanism_active_pairs": null,
+    "different_action_pairs": null,
+    "with_drain_ratio": 0.9997383636913253,
+    "verdict": "uncertain"
+  },
+  {
+    "scenario": "public_toolagent",
+    "family": "remote_reference",
+    "treatment": "Full",
+    "baseline": "RemoteOnly",
+    "n": 12,
+    "time_ratio": 0.9968024096645426,
+    "throughput_change_pct": 0.3207847718319057,
+    "ci95": [
+      0.9869669098070439,
+      1.007306242566394
+    ],
+    "p_raw": 0.5546875,
+    "p_holm": 0.5546875,
+    "mechanism_active_pairs": null,
+    "different_action_pairs": null,
+    "with_drain_ratio": 0.9969839731767541,
+    "verdict": "uncertain"
+  },
+  {
+    "scenario": "public_toolagent",
+    "family": "mechanism",
+    "treatment": "Full",
+    "baseline": "no-J",
+    "n": 12,
+    "time_ratio": 0.9558295753613192,
+    "throughput_change_pct": 4.62116111253239,
+    "ci95": [
+      0.9377028238960804,
+      0.9750910141508053
+    ],
+    "p_raw": 0.001953125,
+    "p_holm": 0.00390625,
+    "mechanism_active_pairs": 12,
+    "different_action_pairs": 12,
+    "with_drain_ratio": 0.9556969170024598,
+    "verdict": "faster"
+  },
+  {
+    "scenario": "static_affinity",
+    "family": "overall",
+    "treatment": "Full",
+    "baseline": "LRU",
+    "n": 12,
+    "time_ratio": 0.828878193902945,
+    "throughput_change_pct": 20.644988293309098,
+    "ci95": [
+      0.8108787919269561,
+      0.8446555833504291
+    ],
+    "p_raw": 0.00048828125,
+    "p_holm": 0.0078125,
+    "mechanism_active_pairs": null,
+    "different_action_pairs": null,
+    "with_drain_ratio": 0.8289158375645109,
+    "verdict": "faster"
+  },
+  {
+    "scenario": "static_affinity",
+    "family": "overall",
+    "treatment": "Full",
+    "baseline": "SIEVE",
+    "n": 12,
+    "time_ratio": 0.8647415826169845,
+    "throughput_change_pct": 15.641484126816273,
+    "ci95": [
+      0.8495628814683317,
+      0.8777172628029885
+    ],
+    "p_raw": 0.00048828125,
+    "p_holm": 0.0078125,
+    "mechanism_active_pairs": null,
+    "different_action_pairs": null,
+    "with_drain_ratio": 0.8647802144058487,
+    "verdict": "faster"
+  },
+  {
+    "scenario": "static_affinity",
+    "family": "overall",
+    "treatment": "Full",
+    "baseline": "SIEVE-2hit",
+    "n": 12,
+    "time_ratio": 0.8909113914341604,
+    "throughput_change_pct": 12.24460811868533,
+    "ci95": [
+      0.8773039375057275,
+      0.9038541291080796
+    ],
+    "p_raw": 0.00048828125,
+    "p_holm": 0.0078125,
+    "mechanism_active_pairs": null,
+    "different_action_pairs": null,
+    "with_drain_ratio": 0.8909246982800871,
+    "verdict": "faster"
+  },
+  {
+    "scenario": "static_affinity",
+    "family": "overall",
+    "treatment": "Full",
+    "baseline": "RecentLFU",
+    "n": 12,
+    "time_ratio": 1.0091574680932163,
+    "throughput_change_pct": -0.9074369840931906,
+    "ci95": [
+      0.9945266663752093,
+      1.021694616984465
+    ],
+    "p_raw": 0.2294921875,
+    "p_holm": 0.6884765625,
+    "mechanism_active_pairs": null,
+    "different_action_pairs": null,
+    "with_drain_ratio": 1.0091508783930914,
+    "verdict": "uncertain"
+  },
+  {
+    "scenario": "static_affinity",
+    "family": "remote_reference",
+    "treatment": "Full",
+    "baseline": "RemoteOnly",
+    "n": 12,
+    "time_ratio": 0.6369455901796881,
+    "throughput_change_pct": 56.999281479897036,
+    "ci95": [
+      0.6286420113153711,
+      0.6451486071609273
+    ],
+    "p_raw": 0.00048828125,
+    "p_holm": 0.001953125,
+    "mechanism_active_pairs": null,
+    "different_action_pairs": null,
+    "with_drain_ratio": 0.6370195436933721,
+    "verdict": "faster"
+  },
+  {
+    "scenario": "uniform",
+    "family": "overall",
+    "treatment": "Full",
+    "baseline": "LRU",
+    "n": 12,
+    "time_ratio": 0.9169462518850359,
+    "throughput_change_pct": 9.057646284525855,
+    "ci95": [
+      0.9093681782334135,
+      0.9247749190999373
+    ],
+    "p_raw": 0.00048828125,
+    "p_holm": 0.0078125,
+    "mechanism_active_pairs": null,
+    "different_action_pairs": null,
+    "with_drain_ratio": 0.9169817410321558,
+    "verdict": "faster"
+  },
+  {
+    "scenario": "uniform",
+    "family": "overall",
+    "treatment": "Full",
+    "baseline": "SIEVE",
+    "n": 12,
+    "time_ratio": 0.920850598476191,
+    "throughput_change_pct": 8.595248963815006,
+    "ci95": [
+      0.9121492321717536,
+      0.9296887096297136
+    ],
+    "p_raw": 0.00048828125,
+    "p_holm": 0.0078125,
+    "mechanism_active_pairs": null,
+    "different_action_pairs": null,
+    "with_drain_ratio": 0.9208783865020288,
+    "verdict": "faster"
+  },
+  {
+    "scenario": "uniform",
+    "family": "overall",
+    "treatment": "Full",
+    "baseline": "SIEVE-2hit",
+    "n": 12,
+    "time_ratio": 0.9417390512277491,
+    "throughput_change_pct": 6.18652785995184,
+    "ci95": [
+      0.9335378317807167,
+      0.9495046293908499
+    ],
+    "p_raw": 0.00048828125,
+    "p_holm": 0.0078125,
+    "mechanism_active_pairs": null,
+    "different_action_pairs": null,
+    "with_drain_ratio": 0.9419009100490864,
+    "verdict": "faster"
+  },
+  {
+    "scenario": "uniform",
+    "family": "overall",
+    "treatment": "Full",
+    "baseline": "RecentLFU",
+    "n": 12,
+    "time_ratio": 1.0037298900907918,
+    "throughput_change_pct": -0.3716029708405344,
+    "ci95": [
+      0.9964390899944222,
+      1.0105064463965028
+    ],
+    "p_raw": 0.34228515625,
+    "p_holm": 0.6884765625,
+    "mechanism_active_pairs": null,
+    "different_action_pairs": null,
+    "with_drain_ratio": 1.003712814527598,
+    "verdict": "uncertain"
+  },
+  {
+    "scenario": "uniform",
+    "family": "remote_reference",
+    "treatment": "Full",
+    "baseline": "RemoteOnly",
+    "n": 12,
+    "time_ratio": 1.0339401741159868,
+    "throughput_change_pct": -3.2826052189146693,
+    "ci95": [
+      1.024977620651104,
+      1.0416928215310526
+    ],
+    "p_raw": 0.0009765625,
+    "p_holm": 0.001953125,
+    "mechanism_active_pairs": null,
+    "different_action_pairs": null,
+    "with_drain_ratio": 1.034112024081727,
+    "verdict": "slower"
+  }
+]

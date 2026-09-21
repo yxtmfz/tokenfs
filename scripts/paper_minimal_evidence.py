@@ -27,6 +27,7 @@ def verify(data,public_source):
         require(not final['remaining_mounts'],'test mounts remain')
         for label,count in names:
             name='paper-minimal-'+label+'-01';root=data/host/name;m=read(root/'manifest.json')
+            require(m['verify']==(label=='correctness') and m['backend_direct'] is True,'wrong verification or I/O mode')
             require((data/host/(name+'.exit')).read_text().strip()=='0','failed batch '+name)
             require(m['binary_sha256']==f['binary_sha256'] and m['source_hashes']==f['source_hashes'],'batch runtime differs')
             require(m['spec']==read(repo/'study-configs'/(name+'.json')),'batch spec differs')

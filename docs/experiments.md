@@ -1,6 +1,8 @@
 # 实验与结果
 
-> 当前结果：[三项机制与整体速度四表](../reports/latest/paper-experiments/13_affinity_joint/README.md)。本轮完成 **576 次正式实测、132 项内容验证**，按热点、访问亲和、联合净收益和整体速度给出四张表。组件采用完整策略逐项关闭的对照，实际 MiB/s 与配对统计决定结论；未确定、未触发和退化结果全部保留。范围为三个私有逻辑缓存域与真实 NVMe/TCP 远端，不是物理 GPU 推理，也不代表完整 Python RobustBenefit 已接入。
+> 最新最小补实验：[同版本整体速度、H/J 消融与论文边界](../reports/latest/paper-experiments/16_minimal_closeout/README.md)。完成 336 次正式测速、56 项内容检查、28 次开发测速和 12 次描述性边界测速；16 项整体缓存比较中，确认提速 10 项、确认变慢 3 项、未确定 3 项。五个实验亲和开关关闭，共享旧元数据统计仍保留。下方历次结果按各自版本解释，不混算；GPU 亲和和真实推理收益仍未证实。
+
+> 历史综合结果：[三项机制与整体速度四表](../reports/latest/paper-experiments/13_affinity_joint/README.md)。本轮完成 **576 次正式实测、132 项内容验证**，按热点、访问亲和、联合净收益和整体速度给出四张表。组件采用完整策略逐项关闭的对照，实际 MiB/s 与配对统计决定结论；未确定、未触发和退化结果全部保留。范围为三个私有逻辑缓存域与真实 NVMe/TCP 远端，不是物理 GPU 推理，也不代表完整 Python RobustBenefit 已接入。
 
 > 上一轮 B3 写作入口：[实验收口与论文可用结论](../reports/latest/paper-experiments/12_paper_closeout/README.md)。756 次预定性能运行完成，热点变化的速度优势得到支持；GPU 亲和独立收益尚未建立。收口报告附完整主表、有效消融、负结果和复核记录，不新增或改写已测数据。
 
