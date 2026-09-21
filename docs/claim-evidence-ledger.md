@@ -1,5 +1,7 @@
 # 论文主张、缺口与验收对应表
 
+> 最新最小补实验：[同版本整体速度、H/J 消融与论文边界](../reports/latest/paper-experiments/16_minimal_closeout/README.md)。完成 336 次正式测速、56 项内容检查、28 次开发测速和 12 次描述性边界测速；16 项整体缓存比较中，确认提速 10 项、确认变慢 3 项、未确定 3 项。五个实验亲和开关关闭，共享旧元数据统计仍保留。下方历次结果按各自版本解释，不混算；GPU 亲和和真实推理收益仍未证实。
+
 依据为本仓库 README、system-design.md、model-and-controller.md、experiments.md，不假设另有未提供的论文内容。验证允许否定原主张；未支持的主张必须收窄或删除，不能以命中率替代速度收益。
 
 上一轮 B3 写作状态见 [实验收口](../reports/latest/paper-experiments/12_paper_closeout/README.md) 和 [机器可读主张清单](../reports/latest/paper-experiments/12_paper_closeout/claims.json)。B3 原始归档离线重审通过；实际执行路径绕过旧亲和状态准入与副本协调，不包含独立亲和开关对照。不能拼接旧版亲和数据与新版热点数据，宣称同一完整策略的两个创新均已成立。

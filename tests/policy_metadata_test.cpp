@@ -7,6 +7,33 @@
 
 namespace {
 struct TokenFSTestAccess {
+  static void sieve_verified_residents(const fs::path& root) {
+    Config cfg; cfg.mount_point=root/"mnt";cfg.metadata_db=root/"sieve.db";
+    cfg.local_eviction_policy="sieve";cfg.checksum="fnv1a64";cfg.readonly_canonical=true;cfg.speculative_copy_may_evict=true;
+    cfg.gpus.push_back({0,"/gpu0",root/"local0",2048,"remote"});
+    cfg.gpus.push_back({1,"/gpu1",root/"local1",2048,"remote"});
+    cfg.backends.emplace("remote",BackendConfig{"remote","directory",root/"remote"});
+    TokenFS filesystem(cfg);filesystem.Init();
+    for(const auto& key:{"a","b","c"}) {
+      auto remote=root/"remote"/"gpu0"/key;
+      std::ofstream(remote)<<std::string(1024,key[0]);
+      FileMeta meta;meta.logical_path=std::string("/gpu0/")+key;meta.gpu_id=0;
+      meta.tier="remote";meta.physical_path=remote;meta.backend_id="remote";
+      meta.size_bytes=1024;meta.has_remote_copy=true;meta.state="COMMITTED";
+      filesystem.metadata_.Upsert(meta);
+      if(std::string(key)=="c")filesystem.sieve_.Hit(0,"/gpu0/a");
+      assert(filesystem.PromoteToLocal(cfg.gpus[0],key,meta,"promote")==0);
+      filesystem.CreateCrossGpuReplica(cfg.gpus[1],cfg.gpus[0],key,meta);
+    }
+    assert(filesystem.metadata_.Get("/gpu0/a")->tier=="local");
+    assert(filesystem.metadata_.Get("/gpu0/b")->tier=="remote");
+    assert(filesystem.metadata_.Get("/gpu0/c")->tier=="local");
+    assert(!filesystem.metadata_.GetLocalReplica("/gpu0/a",1));
+    assert(filesystem.metadata_.GetLocalReplica("/gpu0/b",1));
+    assert(filesystem.metadata_.GetLocalReplica("/gpu0/c",1));
+    assert(TokenFS::DirectoryBytes(root/"local0")==2048 && TokenFS::DirectoryBytes(root/"local1")==2048);
+    for(const auto& key:{"a","b","c"})assert(fs::file_size(root/"remote"/"gpu0"/key)==1024);
+  }
   static void signed_eviction_audit_score() {
     EvictionCandidate candidate;
     candidate.meta.size_bytes=4*1024*1024;
@@ -84,6 +111,7 @@ int main() {
   }
   TokenFSTestAccess::lookup_during_eviction(root/"lookup-race");
   TokenFSTestAccess::signed_eviction_audit_score();
+  TokenFSTestAccess::sieve_verified_residents(root/"sieve-storage");
   fs::remove_all(root);
   std::cout << "policy metadata invariants passed\n";
 }
