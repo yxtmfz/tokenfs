@@ -1,0 +1,87 @@
+{
+  "algorithm_revision": "ec4afcec4d0e7c3e79e8129679c25197ed454c04",
+  "frozen_at_utc": "2026-09-21T11:14:34.111821+00:00",
+  "source_hashes": {
+    "src/main.cpp": "dc558c7d7ef06706e5f16effbd01381841af7efadbd673af27f090dca19322eb",
+    "src/measured_policy.h": "fac148cc5910fe5dbe56268f60aa9b0ba9155298e4560d3ad8b4a5991b1e9229",
+    "scripts/affinity_joint_study.py": "43eb9c6c523890d8bd7441586f4a98e115952a3e9fd5501a2e857d9a942cb6f7",
+    "scripts/evidence_benchmark.py": "c1faf9b0a0ccea4404c3a5f5957b03889513d3959bfc541d434f919ae78770fc",
+    "scripts/evidence_report.py": "2ff27f63d198f9e2a6c1657f653759734b060ff4b08b9e4c350e7935bb6e3475",
+    "scripts/evidence_audit.py": "12b63f993c1d9882086357199c6d97069f010ebca006cae13778b8b6b7863573",
+    "scripts/measured_study.py": "3ee5c676f63a5216862d7a1e1e0304003cc24929e454a4cc1909baa1a70df0ad",
+    "src/sieve_policy.h": "78c0fd1c0372a252ed1d29bffa84c42d9db39528a03b3204f1c6661381294c90",
+    "scripts/paper_minimal_study.py": "f0158c8db97534daa7b7fc060e018ee160e756699a91da9734597b28ec0c26e9"
+  },
+  "binary_sha256": "2f3642866c6515771b6c94e188695f6a17e22d0e67fbaafcc9d7265479038a5d",
+  "spec_sha256": "1f1ae80060f3c40e4f94bb5e22899d1abdb8f1a065d8cf7f3e17bf72f59e2057",
+  "sensitivity_spec_sha256": "1d2d5358dcc775a8b3e3f26765423e29b3e0788430952d14b946b45bebc6049d",
+  "plan_sha256": "13ceda22856fee45aaff93dd02f6e36b5478feb0feb6168989116d0b158229aa",
+  "public_window_manifest_sha256": "c8d399c65cc5734b1f04158713e7aca89edf042a9d3e7f364671c1663f76d78f",
+  "planned_confirmation_runs": 336,
+  "planned_sensitivity_runs": 12,
+  "per_family_alpha": 0.05,
+  "primary_tests": 16,
+  "mechanism_tests": 3,
+  "remote_diagnostic_tests": 4,
+  "paired_blocks_per_scene": 12,
+  "preflight": {
+    "cn7": {
+      "host": "cn7",
+      "binary_sha256": "2f3642866c6515771b6c94e188695f6a17e22d0e67fbaafcc9d7265479038a5d",
+      "source_hashes": {
+        "src/main.cpp": "dc558c7d7ef06706e5f16effbd01381841af7efadbd673af27f090dca19322eb",
+        "src/measured_policy.h": "fac148cc5910fe5dbe56268f60aa9b0ba9155298e4560d3ad8b4a5991b1e9229",
+        "scripts/affinity_joint_study.py": "43eb9c6c523890d8bd7441586f4a98e115952a3e9fd5501a2e857d9a942cb6f7",
+        "scripts/evidence_benchmark.py": "c1faf9b0a0ccea4404c3a5f5957b03889513d3959bfc541d434f919ae78770fc",
+        "scripts/evidence_report.py": "2ff27f63d198f9e2a6c1657f653759734b060ff4b08b9e4c350e7935bb6e3475",
+        "scripts/evidence_audit.py": "12b63f993c1d9882086357199c6d97069f010ebca006cae13778b8b6b7863573",
+        "scripts/measured_study.py": "3ee5c676f63a5216862d7a1e1e0304003cc24929e454a4cc1909baa1a70df0ad",
+        "src/sieve_policy.h": "78c0fd1c0372a252ed1d29bffa84c42d9db39528a03b3204f1c6661381294c90",
+        "scripts/paper_minimal_study.py": "f0158c8db97534daa7b7fc060e018ee160e756699a91da9734597b28ec0c26e9"
+      },
+      "spec_sha256": "1f1ae80060f3c40e4f94bb5e22899d1abdb8f1a065d8cf7f3e17bf72f59e2057",
+      "records": {
+        "paper-minimal-correctness-01": {
+          "passed": true,
+          "checked_runs": 28,
+          "expected_runs": 28,
+          "errors": []
+        },
+        "paper-minimal-development-01": {
+          "passed": true,
+          "checked_runs": 28,
+          "expected_runs": 28,
+          "errors": []
+        }
+      },
+      "remaining_mounts": []
+    },
+    "cn8": {
+      "host": "cn8",
+      "binary_sha256": "2f3642866c6515771b6c94e188695f6a17e22d0e67fbaafcc9d7265479038a5d",
+      "source_hashes": {
+        "src/main.cpp": "dc558c7d7ef06706e5f16effbd01381841af7efadbd673af27f090dca19322eb",
+        "src/measured_policy.h": "fac148cc5910fe5dbe56268f60aa9b0ba9155298e4560d3ad8b4a5991b1e9229",
+        "scripts/affinity_joint_study.py": "43eb9c6c523890d8bd7441586f4a98e115952a3e9fd5501a2e857d9a942cb6f7",
+        "scripts/evidence_benchmark.py": "c1faf9b0a0ccea4404c3a5f5957b03889513d3959bfc541d434f919ae78770fc",
+        "scripts/evidence_report.py": "2ff27f63d198f9e2a6c1657f653759734b060ff4b08b9e4c350e7935bb6e3475",
+        "scripts/evidence_audit.py": "12b63f993c1d9882086357199c6d97069f010ebca006cae13778b8b6b7863573",
+        "scripts/measured_study.py": "3ee5c676f63a5216862d7a1e1e0304003cc24929e454a4cc1909baa1a70df0ad",
+        "src/sieve_policy.h": "78c0fd1c0372a252ed1d29bffa84c42d9db39528a03b3204f1c6661381294c90",
+        "scripts/paper_minimal_study.py": "f0158c8db97534daa7b7fc060e018ee160e756699a91da9734597b28ec0c26e9"
+      },
+      "spec_sha256": "1f1ae80060f3c40e4f94bb5e22899d1abdb8f1a065d8cf7f3e17bf72f59e2057",
+      "records": {
+        "paper-minimal-correctness-01": {
+          "passed": true,
+          "checked_runs": 28,
+          "expected_runs": 28,
+          "errors": []
+        }
+      },
+      "remaining_mounts": []
+    }
+  },
+  "additional_correctness_references": [],
+  "rule": "Freeze after 28 development runs and 28 correctness cases per host; unchanged H/J algorithm, no later policy tuning or significance-based sample extension; storage-only, affinity disabled"
+}
