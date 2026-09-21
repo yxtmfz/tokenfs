@@ -4,6 +4,7 @@
 #include <sqlite3.h>
 #include <yaml-cpp/yaml.h>
 #include "measured_policy.h"
+#include "sieve_policy.h"
 
 #include <algorithm>
 #include <cerrno>
@@ -1604,8 +1605,10 @@ class TokenFS {
           AddBufferedMetric("cross_gpu_local_replica_hit", 1);
         }
       }
+      if(config_.local_eviction_policy=="sieve" && meta.tier=="local")
+        sieve_.Hit(caller_gpu_id,path);
       bool affinity_reset=false;
-      if((config_.measured_policy || config_.measured_track_affinity) && measured_.Observe(caller_gpu_id,path,MeasuredOptions(),meta.tier=="local",&affinity_reset))
+      if((config_.measured_policy || config_.measured_track_affinity || (config_.private_cache_domains && config_.read_through_cache && config_.read_through_min_reads>1)) && measured_.Observe(caller_gpu_id,path,MeasuredOptions(),meta.tier=="local",&affinity_reset))
         AddBufferedMetric("measured_shift_resets",1);
       if(affinity_reset)AddBufferedMetric("measured_affinity_context_resets",1);
       AddBufferedMetric("read_open_count", 1);
@@ -2278,6 +2281,40 @@ class TokenFS {
       return true;
     }
     const std::string policy = config_.local_eviction_policy;
+    if (policy == "sieve") {
+      auto residents = metadata_.LocalEvictionCandidates(gpu.gpu_id, protected_logical_path);
+      std::unordered_set<std::string> eligible;
+      for (const auto& c : residents)
+        if (!IsOpenLogicalPath(c.meta.logical_path) && fs::exists(c.meta.physical_path))
+          eligible.insert(c.meta.logical_path);
+      while (used + required_size > gpu.local_quota_bytes) {
+        const auto key = sieve_.Victim(gpu.gpu_id, eligible);
+        if (key.empty()) return false;
+        eligible.erase(key);
+        auto found = std::find_if(residents.begin(), residents.end(),
+            [&](const auto& c) { return c.meta.logical_path == key; });
+        if (found == residents.end()) return false;
+        auto candidate = *found;
+        const auto bytes = std::max(candidate.meta.size_bytes, FileSizeNoThrow(candidate.meta.physical_path));
+        int rc = 0;
+        if (candidate.replica_gpu >= 0) {
+          std::error_code ec;
+          fs::remove(candidate.meta.physical_path, ec);
+          rc = ec ? -ec.value() : 0;
+          if (!rc) {
+            metadata_.RemoveLocalReplica(key, candidate.replica_gpu);
+            metadata_.AddMetric("evict_count", 1);
+            metadata_.AddMetric("cross_gpu_replica_delete_count", 1);
+          }
+        } else rc = EvictLocalFile(gpu, candidate.meta);
+        if (rc) { metadata_.AddMetric("evict_error_count", 1); return false; }
+        sieve_.Removed(gpu.gpu_id, key);
+        metadata_.AddMetric("evict_policy_sieve", 1);
+        metadata_.RecordPolicyEvent("EVICT", key, gpu.gpu_id, bytes, "sieve", 0);
+        used = used > bytes ? used - bytes : 0;
+      }
+      return true;
+    }
     if (policy != "cost_aware" && policy != "value_aware" &&
         policy != "lru" && policy != "lfu") {
       return false;
@@ -2414,7 +2451,7 @@ class TokenFS {
       return false;
     }
     if (config_.read_through_cache) {
-      if(config_.private_cache_domains && config_.measured_track_affinity)
+      if(config_.private_cache_domains && config_.read_through_min_reads>1)
         read_count=measured_.Frequency(gpu_id,meta.logical_path);
       if (gpu_id != meta.gpu_id) {
         metadata_.AddMetric("read_through_skip_cross_gpu", 1);
@@ -2480,7 +2517,7 @@ class TokenFS {
       return MeasuredMayAdmit(meta,caller_gpu_id);
     }
     if (config_.read_through_cache) return
-        (config_.private_cache_domains && config_.measured_track_affinity ? measured_.Frequency(caller_gpu_id,meta.logical_path) : meta.read_count) >= config_.read_through_min_reads;
+        (config_.private_cache_domains && config_.read_through_min_reads>1 ? measured_.Frequency(caller_gpu_id,meta.logical_path) : meta.read_count) >= config_.read_through_min_reads;
     if (config_.affinity_placement) {
       if (meta.target_local_replica_count == 0) return false;
       if (meta.affinity_state != "REMOTE_SHARED_HOT" && meta.affinity_state != "AFFINITY_SHIFTING" &&
@@ -2632,6 +2669,7 @@ class TokenFS {
     replica.created_at = now;
     replica.last_access_at = now;
     replica.state = "READY";
+    if(config_.local_eviction_policy=="sieve")sieve_.Ready(caller_gpu.gpu_id,meta.logical_path);
     metadata_.UpsertLocalReplica(replica);
     metadata_.RecordReplicaPromotion(meta.logical_path);
     metadata_.RecordPolicyEvent("REPLICATE_READY", meta.logical_path, caller_gpu.gpu_id, size, "cross_gpu");
@@ -2748,6 +2786,7 @@ class TokenFS {
       return -ec.value();
     }
 
+    if(config_.local_eviction_policy=="sieve")sieve_.Ready(gpu.gpu_id,meta.logical_path);
     metadata_.CommitLocalCache(meta, gpu.gpu_id, local, size);
     meta = *metadata_.Get(meta.logical_path);
     metadata_.RecordPolicyEvent("PROMOTE_READY", meta.logical_path, gpu.gpu_id, size, metric_prefix);
@@ -3495,6 +3534,7 @@ class TokenFS {
   bool background_stopping_ = false;
   Config config_;
   tokenfs_policy::MeasuredPolicy measured_;
+  tokenfs_policy::SievePolicy sieve_;
   MetadataStore metadata_;
   std::mutex handles_mu_;
   std::unordered_map<uint64_t, Handle> handles_;

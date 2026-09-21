@@ -1,0 +1,84 @@
+{
+  "stage": "development",
+  "purpose": "fixed descriptive sensitivity only; no policy tuning or confirmed claims",
+  "blocks": [
+    {
+      "id": "hot_shift_q16-s2201",
+      "condition": "hot_shift_q16",
+      "scenario": "hot_shift",
+      "seed": 2201,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 16,
+      "variants": [
+        "Full",
+        "RecentLFU"
+      ]
+    },
+    {
+      "id": "hot_shift_q16-s2203",
+      "condition": "hot_shift_q16",
+      "scenario": "hot_shift",
+      "seed": 2203,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 16,
+      "variants": [
+        "Full",
+        "RecentLFU"
+      ]
+    },
+    {
+      "id": "hot_shift_q16-s2202",
+      "condition": "hot_shift_q16",
+      "scenario": "hot_shift",
+      "seed": 2202,
+      "requests": 384,
+      "shard_mib": 2,
+      "quota_mib": 16,
+      "variants": [
+        "Full",
+        "RecentLFU"
+      ]
+    },
+    {
+      "id": "hot_shift_long-s2203",
+      "condition": "hot_shift_long",
+      "scenario": "hot_shift",
+      "seed": 2203,
+      "requests": 1536,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "Full",
+        "RecentLFU"
+      ]
+    },
+    {
+      "id": "hot_shift_long-s2201",
+      "condition": "hot_shift_long",
+      "scenario": "hot_shift",
+      "seed": 2201,
+      "requests": 1536,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "Full",
+        "RecentLFU"
+      ]
+    },
+    {
+      "id": "hot_shift_long-s2202",
+      "condition": "hot_shift_long",
+      "scenario": "hot_shift",
+      "seed": 2202,
+      "requests": 1536,
+      "shard_mib": 2,
+      "quota_mib": 8,
+      "variants": [
+        "Full",
+        "RecentLFU"
+      ]
+    }
+  ]
+}
