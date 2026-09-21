@@ -9,7 +9,7 @@ namespace {
 struct TokenFSTestAccess {
   static void sieve_verified_residents(const fs::path& root) {
     Config cfg; cfg.mount_point=root/"mnt";cfg.metadata_db=root/"sieve.db";
-    cfg.local_eviction_policy="sieve";cfg.checksum="fnv1a64";cfg.readonly_canonical=true;
+    cfg.local_eviction_policy="sieve";cfg.checksum="fnv1a64";cfg.readonly_canonical=true;cfg.speculative_copy_may_evict=true;
     cfg.gpus.push_back({0,"/gpu0",root/"local0",2048,"remote"});
     cfg.gpus.push_back({1,"/gpu1",root/"local1",2048,"remote"});
     cfg.backends.emplace("remote",BackendConfig{"remote","directory",root/"remote"});
