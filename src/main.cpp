@@ -72,6 +72,8 @@ struct Config {
   bool measured_shift_reset = false;
   bool private_cache_domains = false;
   bool peer_cache_reads = false;
+  bool shared_value_placement = false;
+  bool shared_pool_cache = false;
   bool measured_track_affinity = false;
   bool measured_affinity_gate = false;
   bool measured_affinity_recent_demand = false;
@@ -1344,6 +1346,10 @@ class TokenFS {
   void Init() {
     if (config_.peer_cache_reads && (!config_.readonly_canonical || config_.private_cache_domains))
       throw std::runtime_error("peer cache reads require immutable canonical data and a shared address space");
+    if ((config_.shared_value_placement || config_.shared_pool_cache) &&
+        (!config_.peer_cache_reads || (config_.shared_value_placement && !config_.measured_policy) ||
+         (config_.shared_value_placement && config_.shared_pool_cache)))
+      throw std::runtime_error("shared placement requires peer reads, a compatible policy and one placement mode");
     for (const auto& gpu : config_.gpus) {
       fs::create_directories(gpu.local_root);
       auto* backend = Backend(gpu.remote_backend);
@@ -1582,6 +1588,7 @@ class TokenFS {
     const bool writable = IsWritable(fi->flags);
     const int caller_gpu_id = DetectCallerGpuId(gpu->gpu_id);
     bool borrowed_peer = false;
+    int resident_gpu_id = gpu->gpu_id;
     // Update policy state on every logical read, including local fast hits.
     if (!writable) {
       metadata_.IncrementReadCount(path, caller_gpu_id,
@@ -1605,6 +1612,7 @@ class TokenFS {
           meta.tier = "local";
           meta.backend_id = "local-replica";
           meta.physical_path = replica->physical_path;
+          resident_gpu_id = caller_gpu_id;
           metadata_.TouchLocalReplica(path, caller_gpu_id);
           AddBufferedMetric("cross_gpu_local_replica_hit", 1);
         }
@@ -1615,13 +1623,13 @@ class TokenFS {
           meta.backend_id = "local-peer";
           meta.physical_path = peer->physical_path;
           borrowed_peer = true;
+          resident_gpu_id = peer->gpu_id;
           metadata_.TouchLocalReplica(path, peer->gpu_id);
-          if (config_.local_eviction_policy == "sieve") sieve_.Hit(peer->gpu_id, path);
           AddBufferedMetric("peer_cache_hit", 1);
         }
       }
-      if(config_.local_eviction_policy=="sieve" && meta.tier=="local" && !borrowed_peer)
-        sieve_.Hit(caller_gpu_id,path);
+      if(config_.local_eviction_policy=="sieve" && meta.tier=="local")
+        sieve_.Hit(resident_gpu_id,path);
       bool affinity_reset=false;
       if((config_.measured_policy || config_.measured_track_affinity || (config_.private_cache_domains && config_.read_through_cache && config_.read_through_min_reads>1)) && measured_.Observe(caller_gpu_id,path,MeasuredOptions(),meta.tier=="local",&affinity_reset))
         AddBufferedMetric("measured_shift_resets",1);
@@ -1652,7 +1660,9 @@ class TokenFS {
     fi->direct_io = config_.fuse_direct_io;
     layout_lock.unlock();
     // Pin the selected source before future placement work; this miss remains a miss.
-    if (!writable && !borrowed_peer) {
+    if (!writable && (config_.shared_value_placement || config_.shared_pool_cache)) {
+      if (meta.tier != "local") ScheduleSharedPlacement(*metadata_.Get(path), caller_gpu_id);
+    } else if (!writable && !borrowed_peer) {
       FileMeta canonical = *metadata_.Get(path);
       MaybeManageCrossGpuReplica(canonical, caller_gpu_id);
       if (canonical.tier == "remote" && ShouldPromoteOnRead(canonical, canonical.read_count, caller_gpu_id)) {
@@ -2248,14 +2258,23 @@ class TokenFS {
     return {static_cast<size_t>(config_.measured_window),config_.measured_aging,
             config_.measured_admission,config_.measured_cost,
             config_.measured_value_victim,config_.measured_size_aware,config_.measured_frequency_admission,config_.measured_shift_reset,static_cast<size_t>(config_.measured_shift_window),
-            config_.measured_track_affinity,config_.measured_affinity_gate,config_.measured_joint_admission,static_cast<size_t>(config_.measured_affinity_window),config_.measured_affinity_recent_demand,config_.measured_affinity_handover_epoch};
+            config_.measured_track_affinity,config_.measured_affinity_gate,config_.measured_joint_admission,static_cast<size_t>(config_.measured_affinity_window),config_.measured_affinity_recent_demand,config_.measured_affinity_handover_epoch,config_.shared_value_placement};
+  }
+
+  double MarginalCoverage(const FileMeta& meta, int location) {
+    if (!config_.shared_value_placement) return 1.0;
+    if (auto canonical=metadata_.Get(meta.logical_path); canonical && canonical->tier=="local" &&
+        canonical->gpu_id!=location && fs::is_regular_file(canonical->physical_path)) return 0.0;
+    for (const auto& peer:metadata_.LocalReplicas(meta.logical_path))
+      if (peer.gpu_id!=location && peer.state=="READY" && fs::is_regular_file(peer.physical_path)) return 0.0;
+    return 1.0;
   }
 
   tokenfs_policy::Decision MeasuredPlan(const GpuConfig& gpu,const FileMeta& incoming) {
     std::vector<tokenfs_policy::Item> residents;
     for(const auto& c:metadata_.LocalEvictionCandidates(gpu.gpu_id,incoming.logical_path)) {
       if(!IsOpenLogicalPath(c.meta.logical_path))
-        residents.push_back({c.meta.logical_path,c.meta.size_bytes,c.last_access_at});
+        residents.push_back({c.meta.logical_path,c.meta.size_bytes,c.last_access_at,MarginalCoverage(c.meta,gpu.gpu_id)});
     }
     const auto plan=measured_.Plan(gpu.gpu_id,{incoming.logical_path,incoming.size_bytes,0},
         std::move(residents),DirectoryBytes(gpu.local_root),gpu.local_quota_bytes,MeasuredOptions());
@@ -2353,7 +2372,7 @@ class TokenFS {
     const uint64_t now = UnixNowSeconds();
     if(config_.measured_policy) {
       std::vector<tokenfs_policy::Item> items;
-      for(const auto& c:candidates)items.push_back({c.meta.logical_path,c.meta.size_bytes,c.last_access_at});
+      for(const auto& c:candidates)items.push_back({c.meta.logical_path,c.meta.size_bytes,c.last_access_at,MarginalCoverage(c.meta,gpu.gpu_id)});
       const auto ranked=measured_.Ranked(gpu.gpu_id,std::move(items),MeasuredOptions());
       std::unordered_map<std::string,size_t> order;
       for(size_t i=0;i<ranked.size();++i)order[ranked[i].key]=i;
@@ -2533,6 +2552,64 @@ class TokenFS {
     metadata_.AddMetric("promote_benefit_x100_total", benefit_x100);
     metadata_.SetMetricMax("promote_benefit_x100_max", benefit_x100);
     return true;
+  }
+
+  void PlaceShared(const std::string& path, int caller) {
+    auto parsed=ParseGpuPath(path);if(!parsed)return;
+    const auto [owner,rel]=*parsed;
+    std::optional<GpuConfig> destination;
+    FileMeta incoming;
+    {
+      std::lock_guard<std::mutex> lock(layout_mu_);
+      auto current=metadata_.Get(path);
+      if(!current || current->state!="COMMITTED" || !current->has_remote_copy)return;
+      if(current->tier=="local" || ReadablePeer(path,-1)) {
+        AddBufferedMetric("shared_placement_already_covered",1);return;
+      }
+      incoming=*current;
+      if(config_.shared_pool_cache) {
+        if(incoming.read_count<config_.read_through_min_reads)return;
+        destination=*owner;
+      } else {
+        double best=0;tokenfs_policy::Decision chosen;
+        // Prefer the caller for an equal net gain; compare all permitted locations.
+        auto locations=config_.gpus;
+        std::stable_sort(locations.begin(),locations.end(),[caller](const auto& a,const auto& b){return (a.gpu_id==caller)>(b.gpu_id==caller);});
+        for(const auto& gpu:locations) {
+          const auto plan=MeasuredPlan(gpu,incoming);
+          AddBufferedMetric("shared_placement_plans",1);
+          const double net=plan.incoming_us-plan.copy_us-(config_.measured_joint_admission?plan.displaced_us:0);
+          if(plan.allowed && net>best) {best=net;destination=gpu;chosen=plan;}
+        }
+        if(!destination){AddBufferedMetric("shared_placement_no_gain",1);return;}
+        std::ostringstream detail;detail<<"caller="<<caller<<";incoming="<<chosen.incoming_us
+          <<";victim_loss="<<chosen.displaced_us<<";copy="<<chosen.copy_us;
+        metadata_.RecordPolicyEvent("SHARED_PLACE",path,destination->gpu_id,incoming.size_bytes,detail.str(),best);
+        AddBufferedMetric("shared_placement_selected",1);
+        if(destination->gpu_id!=caller)AddBufferedMetric("shared_placement_relocated",1);
+      }
+    }
+    // Existing copy/commit path rechecks quota and benefit using current evidence.
+    if(destination->gpu_id==owner->gpu_id)PromoteToLocal(*destination,rel,incoming,"promote",true);
+    else CreateCrossGpuReplica(*destination,*owner,rel,incoming);
+  }
+
+  void ScheduleSharedPlacement(const FileMeta& meta, int caller) {
+    if(meta.state!="COMMITTED" || !meta.has_remote_copy)return;
+    if(config_.shared_value_placement && measured_.AdmissionFrequency(caller,meta.logical_path,MeasuredOptions())<2)return;
+    if(config_.shared_pool_cache && meta.read_count<config_.read_through_min_reads)return;
+    const auto path=meta.logical_path;
+    {
+      std::lock_guard<std::mutex> lock(shared_placement_mu_);
+      if(!shared_placement_inflight_.insert(path).second) {
+        AddBufferedMetric("shared_placement_coalesced",1);return;
+      }
+    }
+    auto release=[this,path] {std::lock_guard<std::mutex> lock(shared_placement_mu_);shared_placement_inflight_.erase(path);};
+    if(!SubmitBackground([this,path,caller,release] {
+      try {PlaceShared(path,caller);} catch(...) {release();throw;}
+      release();
+    }))release();
   }
 
   bool ShouldCreateCrossGpuReplica(const FileMeta& meta, int caller_gpu_id) {
@@ -3573,6 +3650,8 @@ class TokenFS {
   std::set<std::string> promote_inflight_;
   std::mutex cross_gpu_replica_mu_;
   std::set<std::string> cross_gpu_replica_inflight_;
+  std::mutex shared_placement_mu_;
+  std::set<std::string> shared_placement_inflight_;
   std::mutex buffered_metrics_mu_;
   std::unordered_map<std::string, uint64_t> buffered_metrics_;
   std::unordered_map<std::string, uint64_t> buffered_metric_max_;
@@ -3629,6 +3708,8 @@ uint64_t MiBToBytes(uint64_t mib) { return mib * 1024ULL * 1024ULL; }
 Config LoadConfig(const fs::path& path) {
   YAML::Node root = YAML::LoadFile(path.string());
   Config config;
+  if(root["policy"] && root["policy"]["shared_value_placement"]) config.shared_value_placement=root["policy"]["shared_value_placement"].as<bool>();
+  if(root["policy"] && root["policy"]["shared_pool_cache"]) config.shared_pool_cache=root["policy"]["shared_pool_cache"].as<bool>();
   if(root["policy"] && root["policy"]["peer_cache_reads"]) config.peer_cache_reads=root["policy"]["peer_cache_reads"].as<bool>();
   if(root["policy"] && root["policy"]["private_cache_domains"]) config.private_cache_domains=root["policy"]["private_cache_domains"].as<bool>();
   if(root["policy"] && root["policy"]["measured_track_affinity"]) config.measured_track_affinity=root["policy"]["measured_track_affinity"].as<bool>();

@@ -13,7 +13,7 @@
 namespace tokenfs_policy {
 // Recent reuse is an estimate, not future knowledge. Each domain sees only accesses
 // observed so far. Rates include measured foreground I/O and verified-copy time.
-struct Item { std::string key; uint64_t bytes=0; uint64_t recency=0; };
+struct Item { std::string key; uint64_t bytes=0; uint64_t recency=0; double coverage=1.0; };
 struct Options {
   size_t window=128;
   bool aging=true;
@@ -30,6 +30,7 @@ struct Options {
   size_t affinity_window=128;
   bool affinity_recent_demand=false;
   bool affinity_handover_epoch=false;
+  bool shared_value=false;
 };
 struct Decision {
   bool allowed=false;
@@ -208,6 +209,17 @@ class MeasuredPolicy {
   }
   uint64_t EffectiveCount(int gpu,const std::string& key,const Options& o,bool incoming) const {
     const auto domain_count=Count(gpu,key);
+    if(o.shared_value) {
+      uint64_t total=0;
+      // Count actual consumers, not the location holding the one shared copy.
+      // H's per-consumer history reset is reflected in both arrival and victim values.
+      for(const auto& [node,domain]:domains_) {
+        (void)node;
+        auto found=domain.counts.find(key);
+        if(found!=domain.counts.end())total+=found->second;
+      }
+      return total;
+    }
     (void)incoming;
     if(!o.affinity_gate || !o.affinity_recent_demand)return domain_count;
     const auto domain=domains_.find(gpu);
@@ -245,7 +257,7 @@ class MeasuredPolicy {
     // resident frequency in full while subtracting one only from the incoming
     // object would add an unintended incumbent preference to the cost ablation.
     if(!o.frequency_admission)repeats=std::max(0.0,repeats-1.0);
-    return repeats*(o.cost?SavingRate()*item.bytes:1.0);
+    return repeats*(o.cost?SavingRate()*item.bytes:1.0)*item.coverage;
   }
   void Sort(int gpu,std::vector<Item>& items,const Options& o) const {
     std::sort(items.begin(),items.end(),[&](const Item& a,const Item& b){
