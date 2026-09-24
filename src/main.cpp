@@ -70,6 +70,7 @@ struct Config {
   bool measured_size_aware = true;
   bool measured_frequency_admission = false;
   bool measured_shift_reset = false;
+  bool measured_causal_window = false;
   bool private_cache_domains = false;
   bool peer_cache_reads = false;
   bool shared_value_placement = false;
@@ -2258,7 +2259,7 @@ class TokenFS {
     return {static_cast<size_t>(config_.measured_window),config_.measured_aging,
             config_.measured_admission,config_.measured_cost,
             config_.measured_value_victim,config_.measured_size_aware,config_.measured_frequency_admission,config_.measured_shift_reset,static_cast<size_t>(config_.measured_shift_window),
-            config_.measured_track_affinity,config_.measured_affinity_gate,config_.measured_joint_admission,static_cast<size_t>(config_.measured_affinity_window),config_.measured_affinity_recent_demand,config_.measured_affinity_handover_epoch,config_.shared_value_placement};
+            config_.measured_track_affinity,config_.measured_affinity_gate,config_.measured_joint_admission,static_cast<size_t>(config_.measured_affinity_window),config_.measured_affinity_recent_demand,config_.measured_affinity_handover_epoch,config_.shared_value_placement,config_.measured_causal_window};
   }
 
   double MarginalCoverage(const FileMeta& meta, int location) {
@@ -2271,6 +2272,13 @@ class TokenFS {
   }
 
   tokenfs_policy::Decision MeasuredPlan(const GpuConfig& gpu,const FileMeta& incoming) {
+    // If even an empty cache cannot repay copying, no resident scan can make
+    // the net gain positive. Keep the same execution-time capacity recheck.
+    if(config_.measured_causal_window) {
+      const auto lower=measured_.Plan(gpu.gpu_id,{incoming.logical_path,incoming.size_bytes,0},
+          {},0,gpu.local_quota_bytes,MeasuredOptions());
+      if(!lower.allowed)return lower;
+    }
     std::vector<tokenfs_policy::Item> residents;
     for(const auto& c:metadata_.LocalEvictionCandidates(gpu.gpu_id,incoming.logical_path)) {
       if(!IsOpenLogicalPath(c.meta.logical_path))
@@ -2278,6 +2286,10 @@ class TokenFS {
     }
     const auto plan=measured_.Plan(gpu.gpu_id,{incoming.logical_path,incoming.size_bytes,0},
         std::move(residents),DirectoryBytes(gpu.local_root),gpu.local_quota_bytes,MeasuredOptions());
+    if(plan.survival_adjusted_items) {
+      AddBufferedMetric("measured_survival_discounted_plans",1);
+      AddBufferedMetric("measured_survival_discounted_items",plan.survival_adjusted_items);
+    }
     if(plan.affinity_adjusted_items) {
       AddBufferedMetric("measured_affinity_reweighted_plans",1);
       AddBufferedMetric("measured_affinity_reweighted_items",plan.affinity_adjusted_items);
@@ -2580,6 +2592,10 @@ class TokenFS {
           AddBufferedMetric("shared_placement_plans",1);
           const double net=plan.incoming_us-plan.copy_us-(config_.measured_joint_admission?plan.displaced_us:0);
           if(plan.allowed && net>best) {best=net;destination=gpu;chosen=plan;}
+          // Zero charged displacement is the exact upper bound: incoming value
+          // and copy cost are location-independent on this shared-host backend.
+          if(config_.measured_causal_window && plan.allowed &&
+              (!config_.measured_joint_admission || plan.displaced_us==0))break;
         }
         if(!destination){AddBufferedMetric("shared_placement_no_gain",1);return;}
         std::ostringstream detail;detail<<"caller="<<caller<<";incoming="<<chosen.incoming_us
@@ -3720,6 +3736,7 @@ Config LoadConfig(const fs::path& path) {
     throw std::runtime_error("recent affinity demand requires affinity tracking");
   if(root["policy"] && root["policy"]["measured_joint_admission"]) config.measured_joint_admission=root["policy"]["measured_joint_admission"].as<bool>();
   if(root["policy"] && root["policy"]["measured_affinity_window"]) config.measured_affinity_window=root["policy"]["measured_affinity_window"].as<uint64_t>();
+  if(root["policy"] && root["policy"]["measured_causal_window"]) config.measured_causal_window=root["policy"]["measured_causal_window"].as<bool>();
   if(root["policy"] && root["policy"]["measured_shift_reset"]) config.measured_shift_reset=root["policy"]["measured_shift_reset"].as<bool>();
   if(root["policy"] && root["policy"]["measured_shift_window"]) config.measured_shift_window=root["policy"]["measured_shift_window"].as<uint64_t>();
   if(root["policy"] && root["policy"]["measured_frequency_admission"]) config.measured_frequency_admission=root["policy"]["measured_frequency_admission"].as<bool>();

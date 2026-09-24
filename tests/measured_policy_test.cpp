@@ -178,5 +178,32 @@ int main(){
  for(int i=0;i<3;++i)shared_coupled.Observe(1,"stale",shared,true);
  for(int i=0;i<8;++i)shared_coupled.Observe(0,i%2?"next-a":"next-b",shared,false);
  assert(shared_coupled.AdmissionFrequency(2,"stale",shared)==3); // Keep other consumers' evidence.
+ // A global observation clock expires inactive consumers' evidence too.
+ Options causal;causal.causal_window=true;causal.shared_value=true;
+ causal.cost=false;causal.window=16;
+ MeasuredPolicy aligned;
+ for(int i=0;i<8;++i)aligned.Observe(i%2,"shared",causal,true);
+ assert(aligned.AdmissionFrequency(2,"shared",causal)==8);
+ for(int i=0;i<16;++i)aligned.Observe(2,"other",causal,true);
+ assert(aligned.Frequency(0,"shared")==4);
+ assert(aligned.AdmissionFrequency(2,"shared",causal)==0);
+ // H ages overdue reuse, not the incoming side alone; no cache-state trigger.
+ MeasuredPolicy residual;causal.window=128;
+ for(int i=0;i<16;++i)residual.Observe(0,"old",causal,true);
+ for(int i=0;i<8;++i)residual.Observe(0,"new",causal,false);
+ const auto stale=residual.Plan(0,{"new",100,0},{{"old",100,0}},100,100,causal);
+ assert(!stale.allowed && stale.displaced_us==15);
+ causal.shift_reset=true;
+ const auto adapted=residual.Plan(0,{"new",100,0},{{"old",100,0}},100,100,causal);
+ assert(adapted.allowed && adapted.displaced_us==3.75 && adapted.survival_adjusted_items==1);
+ const auto same=residual.Plan(0,{"old",100,0},{{"old",100,0}},100,100,causal);
+ assert(same.incoming_us==same.displaced_us && !same.allowed);
+ // P uses all recent consumers, not unrelated objects or destination identity.
+ causal.shared_value=false;
+ assert(residual.AdmissionFrequency(1,"new",causal)==0);
+ causal.shared_value=true;
+ assert(residual.AdmissionFrequency(1,"new",causal)==8);
+ const auto absent=residual.Plan(0,{"absent",100,0},{},0,100,causal);
+ assert(!absent.allowed && absent.reason=="no_reuse");
  std::cout<<"measured admission invariants passed\n";
 }
