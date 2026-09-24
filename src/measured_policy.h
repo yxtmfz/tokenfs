@@ -31,6 +31,7 @@ struct Options {
   bool affinity_recent_demand=false;
   bool affinity_handover_epoch=false;
   bool shared_value=false;
+  bool causal_window=false;
 };
 struct Decision {
   bool allowed=false;
@@ -40,6 +41,7 @@ struct Decision {
   uint64_t incoming_count=0;
   uint64_t affinity_incoming_count=0;
   uint64_t affinity_adjusted_items=0;
+  uint64_t survival_adjusted_items=0;
   std::vector<std::string> victims;
 };
 
@@ -49,6 +51,20 @@ class MeasuredPolicy {
     std::lock_guard<std::mutex> lock(mu_);
     if(affinity_reset)*affinity_reset=false;
     ++observations_;
+    if(o.causal_window) {
+      recent_history_.push_back({key,gpu});
+      recent_shared_[key].push_back(observations_);
+      recent_domains_[gpu][key].push_back(observations_);
+      while(recent_history_.size()>std::max<size_t>(2,o.window)) {
+        const auto old=recent_history_.front();recent_history_.pop_front();
+        auto& shared=recent_shared_.at(old.first);shared.pop_front();
+        if(shared.empty())recent_shared_.erase(old.first);
+        auto& domain=recent_domains_.at(old.second);
+        auto& positions=domain.at(old.first);positions.pop_front();
+        if(positions.empty())domain.erase(old.first);
+        if(domain.empty())recent_domains_.erase(old.second);
+      }
+    }
     auto& d=domains_[gpu];
     if(d.last_observation && observations_-d.last_observation>=std::max<size_t>(8,o.affinity_window/4)) {
       d.epoch_reads=0;d.epoch_pending=true;
@@ -67,7 +83,7 @@ class MeasuredPolicy {
     d.misses=local_hit?0:d.misses+1;
     bool reset=false;
     const size_t k=std::max<size_t>(4,o.shift_window);
-    if(o.aging && o.shift_reset && d.misses>=k && d.history.size()>k) {
+    if(!o.causal_window && o.aging && o.shift_reset && d.misses>=k && d.history.size()>k) {
       std::unordered_set<std::string> latest(d.history.end()-k,d.history.end());
       // Repeated misses to a small new working set indicate stale resident heat.
       // A stream of one-off misses must not erase useful frequency history.
@@ -161,6 +177,9 @@ class MeasuredPolicy {
     result.affinity_adjusted_items=result.affinity_incoming_count!=frequency;
     for(const auto& resident:residents)
       result.affinity_adjusted_items+=EffectiveCount(gpu,resident.key,o,false)!=Count(gpu,resident.key);
+    result.survival_adjusted_items=Survival(gpu,incoming.key,o)<1.0;
+    for(const auto& resident:residents)
+      result.survival_adjusted_items+=Survival(gpu,resident.key,o)<1.0;
     result.costs_calibrated=remote_.n && local_.n && copy_.n;
     if(o.admission && result.affinity_incoming_count<2){result.reason="no_reuse";return result;}
     if(o.admission && o.affinity_gate && !o.affinity_recent_demand) {
@@ -209,6 +228,10 @@ class MeasuredPolicy {
   }
   uint64_t EffectiveCount(int gpu,const std::string& key,const Options& o,bool incoming) const {
     const auto domain_count=Count(gpu,key);
+    if(o.causal_window) {
+      const auto* positions=RecentPositions(gpu,key,o);
+      return positions?positions->size():0;
+    }
     if(o.shared_value) {
       uint64_t total=0;
       // Count actual consumers, not the location holding the one shared copy.
@@ -251,13 +274,33 @@ class MeasuredPolicy {
     if(short_own*4<3*short_window || short_own*affinity_history_.size()<2*short_window*long_own)return domain_count;
     return std::max(domain_count,total*short_own/short_window);
   }
+  const std::deque<uint64_t>* RecentPositions(int gpu,const std::string& key,const Options& o) const {
+    if(o.shared_value) {
+      const auto found=recent_shared_.find(key);
+      return found==recent_shared_.end()?nullptr:&found->second;
+    }
+    const auto domain=recent_domains_.find(gpu);
+    if(domain==recent_domains_.end())return nullptr;
+    const auto found=domain->second.find(key);
+    return found==domain->second.end()?nullptr:&found->second;
+  }
+  double Survival(int gpu,const std::string& key,const Options& o) const {
+    if(!o.causal_window || !o.shift_reset)return 1.0;
+    const auto* positions=RecentPositions(gpu,key,o);
+    if(!positions || positions->size()<2)return 1.0;
+    // Past inter-arrival spacing sets the half-life. An unrequested resident
+    // loses value as its next reuse becomes overdue. Arrivals and residents use
+    // exactly the same forecast; there is no phase label or cache-state oracle.
+    const double gap=double(positions->back()-positions->front())/(positions->size()-1);
+    return std::exp2(-double(observations_-positions->back())/std::max(4.0,gap));
+  }
   double Value(int gpu,const Item& item,const Options& o,bool incoming) const {
     double repeats=double(EffectiveCount(gpu,item.key,o,incoming));
     // Use the same repeat-evidence estimate for arrivals and residents. Charging
     // resident frequency in full while subtracting one only from the incoming
     // object would add an unintended incumbent preference to the cost ablation.
     if(!o.frequency_admission)repeats=std::max(0.0,repeats-1.0);
-    return repeats*(o.cost?SavingRate()*item.bytes:1.0)*item.coverage;
+    return repeats*Survival(gpu,item.key,o)*(o.cost?SavingRate()*item.bytes:1.0)*item.coverage;
   }
   void Sort(int gpu,std::vector<Item>& items,const Options& o) const {
     std::sort(items.begin(),items.end(),[&](const Item& a,const Item& b){
@@ -274,6 +317,9 @@ class MeasuredPolicy {
   std::unordered_map<int,Domain> domains_;
   std::deque<std::pair<std::string,int>> affinity_history_;
   std::unordered_map<std::string,std::unordered_map<int,uint64_t>> affinity_counts_;
+  std::deque<std::pair<std::string,int>> recent_history_;
+  std::unordered_map<std::string,std::deque<uint64_t>> recent_shared_;
+  std::unordered_map<int,std::unordered_map<std::string,std::deque<uint64_t>>> recent_domains_;
   uint64_t observations_=0;
   Rate local_,remote_,copy_;
 };

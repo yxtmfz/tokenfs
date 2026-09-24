@@ -10,7 +10,7 @@ struct TokenFSTestAccess {
   static void shared_placement(const fs::path& root) {
     Config cfg;cfg.mount_point=root/"mnt";cfg.metadata_db=root/"state.db";
     cfg.readonly_canonical=true;cfg.peer_cache_reads=true;cfg.shared_value_placement=true;
-    cfg.measured_policy=true;cfg.measured_cost=false;cfg.checksum="fnv1a64";
+    cfg.measured_policy=true;cfg.measured_causal_window=true;cfg.measured_cost=false;cfg.checksum="fnv1a64";
     cfg.speculative_copy_may_evict=true;
     for(int id=0;id<3;++id)cfg.gpus.push_back({id,"/gpu"+std::to_string(id),root/("local"+std::to_string(id)),1024,"remote"});
     cfg.backends.emplace("remote",BackendConfig{"remote","directory",root/"remote"});

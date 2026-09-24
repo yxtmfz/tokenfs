@@ -39,3 +39,5 @@ jobs:
         run: python3 -m unittest tests.shared_cache_pilot_test
       - name: Test bounded shared-placement factorial controls
         run: python3 -m unittest tests.shared_joint_pilot_test
+      - name: Test causal reuse pilot controls
+        run: python3 -m unittest tests.causal_reuse_pilot_test

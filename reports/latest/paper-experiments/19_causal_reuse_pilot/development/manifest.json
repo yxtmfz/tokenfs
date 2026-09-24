@@ -1,0 +1,90 @@
+{
+  "spec": {
+    "stage": "development",
+    "blocks": [
+      {
+        "id": "moving-shared-seed-2903",
+        "scenario": "moving_shared",
+        "seed": 2903,
+        "variants": [
+          "Shared",
+          "H",
+          "P",
+          "HP",
+          "Independent",
+          "PoolSIEVE2"
+        ],
+        "quota_mib": 24,
+        "shard_mib": 2,
+        "requests": 576
+      },
+      {
+        "id": "moving-shared-seed-2902",
+        "scenario": "moving_shared",
+        "seed": 2902,
+        "variants": [
+          "Shared",
+          "H",
+          "P",
+          "HP",
+          "Independent",
+          "PoolSIEVE2"
+        ],
+        "quota_mib": 24,
+        "shard_mib": 2,
+        "requests": 576
+      },
+      {
+        "id": "moving-shared-seed-2901",
+        "scenario": "moving_shared",
+        "seed": 2901,
+        "variants": [
+          "Shared",
+          "H",
+          "P",
+          "HP",
+          "Independent",
+          "PoolSIEVE2"
+        ],
+        "quota_mib": 24,
+        "shard_mib": 2,
+        "requests": 576
+      }
+    ]
+  },
+  "spec_sha256": "9ee684362f50ec2d8fb7550b4ff3ba5c80f36c6cef02c70968ceb13a259992f2",
+  "source_hashes": {
+    "src/main.cpp": "549b741848cfbdec728b948c6f1852d70ab6bf480a4a023c7dc093e36b1c97e9",
+    "src/measured_policy.h": "d3e63c4015ff2a924866ae7da0b95dd9db616f12c46815abe39a6af8f5c53080",
+    "src/sieve_policy.h": "78c0fd1c0372a252ed1d29bffa84c42d9db39528a03b3204f1c6661381294c90",
+    "scripts/causal_reuse_pilot.py": "f40738edf0b30b79f2d2098c7ac56e5dea4bc78fc9b928f91ecc156b338ceee8",
+    "scripts/affinity_joint_study.py": "43eb9c6c523890d8bd7441586f4a98e115952a3e9fd5501a2e857d9a942cb6f7",
+    "scripts/paper_minimal_study.py": "f0158c8db97534daa7b7fc060e018ee160e756699a91da9734597b28ec0c26e9",
+    "scripts/evidence_benchmark.py": "c1faf9b0a0ccea4404c3a5f5957b03889513d3959bfc541d434f919ae78770fc",
+    "scripts/evidence_report.py": "2ff27f63d198f9e2a6c1657f653759734b060ff4b08b9e4c350e7935bb6e3475",
+    "scripts/measured_study.py": "3ee5c676f63a5216862d7a1e1e0304003cc24929e454a4cc1909baa1a70df0ad",
+    "tests/policy_metadata_test.cpp": "c96fb14f0cc6d394cc5018e33ca073ea339cb509fab23fc14aa9405e56e5d9b7",
+    "tests/measured_policy_test.cpp": "2c7dc412a23d0b1550920b6629840b7e4e40a4195c8a1d747bb79be9456fe287",
+    "tests/causal_reuse_pilot_test.py": "867e4deda3aa77afe272d4352b388ae8004719221b59c656d347b5c338f08cf4",
+    "docs/causal-reuse-pilot-plan.md": "da64ad01ed0db272839577d82a0fb8cfc90c7f4a03672e67d550a5e87bf0be01",
+    "CMakeLists.txt": "066087890a3c2ffd51c85f33df4d72f55f39880ad4679a41781679400be65fd0"
+  },
+  "binary_sha256": "e24c897fb5bdd3741e29ba32d563c36b8abd9bef91d87e7a675a9709baf519bd",
+  "output": "/home/wjxt/tokenfs-causal-reuse-evidence/development",
+  "remote_data": "/srv/tokenfs/remote-cn7/causal-reuse-20260925/aj-development",
+  "verify": false,
+  "backend_direct": true,
+  "topology": "three logical cache partitions on one shared host disk; access policy varied explicitly; serialized callers; no physical GPUs",
+  "created_utc": "2026-09-24T16:15:31Z",
+  "mount": {
+    "target": "/srv/tokenfs/remote-cn7",
+    "source": "/dev/nvme1n1",
+    "fstype": "ext4",
+    "options": "rw,nosuid,nodev,relatime"
+  },
+  "nvme_identity": {
+    "transport": "tcp",
+    "address": "traddr=28.10.10.13,trsvcid=4420,src_addr=28.10.10.7",
+    "subsysnqn": "nqn.2026-09.local.aura-kv:remote-cn7"
+  }
+}
