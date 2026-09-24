@@ -52,10 +52,20 @@ def review(data,source,freeze):
  check(math.isclose(statistics.mean(deltas),interaction['mean_seconds'],abs_tol=1e-12) and math.isclose(statistics.mean(logs),interaction['mean_log_interaction'],abs_tol=1e-12),'interaction aggregate')
  for arm in study.VARIANTS:
   check({study.arm_order(b).index(arm)//2 for b in m['spec']['blocks']}=={0,1,2},arm+': order balance')
+ effects=[]
+ for b in m['spec']['blocks']:
+  ev={n:json.loads((root/b['id']/n/'policy-events.json').read_text()) for n in study.VARIANTS}
+  def actions(n):return [(e['action'],e['logical_path'],e['gpu_id']) for e in ev[n] if e['action'] in ['EVICT','PROMOTE_READY','REPLICATE_READY']]
+  charged=0
+  for e in ev['HP']:
+   if e['action']=='SHARED_PLACE':
+    parts=dict(v.split('=',1) for v in e['reason'].split(';'))
+    if float(parts['victim_loss'])>0:charged+=1
+  effects.append(dict(seed=b['seed'],h_active=rs[b['id'],'HP']['metrics'].get('measured_shift_resets',0)>0,p_active=rs[b['id'],'HP']['metrics'].get('shared_placement_relocated',0)>0,h_actions_differ=actions('HP')!=actions('P'),p_actions_differ=actions('HP')!=actions('H'),j_actions_differ=actions('HP')!=actions('Independent'),selected_plans_with_victim_loss=charged))
  p={(r['treatment'],r['baseline']):r for r in pairs};s={r['strategy']:r for r in summaries}
  def promising(baseline):return p['HP',baseline]['wins']==3 and p['HP',baseline]['paired_gain_pct']>=5
- gates=dict(affinity_conditional_on_H=promising('H') and s['HP']['placements']>0,hotspot_conditional_on_P=promising('P') and s['HP']['h_resets']>0,joint_controller=promising('Independent'),beats_pooled_reference=promising('PoolSIEVE2'))
- return dict(passed=not errors,errors=errors,stages=stages,checked_speed_runs=18,checked_content_runs=6,pilot_gates=gates,mean_interaction_seconds=statistics.mean(deltas),interpretation='exploratory single synthetic scenario; no formal significance, universal superiority, GPU inference or priority-of-invention claim; no automatic expansion')
+ gates=dict(affinity_conditional_on_H=promising('H') and s['HP']['placements']>0,hotspot_conditional_on_P=promising('P') and s['HP']['h_resets']>0,joint_controller=promising('Independent') and any(e['selected_plans_with_victim_loss']>0 and e['j_actions_differ'] for e in effects),beats_pooled_reference=promising('PoolSIEVE2'))
+ return dict(passed=not errors,errors=errors,stages=stages,checked_speed_runs=18,checked_content_runs=6,mechanism_pairs=effects,pilot_gates=gates,mean_interaction_seconds=statistics.mean(deltas),interpretation='exploratory single synthetic scenario; no formal significance, universal superiority, GPU inference or priority-of-invention claim; no automatic expansion')
 
 if __name__=='__main__':
  p=argparse.ArgumentParser()
