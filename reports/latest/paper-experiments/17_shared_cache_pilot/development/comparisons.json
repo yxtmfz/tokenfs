@@ -1,0 +1,146 @@
+[
+  {
+    "scenario": "shared_capacity",
+    "treatment": "AnyReadyShare",
+    "baseline": "Private",
+    "n": 3,
+    "paired_change_pct": 23.269879996979938,
+    "per_seed": [
+      {
+        "seed": 2702,
+        "change_pct": 22.199884934820034
+      },
+      {
+        "seed": 2701,
+        "change_pct": 25.87173426731546
+      },
+      {
+        "seed": 2703,
+        "change_pct": 21.77886068552748
+      }
+    ],
+    "wins": 3,
+    "with_drain_change_pct": 23.25707238480057,
+    "interpretation": "exploratory pilot; no significance or general GPU claim"
+  },
+  {
+    "scenario": "shared_capacity",
+    "treatment": "AnyReadyShare",
+    "baseline": "OwnerShare",
+    "n": 3,
+    "paired_change_pct": 7.362254973015148,
+    "per_seed": [
+      {
+        "seed": 2702,
+        "change_pct": 1.6041350365243678
+      },
+      {
+        "seed": 2701,
+        "change_pct": 10.072461360313234
+      },
+      {
+        "seed": 2703,
+        "change_pct": 10.65341271991256
+      }
+    ],
+    "wins": 3,
+    "with_drain_change_pct": 7.357740512519473,
+    "interpretation": "exploratory pilot; no significance or general GPU claim"
+  },
+  {
+    "scenario": "shared_capacity",
+    "treatment": "OwnerShare",
+    "baseline": "Private",
+    "n": 3,
+    "paired_change_pct": 14.816776182619385,
+    "per_seed": [
+      {
+        "seed": 2702,
+        "change_pct": 20.27058238416375
+      },
+      {
+        "seed": 2701,
+        "change_pct": 14.35352013732536
+      },
+      {
+        "seed": 2703,
+        "change_pct": 10.054319782956721
+      }
+    ],
+    "wins": 3,
+    "with_drain_change_pct": 14.809674455124178,
+    "interpretation": "exploratory pilot; no significance or general GPU claim"
+  },
+  {
+    "scenario": "disjoint",
+    "treatment": "AnyReadyShare",
+    "baseline": "Private",
+    "n": 3,
+    "paired_change_pct": 1.4353928359393642,
+    "per_seed": [
+      {
+        "seed": 2703,
+        "change_pct": -0.32989987943238264
+      },
+      {
+        "seed": 2701,
+        "change_pct": 0.34440115818723527
+      },
+      {
+        "seed": 2702,
+        "change_pct": 4.354337765822258
+      }
+    ],
+    "wins": 2,
+    "with_drain_change_pct": 1.426902834111643,
+    "interpretation": "exploratory pilot; no significance or general GPU claim"
+  },
+  {
+    "scenario": "disjoint",
+    "treatment": "AnyReadyShare",
+    "baseline": "OwnerShare",
+    "n": 3,
+    "paired_change_pct": 1.6400699446066591,
+    "per_seed": [
+      {
+        "seed": 2703,
+        "change_pct": 0.18264343246117143
+      },
+      {
+        "seed": 2701,
+        "change_pct": -0.27765072868832785
+      },
+      {
+        "seed": 2702,
+        "change_pct": 5.101733164584954
+      }
+    ],
+    "wins": 2,
+    "with_drain_change_pct": 1.634955729052212,
+    "interpretation": "exploratory pilot; no significance or general GPU claim"
+  },
+  {
+    "scenario": "disjoint",
+    "treatment": "OwnerShare",
+    "baseline": "Private",
+    "n": 3,
+    "paired_change_pct": -0.2013744272104656,
+    "per_seed": [
+      {
+        "seed": 2703,
+        "change_pct": -0.5116088918526773
+      },
+      {
+        "seed": 2701,
+        "change_pct": 0.6237838272172613
+      },
+      {
+        "seed": 2702,
+        "change_pct": -0.7111161502848962
+      }
+    ],
+    "wins": 1,
+    "with_drain_change_pct": -0.20470604178274288,
+    "interpretation": "exploratory pilot; no significance or general GPU claim"
+  }
+]

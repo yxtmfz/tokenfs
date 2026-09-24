@@ -1,0 +1,49 @@
+{
+  "spec": {
+    "stage": "correctness",
+    "blocks": [
+      {
+        "id": "shared_capacity-seed-2699",
+        "scenario": "shared_capacity",
+        "seed": 2699,
+        "requests": 96,
+        "shard_mib": 2,
+        "quota_mib": 8,
+        "variants": [
+          "Private",
+          "OwnerShare",
+          "AnyReadyShare"
+        ]
+      }
+    ]
+  },
+  "spec_sha256": "3a05aa6714af3bf4cb41421d5d0f2533d0ad901b173bce2221ac1d05c5fbe8ae",
+  "source_hashes": {
+    "src/main.cpp": "9cdb027944d9b0c1be9ab7ac46b423ac52aa13bd00ab47d452d9a41dd69fdf8a",
+    "src/measured_policy.h": "fac148cc5910fe5dbe56268f60aa9b0ba9155298e4560d3ad8b4a5991b1e9229",
+    "src/sieve_policy.h": "78c0fd1c0372a252ed1d29bffa84c42d9db39528a03b3204f1c6661381294c90",
+    "scripts/shared_cache_pilot.py": "917849cfb220382f83199d9e8724426b43df2810928aca5437713ec08ba722aa",
+    "scripts/affinity_joint_study.py": "43eb9c6c523890d8bd7441586f4a98e115952a3e9fd5501a2e857d9a942cb6f7",
+    "scripts/paper_minimal_study.py": "f0158c8db97534daa7b7fc060e018ee160e756699a91da9734597b28ec0c26e9",
+    "scripts/evidence_benchmark.py": "c1faf9b0a0ccea4404c3a5f5957b03889513d3959bfc541d434f919ae78770fc",
+    "scripts/evidence_report.py": "2ff27f63d198f9e2a6c1657f653759734b060ff4b08b9e4c350e7935bb6e3475",
+    "scripts/measured_study.py": "3ee5c676f63a5216862d7a1e1e0304003cc24929e454a4cc1909baa1a70df0ad",
+    "tests/policy_metadata_test.cpp": "d2d8deac233ad0cb8452479d6930287aff223041c9ec805b8e8c7b6da3f97e32",
+    "tests/shared_cache_pilot_test.py": "9a0d50758a76f709bc83482b7225734dd4266f463c40397ebf9f2566ae0f42fd",
+    "CMakeLists.txt": "066087890a3c2ffd51c85f33df4d72f55f39880ad4679a41781679400be65fd0"
+  },
+  "binary_sha256": "2887266c1b30fe1b5a4bb9d3e2b139a899bab2bf1358ff67bda92d73c0baebb5",
+  "output": "/home/wjxt/tokenfs-shared-pilot-evidence/correctness",
+  "remote_data": "/srv/tokenfs/remote-cn7/shared-pilot-20260924/aj-correctness",
+  "verify": true,
+  "backend_direct": true,
+  "topology": "three logical cache partitions on one shared host disk; access policy varied explicitly; serialized callers; no physical GPUs",
+  "created_utc": "2026-09-24T14:42:25Z",
+  "mount": {
+    "target": "/srv/tokenfs/remote-cn7",
+    "source": "/dev/nvme1n1",
+    "fstype": "ext4",
+    "options": "rw,nosuid,nodev,relatime"
+  },
+  "verification_only": true
+}

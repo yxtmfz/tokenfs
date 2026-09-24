@@ -71,6 +71,7 @@ struct Config {
   bool measured_frequency_admission = false;
   bool measured_shift_reset = false;
   bool private_cache_domains = false;
+  bool peer_cache_reads = false;
   bool measured_track_affinity = false;
   bool measured_affinity_gate = false;
   bool measured_affinity_recent_demand = false;
@@ -1341,6 +1342,8 @@ class TokenFS {
       : config_(std::move(config)), metadata_(config_.metadata_db) {}
 
   void Init() {
+    if (config_.peer_cache_reads && (!config_.readonly_canonical || config_.private_cache_domains))
+      throw std::runtime_error("peer cache reads require immutable canonical data and a shared address space");
     for (const auto& gpu : config_.gpus) {
       fs::create_directories(gpu.local_root);
       auto* backend = Backend(gpu.remote_backend);
@@ -1578,6 +1581,7 @@ class TokenFS {
     }
     const bool writable = IsWritable(fi->flags);
     const int caller_gpu_id = DetectCallerGpuId(gpu->gpu_id);
+    bool borrowed_peer = false;
     // Update policy state on every logical read, including local fast hits.
     if (!writable) {
       metadata_.IncrementReadCount(path, caller_gpu_id,
@@ -1605,7 +1609,18 @@ class TokenFS {
           AddBufferedMetric("cross_gpu_local_replica_hit", 1);
         }
       }
-      if(config_.local_eviction_policy=="sieve" && meta.tier=="local")
+      if (config_.peer_cache_reads && meta.tier != "local") {
+        if (auto peer = ReadablePeer(path, caller_gpu_id)) {
+          meta.tier = "local";
+          meta.backend_id = "local-peer";
+          meta.physical_path = peer->physical_path;
+          borrowed_peer = true;
+          metadata_.TouchLocalReplica(path, peer->gpu_id);
+          if (config_.local_eviction_policy == "sieve") sieve_.Hit(peer->gpu_id, path);
+          AddBufferedMetric("peer_cache_hit", 1);
+        }
+      }
+      if(config_.local_eviction_policy=="sieve" && meta.tier=="local" && !borrowed_peer)
         sieve_.Hit(caller_gpu_id,path);
       bool affinity_reset=false;
       if((config_.measured_policy || config_.measured_track_affinity || (config_.private_cache_domains && config_.read_through_cache && config_.read_through_min_reads>1)) && measured_.Observe(caller_gpu_id,path,MeasuredOptions(),meta.tier=="local",&affinity_reset))
@@ -1637,7 +1652,7 @@ class TokenFS {
     fi->direct_io = config_.fuse_direct_io;
     layout_lock.unlock();
     // Pin the selected source before future placement work; this miss remains a miss.
-    if (!writable) {
+    if (!writable && !borrowed_peer) {
       FileMeta canonical = *metadata_.Get(path);
       MaybeManageCrossGpuReplica(canonical, caller_gpu_id);
       if (canonical.tier == "remote" && ShouldPromoteOnRead(canonical, canonical.read_count, caller_gpu_id)) {
@@ -1680,6 +1695,8 @@ class TokenFS {
     }
     AddBufferedMetric("read_ops", 1);
     AddBufferedMetric("read_bytes", static_cast<uint64_t>(n));
+    if (handle->backend_id == "local-peer")
+      AddBufferedMetric("peer_cache_read_bytes", static_cast<uint64_t>(n));
     AddBufferedMetric("qos_gpu" + std::to_string(handle->caller_gpu_id) +
                           "_read_ops",
                       1);
@@ -1993,6 +2010,17 @@ class TokenFS {
                        [gpu_id](const GpuConfig& gpu) {
                          return gpu.gpu_id == gpu_id;
                        });
+  }
+
+  // Called under layout_mu_; Open pins the selected file before releasing it.
+  // This is shared-host storage reuse, not CUDA peer access or remote RPC.
+  std::optional<LocalReplica> ReadablePeer(const std::string& path, int caller) {
+    for (const auto& replica : metadata_.LocalReplicas(path)) {
+      if (replica.gpu_id != caller && KnownGpuId(replica.gpu_id) &&
+          replica.state == "READY" && fs::is_regular_file(replica.physical_path))
+        return replica;
+    }
+    return std::nullopt;
   }
 
   int DetectCallerGpuId(int fallback_gpu_id) {
@@ -3601,6 +3629,7 @@ uint64_t MiBToBytes(uint64_t mib) { return mib * 1024ULL * 1024ULL; }
 Config LoadConfig(const fs::path& path) {
   YAML::Node root = YAML::LoadFile(path.string());
   Config config;
+  if(root["policy"] && root["policy"]["peer_cache_reads"]) config.peer_cache_reads=root["policy"]["peer_cache_reads"].as<bool>();
   if(root["policy"] && root["policy"]["private_cache_domains"]) config.private_cache_domains=root["policy"]["private_cache_domains"].as<bool>();
   if(root["policy"] && root["policy"]["measured_track_affinity"]) config.measured_track_affinity=root["policy"]["measured_track_affinity"].as<bool>();
   if(root["policy"] && root["policy"]["measured_affinity_gate"]) config.measured_affinity_gate=root["policy"]["measured_affinity_gate"].as<bool>();
