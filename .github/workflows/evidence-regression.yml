@@ -37,3 +37,5 @@ jobs:
         run: python3 -m unittest tests.paper_minimal_test
       - name: Test bounded shared-cache pilot controls
         run: python3 -m unittest tests.shared_cache_pilot_test
+      - name: Test bounded shared-placement factorial controls
+        run: python3 -m unittest tests.shared_joint_pilot_test

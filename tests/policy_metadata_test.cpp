@@ -7,6 +7,37 @@
 
 namespace {
 struct TokenFSTestAccess {
+  static void shared_placement(const fs::path& root) {
+    Config cfg;cfg.mount_point=root/"mnt";cfg.metadata_db=root/"state.db";
+    cfg.readonly_canonical=true;cfg.peer_cache_reads=true;cfg.shared_value_placement=true;
+    cfg.measured_policy=true;cfg.measured_cost=false;cfg.checksum="fnv1a64";
+    cfg.speculative_copy_may_evict=true;
+    for(int id=0;id<3;++id)cfg.gpus.push_back({id,"/gpu"+std::to_string(id),root/("local"+std::to_string(id)),1024,"remote"});
+    cfg.backends.emplace("remote",BackendConfig{"remote","directory",root/"remote"});
+    TokenFS filesystem(cfg);filesystem.Init();
+    for(const auto& key:{"hot","incoming"}) {
+      auto remote=root/"remote/gpu0"/key;std::ofstream(remote)<<std::string(1024,key[0]);
+      FileMeta meta;meta.logical_path=std::string("/gpu0/")+key;meta.gpu_id=0;
+      meta.tier="remote";meta.physical_path=remote;meta.backend_id="remote";
+      meta.size_bytes=1024;meta.has_remote_copy=true;meta.state="COMMITTED";filesystem.metadata_.Upsert(meta);
+    }
+    for(int i=0;i<16;++i)filesystem.measured_.Observe(0,"/gpu0/hot",filesystem.MeasuredOptions(),true);
+    filesystem.PlaceShared("/gpu0/hot",0);
+    assert(filesystem.metadata_.Get("/gpu0/hot")->tier=="local");
+    for(int i=0;i<4;++i)filesystem.measured_.Observe(0,"/gpu0/incoming",filesystem.MeasuredOptions(),false);
+    filesystem.PlaceShared("/gpu0/incoming",0); // Caller is full: use free peer capacity.
+    auto replica=filesystem.metadata_.GetLocalReplica("/gpu0/incoming",1);
+    assert(replica && replica->state=="READY");
+    assert(filesystem.metadata_.Get("/gpu0/hot")->tier=="local");
+    assert(filesystem.MarginalCoverage(*filesystem.metadata_.Get("/gpu0/incoming"),1)==1);
+    auto copy=*replica;copy.gpu_id=2;copy.physical_path=root/"local2/incoming";
+    fs::copy_file(replica->physical_path,copy.physical_path);filesystem.metadata_.UpsertLocalReplica(copy);
+    assert(filesystem.MarginalCoverage(*filesystem.metadata_.Get("/gpu0/incoming"),1)==0);
+    fs::remove(copy.physical_path);filesystem.metadata_.RemoveLocalReplica(copy.logical_path,2);
+    filesystem.PlaceShared("/gpu0/incoming",2); // Execution-time coverage prevents duplication.
+    assert(!filesystem.metadata_.GetLocalReplica("/gpu0/incoming",2));
+    assert(filesystem.MarginalCoverage(*filesystem.metadata_.Get("/gpu0/incoming"),1)==1);
+  }
   static void readable_peer(const fs::path& root) {
     Config cfg; cfg.mount_point=root/"mnt";cfg.metadata_db=root/"peer.db";
     cfg.readonly_canonical=true;cfg.peer_cache_reads=true;
@@ -137,6 +168,7 @@ int main() {
   }
   TokenFSTestAccess::lookup_during_eviction(root/"lookup-race");
   TokenFSTestAccess::readable_peer(root/"peer-storage");
+  TokenFSTestAccess::shared_placement(root/"shared-placement");
   TokenFSTestAccess::signed_eviction_audit_score();
   TokenFSTestAccess::sieve_verified_residents(root/"sieve-storage");
   fs::remove_all(root);

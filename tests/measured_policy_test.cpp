@@ -160,5 +160,23 @@ int main(){
  for(int i=0;i<64;i++)no_transfer.Observe(0,"unrelated",epoch);
  for(int i=0;i<4;i++){no_transfer.Observe(1,"cold-new",epoch,false,&context_reset);assert(!context_reset);}
  assert(no_transfer.Frequency(1,"old-task")==24);
+ // A shared copy serves all consumers, independent of its resident location.
+ Options shared;shared.shared_value=true;shared.cost=false;
+ MeasuredPolicy reuse;
+ for(int i=0;i<4;++i)reuse.Observe(i%2,"shared",shared,true);
+ assert(reuse.AdmissionFrequency(2,"shared",shared)==4);
+ assert(reuse.Frequency(2,"shared")==0);
+ for(int i=0;i<6;++i)reuse.Observe(1,"valuable",shared,true);
+ assert(!reuse.Plan(2,{"shared",100,0},{{"valuable",100,0}},100,100,shared).allowed);
+ // Evicting a duplicate with another readable copy does not destroy coverage.
+ auto duplicate=reuse.Plan(2,{"shared",100,0},{{"valuable",100,0,0.0}},100,100,shared);
+ assert(duplicate.allowed && duplicate.displaced_us==0);
+ auto independent=shared;independent.joint_admission=false;
+ assert(reuse.Plan(2,{"shared",100,0},{{"valuable",100,0}},100,100,independent).allowed);
+ MeasuredPolicy shared_coupled;shared.shift_reset=true;
+ for(int i=0;i<64;++i)shared_coupled.Observe(0,"stale",shared,true);
+ for(int i=0;i<3;++i)shared_coupled.Observe(1,"stale",shared,true);
+ for(int i=0;i<8;++i)shared_coupled.Observe(0,i%2?"next-a":"next-b",shared,false);
+ assert(shared_coupled.AdmissionFrequency(2,"stale",shared)==3); // Keep other consumers' evidence.
  std::cout<<"measured admission invariants passed\n";
 }

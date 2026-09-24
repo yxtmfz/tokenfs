@@ -1,0 +1,57 @@
+{
+  "passed": true,
+  "errors": [],
+  "stages": {
+    "correctness": {
+      "passed": true,
+      "checked_runs": 6,
+      "expected_runs": 6,
+      "errors": []
+    },
+    "development": {
+      "passed": true,
+      "checked_runs": 18,
+      "expected_runs": 18,
+      "errors": []
+    }
+  },
+  "checked_speed_runs": 18,
+  "checked_content_runs": 6,
+  "mechanism_pairs": [
+    {
+      "seed": 2803,
+      "h_active": true,
+      "p_active": true,
+      "h_actions_differ": true,
+      "p_actions_differ": true,
+      "j_actions_differ": true,
+      "selected_plans_with_victim_loss": 17
+    },
+    {
+      "seed": 2802,
+      "h_active": true,
+      "p_active": true,
+      "h_actions_differ": true,
+      "p_actions_differ": true,
+      "j_actions_differ": true,
+      "selected_plans_with_victim_loss": 11
+    },
+    {
+      "seed": 2801,
+      "h_active": true,
+      "p_active": true,
+      "h_actions_differ": true,
+      "p_actions_differ": true,
+      "j_actions_differ": true,
+      "selected_plans_with_victim_loss": 19
+    }
+  ],
+  "pilot_gates": {
+    "affinity_conditional_on_H": true,
+    "hotspot_conditional_on_P": false,
+    "joint_controller": false,
+    "beats_pooled_reference": false
+  },
+  "mean_interaction_seconds": -0.330714509666666,
+  "interpretation": "exploratory single synthetic scenario; no formal significance, universal superiority, GPU inference or priority-of-invention claim; no automatic expansion"
+}
