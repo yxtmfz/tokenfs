@@ -65,6 +65,11 @@ def review(data,source,freeze):
  p={(r['treatment'],r['baseline']):r for r in pairs};s={r['strategy']:r for r in summaries}
  def promising(baseline):return p['HP',baseline]['wins']==3 and p['HP',baseline]['paired_gain_pct']>=5
  gates=dict(affinity_conditional_on_H=promising('H') and s['HP']['placements']>0,hotspot_conditional_on_P=promising('P') and s['HP']['survival_plans']>0,joint_controller=promising('Independent') and any(e['selected_plans_with_victim_loss']>0 and e['j_actions_differ'] for e in effects),beats_pooled_reference=promising('PoolSIEVE2'))
+ def standalone(name):
+  row=p[name,'Shared'];return row['wins']==3 and row['paired_gain_pct']>=5
+ gates['hotspot_standalone']=standalone('H')
+ gates['affinity_standalone']=standalone('P')
+ gates['all_component_and_reference_gates']=all(gates.values())
  return dict(passed=not errors,errors=errors,stages=stages,checked_speed_runs=18,checked_content_runs=6,mechanism_pairs=effects,pilot_gates=gates,mean_interaction_seconds=statistics.mean(deltas),interpretation='exploratory single synthetic scenario; no formal significance, universal superiority, GPU inference or priority-of-invention claim; no automatic expansion')
 
 if __name__=='__main__':
