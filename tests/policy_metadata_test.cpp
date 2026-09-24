@@ -7,6 +7,32 @@
 
 namespace {
 struct TokenFSTestAccess {
+  static void readable_peer(const fs::path& root) {
+    Config cfg; cfg.mount_point=root/"mnt";cfg.metadata_db=root/"peer.db";
+    cfg.readonly_canonical=true;cfg.peer_cache_reads=true;
+    cfg.gpus.push_back({0,"/gpu0",root/"local0",2048,"remote"});
+    cfg.gpus.push_back({1,"/gpu1",root/"local1",2048,"remote"});
+    cfg.backends.emplace("remote",BackendConfig{"remote","directory",root/"remote"});
+    TokenFS filesystem(cfg);filesystem.Init();
+    LocalReplica replica;replica.logical_path="/gpu0/a";replica.gpu_id=1;
+    replica.physical_path=root/"local1"/"a";replica.size_bytes=4;
+    replica.state="COPYING";std::ofstream(replica.physical_path)<<"data";
+    filesystem.metadata_.UpsertLocalReplica(replica);
+    assert(!filesystem.ReadablePeer("/gpu0/a",0));
+    replica.state="READY";filesystem.metadata_.UpsertLocalReplica(replica);
+    assert(filesystem.ReadablePeer("/gpu0/a",0));
+    assert(!filesystem.ReadablePeer("/gpu0/a",1));
+    int fd=open(filesystem.ReadablePeer("/gpu0/a",0)->physical_path.c_str(),O_RDONLY);
+    assert(fd>=0);fs::remove(replica.physical_path);
+    assert(!filesystem.ReadablePeer("/gpu0/a",0));
+    char bytes[4];assert(pread(fd,bytes,4,0)==4 && std::string(bytes,4)=="data");close(fd);
+    cfg.private_cache_domains=true;
+    bool rejected=false;try {TokenFS invalid(cfg);invalid.Init();} catch(const std::runtime_error&) {rejected=true;}
+    assert(rejected);
+    cfg.private_cache_domains=false;cfg.readonly_canonical=false;
+    rejected=false;try {TokenFS invalid(cfg);invalid.Init();} catch(const std::runtime_error&) {rejected=true;}
+    assert(rejected);
+  }
   static void sieve_verified_residents(const fs::path& root) {
     Config cfg; cfg.mount_point=root/"mnt";cfg.metadata_db=root/"sieve.db";
     cfg.local_eviction_policy="sieve";cfg.checksum="fnv1a64";cfg.readonly_canonical=true;cfg.speculative_copy_may_evict=true;
@@ -110,6 +136,7 @@ int main() {
     assert(newest->meta.logical_path=="/gpu0/b");
   }
   TokenFSTestAccess::lookup_during_eviction(root/"lookup-race");
+  TokenFSTestAccess::readable_peer(root/"peer-storage");
   TokenFSTestAccess::signed_eviction_audit_score();
   TokenFSTestAccess::sieve_verified_residents(root/"sieve-storage");
   fs::remove_all(root);

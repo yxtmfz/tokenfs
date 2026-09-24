@@ -35,3 +35,5 @@ jobs:
         run: python3 -m unittest tests.affinity_v2_test tests.affinity_v3_test
       - name: Test minimal paper experiment controls
         run: python3 -m unittest tests.paper_minimal_test
+      - name: Test bounded shared-cache pilot controls
+        run: python3 -m unittest tests.shared_cache_pilot_test
