@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 """Offline review of the bounded H/P factorial; no benchmark execution."""
-import argparse,json,math,statistics,sys
+import argparse,json,math,statistics,sys,sqlite3
+from collections import Counter
 from pathlib import Path
 import compact_planning_study as study
 from evidence_benchmark import sha,dump,MIB
@@ -25,6 +26,20 @@ def review(data,source,freeze):
     if arm=='PoolSIEVE2':check(r['retained_cache_bytes'][1:]==[0,0],b['id']+': pool capacity')
     check(metrics.get('legacy_affinity_statistics_skipped',0)==b['requests'],b['id']+'/'+arm+': common accounting')
     check(metrics.get('replica_touch_batched',0)==metrics.get('peer_cache_hit',0)+metrics.get('cross_gpu_local_replica_hit',0),b['id']+'/'+arm+': durable touch accounting')
+    expected=Counter((f"/gpu0/shard-{e['key']:06d}.tokens",e['caller']) for e in study.trace(b))
+    with sqlite3.connect((root/b['id']/arm/'state.db').resolve().as_uri()+'?mode=ro&immutable=1',uri=True) as db:
+     recorded={(path,gpu):count for path,gpu,count in db.execute('SELECT logical_path,gpu_id,read_count FROM gpu_access')}
+     check(recorded==dict(expected),b['id']+'/'+arm+': persisted per-consumer counts')
+     last_order={(f"/gpu0/shard-{e['key']:06d}.tokens",e['caller']):e['index']+1 for e in study.trace(b)}
+     recorded_order={(path,gpu):order for path,gpu,order in db.execute('SELECT logical_path,gpu_id,access_order FROM gpu_access')}
+     check(recorded_order==last_order,b['id']+'/'+arm+': persisted access order')
+     shares=Counter(path for path,gpu in expected)
+     check(dict(db.execute('SELECT logical_path,share_count FROM files'))==dict(shares),b['id']+'/'+arm+': persisted consumer shares')
+     check(db.execute('SELECT COUNT(*) FROM gpu_access_events').fetchone()[0]==0,b['id']+'/'+arm+': disabled unused legacy event history')
+     per_object=Counter()
+     for (path,gpu),count in expected.items():per_object[path]+=count
+     file_counts=dict(db.execute('SELECT logical_path,read_count FROM files'))
+     check(file_counts==dict(per_object),b['id']+'/'+arm+': persisted object counts')
     if arm not in ['P','HP','Independent']:check(metrics.get('shared_placement_selected',0)==0,b['id']+'/'+arm+': P off')
     if arm not in ['H','HP','Independent']:check(metrics.get('measured_survival_discounted_plans',0)==0,b['id']+'/'+arm+': H off')
  root=data/'development';m=json.loads((root/'manifest.json').read_text())
