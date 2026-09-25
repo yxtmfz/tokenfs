@@ -7,10 +7,10 @@
 
 namespace {
 struct TokenFSTestAccess {
-  static void shared_placement(const fs::path& root) {
+  static void shared_placement(const fs::path& root,bool compact=false) {
     Config cfg;cfg.mount_point=root/"mnt";cfg.metadata_db=root/"state.db";
     cfg.readonly_canonical=true;cfg.peer_cache_reads=true;cfg.shared_value_placement=true;
-    cfg.measured_policy=true;cfg.measured_causal_window=true;cfg.measured_cost=false;cfg.checksum="fnv1a64";
+    cfg.measured_policy=true;cfg.measured_causal_window=true;cfg.compact_measured_planning=compact;cfg.measured_cost=false;cfg.checksum="fnv1a64";
     cfg.speculative_copy_may_evict=true;
     for(int id=0;id<3;++id)cfg.gpus.push_back({id,"/gpu"+std::to_string(id),root/("local"+std::to_string(id)),1024,"remote"});
     cfg.backends.emplace("remote",BackendConfig{"remote","directory",root/"remote"});
@@ -33,10 +33,71 @@ struct TokenFSTestAccess {
     auto copy=*replica;copy.gpu_id=2;copy.physical_path=root/"local2/incoming";
     fs::copy_file(replica->physical_path,copy.physical_path);filesystem.metadata_.UpsertLocalReplica(copy);
     assert(filesystem.MarginalCoverage(*filesystem.metadata_.Get("/gpu0/incoming"),1)==0);
+    if(compact) {
+      const auto snap=filesystem.SnapshotMeasuredResidents("");
+      for(int location:{1,2}) {
+        const auto& items=snap.at(location);
+        auto item=std::find_if(items.begin(),items.end(),[](const auto& i){return i.key=="/gpu0/incoming";});
+        assert(item!=items.end() && item->coverage==0);
+      }
+    }
     fs::remove(copy.physical_path);filesystem.metadata_.RemoveLocalReplica(copy.logical_path,2);
     filesystem.PlaceShared("/gpu0/incoming",2); // Execution-time coverage prevents duplication.
     assert(!filesystem.metadata_.GetLocalReplica("/gpu0/incoming",2));
     assert(filesystem.MarginalCoverage(*filesystem.metadata_.Get("/gpu0/incoming"),1)==1);
+  }
+  static void compact_plan_invariants(const fs::path& root) {
+    Config cfg;cfg.mount_point=root/"mnt";cfg.metadata_db=root/"state.db";
+    cfg.readonly_canonical=true;cfg.measured_policy=true;cfg.measured_causal_window=true;
+    cfg.measured_cost=false;cfg.compact_measured_planning=true;cfg.lean_read_accounting=true;
+    cfg.affinity_placement=false;cfg.speculative_copy_may_evict=true;
+    cfg.gpus.push_back({0,"/gpu0",root/"local",200,"remote"});
+    cfg.backends.emplace("remote",BackendConfig{"remote","directory",root/"remote"});
+    TokenFS filesystem(cfg);filesystem.Init();
+    for(const auto& key:{"a","b","new"}) {
+      const auto bytes=std::string(key)=="new"?200:100;
+      auto remote=root/"remote/gpu0"/key;std::ofstream(remote)<<std::string(bytes,key[0]);
+      FileMeta meta;meta.logical_path=std::string("/gpu0/")+key;meta.gpu_id=0;
+      meta.tier=std::string(key)=="new"?"remote":"local";meta.backend_id=meta.tier;
+      meta.physical_path=meta.tier=="local"?root/"local"/key:remote;
+      if(meta.tier=="local")fs::copy_file(remote,meta.physical_path);
+      meta.size_bytes=bytes;meta.has_remote_copy=true;filesystem.metadata_.Upsert(meta);
+      for(int i=0;i<(std::string(key)=="new"?10:2);++i) {
+        filesystem.measured_.Observe(0,meta.logical_path,filesystem.MeasuredOptions(),true);
+        filesystem.metadata_.IncrementReadCount(meta.logical_path,0,70,55,2,10,3,4,2,3,false);
+      }
+    }
+    auto incoming=*filesystem.metadata_.Get("/gpu0/new");
+    const auto compact=filesystem.MeasuredPlan(cfg.gpus[0],incoming);
+    filesystem.config_.compact_measured_planning=false;
+    const auto reference=filesystem.MeasuredPlan(cfg.gpus[0],incoming);
+    assert(compact.allowed && compact.victims.size()==2 && compact.victims==reference.victims);
+    assert(compact.displaced_us==reference.displaced_us && compact.incoming_us==reference.incoming_us);
+    filesystem.config_.compact_measured_planning=true;
+    Handle pin;pin.logical_path="/gpu0/a";
+    const auto id=filesystem.StoreHandle(pin);
+    assert(!filesystem.MeasuredPlan(cfg.gpus[0],incoming).allowed);
+    fuse_file_info fi{};fi.fh=id;filesystem.Release("/gpu0/a",&fi);
+    assert(filesystem.EnsureLocalCapacity(cfg.gpus[0],200,"/gpu0/new"));
+    assert(TokenFS::DirectoryBytes(root/"local")==0);
+    assert(filesystem.metadata_.Get("/gpu0/a")->tier=="remote");
+    assert(filesystem.metadata_.Get("/gpu0/b")->tier=="remote");
+    assert(fs::file_size(root/"remote/gpu0/a")==100 && fs::file_size(root/"remote/gpu0/b")==100);
+    // A persisted replica touch belongs to the same read-count transaction.
+    LocalReplica replica;replica.logical_path="/gpu0/a";replica.gpu_id=1;
+    replica.physical_path=root/"unconfigured";replica.last_access_at=0;
+    filesystem.metadata_.UpsertLocalReplica(replica);
+    const auto previous=filesystem.metadata_.Get("/gpu0/a")->read_count;
+    assert(filesystem.metadata_.IncrementReadCount("/gpu0/a",1,70,55,2,10,3,4,2,3,false,1)==previous+1);
+    assert(filesystem.metadata_.GetLocalReplica("/gpu0/a",1)->last_access_at>0);
+    // Stale paths and unconfigured locations cannot contribute shared coverage.
+    assert(filesystem.SnapshotMeasuredResidents("").empty());
+    auto invalid=cfg;invalid.readonly_canonical=false;
+    bool rejected=false;try {TokenFS bad(invalid);bad.Init();}catch(const std::runtime_error&){rejected=true;}
+    assert(rejected);
+    invalid=cfg;invalid.affinity_placement=true;rejected=false;
+    try {TokenFS bad(invalid);bad.Init();}catch(const std::runtime_error&){rejected=true;}
+    assert(rejected);
   }
   static void readable_peer(const fs::path& root) {
     Config cfg; cfg.mount_point=root/"mnt";cfg.metadata_db=root/"peer.db";
@@ -169,6 +230,8 @@ int main() {
   TokenFSTestAccess::lookup_during_eviction(root/"lookup-race");
   TokenFSTestAccess::readable_peer(root/"peer-storage");
   TokenFSTestAccess::shared_placement(root/"shared-placement");
+  TokenFSTestAccess::shared_placement(root/"compact-shared-placement",true);
+  TokenFSTestAccess::compact_plan_invariants(root/"compact-invariants");
   TokenFSTestAccess::signed_eviction_audit_score();
   TokenFSTestAccess::sieve_verified_residents(root/"sieve-storage");
   fs::remove_all(root);
