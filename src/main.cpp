@@ -71,6 +71,8 @@ struct Config {
   bool measured_frequency_admission = false;
   bool measured_shift_reset = false;
   bool measured_causal_window = false;
+  bool compact_measured_planning = false;
+  bool lean_read_accounting = false;
   bool private_cache_domains = false;
   bool peer_cache_reads = false;
   bool shared_value_placement = false;
@@ -535,7 +537,7 @@ class MetadataStore {
                               uint64_t trend_min_reads,
                               uint64_t hot_read_threshold,
                               uint64_t warm_read_threshold,
-                              uint64_t max_local_replicas) {
+                              uint64_t max_local_replicas, bool legacy_affinity=true, int replica_gpu=-1) {
     std::lock_guard<std::mutex> lock(mu_);
     const auto now = UnixNow();
     const auto event_now = UnixNowMillis();
@@ -560,6 +562,13 @@ class MetadataStore {
     sqlite3_bind_int64(stmt, 4, ++access_sequence_);
     StepDone(stmt);
 
+    if(replica_gpu>=0) {
+      Prepare("UPDATE local_replicas SET last_access_at=? WHERE logical_path=? AND gpu_id=?;",&stmt);
+      sqlite3_bind_int64(stmt,1,now);
+      sqlite3_bind_text(stmt,2,logical_path.c_str(),-1,SQLITE_TRANSIENT);
+      sqlite3_bind_int(stmt,3,replica_gpu);StepDone(stmt);
+    }
+    if(legacy_affinity) {
     Prepare("INSERT INTO gpu_access_events(logical_path,gpu_id,access_at) "
             "VALUES(?,?,?);",
             &stmt);
@@ -576,6 +585,7 @@ class MetadataStore {
         event_now - 1000 * static_cast<sqlite3_int64>(std::max<uint64_t>(long_window_sec, short_window_sec)));
     StepDone(stmt);
 
+    }
     Prepare("UPDATE files SET share_count=("
             "SELECT COUNT(*) FROM gpu_access WHERE logical_path=?) "
             "WHERE logical_path=?;",
@@ -584,7 +594,7 @@ class MetadataStore {
     sqlite3_bind_text(stmt, 2, logical_path.c_str(), -1, SQLITE_TRANSIENT);
     StepDone(stmt);
 
-    UpdateAffinityLocked(logical_path, dominant_threshold_x100,
+    if(legacy_affinity)UpdateAffinityLocked(logical_path, dominant_threshold_x100,
                          shared_threshold_x100, short_window_sec,
                          long_window_sec, trend_min_reads,
                          hot_read_threshold, warm_read_threshold,
@@ -986,6 +996,34 @@ class MetadataStore {
     return out;
   }
 
+  struct PlanningResident {
+    std::string key;
+    int location=0;
+    fs::path physical;
+    uint64_t bytes=0,recency=0;
+  };
+  std::vector<PlanningResident> PlanningResidents() {
+    std::lock_guard<std::mutex> lock(mu_);
+    sqlite3_stmt* stmt=nullptr;
+    // One read transaction/statement, without per-resident Get/access queries.
+    Prepare("SELECT f.logical_path,f.gpu_id,f.physical_path,f.size_bytes,COALESCE(a.access_order,0) "
+            "FROM files f LEFT JOIN gpu_access a ON a.logical_path=f.logical_path AND a.gpu_id=f.gpu_id "
+            "WHERE f.tier='local' AND f.state='COMMITTED' "
+            "UNION ALL "
+            "SELECT r.logical_path,r.gpu_id,r.physical_path,r.size_bytes,COALESCE(a.access_order,0) "
+            "FROM local_replicas r JOIN files f ON f.logical_path=r.logical_path "
+            "LEFT JOIN gpu_access a ON a.logical_path=r.logical_path AND a.gpu_id=r.gpu_id "
+            "WHERE r.state='READY' AND f.state='COMMITTED';", &stmt);
+    std::vector<PlanningResident> out;
+    for(int rc;(rc=sqlite3_step(stmt))!=SQLITE_DONE;) {
+      if(rc!=SQLITE_ROW) {std::string err=sqlite3_errmsg(db_);sqlite3_finalize(stmt);throw std::runtime_error(err);}
+      out.push_back({ColumnText(stmt,0),sqlite3_column_int(stmt,1),ColumnText(stmt,2),
+                    static_cast<uint64_t>(sqlite3_column_int64(stmt,3)),
+                    static_cast<uint64_t>(sqlite3_column_int64(stmt,4))});
+    }
+    sqlite3_finalize(stmt);return out;
+  }
+
   std::vector<EvictionCandidate> LocalEvictionCandidates(
       int gpu_id, const std::string& protected_logical_path) {
     std::unique_lock<std::mutex> lock(mu_);
@@ -1351,6 +1389,10 @@ class TokenFS {
         (!config_.peer_cache_reads || (config_.shared_value_placement && !config_.measured_policy) ||
          (config_.shared_value_placement && config_.shared_pool_cache)))
       throw std::runtime_error("shared placement requires peer reads, a compatible policy and one placement mode");
+    if(config_.lean_read_accounting && (!config_.readonly_canonical || config_.affinity_placement || config_.prefetch_on_read || (!config_.measured_policy && !config_.read_through_cache)))
+      throw std::runtime_error("lean accounting requires immutable readers without legacy affinity or prefetch consumers");
+    if(config_.compact_measured_planning && (!config_.measured_policy || !config_.measured_causal_window || !config_.readonly_canonical))
+      throw std::runtime_error("compact measured planning requires causal immutable measured mode");
     for (const auto& gpu : config_.gpus) {
       fs::create_directories(gpu.local_root);
       auto* backend = Backend(gpu.remote_backend);
@@ -1592,13 +1634,18 @@ class TokenFS {
     int resident_gpu_id = gpu->gpu_id;
     // Update policy state on every logical read, including local fast hits.
     if (!writable) {
-      metadata_.IncrementReadCount(path, caller_gpu_id,
+      auto record_read=[&](int replica_gpu) {
+        return metadata_.IncrementReadCount(path, caller_gpu_id,
           config_.affinity_dominant_threshold_x100, config_.affinity_shared_threshold_x100,
           config_.affinity_short_window_sec,
           config_.trend_prediction ? config_.affinity_long_window_sec : config_.affinity_short_window_sec,
           config_.affinity_trend_min_reads, config_.affinity_hot_read_threshold,
-          config_.affinity_warm_read_threshold, config_.max_local_replicas_per_file);
-      meta = *metadata_.Get(path);
+          config_.affinity_warm_read_threshold, config_.max_local_replicas_per_file,!config_.lean_read_accounting,replica_gpu);
+      };
+      int touched_replica=-1;
+      if(!config_.lean_read_accounting) {
+        record_read(-1);meta=*metadata_.Get(path);
+      }
       // Optional isolated access-domain topology: another domain's canonical
       // local copy is not addressable. Every compared policy uses this routing.
       if(config_.private_cache_domains && caller_gpu_id!=gpu->gpu_id) {
@@ -1614,7 +1661,8 @@ class TokenFS {
           meta.backend_id = "local-replica";
           meta.physical_path = replica->physical_path;
           resident_gpu_id = caller_gpu_id;
-          metadata_.TouchLocalReplica(path, caller_gpu_id);
+          touched_replica=caller_gpu_id;
+          if(!config_.lean_read_accounting)metadata_.TouchLocalReplica(path, caller_gpu_id);
           AddBufferedMetric("cross_gpu_local_replica_hit", 1);
         }
       }
@@ -1625,9 +1673,17 @@ class TokenFS {
           meta.physical_path = peer->physical_path;
           borrowed_peer = true;
           resident_gpu_id = peer->gpu_id;
-          metadata_.TouchLocalReplica(path, peer->gpu_id);
+          touched_replica=peer->gpu_id;
+          if(!config_.lean_read_accounting)metadata_.TouchLocalReplica(path, peer->gpu_id);
           AddBufferedMetric("peer_cache_hit", 1);
         }
+      }
+      if(config_.lean_read_accounting) {
+        // Persist counts and the selected replica timestamp in ONE FULL-WAL
+        // transaction. Durability is unchanged; avoid a second hit-path fsync.
+        meta.read_count=record_read(touched_replica);
+        AddBufferedMetric("legacy_affinity_statistics_skipped",1);
+        if(touched_replica>=0)AddBufferedMetric("replica_touch_batched",1);
       }
       if(config_.local_eviction_policy=="sieve" && meta.tier=="local")
         sieve_.Hit(resident_gpu_id,path);
@@ -2271,7 +2327,26 @@ class TokenFS {
     return 1.0;
   }
 
-  tokenfs_policy::Decision MeasuredPlan(const GpuConfig& gpu,const FileMeta& incoming) {
+  using PlanningSnapshot=std::unordered_map<int,std::vector<tokenfs_policy::Item>>;
+  PlanningSnapshot SnapshotMeasuredResidents(const std::string& protected_path) {
+    auto rows=metadata_.PlanningResidents();
+    std::erase_if(rows,[this](const auto& row){return !GpuById(row.location) || !fs::is_regular_file(row.physical);});
+    std::unordered_map<std::string,std::unordered_set<int>> covered;
+    for(const auto& row:rows)
+      covered[row.key].insert(row.location);
+    PlanningSnapshot snapshot;
+    for(const auto& row:rows) {
+      if(row.key==protected_path || IsOpenLogicalPath(row.key) || !covered[row.key].count(row.location))continue;
+      const double coverage=config_.shared_value_placement && covered[row.key].size()>1?0.0:1.0;
+      snapshot[row.location].push_back({row.key,row.bytes,row.recency,coverage});
+    }
+    AddBufferedMetric("compact_planning_snapshots",1);
+    AddBufferedMetric("compact_planning_residents",rows.size());
+    return snapshot;
+  }
+
+  tokenfs_policy::Decision MeasuredPlan(const GpuConfig& gpu,const FileMeta& incoming,
+      const PlanningSnapshot* snapshot=nullptr,std::optional<uint64_t> known_used=std::nullopt) {
     // If even an empty cache cannot repay copying, no resident scan can make
     // the net gain positive. Keep the same execution-time capacity recheck.
     if(config_.measured_causal_window) {
@@ -2280,12 +2355,18 @@ class TokenFS {
       if(!lower.allowed)return lower;
     }
     std::vector<tokenfs_policy::Item> residents;
-    for(const auto& c:metadata_.LocalEvictionCandidates(gpu.gpu_id,incoming.logical_path)) {
-      if(!IsOpenLogicalPath(c.meta.logical_path))
-        residents.push_back({c.meta.logical_path,c.meta.size_bytes,c.last_access_at,MarginalCoverage(c.meta,gpu.gpu_id)});
+    PlanningSnapshot owned;
+    if(config_.compact_measured_planning) {
+      if(!snapshot){owned=SnapshotMeasuredResidents(incoming.logical_path);snapshot=&owned;}
+      if(auto it=snapshot->find(gpu.gpu_id);it!=snapshot->end())residents=it->second;
+    } else {
+      for(const auto& c:metadata_.LocalEvictionCandidates(gpu.gpu_id,incoming.logical_path)) {
+        if(!IsOpenLogicalPath(c.meta.logical_path))
+          residents.push_back({c.meta.logical_path,c.meta.size_bytes,c.last_access_at,MarginalCoverage(c.meta,gpu.gpu_id)});
+      }
     }
     const auto plan=measured_.Plan(gpu.gpu_id,{incoming.logical_path,incoming.size_bytes,0},
-        std::move(residents),DirectoryBytes(gpu.local_root),gpu.local_quota_bytes,MeasuredOptions());
+        std::move(residents),known_used?*known_used:DirectoryBytes(gpu.local_root),gpu.local_quota_bytes,MeasuredOptions());
     if(plan.survival_adjusted_items) {
       AddBufferedMetric("measured_survival_discounted_plans",1);
       AddBufferedMetric("measured_survival_discounted_items",plan.survival_adjusted_items);
@@ -2320,11 +2401,13 @@ class TokenFS {
         used -= existing_size;
       }
     }
+    tokenfs_policy::Decision committed_plan;
     if(config_.measured_policy) {
       auto incoming=metadata_.Get(protected_logical_path);
       if(!incoming)return false;
       incoming->size_bytes=required_size;
-      const auto plan=MeasuredPlan(gpu,*incoming);
+      const auto plan=MeasuredPlan(gpu,*incoming,nullptr,config_.compact_measured_planning?std::optional<uint64_t>(used):std::nullopt);
+      committed_plan=plan;
       AddBufferedMetric("measured_commit_"+plan.reason,1);
       if(!plan.allowed)return false;
       std::ostringstream detail;
@@ -2379,10 +2462,26 @@ class TokenFS {
       return false;
     }
 
-    auto candidates =
-        metadata_.LocalEvictionCandidates(gpu.gpu_id, protected_logical_path);
+    std::vector<EvictionCandidate> candidates;
+    if(config_.compact_measured_planning) {
+      // This plan was just revalidated while holding layout_mu_. Fetch only the
+      // selected victims, preserving that plan's multi-victim cost and order.
+      for(const auto& key:committed_plan.victims) {
+        auto canonical=metadata_.Get(key);if(!canonical)return false;
+        EvictionCandidate c;c.meta=*canonical;
+        if(canonical->tier!="local" || canonical->gpu_id!=gpu.gpu_id) {
+          auto replica=metadata_.GetLocalReplica(key,gpu.gpu_id);
+          if(!replica || replica->state!="READY")return false;
+          c.meta.physical_path=replica->physical_path;c.meta.size_bytes=replica->size_bytes;c.replica_gpu=gpu.gpu_id;
+        }
+        candidates.push_back(std::move(c));
+      }
+      AddBufferedMetric("compact_committed_victims",candidates.size());
+    } else candidates=metadata_.LocalEvictionCandidates(gpu.gpu_id, protected_logical_path);
     const uint64_t now = UnixNowSeconds();
-    if(config_.measured_policy) {
+    if(config_.compact_measured_planning) {
+      metadata_.AddMetric("evict_policy_measured",1);
+    } else if(config_.measured_policy) {
       std::vector<tokenfs_policy::Item> items;
       for(const auto& c:candidates)items.push_back({c.meta.logical_path,c.meta.size_bytes,c.last_access_at,MarginalCoverage(c.meta,gpu.gpu_id)});
       const auto ranked=measured_.Ranked(gpu.gpu_id,std::move(items),MeasuredOptions());
@@ -2587,8 +2686,10 @@ class TokenFS {
         // Prefer the caller for an equal net gain; compare all permitted locations.
         auto locations=config_.gpus;
         std::stable_sort(locations.begin(),locations.end(),[caller](const auto& a,const auto& b){return (a.gpu_id==caller)>(b.gpu_id==caller);});
+        std::optional<PlanningSnapshot> snapshot;
+        if(config_.compact_measured_planning)snapshot=SnapshotMeasuredResidents(path);
         for(const auto& gpu:locations) {
-          const auto plan=MeasuredPlan(gpu,incoming);
+          const auto plan=MeasuredPlan(gpu,incoming,snapshot?&*snapshot:nullptr);
           AddBufferedMetric("shared_placement_plans",1);
           const double net=plan.incoming_us-plan.copy_us-(config_.measured_joint_admission?plan.displaced_us:0);
           if(plan.allowed && net>best) {best=net;destination=gpu;chosen=plan;}
@@ -3736,6 +3837,8 @@ Config LoadConfig(const fs::path& path) {
     throw std::runtime_error("recent affinity demand requires affinity tracking");
   if(root["policy"] && root["policy"]["measured_joint_admission"]) config.measured_joint_admission=root["policy"]["measured_joint_admission"].as<bool>();
   if(root["policy"] && root["policy"]["measured_affinity_window"]) config.measured_affinity_window=root["policy"]["measured_affinity_window"].as<uint64_t>();
+  if(root["policy"] && root["policy"]["lean_read_accounting"]) config.lean_read_accounting=root["policy"]["lean_read_accounting"].as<bool>();
+  if(root["policy"] && root["policy"]["compact_measured_planning"]) config.compact_measured_planning=root["policy"]["compact_measured_planning"].as<bool>();
   if(root["policy"] && root["policy"]["measured_causal_window"]) config.measured_causal_window=root["policy"]["measured_causal_window"].as<bool>();
   if(root["policy"] && root["policy"]["measured_shift_reset"]) config.measured_shift_reset=root["policy"]["measured_shift_reset"].as<bool>();
   if(root["policy"] && root["policy"]["measured_shift_window"]) config.measured_shift_window=root["policy"]["measured_shift_window"].as<uint64_t>();

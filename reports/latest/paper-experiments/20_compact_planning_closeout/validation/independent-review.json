@@ -1,0 +1,61 @@
+{
+  "passed": true,
+  "errors": [],
+  "stages": {
+    "correctness": {
+      "passed": true,
+      "checked_runs": 6,
+      "expected_runs": 6,
+      "errors": []
+    },
+    "development": {
+      "passed": true,
+      "checked_runs": 18,
+      "expected_runs": 18,
+      "errors": []
+    }
+  },
+  "checked_speed_runs": 18,
+  "checked_content_runs": 6,
+  "mechanism_pairs": [
+    {
+      "seed": 3003,
+      "h_active": true,
+      "p_active": true,
+      "h_actions_differ": true,
+      "p_actions_differ": true,
+      "j_actions_differ": true,
+      "selected_plans_with_victim_loss": 39
+    },
+    {
+      "seed": 3002,
+      "h_active": true,
+      "p_active": true,
+      "h_actions_differ": true,
+      "p_actions_differ": true,
+      "j_actions_differ": true,
+      "selected_plans_with_victim_loss": 36
+    },
+    {
+      "seed": 3001,
+      "h_active": true,
+      "p_active": true,
+      "h_actions_differ": true,
+      "p_actions_differ": true,
+      "j_actions_differ": true,
+      "selected_plans_with_victim_loss": 27
+    }
+  ],
+  "pilot_gates": {
+    "affinity_conditional_on_H": true,
+    "hotspot_conditional_on_P": false,
+    "joint_controller": true,
+    "beats_pooled_reference": false,
+    "hotspot_standalone": true,
+    "affinity_standalone": true,
+    "p99_vs_pooled": false,
+    "all_component_and_reference_gates": false
+  },
+  "mean_interaction_seconds": 0.49676347499999923,
+  "interpretation": "exploratory single synthetic scenario; no formal significance, universal superiority, GPU inference or priority-of-invention claim; no automatic expansion"
+}

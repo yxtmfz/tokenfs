@@ -1,6 +1,8 @@
 # AURA-KV / TokenFS 文档导航
 
-当前先读 [18次热点、亲和与联合优化结果](../reports/latest/paper-experiments/19_causal_reuse_pilot/README.md)、[冻结先导方案](causal-reuse-pilot-plan.md)和[候选创新与已有工作边界](causal-reuse-novelty-boundary.md)。本轮三个组件配对均值均正向，完整版本尚未超过同总容量共享SIEVE；小样本与逻辑GPU边界保留。此前 [共享读取试验](../reports/latest/paper-experiments/17_shared_cache_pilot/README.md)和[第一轮共享联合试验](../reports/latest/paper-experiments/18_shared_joint_pilot/README.md)的结果不改写、不混算。
+当前先读 [最后18次小规模实验四表](../reports/latest/paper-experiments/20_compact_planning_closeout/README.md)、[冻结方案](compact-planning-closeout-plan.md)与[规划和计账正确性说明](compact-planning-correctness.md)。联合控制本轮+5.88%，强共享基线仍未超过，所有未通过门槛与原始记录一并保留。
+
+上一轮见 [18次热点、亲和与联合优化结果](../reports/latest/paper-experiments/19_causal_reuse_pilot/README.md)、[冻结先导方案](causal-reuse-pilot-plan.md)和[候选创新与已有工作边界](causal-reuse-novelty-boundary.md)。本轮三个组件配对均值均正向，完整版本尚未超过同总容量共享SIEVE；小样本与逻辑GPU边界保留。此前 [共享读取试验](../reports/latest/paper-experiments/17_shared_cache_pilot/README.md)和[第一轮共享联合试验](../reports/latest/paper-experiments/18_shared_joint_pilot/README.md)的结果不改写、不混算。
 
 旧大样本实验见 [三项机制与整体速度四表](../reports/latest/paper-experiments/13_affinity_joint/README.md)，以及 [本轮预先固定方案](affinity-joint-confirmation-plan.md)。本轮完成 **576 次正式实测、132 项内容验证**，按热点、访问亲和、联合净收益和整体速度给出四张表。组件采用完整策略逐项关闭的对照，实际 MiB/s 与配对统计决定结论；未确定、未触发和退化结果全部保留。范围为三个私有逻辑缓存域与真实 NVMe/TCP 远端，不是物理 GPU 推理，也不代表完整 Python RobustBenefit 已接入。
 
