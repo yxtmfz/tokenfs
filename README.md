@@ -1,5 +1,7 @@
 # AURA-KV / TokenFS
 
+> 最新SIEVE对照：[18次真实测速与完整证据](reports/latest/paper-experiments/21_burst_reuse_sieve/README.md)。热点变化场景中新版相对原共享SIEVE-2hit **+5.12%（3/3更快）**，相对同期旧完整版+5.44%；对SIEVE-1hit仍−0.28%，随机访问对两种SIEVE仍约−4.8%。新增短期复用预测、7组内容校验与完整审计；仅原SIEVE-2hit先导门槛通过，未证明全面优于SIEVE。
+
 > 最新收尾实测：[热点、亲和、联合与整体速度四表](reports/latest/paper-experiments/20_compact_planning_closeout/README.md)。固定18次测速＋6组内容检查：热点 +8.35%、亲和 +14.65%、联合控制 +5.88%，三个组件比较均3/3提速；完整版本相对基础共享 +19.68%，相对同容量共享SIEVE仍 −1.96%。联合通过本轮先导筛选；强基线、尾延迟及完整版本中热点≥5%的目标仍未闭合。数据完整不等于全部论文主张成立。
 
 > 上一轮小规模优化：[热点、共享亲和和联合控制18次实测](reports/latest/paper-experiments/19_causal_reuse_pilot/README.md)。同版本配对结果：热点 +5.59%、亲和 +7.34%、联合控制 +4.15%，均为3/3种子提速；完整版本相对基础共享 +14.31%，相对同容量共享SIEVE仍 −1.84%。这是开发先导，未证明三个独立创新或真实GPU推理收益；旧轮次正负结果均保留。

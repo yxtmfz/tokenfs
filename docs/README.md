@@ -1,3 +1,5 @@
+当前优先查看 [新版与两种共享SIEVE的真实对照](../reports/latest/paper-experiments/21_burst_reuse_sieve/README.md) 和 [冻结小规模方案](burst-reuse-sieve-plan.md)：热点变化场景超过原SIEVE-2hit 5.12%，但SIEVE-1hit及随机负对照的未通过结果一并保留。
+
 # AURA-KV / TokenFS 文档导航
 
 当前先读 [最后18次小规模实验四表](../reports/latest/paper-experiments/20_compact_planning_closeout/README.md)、[冻结方案](compact-planning-closeout-plan.md)与[规划和计账正确性说明](compact-planning-correctness.md)。联合控制本轮+5.88%，强共享基线仍未超过，所有未通过门槛与原始记录一并保留。

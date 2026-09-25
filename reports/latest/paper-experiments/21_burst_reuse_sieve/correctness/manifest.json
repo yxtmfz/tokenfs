@@ -1,0 +1,66 @@
+{
+  "spec": {
+    "stage": "correctness",
+    "blocks": [
+      {
+        "id": "moving_shared-3099",
+        "scenario": "moving_shared",
+        "seed": 3099,
+        "variants": [
+          "OldHP",
+          "BurstHP",
+          "PoolSIEVE2",
+          "PoolSIEVE1"
+        ],
+        "quota_mib": 24,
+        "shard_mib": 2,
+        "requests": 96
+      },
+      {
+        "id": "uniform-3098",
+        "scenario": "uniform",
+        "seed": 3098,
+        "variants": [
+          "BurstHP",
+          "PoolSIEVE2",
+          "PoolSIEVE1"
+        ],
+        "quota_mib": 24,
+        "shard_mib": 2,
+        "requests": 96
+      }
+    ]
+  },
+  "spec_sha256": "b60161e1fdbcc58f6812f6ed259c36b02acb5f7475d75b1cbc5525941b94efb9",
+  "source_hashes": {
+    "src/main.cpp": "83994c68dce075e464e47899384e8d028a9b31cf2d9b2f5e3f93a07e6accb69a",
+    "src/measured_policy.h": "622fe371f3d3b65e4a4c332faa808c0238cd08c1758012dac4cf1760813f22a3",
+    "src/sieve_policy.h": "78c0fd1c0372a252ed1d29bffa84c42d9db39528a03b3204f1c6661381294c90",
+    "scripts/burst_reuse_study.py": "62dd8f843c01dd7de6409f6818e60d3ce9a20a194ff71218bfea891162465754",
+    "scripts/compact_planning_study.py": "479d865ad4c37496dc448cd9faecfa2953b7380497a8ae23e3196e7856db226f",
+    "scripts/affinity_joint_study.py": "43eb9c6c523890d8bd7441586f4a98e115952a3e9fd5501a2e857d9a942cb6f7",
+    "scripts/paper_minimal_study.py": "f0158c8db97534daa7b7fc060e018ee160e756699a91da9734597b28ec0c26e9",
+    "scripts/evidence_benchmark.py": "c1faf9b0a0ccea4404c3a5f5957b03889513d3959bfc541d434f919ae78770fc",
+    "scripts/evidence_report.py": "2ff27f63d198f9e2a6c1657f653759734b060ff4b08b9e4c350e7935bb6e3475",
+    "scripts/measured_study.py": "3ee5c676f63a5216862d7a1e1e0304003cc24929e454a4cc1909baa1a70df0ad",
+    "tests/measured_policy_test.cpp": "8a178465bb239541a598d99e81df9f7b00f1213c8da81de44e4c26dd34c3d867",
+    "tests/policy_metadata_test.cpp": "745c912c242275e42c9990af8d22229f78c778cc573a6a28958872a1ffa0f3e7",
+    "tests/burst_reuse_test.py": "84d13b7104f2e74c7abbea0f5bbc442eee9f002441a9f5f5eaf1701226304745",
+    "docs/burst-reuse-sieve-plan.md": "e4487ea2a153a56e740af9efb3c2c404b6825c3f4bf2b25eeaec7596f04043a3",
+    "CMakeLists.txt": "066087890a3c2ffd51c85f33df4d72f55f39880ad4679a41781679400be65fd0"
+  },
+  "binary_sha256": "a2cb7f6baf6c66f5caaa4e92e9ba0756cdff1f15806ceac015b658fda062e762",
+  "output": "/home/wjxt/tokenfs-burst-reuse-evidence/correctness",
+  "remote_data": "/srv/tokenfs/remote-cn7/burst-reuse-20260925/aj-correctness",
+  "verify": true,
+  "backend_direct": true,
+  "topology": "three logical cache partitions on one shared host disk; access policy varied explicitly; serialized callers; no physical GPUs",
+  "created_utc": "2026-09-25T08:31:03Z",
+  "mount": {
+    "target": "/srv/tokenfs/remote-cn7",
+    "source": "/dev/nvme1n1",
+    "fstype": "ext4",
+    "options": "rw,nosuid,nodev,relatime"
+  },
+  "verification_only": true
+}
