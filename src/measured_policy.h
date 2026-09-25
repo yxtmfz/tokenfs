@@ -32,12 +32,14 @@ struct Options {
   bool affinity_handover_epoch=false;
   bool shared_value=false;
   bool causal_window=false;
+  bool burst_reuse=false;
 };
 struct Decision {
   bool allowed=false;
   std::string reason;
   double incoming_us=0, displaced_us=0, copy_us=0;
   bool costs_calibrated=false;
+  double burst_remaining=0;
   uint64_t incoming_count=0;
   uint64_t affinity_incoming_count=0;
   uint64_t affinity_adjusted_items=0;
@@ -51,6 +53,19 @@ class MeasuredPolicy {
     std::lock_guard<std::mutex> lock(mu_);
     if(affinity_reset)*affinity_reset=false;
     ++observations_;
+    if(o.burst_reuse) {
+      if(active_burst_key_==key)++active_burst_length_;
+      else {
+        if(active_burst_length_) {
+          completed_bursts_.push_back(active_burst_length_);
+          completed_burst_reads_+=active_burst_length_;
+          while(completed_burst_reads_>std::max<size_t>(2,o.window)) {
+            completed_burst_reads_-=completed_bursts_.front();completed_bursts_.pop_front();
+          }
+        }
+        active_burst_key_=key;active_burst_length_=1;
+      }
+    }
     if(o.causal_window) {
       recent_history_.push_back({key,gpu});
       recent_shared_[key].push_back(observations_);
@@ -164,6 +179,10 @@ class MeasuredPolicy {
   uint64_t AdmissionFrequency(int gpu,const std::string& key,const Options& o) const {
     std::lock_guard<std::mutex> lock(mu_);return EffectiveCount(gpu,key,o,true);
   }
+  bool HasReuseEvidence(int gpu,const std::string& key,const Options& o) const {
+    std::lock_guard<std::mutex> lock(mu_);
+    return EffectiveCount(gpu,key,o,true)>=2 || BurstRemaining(key,o)>0;
+  }
   std::vector<Item> Ranked(int gpu,std::vector<Item> items,const Options& o) const {
     std::lock_guard<std::mutex> lock(mu_);Sort(gpu,items,o);return items;
   }
@@ -181,7 +200,8 @@ class MeasuredPolicy {
     for(const auto& resident:residents)
       result.survival_adjusted_items+=Survival(gpu,resident.key,o)<1.0;
     result.costs_calibrated=remote_.n && local_.n && copy_.n;
-    if(o.admission && result.affinity_incoming_count<2){result.reason="no_reuse";return result;}
+    result.burst_remaining=BurstRemaining(incoming.key,o);
+    if(o.admission && result.affinity_incoming_count<2 && result.burst_remaining<=0){result.reason="no_reuse";return result;}
     if(o.admission && o.affinity_gate && !o.affinity_recent_demand) {
       const auto found=affinity_counts_.find(incoming.key);
       uint64_t own=0,peak=0;
@@ -294,13 +314,27 @@ class MeasuredPolicy {
     const double gap=double(positions->back()-positions->front())/(positions->size()-1);
     return std::exp2(-double(observations_-positions->back())/std::max(4.0,gap));
   }
+  double BurstRemaining(const std::string& key,const Options& o) const {
+    if(!o.burst_reuse || !o.causal_window || !o.shared_value || key!=active_burst_key_ || completed_bursts_.size()<8)return 0;
+    // Conditional residual length of completed runs only. The active run is
+    // censored: never use its eventual length. Two zero-residual pseudo-runs
+    // shrink a sparse estimate; no workload labels or fixed burst length.
+    double remaining=0,eligible=2;
+    for(const auto length:completed_bursts_)if(length>=active_burst_length_) {
+      remaining+=length-active_burst_length_;++eligible;
+    }
+    return remaining/eligible;
+  }
   double Value(int gpu,const Item& item,const Options& o,bool incoming) const {
     double repeats=double(EffectiveCount(gpu,item.key,o,incoming));
     // Use the same repeat-evidence estimate for arrivals and residents. Charging
     // resident frequency in full while subtracting one only from the incoming
     // object would add an unintended incumbent preference to the cost ablation.
     if(!o.frequency_admission)repeats=std::max(0.0,repeats-1.0);
-    return repeats*Survival(gpu,item.key,o)*(o.cost?SavingRate()*item.bytes:1.0)*item.coverage;
+    const double past=repeats*Survival(gpu,item.key,o);
+    // These are overlapping estimates, not independent demand to add together.
+    // Use the same value for incoming and resident copies of the current key.
+    return std::max(past,BurstRemaining(item.key,o))*(o.cost?SavingRate()*item.bytes:1.0)*item.coverage;
   }
   void Sort(int gpu,std::vector<Item>& items,const Options& o) const {
     std::sort(items.begin(),items.end(),[&](const Item& a,const Item& b){
@@ -321,6 +355,9 @@ class MeasuredPolicy {
   std::unordered_map<std::string,std::deque<uint64_t>> recent_shared_;
   std::unordered_map<int,std::unordered_map<std::string,std::deque<uint64_t>>> recent_domains_;
   uint64_t observations_=0;
+  std::string active_burst_key_;
+  uint64_t active_burst_length_=0,completed_burst_reads_=0;
+  std::deque<uint64_t> completed_bursts_;
   Rate local_,remote_,copy_;
 };
 }

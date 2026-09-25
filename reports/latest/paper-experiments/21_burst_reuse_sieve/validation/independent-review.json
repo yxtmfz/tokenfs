@@ -1,0 +1,51 @@
+{
+  "passed": true,
+  "errors": [],
+  "stages": {
+    "correctness": {
+      "passed": true,
+      "checked_runs": 7,
+      "expected_runs": 7,
+      "errors": []
+    },
+    "development": {
+      "passed": true,
+      "checked_runs": 18,
+      "expected_runs": 18,
+      "errors": []
+    }
+  },
+  "mechanisms": [
+    {
+      "block": "moving_shared-3101",
+      "first_read_selections": 41,
+      "committed_first_read_forecasts": 41,
+      "copies": 49
+    },
+    {
+      "block": "moving_shared-3102",
+      "first_read_selections": 36,
+      "committed_first_read_forecasts": 36,
+      "copies": 42
+    },
+    {
+      "block": "moving_shared-3103",
+      "first_read_selections": 47,
+      "committed_first_read_forecasts": 47,
+      "copies": 53
+    },
+    {
+      "block": "uniform-3111",
+      "first_read_selections": 0,
+      "committed_first_read_forecasts": 0,
+      "copies": 207
+    },
+    {
+      "block": "uniform-3112",
+      "first_read_selections": 0,
+      "committed_first_read_forecasts": 0,
+      "copies": 215
+    }
+  ],
+  "interpretation": "18 development speed runs, 7 content runs; synthetic logical domains, no significance or physical GPU inference claim; compare both SIEVE admission thresholds"
+}

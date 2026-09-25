@@ -1,0 +1,32 @@
+{
+  "stage": "correctness",
+  "blocks": [
+    {
+      "id": "moving_shared-3099",
+      "scenario": "moving_shared",
+      "seed": 3099,
+      "variants": [
+        "OldHP",
+        "BurstHP",
+        "PoolSIEVE2",
+        "PoolSIEVE1"
+      ],
+      "quota_mib": 24,
+      "shard_mib": 2,
+      "requests": 96
+    },
+    {
+      "id": "uniform-3098",
+      "scenario": "uniform",
+      "seed": 3098,
+      "variants": [
+        "BurstHP",
+        "PoolSIEVE2",
+        "PoolSIEVE1"
+      ],
+      "quota_mib": 24,
+      "shard_mib": 2,
+      "requests": 96
+    }
+  ]
+}

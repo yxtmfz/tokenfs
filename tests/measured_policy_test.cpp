@@ -3,6 +3,33 @@
 #include <iostream>
 using namespace tokenfs_policy;
 int main(){
+ {
+  Options o;o.causal_window=true;o.shared_value=true;o.burst_reuse=true;
+  MeasuredPolicy p;p.ReadSample(false,100,100);p.ReadSample(true,100,20);p.CopySample(100,40);
+  // Learn unequal observed runs; no fixed test burst length in the policy.
+  for(int k=0;k<12;++k)for(int j=0;j<(k%2?3:5);++j)p.Observe(j%3,"old"+std::to_string(k),o);
+  p.Observe(2,"new",o);
+  auto forecast=p.Plan(2,{"new",100,0},{},0,100,o);
+  assert(forecast.allowed && forecast.affinity_incoming_count==1 && forecast.burst_remaining>2);
+  Options off=o;off.burst_reuse=false;
+  assert(!p.Plan(2,{"new",100,0},{},0,100,off).allowed);
+  assert(p.HasReuseEvidence(2,"new",o) && !p.HasReuseEvidence(2,"new",off));
+  auto symmetric=p.Plan(2,{"new",100,0},{{"new",100,1}},100,100,o);
+  assert(symmetric.incoming_us==symmetric.displaced_us && !symmetric.allowed);
+  assert(!p.Plan(2,{"new",101,0},{},0,100,o).allowed);
+  assert(!p.Plan(2,{"new",100,0},{},100,100,o).allowed); // pinned capacity
+  p.CopySample(100,100000);
+  assert(!p.Plan(2,{"new",100,0},{},0,100,o).allowed);
+  p.Observe(0,"other",o);
+  assert(p.Plan(2,{"new",100,0},{},0,100,o).burst_remaining==0);
+  for(int k=0;k<160;++k)p.Observe(0,"scan"+std::to_string(k),o);
+  assert(!p.HasReuseEvidence(0,"scan159",o)); // short-term adaptation to no reuse
+  MeasuredPolicy cold;
+  cold.Observe(0,"first",o);assert(!cold.HasReuseEvidence(0,"first",o));
+  for(int j=0;j<100;++j)cold.Observe(0,"first",o);
+  cold.Observe(0,"next",o);assert(!cold.HasReuseEvidence(0,"next",o)); // no forecast from one run
+ }
+
  Options o;o.window=8;MeasuredPolicy p;
  p.ReadSample(false,100,100);p.ReadSample(true,100,20);p.CopySample(100,160);
  p.Observe(0,"a",o);
