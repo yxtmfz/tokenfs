@@ -71,6 +71,7 @@ struct Config {
   bool measured_frequency_admission = false;
   bool measured_shift_reset = false;
   bool measured_causal_window = false;
+  bool measured_burst_reuse = false;
   bool compact_measured_planning = false;
   bool lean_read_accounting = false;
   bool private_cache_domains = false;
@@ -1391,6 +1392,8 @@ class TokenFS {
       throw std::runtime_error("shared placement requires peer reads, a compatible policy and one placement mode");
     if(config_.lean_read_accounting && (!config_.readonly_canonical || config_.affinity_placement || config_.prefetch_on_read || (!config_.measured_policy && !config_.read_through_cache)))
       throw std::runtime_error("lean accounting requires immutable readers without legacy affinity or prefetch consumers");
+    if(config_.measured_burst_reuse && (!config_.measured_causal_window || !config_.shared_value_placement || !config_.measured_admission || !config_.measured_cost))
+      throw std::runtime_error("burst reuse requires causal shared cost-based admission");
     if(config_.compact_measured_planning && (!config_.measured_policy || !config_.measured_causal_window || !config_.readonly_canonical))
       throw std::runtime_error("compact measured planning requires causal immutable measured mode");
     for (const auto& gpu : config_.gpus) {
@@ -2315,7 +2318,7 @@ class TokenFS {
     return {static_cast<size_t>(config_.measured_window),config_.measured_aging,
             config_.measured_admission,config_.measured_cost,
             config_.measured_value_victim,config_.measured_size_aware,config_.measured_frequency_admission,config_.measured_shift_reset,static_cast<size_t>(config_.measured_shift_window),
-            config_.measured_track_affinity,config_.measured_affinity_gate,config_.measured_joint_admission,static_cast<size_t>(config_.measured_affinity_window),config_.measured_affinity_recent_demand,config_.measured_affinity_handover_epoch,config_.shared_value_placement,config_.measured_causal_window};
+            config_.measured_track_affinity,config_.measured_affinity_gate,config_.measured_joint_admission,static_cast<size_t>(config_.measured_affinity_window),config_.measured_affinity_recent_demand,config_.measured_affinity_handover_epoch,config_.shared_value_placement,config_.measured_causal_window,config_.measured_burst_reuse};
   }
 
   double MarginalCoverage(const FileMeta& meta, int location) {
@@ -2367,6 +2370,7 @@ class TokenFS {
     }
     const auto plan=measured_.Plan(gpu.gpu_id,{incoming.logical_path,incoming.size_bytes,0},
         std::move(residents),known_used?*known_used:DirectoryBytes(gpu.local_root),gpu.local_quota_bytes,MeasuredOptions());
+    if(plan.burst_remaining>0)AddBufferedMetric("measured_burst_forecast_plans",1);
     if(plan.survival_adjusted_items) {
       AddBufferedMetric("measured_survival_discounted_plans",1);
       AddBufferedMetric("measured_survival_discounted_items",plan.survival_adjusted_items);
@@ -2415,7 +2419,8 @@ class TokenFS {
              << ";displaced=" << plan.displaced_us << ";copy=" << plan.copy_us
              << ";frequency=" << plan.incoming_count << ";calibrated=" << plan.costs_calibrated
              << ";affinity_count=" << plan.affinity_incoming_count
-             << ";affinity_adjusted_items=" << plan.affinity_adjusted_items;
+             << ";affinity_adjusted_items=" << plan.affinity_adjusted_items
+             << ";burst_remaining=" << plan.burst_remaining;
       metadata_.RecordPolicyEvent("ADMIT",protected_logical_path,gpu.gpu_id,required_size,
           detail.str(),plan.incoming_us-plan.displaced_us-plan.copy_us);
     }
@@ -2700,9 +2705,10 @@ class TokenFS {
         }
         if(!destination){AddBufferedMetric("shared_placement_no_gain",1);return;}
         std::ostringstream detail;detail<<"caller="<<caller<<";incoming="<<chosen.incoming_us
-          <<";victim_loss="<<chosen.displaced_us<<";copy="<<chosen.copy_us;
+          <<";victim_loss="<<chosen.displaced_us<<";copy="<<chosen.copy_us<<";burst_remaining="<<chosen.burst_remaining;
         metadata_.RecordPolicyEvent("SHARED_PLACE",path,destination->gpu_id,incoming.size_bytes,detail.str(),best);
         AddBufferedMetric("shared_placement_selected",1);
+        if(chosen.burst_remaining>0 && chosen.affinity_incoming_count<2)AddBufferedMetric("shared_burst_first_read_selected",1);
         if(destination->gpu_id!=caller)AddBufferedMetric("shared_placement_relocated",1);
       }
     }
@@ -2713,7 +2719,7 @@ class TokenFS {
 
   void ScheduleSharedPlacement(const FileMeta& meta, int caller) {
     if(meta.state!="COMMITTED" || !meta.has_remote_copy)return;
-    if(config_.shared_value_placement && measured_.AdmissionFrequency(caller,meta.logical_path,MeasuredOptions())<2)return;
+    if(config_.shared_value_placement && !measured_.HasReuseEvidence(caller,meta.logical_path,MeasuredOptions()))return;
     if(config_.shared_pool_cache && meta.read_count<config_.read_through_min_reads)return;
     const auto path=meta.logical_path;
     {
@@ -3838,6 +3844,7 @@ Config LoadConfig(const fs::path& path) {
   if(root["policy"] && root["policy"]["measured_joint_admission"]) config.measured_joint_admission=root["policy"]["measured_joint_admission"].as<bool>();
   if(root["policy"] && root["policy"]["measured_affinity_window"]) config.measured_affinity_window=root["policy"]["measured_affinity_window"].as<uint64_t>();
   if(root["policy"] && root["policy"]["lean_read_accounting"]) config.lean_read_accounting=root["policy"]["lean_read_accounting"].as<bool>();
+  if(root["policy"] && root["policy"]["measured_burst_reuse"]) config.measured_burst_reuse=root["policy"]["measured_burst_reuse"].as<bool>();
   if(root["policy"] && root["policy"]["compact_measured_planning"]) config.compact_measured_planning=root["policy"]["compact_measured_planning"].as<bool>();
   if(root["policy"] && root["policy"]["measured_causal_window"]) config.measured_causal_window=root["policy"]["measured_causal_window"].as<bool>();
   if(root["policy"] && root["policy"]["measured_shift_reset"]) config.measured_shift_reset=root["policy"]["measured_shift_reset"].as<bool>();

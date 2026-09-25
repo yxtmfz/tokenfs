@@ -46,6 +46,27 @@ struct TokenFSTestAccess {
     assert(!filesystem.metadata_.GetLocalReplica("/gpu0/incoming",2));
     assert(filesystem.MarginalCoverage(*filesystem.metadata_.Get("/gpu0/incoming"),1)==1);
   }
+  static void burst_first_read(const fs::path& root) {
+    Config cfg;cfg.mount_point=root/"mnt";cfg.metadata_db=root/"state.db";
+    cfg.readonly_canonical=true;cfg.peer_cache_reads=true;cfg.shared_value_placement=true;
+    cfg.measured_policy=true;cfg.measured_causal_window=true;cfg.compact_measured_planning=true;
+    cfg.measured_burst_reuse=true;cfg.checksum="fnv1a64";cfg.speculative_copy_may_evict=true;
+    cfg.gpus.push_back({0,"/gpu0",root/"local",1024,"remote"});
+    cfg.backends.emplace("remote",BackendConfig{"remote","directory",root/"remote"});
+    TokenFS filesystem(cfg);filesystem.Init();
+    for(int k=0;k<10;++k)for(int j=0;j<4;++j)filesystem.measured_.Observe(0,"learn"+std::to_string(k),filesystem.MeasuredOptions());
+    auto remote=root/"remote/gpu0/new";std::ofstream(remote)<<std::string(1024,'b');
+    FileMeta meta;meta.logical_path="/gpu0/new";meta.gpu_id=0;meta.tier="remote";
+    meta.backend_id="remote";meta.physical_path=remote;meta.size_bytes=1024;meta.has_remote_copy=true;meta.state="COMMITTED";
+    filesystem.metadata_.Upsert(meta);
+    filesystem.measured_.Observe(0,meta.logical_path,filesystem.MeasuredOptions());
+    filesystem.PlaceShared(meta.logical_path,0);
+    assert(filesystem.metadata_.Get(meta.logical_path)->tier=="local");
+    assert(fs::file_size(root/"local/new")==1024 && fs::file_size(remote)==1024);
+    auto invalid=cfg;invalid.measured_cost=false;bool rejected=false;
+    try {TokenFS bad(invalid);bad.Init();}catch(const std::runtime_error&){rejected=true;}
+    assert(rejected);
+  }
   static void compact_plan_invariants(const fs::path& root) {
     Config cfg;cfg.mount_point=root/"mnt";cfg.metadata_db=root/"state.db";
     cfg.readonly_canonical=true;cfg.measured_policy=true;cfg.measured_causal_window=true;
@@ -197,6 +218,7 @@ struct TokenFSTestAccess {
 int main() {
   const fs::path root = fs::temp_directory_path() / ("tokenfs-policy-test-" + std::to_string(getpid()));
   fs::create_directory(root);
+  TokenFSTestAccess::burst_first_read(root/"burst-first-read");
   auto observe = [](MetadataStore& db, const std::string& key, int gpu) {
     return db.IncrementReadCount(key, gpu, 70, 55, 2, 10, 3, 4, 2, 3);
   };

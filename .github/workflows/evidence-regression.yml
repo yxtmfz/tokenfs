@@ -43,3 +43,5 @@ jobs:
         run: python3 -m unittest tests.causal_reuse_pilot_test
       - name: Test compact planning closeout controls
         run: python3 -m unittest tests.compact_planning_test
+      - name: Test burst reuse SIEVE comparisons
+        run: python3 -m unittest tests.burst_reuse_test
