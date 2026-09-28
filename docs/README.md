@@ -1,3 +1,5 @@
+> 最新结果：[共享放置与联合准入12组实测](../reports/latest/paper-experiments/30_component_ablation/README.md)。跨域放置三条件吞吐均提高，但固定热点未达5%门槛；联合决策固定热点/随机提高10.49%/13.95%，迁移热点降低4.01%。完整版对SIEVE-1hit两个热点分别降低1.43%/2.99%、随机提高21.63%。整体门槛未通过，全部结果和原始证据保留，未扩量。
+
 > 下一轮准备：[共享放置与联合准入消融](../reports/latest/paper-experiments/29_component_ablation_preflight/README.md)。已补单变量对照与固定12组输入，尚未运行；第28轮实测结论不变。
 
 > 最新结果：[暂存共享12组实测速率与完整审计](../reports/latest/paper-experiments/28_inflight_shared_reads/README.md)。新版热点相对旧版 **+32.56%**，相对同样启用共享读取的SIEVE-1hit/2hit **+2.86%/+17.75%**，两个热点种子均更快。随机相对两种SIEVE **+19.48%/+19.85%**，但仅一个种子；相对旧版p99退化3.58%。热点对1hit未达到预设5%门槛，整体门槛未通过。全部12组保留，未追加测速；最新热点/亲和/联合独立消融仍未闭合。
