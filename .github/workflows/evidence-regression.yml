@@ -51,3 +51,5 @@ jobs:
         run: python3 -m unittest tests.tail_diagnostic_test
       - name: Test fair read-fill pilot controls
         run: python3 -m unittest tests.read_fill_study_test
+      - name: Test request-cost sampling and final evidence counters
+        run: python3 -m unittest tests.request_cost_study_test tests.final_metrics_test

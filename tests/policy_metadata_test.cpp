@@ -10,7 +10,7 @@ namespace {
 struct TokenFSTestAccess {
   static void foreground_fill(const fs::path& root,int threshold,bool adaptive=false) {
     Config cfg;cfg.mount_point=root/"mnt";cfg.metadata_db=root/"state.db";
-    cfg.foreground_read_fill=true;cfg.readonly_canonical=true;cfg.peer_cache_reads=true;
+    cfg.foreground_read_fill=true;cfg.request_read_costs=true;cfg.readonly_canonical=true;cfg.peer_cache_reads=true;
     cfg.shared_pool_cache=!adaptive;cfg.shared_value_placement=adaptive;cfg.checksum="fnv1a64";
     cfg.backend_direct_io=true;cfg.affinity_placement=false;cfg.lean_read_accounting=true;
     cfg.speculative_copy_may_evict=true;cfg.local_eviction_policy=adaptive?"value_aware":"sieve";
@@ -67,6 +67,7 @@ struct TokenFSTestAccess {
   }
   static void request_trace_roundtrip(const fs::path& root) {
     Config cfg;cfg.mount_point=root/"mnt";cfg.metadata_db=root/"state.db";
+    cfg.request_read_costs=true;
     cfg.request_trace_path=(root/"trace.json").string();cfg.checksum="fnv1a64";
     cfg.readonly_canonical=true;cfg.backend_direct_io=true;cfg.affinity_placement=false;
     cfg.read_through_cache=true;cfg.read_through_min_reads=100;cfg.lean_read_accounting=true;
@@ -98,6 +99,14 @@ struct TokenFSTestAccess {
     }
     assert(opens==2 && releases==2 && copies==1 && bytes.size()==2);
     for(auto [handle,n]:bytes)assert(n==8192 && handle>0);
+    sqlite3* db=nullptr;assert(sqlite3_open_v2(cfg.metadata_db.c_str(),&db,SQLITE_OPEN_READONLY,nullptr)==SQLITE_OK);
+    sqlite3_stmt* stmt=nullptr;
+    assert(sqlite3_prepare_v2(db,"SELECT name,value FROM metrics WHERE name LIKE 'request_cost_%';",-1,&stmt,nullptr)==SQLITE_OK);
+    std::map<std::string,uint64_t> metrics;
+    while(sqlite3_step(stmt)==SQLITE_ROW)metrics[reinterpret_cast<const char*>(sqlite3_column_text(stmt,0))]=sqlite3_column_int64(stmt,1);
+    sqlite3_finalize(stmt);sqlite3_close(db);
+    assert(metrics["request_cost_local_samples"]==1 && metrics["request_cost_remote_samples"]==1);
+    assert(metrics["request_cost_local_bytes"]==8192 && metrics["request_cost_remote_bytes"]==8192);
   }
   static void shared_placement(const fs::path& root,bool compact=false,bool adaptive=false) {
     Config cfg;cfg.mount_point=root/"mnt";cfg.metadata_db=root/"state.db";

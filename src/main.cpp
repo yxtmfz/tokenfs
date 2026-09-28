@@ -7,6 +7,7 @@
 #include "sieve_policy.h"
 #include "request_trace.h"
 #include "read_fill.h"
+#include "request_read_cost.h"
 
 #include <algorithm>
 #include <cerrno>
@@ -78,6 +79,7 @@ struct Config {
   bool profile_control_path = false;
   std::string request_trace_path;
   bool foreground_read_fill = false;
+  bool request_read_costs = false;
   uint64_t read_fill_buffer_bytes = 4*1024*1024;
   bool compact_measured_planning = false;
   bool lean_read_accounting = false;
@@ -206,6 +208,7 @@ struct Handle {
   bool pending_physical_dedup = false;
   fs::path dedup_primary_path;
   std::shared_ptr<ReadFillPool::Buffer> read_fill;
+  std::shared_ptr<RequestReadCost> read_cost;
 };
 
 class MetadataStore {
@@ -1742,6 +1745,7 @@ class TokenFS {
     handle.flags = fi->flags;
     handle.writable = writable;
     handle.state = meta.state;
+    if(config_.request_read_costs && !writable)handle.read_cost=std::make_shared<RequestReadCost>(meta.size_bytes);
     if(config_.foreground_read_fill && !writable && meta.tier=="remote") {
       handle.read_fill=fills_.Acquire(path,fd,meta.size_bytes);
       AddBufferedMetric(handle.read_fill?"read_fill_capture_started":"read_fill_capture_unavailable",1);
@@ -1828,9 +1832,10 @@ class TokenFS {
     const uint64_t latency_us = ElapsedMicros(start);
     RecordLatency("read", handle->tier, latency_us);
     if (n > 0) {
-      if(config_.measured_policy || config_.measured_track_affinity) measured_.ReadSample(handle->tier=="local",static_cast<uint64_t>(n),latency_us);
+      if(!config_.request_read_costs && (config_.measured_policy || config_.measured_track_affinity)) measured_.ReadSample(handle->tier=="local",static_cast<uint64_t>(n),latency_us);
       MaybeAdaptivePromote(*handle, latency_us);
     }
+    if(handle->read_cost)AccountRequestReadCost(*handle,n>0?handle->read_cost->Add(offset,n,latency_us):handle->read_cost->Finish());
     if(handle->read_fill) {
       const auto capture_start=ReadFillPool::NowNs();
       const bool complete=handle->read_fill->Append(offset,buf,static_cast<size_t>(n),handle->fd);
@@ -1909,6 +1914,7 @@ class TokenFS {
     if (should_dedup) {
       ApplyPhysicalDedup(it->second);
     }
+    if(it->second.read_cost)AccountRequestReadCost(it->second,it->second.read_cost->Finish());
     const bool fallback=it->second.read_fill && !it->second.read_fill->Dispatched();
     const auto fallback_path=fallback?it->second.logical_path:std::string{};
     const int fallback_caller=it->second.caller_gpu_id;
@@ -2929,6 +2935,16 @@ class TokenFS {
     AddBufferedMetric("read_fill_copy_count",1);
     AddBufferedMetric("read_fill_copy_bytes",size);
     AddBufferedMetric("read_fill_committed_capture_us",fill->CaptureUs());
+  }
+
+  void AccountRequestReadCost(const Handle& handle,const std::optional<RequestReadCost::Sample>& sample) {
+    if(!sample)return;
+    const auto tier=handle.tier=="local"?"local":"remote";
+    AddBufferedMetric(std::string("request_cost_")+tier+"_samples",1);
+    AddBufferedMetric(std::string("request_cost_")+tier+"_bytes",sample->bytes);
+    AddBufferedMetric(std::string("request_cost_")+tier+"_us",sample->micros);
+    if(config_.measured_policy || config_.measured_track_affinity)
+      measured_.ReadSample(handle.tier=="local",sample->bytes,sample->micros);
   }
 
   void CreateCrossGpuReplica(const GpuConfig& caller_gpu,
@@ -3977,6 +3993,7 @@ Config LoadConfig(const fs::path& path) {
   if(root["policy"] && root["policy"]["profile_control_path"]) config.profile_control_path=root["policy"]["profile_control_path"].as<bool>();
   if(root["policy"] && root["policy"]["request_trace_path"]) config.request_trace_path=root["policy"]["request_trace_path"].as<std::string>();
   if(root["policy"] && root["policy"]["foreground_read_fill"]) config.foreground_read_fill=root["policy"]["foreground_read_fill"].as<bool>();
+  if(root["policy"] && root["policy"]["request_read_costs"]) config.request_read_costs=root["policy"]["request_read_costs"].as<bool>();
   if(root["policy"] && root["policy"]["read_fill_buffer_bytes"]) config.read_fill_buffer_bytes=root["policy"]["read_fill_buffer_bytes"].as<uint64_t>();
   if(root["policy"] && root["policy"]["measured_burst_reuse"]) config.measured_burst_reuse=root["policy"]["measured_burst_reuse"].as<bool>();
   if(root["policy"] && root["policy"]["compact_measured_planning"]) config.compact_measured_planning=root["policy"]["compact_measured_planning"].as<bool>();
