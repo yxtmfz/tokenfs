@@ -171,6 +171,17 @@ def drain(db, timeout=120):
     raise TimeoutError("background queue did not drain")
 
 
+def finalize_case_metrics(case, result, returncode):
+    if returncode != 0: raise RuntimeError("daemon exit failed")
+    final_metrics=metrics(case / "state.db")
+    for key in ["read_bytes","read_open_count","read_local_bytes","read_remote_bytes","background_submitted","background_completed"]:
+        if final_metrics.get(key,0)!=result["metrics"].get(key,0):
+            raise RuntimeError("final I/O accounting changed: "+key)
+    result["metrics"]=final_metrics
+    result["metrics_snapshot"]="after_daemon_shutdown"
+    dump(case / "result.json",result)
+
+
 def run_case(binary, case, remote, strategy, events, expected, quota_mib, verify, backend_direct=False, configuration=None):
     case.mkdir()
     config = configuration if configuration is not None else config_for(strategy, case, remote, quota_mib, backend_direct)
@@ -279,6 +290,11 @@ def run_case(binary, case, remote, strategy, events, expected, quota_mib, verify
         try: proc.wait(timeout=120)
         except subprocess.TimeoutExpired: proc.terminate(); proc.wait(timeout=10)
         log.close()
+        # Buffered non-I/O decision metrics can be flushed only by the daemon's
+        # destructor after the final background task. Preserve measured timings,
+        # but publish the final durable counters rather than an earlier snapshot.
+        if (case / "result.json").exists() and not (case / "failure.json").exists():
+            finalize_case_metrics(case,result,proc.returncode)
 
 
 def percentile(values, p):

@@ -1,0 +1,139 @@
+{
+  "passed": true,
+  "source_files_verified": 28,
+  "batch": {
+    "passed": true,
+    "checked_runs": 6,
+    "expected_runs": 6,
+    "errors": []
+  },
+  "requests": 3456,
+  "mechanisms": [
+    {
+      "seed": 3241,
+      "strategy": "AdaptiveHP",
+      "copy_count": 43,
+      "reused_copy_count": 43,
+      "source_copy_count": 0,
+      "staging_peak_bytes": 4194304,
+      "capture_us": 35223,
+      "committed_capture_us": 20737,
+      "capture_complete": 124,
+      "capture_unavailable": 49
+    },
+    {
+      "seed": 3241,
+      "strategy": "PoolSIEVE2",
+      "copy_count": 54,
+      "reused_copy_count": 54,
+      "source_copy_count": 0,
+      "staging_peak_bytes": 2097152,
+      "capture_us": 30877,
+      "committed_capture_us": 28795,
+      "capture_complete": 101,
+      "capture_unavailable": 54
+    },
+    {
+      "seed": 3241,
+      "strategy": "PoolSIEVE1",
+      "copy_count": 54,
+      "reused_copy_count": 54,
+      "source_copy_count": 0,
+      "staging_peak_bytes": 2097152,
+      "capture_us": 15308,
+      "committed_capture_us": 25165,
+      "capture_complete": 54,
+      "capture_unavailable": 54
+    },
+    {
+      "seed": 3242,
+      "strategy": "AdaptiveHP",
+      "copy_count": 48,
+      "reused_copy_count": 48,
+      "source_copy_count": 0,
+      "staging_peak_bytes": 2097152,
+      "capture_us": 16273,
+      "committed_capture_us": 25276,
+      "capture_complete": 48,
+      "capture_unavailable": 48
+    },
+    {
+      "seed": 3242,
+      "strategy": "PoolSIEVE2",
+      "copy_count": 55,
+      "reused_copy_count": 55,
+      "source_copy_count": 0,
+      "staging_peak_bytes": 2097152,
+      "capture_us": 36694,
+      "committed_capture_us": 33047,
+      "capture_complete": 103,
+      "capture_unavailable": 55
+    },
+    {
+      "seed": 3242,
+      "strategy": "PoolSIEVE1",
+      "copy_count": 55,
+      "reused_copy_count": 55,
+      "source_copy_count": 0,
+      "staging_peak_bytes": 2097152,
+      "capture_us": 16823,
+      "committed_capture_us": 27401,
+      "capture_complete": 55,
+      "capture_unavailable": 55
+    }
+  ],
+  "pairs": [
+    {
+      "scenario": "moving_shared",
+      "treatment": "AdaptiveHP",
+      "baseline": "PoolSIEVE2",
+      "n": 2,
+      "paired_gain_pct": 6.248903775850589,
+      "wins": 2,
+      "per_seed": [
+        {
+          "seed": 3241,
+          "gain_pct": 1.026281781771754,
+          "drain_gain_pct": 1.0334262573844066,
+          "p99_change_pct": -8.021606910310231
+        },
+        {
+          "seed": 3242,
+          "gain_pct": 11.741512747693816,
+          "drain_gain_pct": 11.737070868656097,
+          "p99_change_pct": -4.799386025483432
+        }
+      ],
+      "pilot_speed_gate": true,
+      "nonregression_gate": true,
+      "tail_gate": true
+    },
+    {
+      "scenario": "moving_shared",
+      "treatment": "AdaptiveHP",
+      "baseline": "PoolSIEVE1",
+      "n": 2,
+      "paired_gain_pct": -1.4069239750716056,
+      "wins": 1,
+      "per_seed": [
+        {
+          "seed": 3241,
+          "gain_pct": -4.134136291644552,
+          "drain_gain_pct": -4.121490608566969,
+          "p99_change_pct": -6.137232274421944
+        },
+        {
+          "seed": 3242,
+          "gain_pct": 1.3978726528709684,
+          "drain_gain_pct": 1.3979777824354889,
+          "p99_change_pct": -5.600708884669436
+        }
+      ],
+      "pilot_speed_gate": false,
+      "nonregression_gate": false,
+      "tail_gate": true
+    }
+  ],
+  "all_gates_passed": false,
+  "limits": "six development runs, two new seeds, common corrected read-fill path; no latest H/P/J, uniform or physical GPU confirmation; no causal timing gain from cross-seed/version comparisons"
+}

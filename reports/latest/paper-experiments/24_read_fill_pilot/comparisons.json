@@ -1,0 +1,163 @@
+[
+  {
+    "kind": "common_path",
+    "treatment": "AdaptiveHP-fill",
+    "baseline": "AdaptiveHP-old",
+    "paired_gain_pct": -10.648601070838792,
+    "wins": 1,
+    "per_seed": [
+      {
+        "seed": 3231,
+        "gain_pct": 9.770714031649197,
+        "drain_gain_pct": 9.76652925410859,
+        "p99_change_pct": -9.112974550015107
+      },
+      {
+        "seed": 3232,
+        "gain_pct": -27.269558542761686,
+        "drain_gain_pct": -27.379988543184908,
+        "p99_change_pct": -8.686194316904515
+      }
+    ],
+    "speed_gate": false,
+    "tail_gate": true
+  },
+  {
+    "kind": "common_path",
+    "treatment": "PoolSIEVE2-fill",
+    "baseline": "PoolSIEVE2-old",
+    "paired_gain_pct": 9.342837697691465,
+    "wins": 2,
+    "per_seed": [
+      {
+        "seed": 3231,
+        "gain_pct": 8.5931803178662,
+        "drain_gain_pct": 8.588476832307524,
+        "p99_change_pct": -5.2988597518584974
+      },
+      {
+        "seed": 3232,
+        "gain_pct": 10.09767022926642,
+        "drain_gain_pct": 10.094991976881662,
+        "p99_change_pct": -2.6006936502522504
+      }
+    ],
+    "speed_gate": true,
+    "tail_gate": true
+  },
+  {
+    "kind": "common_path",
+    "treatment": "PoolSIEVE1-fill",
+    "baseline": "PoolSIEVE1-old",
+    "paired_gain_pct": 12.919094002714937,
+    "wins": 2,
+    "per_seed": [
+      {
+        "seed": 3231,
+        "gain_pct": 13.647516179429475,
+        "drain_gain_pct": 13.642059285594899,
+        "p99_change_pct": -10.690711557862741
+      },
+      {
+        "seed": 3232,
+        "gain_pct": 12.19534063782637,
+        "drain_gain_pct": 12.189402201162935,
+        "p99_change_pct": -3.84288691723238
+      }
+    ],
+    "speed_gate": true,
+    "tail_gate": true
+  },
+  {
+    "kind": "policy",
+    "treatment": "AdaptiveHP-old",
+    "baseline": "PoolSIEVE1-old",
+    "paired_gain_pct": 1.1405903072151613,
+    "wins": 2,
+    "per_seed": [
+      {
+        "seed": 3231,
+        "gain_pct": 0.9673874873189936,
+        "drain_gain_pct": 0.9664826331768461,
+        "p99_change_pct": 1.5954752622716617
+      },
+      {
+        "seed": 3232,
+        "gain_pct": 1.3140902449982894,
+        "drain_gain_pct": 1.3106046366030855,
+        "p99_change_pct": -0.27889088545409724
+      }
+    ],
+    "speed_gate": false,
+    "tail_gate": false
+  },
+  {
+    "kind": "policy",
+    "treatment": "AdaptiveHP-old",
+    "baseline": "PoolSIEVE2-old",
+    "paired_gain_pct": 6.018575579808139,
+    "wins": 2,
+    "per_seed": [
+      {
+        "seed": 3231,
+        "gain_pct": 5.974891421990369,
+        "drain_gain_pct": 5.970971015614723,
+        "p99_change_pct": 7.808172838624716
+      },
+      {
+        "seed": 3232,
+        "gain_pct": 6.062277744774769,
+        "drain_gain_pct": 6.060444915032215,
+        "p99_change_pct": 1.158547920230868
+      }
+    ],
+    "speed_gate": true,
+    "tail_gate": false
+  },
+  {
+    "kind": "policy",
+    "treatment": "AdaptiveHP-fill",
+    "baseline": "PoolSIEVE1-fill",
+    "paired_gain_pct": -19.968776651240596,
+    "wins": 0,
+    "per_seed": [
+      {
+        "seed": 3231,
+        "gain_pct": -2.4768636307485714,
+        "drain_gain_pct": -2.476772778404901,
+        "p99_change_pct": 3.3902599251794285
+      },
+      {
+        "seed": 3232,
+        "gain_pct": -34.32331086596927,
+        "drain_gain_pct": -34.421815919697295,
+        "p99_change_pct": -5.301712080826981
+      }
+    ],
+    "speed_gate": false,
+    "tail_gate": false
+  },
+  {
+    "kind": "policy",
+    "treatment": "AdaptiveHP-fill",
+    "baseline": "PoolSIEVE2-fill",
+    "paired_gain_pct": -13.365079597409535,
+    "wins": 1,
+    "per_seed": [
+      {
+        "seed": 3231,
+        "gain_pct": 7.124033634223359,
+        "drain_gain_pct": 7.1206266944428,
+        "p99_change_pct": 3.4661686525231383
+      },
+      {
+        "seed": 3232,
+        "gain_pct": -29.935335904254657,
+        "drain_gain_pct": -30.041225431381314,
+        "p99_change_pct": -5.161829851204203
+      }
+    ],
+    "speed_gate": false,
+    "tail_gate": false
+  }
+]

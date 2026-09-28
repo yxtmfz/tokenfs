@@ -6,6 +6,8 @@
 #include "measured_policy.h"
 #include "sieve_policy.h"
 #include "request_trace.h"
+#include "read_fill.h"
+#include "request_read_cost.h"
 
 #include <algorithm>
 #include <cerrno>
@@ -76,6 +78,9 @@ struct Config {
   bool adaptive_reuse_control = false;
   bool profile_control_path = false;
   std::string request_trace_path;
+  bool foreground_read_fill = false;
+  bool request_read_costs = false;
+  uint64_t read_fill_buffer_bytes = 4*1024*1024;
   bool compact_measured_planning = false;
   bool lean_read_accounting = false;
   bool private_cache_domains = false;
@@ -202,6 +207,8 @@ struct Handle {
   std::string last_checksum;
   bool pending_physical_dedup = false;
   fs::path dedup_primary_path;
+  std::shared_ptr<ReadFillPool::Buffer> read_fill;
+  std::shared_ptr<RequestReadCost> read_cost;
 };
 
 class MetadataStore {
@@ -1385,9 +1392,13 @@ class TokenFS {
   friend struct TokenFSTestAccess;
  public:
   explicit TokenFS(Config config)
-      : config_(std::move(config)), trace_(config_.request_trace_path), metadata_(config_.metadata_db) {}
+      : config_(std::move(config)), trace_(config_.request_trace_path), fills_(config_.read_fill_buffer_bytes), metadata_(config_.metadata_db) {}
 
   void Init() {
+    if(config_.foreground_read_fill && (!config_.readonly_canonical || !config_.peer_cache_reads ||
+       !(config_.shared_value_placement || config_.shared_pool_cache) || config_.checksum!="fnv1a64" ||
+       config_.read_fill_buffer_bytes==0 || config_.read_fill_buffer_bytes>64*1024*1024))
+      throw std::runtime_error("foreground read fill requires verified immutable shared caching and a bounded buffer");
     if (config_.peer_cache_reads && (!config_.readonly_canonical || config_.private_cache_domains))
       throw std::runtime_error("peer cache reads require immutable canonical data and a shared address space");
     if ((config_.shared_value_placement || config_.shared_pool_cache) &&
@@ -1734,13 +1745,20 @@ class TokenFS {
     handle.flags = fi->flags;
     handle.writable = writable;
     handle.state = meta.state;
+    if(config_.request_read_costs && !writable)handle.read_cost=std::make_shared<RequestReadCost>(meta.size_bytes);
+    if(config_.foreground_read_fill && !writable && meta.tier=="remote") {
+      handle.read_fill=fills_.Acquire(path,fd,meta.size_bytes);
+      AddBufferedMetric(handle.read_fill?"read_fill_capture_started":"read_fill_capture_unavailable",1);
+      SetBufferedMetricMax("read_fill_buffer_peak_bytes",fills_.PeakBytes());
+    }
+    const bool deferred_fill=bool(handle.read_fill);
     fi->fh = StoreHandle(std::move(handle));
     fi->direct_io = config_.fuse_direct_io;
     if(diagnostic.Enabled()){diagnostic.e.handle=fi->fh;diagnostic.e.caller=caller_gpu_id;diagnostic.e.tier=meta.tier;}
     layout_lock.unlock();
     // Pin the selected source before future placement work; this miss remains a miss.
     if (!writable && (config_.shared_value_placement || config_.shared_pool_cache)) {
-      if (meta.tier != "local") ScheduleSharedPlacement(*metadata_.Get(path), caller_gpu_id);
+      if (meta.tier != "local" && !deferred_fill) ScheduleSharedPlacement(*metadata_.Get(path), caller_gpu_id);
     } else if (!writable && !borrowed_peer) {
       FileMeta canonical = *metadata_.Get(path);
       MaybeManageCrossGpuReplica(canonical, caller_gpu_id);
@@ -1791,6 +1809,7 @@ class TokenFS {
       errno=saved_errno;
     }
     if (n < 0) {
+      if(handle->read_fill)handle->read_fill->Invalidate();
       return -errno;
     }
     if(diagnostic.Enabled())diagnostic.e.bytes=static_cast<uint64_t>(n);
@@ -1813,8 +1832,20 @@ class TokenFS {
     const uint64_t latency_us = ElapsedMicros(start);
     RecordLatency("read", handle->tier, latency_us);
     if (n > 0) {
-      if(config_.measured_policy || config_.measured_track_affinity) measured_.ReadSample(handle->tier=="local",static_cast<uint64_t>(n),latency_us);
+      if(!config_.request_read_costs && (config_.measured_policy || config_.measured_track_affinity)) measured_.ReadSample(handle->tier=="local",static_cast<uint64_t>(n),latency_us);
       MaybeAdaptivePromote(*handle, latency_us);
+    }
+    if(handle->read_cost)AccountRequestReadCost(*handle,n>0?handle->read_cost->Add(offset,n,latency_us):handle->read_cost->Finish());
+    if(handle->read_fill) {
+      const auto capture_start=ReadFillPool::NowNs();
+      const bool complete=handle->read_fill->Append(offset,buf,static_cast<size_t>(n),handle->fd);
+      AddBufferedMetric("read_fill_capture_us",(ReadFillPool::NowNs()-capture_start+999)/1000);
+      if(complete) {
+        AddBufferedMetric("read_fill_capture_complete",1);
+        AddBufferedMetric("read_fill_capture_bytes",handle->read_fill->Data().size());
+        if(auto meta=metadata_.Get(handle->logical_path))
+          ScheduleSharedPlacement(*meta,handle->caller_gpu_id,handle->read_fill);
+      }
     }
     return static_cast<int>(n);
   }
@@ -1858,7 +1889,7 @@ class TokenFS {
 
   int Release(const char*, fuse_file_info* fi) {
     RequestTrace::Span diagnostic(trace_,"release");
-    std::lock_guard<std::mutex> lock(handles_mu_);
+    std::unique_lock<std::mutex> lock(handles_mu_);
     auto it = handles_.find(fi->fh);
     if (it == handles_.end()) {
       FlushBufferedMetrics();
@@ -1883,7 +1914,16 @@ class TokenFS {
     if (should_dedup) {
       ApplyPhysicalDedup(it->second);
     }
+    if(it->second.read_cost)AccountRequestReadCost(it->second,it->second.read_cost->Finish());
+    const bool fallback=it->second.read_fill && !it->second.read_fill->Dispatched();
+    const auto fallback_path=fallback?it->second.logical_path:std::string{};
+    const int fallback_caller=it->second.caller_gpu_id;
     handles_.erase(it);
+    if(fallback) {
+      lock.unlock();
+      AddBufferedMetric("read_fill_partial_fallback",1);
+      if(auto meta=metadata_.Get(fallback_path))ScheduleSharedPlacement(*meta,fallback_caller);
+    }
     const auto flush_start=diagnostic.Enabled()?RequestTrace::Now():0;
     FlushBufferedMetrics();
     if(diagnostic.Enabled())diagnostic.e.flush_ns=RequestTrace::Now()-flush_start;
@@ -2707,7 +2747,7 @@ class TokenFS {
     return true;
   }
 
-  void PlaceShared(const std::string& path, int caller) {
+  void PlaceShared(const std::string& path, int caller,std::shared_ptr<ReadFillPool::Buffer> fill={}) {
     const auto plan_start=Clock::now();
     auto parsed=ParseGpuPath(path);if(!parsed)return;
     const auto [owner,rel]=*parsed;
@@ -2761,11 +2801,11 @@ class TokenFS {
     }
     if(config_.profile_control_path)RecordLatency("shared_plan","background",ElapsedMicros(plan_start));
     // Existing copy/commit path rechecks quota and benefit using current evidence.
-    if(destination->gpu_id==owner->gpu_id)PromoteToLocal(*destination,rel,incoming,"promote",true);
-    else CreateCrossGpuReplica(*destination,*owner,rel,incoming);
+    if(destination->gpu_id==owner->gpu_id)PromoteToLocal(*destination,rel,incoming,"promote",true,fill);
+    else CreateCrossGpuReplica(*destination,*owner,rel,incoming,fill);
   }
 
-  void ScheduleSharedPlacement(const FileMeta& meta, int caller) {
+  void ScheduleSharedPlacement(const FileMeta& meta, int caller,std::shared_ptr<ReadFillPool::Buffer> fill={}) {
     if(meta.state!="COMMITTED" || !meta.has_remote_copy)return;
     if(config_.shared_value_placement && !measured_.HasReuseEvidence(caller,meta.logical_path,MeasuredOptions()))return;
     if(config_.shared_pool_cache && meta.read_count<config_.read_through_min_reads)return;
@@ -2777,8 +2817,8 @@ class TokenFS {
       }
     }
     auto release=[this,path] {std::lock_guard<std::mutex> lock(shared_placement_mu_);shared_placement_inflight_.erase(path);};
-    if(!SubmitBackground([this,path,caller,release] {
-      try {PlaceShared(path,caller);} catch(...) {release();throw;}
+    if(!SubmitBackground([this,path,caller,release,fill] {
+      try {PlaceShared(path,caller,fill);} catch(...) {release();throw;}
       release();
     }))release();
   }
@@ -2870,9 +2910,46 @@ class TokenFS {
     }
   }
 
+  bool CopyOrFill(const fs::path& source,const fs::path& temporary,uint64_t size,
+                  const std::shared_ptr<ReadFillPool::Buffer>& fill,std::error_code& ec) {
+    const bool reuse=config_.foreground_read_fill && fill && fill->Matches(source.string(),size);
+    if(!reuse) {
+      if(fill)AddBufferedMetric("read_fill_source_changed_fallback",1);
+      fs::copy_file(source,temporary,fs::copy_options::overwrite_existing,ec);
+      return false;
+    }
+    int fd=open(temporary.c_str(),O_WRONLY|O_CREAT|O_TRUNC,0600);
+    if(fd<0){ec=std::error_code(errno,std::generic_category());return true;}
+    size_t offset=0;const auto& bytes=fill->Data();
+    while(offset<bytes.size()) {
+      const auto n=write(fd,bytes.data()+offset,bytes.size()-offset);
+      if(n<0 && errno==EINTR)continue;
+      if(n<=0){ec=std::error_code(n<0?errno:EIO,std::generic_category());break;}
+      offset+=static_cast<size_t>(n);
+    }
+    if(close(fd)!=0 && !ec)ec=std::error_code(errno,std::generic_category());
+    return true;
+  }
+
+  void RecordReadFillCommit(uint64_t size,const std::shared_ptr<ReadFillPool::Buffer>& fill) {
+    AddBufferedMetric("read_fill_copy_count",1);
+    AddBufferedMetric("read_fill_copy_bytes",size);
+    AddBufferedMetric("read_fill_committed_capture_us",fill->CaptureUs());
+  }
+
+  void AccountRequestReadCost(const Handle& handle,const std::optional<RequestReadCost::Sample>& sample) {
+    if(!sample)return;
+    const auto tier=handle.tier=="local"?"local":"remote";
+    AddBufferedMetric(std::string("request_cost_")+tier+"_samples",1);
+    AddBufferedMetric(std::string("request_cost_")+tier+"_bytes",sample->bytes);
+    AddBufferedMetric(std::string("request_cost_")+tier+"_us",sample->micros);
+    if(config_.measured_policy || config_.measured_track_affinity)
+      measured_.ReadSample(handle.tier=="local",sample->bytes,sample->micros);
+  }
+
   void CreateCrossGpuReplica(const GpuConfig& caller_gpu,
                              const GpuConfig& owner_gpu, const fs::path& rel,
-                             FileMeta meta) {
+                             FileMeta meta,std::shared_ptr<ReadFillPool::Buffer> fill={}) {
     fs::path source = RemotePath(owner_gpu, rel);
     if (!fs::exists(source)) {
       source = meta.physical_path;
@@ -2906,7 +2983,7 @@ class TokenFS {
     fs::remove(tmp, ec);
     ec.clear();
     const auto copy_io_start=diagnostic.Enabled()?RequestTrace::Now():0;
-    fs::copy_file(source, tmp, fs::copy_options::overwrite_existing, ec);
+    const bool reused=CopyOrFill(source,tmp,size,fill,ec);
     if(diagnostic.Enabled())diagnostic.e.copy_ns=RequestTrace::Now()-copy_io_start;
     if (ec) {
       fs::remove(tmp, ec);
@@ -2925,10 +3002,11 @@ class TokenFS {
     }
     if (config_.checksum != "none") {
       const auto verify_start=diagnostic.Enabled()?RequestTrace::Now():0;
-      auto source_hash = ChecksumFile(source);
+      auto source_hash = reused?std::optional<std::string>(fill->Checksum()):ChecksumFile(source);
       auto copy_hash = ChecksumFile(tmp);
       if(diagnostic.Enabled())diagnostic.e.verify_ns=RequestTrace::Now()-verify_start;
-      if (!source_hash || !copy_hash || *source_hash != *copy_hash) {
+      if (!source_hash || !copy_hash || *source_hash != *copy_hash ||
+          (reused && !fill->Matches(source.string(),size))) {
         fs::remove(tmp, ec);
         metadata_.AddMetric("copy_checksum_error_count", 1);
         return;
@@ -2955,7 +3033,8 @@ class TokenFS {
     metadata_.UpsertLocalReplica(replica);
     metadata_.RecordReplicaPromotion(meta.logical_path);
     metadata_.RecordPolicyEvent("REPLICATE_READY", meta.logical_path, caller_gpu.gpu_id, size, "cross_gpu");
-    if(config_.measured_policy) measured_.CopySample(size,ElapsedMicros(copy_start));
+    if(reused)RecordReadFillCommit(size,fill);
+    if(config_.measured_policy) measured_.CopySample(size,ElapsedMicros(copy_start)+(reused?fill->CaptureUs():0));
     metadata_.AddMetric("cross_gpu_replica_create_count", 1);
     metadata_.AddMetric("cross_gpu_replica_create_bytes", size);
   }
@@ -2995,7 +3074,7 @@ class TokenFS {
 
   int PromoteToLocal(const GpuConfig& gpu, const fs::path& rel, FileMeta& meta,
                      const std::string& metric_prefix,
-                     bool allow_eviction = true) {
+                     bool allow_eviction = true,std::shared_ptr<ReadFillPool::Buffer> fill={}) {
     std::lock_guard<std::mutex> copy_lock(copy_mu_);
     const auto copy_start=Clock::now();
     if (auto current = metadata_.Get(meta.logical_path); current && current->tier == "local") return 0;
@@ -3032,11 +3111,12 @@ class TokenFS {
     }
 
     const auto copy_io_start=diagnostic.Enabled()?RequestTrace::Now():0;
-    fs::copy_file(source, tmp, fs::copy_options::overwrite_existing, ec);
+    const bool reused=CopyOrFill(source,tmp,size,fill,ec);
     if(diagnostic.Enabled())diagnostic.e.copy_ns=RequestTrace::Now()-copy_io_start;
     if (ec) {
+      const int error=ec.value();
       fs::remove(tmp, ec);
-      return -ec.value();
+      return -error;
     }
 
     if (config_.durable_local_cache) {
@@ -3059,10 +3139,11 @@ class TokenFS {
 
     if (config_.checksum != "none") {
       const auto verify_start=diagnostic.Enabled()?RequestTrace::Now():0;
-      auto source_hash = ChecksumFile(source);
+      auto source_hash = reused?std::optional<std::string>(fill->Checksum()):ChecksumFile(source);
       auto copy_hash = ChecksumFile(tmp);
       if(diagnostic.Enabled())diagnostic.e.verify_ns=RequestTrace::Now()-verify_start;
-      if (!source_hash || !copy_hash || *source_hash != *copy_hash) {
+      if (!source_hash || !copy_hash || *source_hash != *copy_hash ||
+          (reused && !fill->Matches(source.string(),size))) {
         fs::remove(tmp, ec);
         metadata_.AddMetric("copy_checksum_error_count", 1);
         return -EIO;
@@ -3070,16 +3151,18 @@ class TokenFS {
     }
     fs::rename(tmp, local, ec);
     if (ec) {
+      const int error=ec.value();
       fs::remove(tmp, ec);
-      return -ec.value();
+      return -error;
     }
 
     if(config_.local_eviction_policy=="sieve")sieve_.Ready(gpu.gpu_id,meta.logical_path);
     metadata_.CommitLocalCache(meta, gpu.gpu_id, local, size);
     meta = *metadata_.Get(meta.logical_path);
     metadata_.RecordPolicyEvent("PROMOTE_READY", meta.logical_path, gpu.gpu_id, size, metric_prefix);
+    if(reused)RecordReadFillCommit(size,fill);
     if(config_.measured_policy) {
-      const auto elapsed=ElapsedMicros(copy_start);
+      const auto elapsed=ElapsedMicros(copy_start)+(reused?fill->CaptureUs():0);
       measured_.CopySample(size,elapsed);
       AddBufferedMetric("measured_verified_copy_us",elapsed);
       SetBufferedMetricMax("measured_history_entries_max",measured_.Entries());
@@ -3822,6 +3905,7 @@ class TokenFS {
   bool background_stopping_ = false;
   Config config_;
   RequestTrace trace_;
+  ReadFillPool fills_;
   tokenfs_policy::MeasuredPolicy measured_;
   tokenfs_policy::SievePolicy sieve_;
   MetadataStore metadata_;
@@ -3908,6 +3992,9 @@ Config LoadConfig(const fs::path& path) {
   if(root["policy"] && root["policy"]["adaptive_reuse_control"]) config.adaptive_reuse_control=root["policy"]["adaptive_reuse_control"].as<bool>();
   if(root["policy"] && root["policy"]["profile_control_path"]) config.profile_control_path=root["policy"]["profile_control_path"].as<bool>();
   if(root["policy"] && root["policy"]["request_trace_path"]) config.request_trace_path=root["policy"]["request_trace_path"].as<std::string>();
+  if(root["policy"] && root["policy"]["foreground_read_fill"]) config.foreground_read_fill=root["policy"]["foreground_read_fill"].as<bool>();
+  if(root["policy"] && root["policy"]["request_read_costs"]) config.request_read_costs=root["policy"]["request_read_costs"].as<bool>();
+  if(root["policy"] && root["policy"]["read_fill_buffer_bytes"]) config.read_fill_buffer_bytes=root["policy"]["read_fill_buffer_bytes"].as<uint64_t>();
   if(root["policy"] && root["policy"]["measured_burst_reuse"]) config.measured_burst_reuse=root["policy"]["measured_burst_reuse"].as<bool>();
   if(root["policy"] && root["policy"]["compact_measured_planning"]) config.compact_measured_planning=root["policy"]["compact_measured_planning"].as<bool>();
   if(root["policy"] && root["policy"]["measured_causal_window"]) config.measured_causal_window=root["policy"]["measured_causal_window"].as<bool>();

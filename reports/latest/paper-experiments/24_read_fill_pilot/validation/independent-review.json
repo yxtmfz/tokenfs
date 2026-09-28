@@ -1,0 +1,199 @@
+{
+  "passed": false,
+  "critical_checks_passed": true,
+  "metric_snapshot_discrepancies": [
+    {
+      "seed": 3232,
+      "strategy": "AdaptiveHP-fill",
+      "differences": {
+        "compact_planning_snapshots": {
+          "snapshot": 423,
+          "durable": 424
+        },
+        "measured_burst_forecast_plans": {
+          "snapshot": 1162,
+          "durable": 1165
+        },
+        "shared_placement_plans": {
+          "snapshot": 1195,
+          "durable": 1198
+        },
+        "shared_placement_no_gain": {
+          "snapshot": 383,
+          "durable": 384
+        },
+        "measured_affinity_reweighted_items": {
+          "snapshot": 3094,
+          "durable": 3096
+        },
+        "measured_affinity_reweighted_plans": {
+          "snapshot": 1186,
+          "durable": 1188
+        },
+        "compact_planning_residents": {
+          "snapshot": 4920,
+          "durable": 4932
+        }
+      }
+    }
+  ],
+  "source_files_verified": 22,
+  "batch": {
+    "passed": true,
+    "checked_runs": 12,
+    "expected_runs": 12,
+    "errors": []
+  },
+  "requests": 6912,
+  "mechanisms": [
+    {
+      "seed": 3231,
+      "strategy": "AdaptiveHP-old",
+      "copy_count": 49,
+      "reused_copy_count": 0,
+      "source_copy_count": 49,
+      "staging_peak_bytes": 0,
+      "capture_us": 0,
+      "committed_capture_us": 0,
+      "capture_complete": 0,
+      "capture_unavailable": 0
+    },
+    {
+      "seed": 3231,
+      "strategy": "AdaptiveHP-fill",
+      "copy_count": 48,
+      "reused_copy_count": 48,
+      "source_copy_count": 0,
+      "staging_peak_bytes": 2097152,
+      "capture_us": 18145,
+      "committed_capture_us": 26174,
+      "capture_complete": 52,
+      "capture_unavailable": 49
+    },
+    {
+      "seed": 3231,
+      "strategy": "PoolSIEVE2-old",
+      "copy_count": 53,
+      "reused_copy_count": 0,
+      "source_copy_count": 53,
+      "staging_peak_bytes": 0,
+      "capture_us": 0,
+      "committed_capture_us": 0,
+      "capture_complete": 0,
+      "capture_unavailable": 0
+    },
+    {
+      "seed": 3231,
+      "strategy": "PoolSIEVE2-fill",
+      "copy_count": 53,
+      "reused_copy_count": 53,
+      "source_copy_count": 0,
+      "staging_peak_bytes": 2097152,
+      "capture_us": 37591,
+      "committed_capture_us": 32195,
+      "capture_complete": 99,
+      "capture_unavailable": 53
+    },
+    {
+      "seed": 3231,
+      "strategy": "PoolSIEVE1-old",
+      "copy_count": 53,
+      "reused_copy_count": 0,
+      "source_copy_count": 53,
+      "staging_peak_bytes": 0,
+      "capture_us": 0,
+      "committed_capture_us": 0,
+      "capture_complete": 0,
+      "capture_unavailable": 0
+    },
+    {
+      "seed": 3231,
+      "strategy": "PoolSIEVE1-fill",
+      "copy_count": 53,
+      "reused_copy_count": 53,
+      "source_copy_count": 0,
+      "staging_peak_bytes": 2097152,
+      "capture_us": 16384,
+      "committed_capture_us": 26738,
+      "capture_complete": 53,
+      "capture_unavailable": 53
+    },
+    {
+      "seed": 3232,
+      "strategy": "AdaptiveHP-old",
+      "copy_count": 47,
+      "reused_copy_count": 0,
+      "source_copy_count": 47,
+      "staging_peak_bytes": 0,
+      "capture_us": 0,
+      "committed_capture_us": 0,
+      "capture_complete": 0,
+      "capture_unavailable": 0
+    },
+    {
+      "seed": 3232,
+      "strategy": "AdaptiveHP-fill",
+      "copy_count": 20,
+      "reused_copy_count": 20,
+      "source_copy_count": 0,
+      "staging_peak_bytes": 2097152,
+      "capture_us": 145420,
+      "committed_capture_us": 12039,
+      "capture_complete": 404,
+      "capture_unavailable": 20
+    },
+    {
+      "seed": 3232,
+      "strategy": "PoolSIEVE2-old",
+      "copy_count": 54,
+      "reused_copy_count": 0,
+      "source_copy_count": 54,
+      "staging_peak_bytes": 0,
+      "capture_us": 0,
+      "committed_capture_us": 0,
+      "capture_complete": 0,
+      "capture_unavailable": 0
+    },
+    {
+      "seed": 3232,
+      "strategy": "PoolSIEVE2-fill",
+      "copy_count": 50,
+      "reused_copy_count": 50,
+      "source_copy_count": 0,
+      "staging_peak_bytes": 2097152,
+      "capture_us": 34221,
+      "committed_capture_us": 29749,
+      "capture_complete": 96,
+      "capture_unavailable": 50
+    },
+    {
+      "seed": 3232,
+      "strategy": "PoolSIEVE1-old",
+      "copy_count": 50,
+      "reused_copy_count": 0,
+      "source_copy_count": 50,
+      "staging_peak_bytes": 0,
+      "capture_us": 0,
+      "committed_capture_us": 0,
+      "capture_complete": 0,
+      "capture_unavailable": 0
+    },
+    {
+      "seed": 3232,
+      "strategy": "PoolSIEVE1-fill",
+      "copy_count": 50,
+      "reused_copy_count": 50,
+      "source_copy_count": 0,
+      "staging_peak_bytes": 2097152,
+      "capture_us": 16557,
+      "committed_capture_us": 26898,
+      "capture_complete": 50,
+      "capture_unavailable": 50
+    }
+  ],
+  "gates": {
+    "execution_improves_each_policy": false,
+    "full_beats_both_equal_path_baselines": false
+  },
+  "limits": "12 development runs, two seeds, common execution path, no latest H/P/J or uniform confirmation, 4 MiB extra bounded staging on fill arms"
+}

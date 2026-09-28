@@ -33,6 +33,12 @@ target_link_libraries(tokenfs PRIVATE
 
 include(CTest)
 if(BUILD_TESTING)
+  add_executable(request_read_cost_test tests/request_read_cost_test.cpp)
+  target_compile_options(request_read_cost_test PRIVATE -UNDEBUG)
+  add_test(NAME request_read_cost COMMAND request_read_cost_test)
+  add_executable(read_fill_test tests/read_fill_test.cpp)
+  target_compile_options(read_fill_test PRIVATE -UNDEBUG)
+  add_test(NAME read_fill COMMAND read_fill_test)
   add_executable(request_trace_test tests/request_trace_test.cpp)
   target_compile_options(request_trace_test PRIVATE -UNDEBUG)
   add_test(NAME request_trace COMMAND request_trace_test)
