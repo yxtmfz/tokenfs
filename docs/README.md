@@ -1,3 +1,5 @@
+> 下一轮准备：[共享放置与联合准入消融](../reports/latest/paper-experiments/29_component_ablation_preflight/README.md)。已补单变量对照与固定12组输入，尚未运行；第28轮实测结论不变。
+
 > 最新结果：[暂存共享12组实测速率与完整审计](../reports/latest/paper-experiments/28_inflight_shared_reads/README.md)。新版热点相对旧版 **+32.56%**，相对同样启用共享读取的SIEVE-1hit/2hit **+2.86%/+17.75%**，两个热点种子均更快。随机相对两种SIEVE **+19.48%/+19.85%**，但仅一个种子；相对旧版p99退化3.58%。热点对1hit未达到预设5%门槛，整体门槛未通过。全部12组保留，未追加测速；最新热点/亲和/联合独立消融仍未闭合。
 
 > 上一轮验证：[12组剩余复制成本单变量对照](../reports/latest/paper-experiments/26_incremental_copy_cost/README.md)。候选修正对旧控制器未取得新增提速，保持默认关闭。原控制器本轮热点对SIEVE-1hit仍一胜一负；随机单种子对1hit/2hit提速25.79%/23.03%，尚非独立确认。全部原始结果保留，未扩大实验规模。

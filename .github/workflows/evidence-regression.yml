@@ -57,3 +57,5 @@ jobs:
         run: python3 -m unittest tests.incremental_cost_study_test
       - name: Test fair bounded inflight sharing controls
         run: python3 -m unittest tests.inflight_shared_study_test
+      - name: Test isolated shared-placement and joint ablations
+        run: python3 -m unittest tests.component_ablation_test

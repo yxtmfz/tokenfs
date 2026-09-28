@@ -52,7 +52,9 @@ struct TokenFSTestAccess {
     assert(m["read_bytes"]==12288 && m["read_local_bytes"]==4096);
     assert(m["read_remote_bytes"]==(enabled?4096:8192) && m["read_inflight_bytes"]==(enabled?4096:0));
     assert(m["request_cost_inflight_samples"]==(enabled?1:0));
-    auto invalid=cfg;invalid.foreground_read_fill=false;invalid.coalesce_pending_reads=true;bool rejected=false;
+    auto invalid=cfg;invalid.shared_caller_only=true;bool rejected=false;
+    try{TokenFS bad(invalid);bad.Init();}catch(const std::runtime_error&){rejected=true;}assert(rejected);
+    invalid=cfg;invalid.foreground_read_fill=false;invalid.coalesce_pending_reads=true;rejected=false;
     try{TokenFS bad(invalid);bad.Init();}catch(const std::runtime_error&){rejected=true;}assert(rejected);
   }
   static void foreground_fill(const fs::path& root,int threshold,bool adaptive=false,bool incremental=false) {
@@ -167,12 +169,13 @@ struct TokenFSTestAccess {
     assert(metrics["request_cost_local_samples"]==1 && metrics["request_cost_remote_samples"]==1);
     assert(metrics["request_cost_local_bytes"]==8192 && metrics["request_cost_remote_bytes"]==8192);
   }
-  static void shared_placement(const fs::path& root,bool compact=false,bool adaptive=false) {
+  static void shared_placement(const fs::path& root,bool compact=false,bool adaptive=false,bool caller_only=false) {
     Config cfg;cfg.mount_point=root/"mnt";cfg.metadata_db=root/"state.db";
     cfg.readonly_canonical=true;cfg.peer_cache_reads=true;cfg.shared_value_placement=true;
     cfg.measured_policy=true;cfg.measured_causal_window=true;cfg.compact_measured_planning=compact;cfg.measured_cost=false;cfg.checksum="fnv1a64";
     cfg.speculative_copy_may_evict=true;
     cfg.adaptive_reuse_control=adaptive;cfg.measured_burst_reuse=adaptive;cfg.measured_cost=adaptive;
+    cfg.shared_caller_only=caller_only;
     for(int id=0;id<3;++id)cfg.gpus.push_back({id,"/gpu"+std::to_string(id),root/("local"+std::to_string(id)),1024,"remote"});
     cfg.backends.emplace("remote",BackendConfig{"remote","directory",root/"remote"});
     TokenFS filesystem(cfg);filesystem.Init();
@@ -189,6 +192,12 @@ struct TokenFSTestAccess {
     for(int i=0;i<4;++i)filesystem.measured_.Observe(0,"/gpu0/incoming",filesystem.MeasuredOptions(),false);
     filesystem.PlaceShared("/gpu0/incoming",0); // Caller is full: use free peer capacity.
     auto replica=filesystem.metadata_.GetLocalReplica("/gpu0/incoming",1);
+    if(caller_only) {
+      assert(!replica && !filesystem.metadata_.GetLocalReplica("/gpu0/incoming",2));
+      assert(filesystem.metadata_.Get("/gpu0/incoming")->tier=="remote");
+      assert(filesystem.metadata_.Get("/gpu0/hot")->tier=="local");
+      return;
+    }
     assert(replica && replica->state=="READY");
     assert(filesystem.metadata_.Get("/gpu0/hot")->tier=="local");
     assert(filesystem.MarginalCoverage(*filesystem.metadata_.Get("/gpu0/incoming"),1)==1);
@@ -282,11 +291,12 @@ struct TokenFSTestAccess {
     try {TokenFS bad(invalid);bad.Init();}catch(const std::runtime_error&){rejected=true;}
     assert(rejected);
   }
-  static void stale_advisory_plan(const fs::path& root) {
+  static void stale_advisory_plan(const fs::path& root,bool joint=true) {
     Config cfg;cfg.mount_point=root/"mnt";cfg.metadata_db=root/"state.db";
     cfg.readonly_canonical=true;cfg.peer_cache_reads=true;cfg.shared_value_placement=true;
     cfg.measured_policy=true;cfg.measured_causal_window=true;cfg.compact_measured_planning=true;
     cfg.measured_burst_reuse=true;cfg.adaptive_reuse_control=true;cfg.speculative_copy_may_evict=true;
+    cfg.measured_joint_admission=joint;
     cfg.gpus.push_back({0,"/gpu0",root/"local",100,"remote"});
     cfg.backends.emplace("remote",BackendConfig{"remote","directory",root/"remote"});
     TokenFS filesystem(cfg);filesystem.Init();
@@ -300,7 +310,7 @@ struct TokenFSTestAccess {
     std::ofstream(root/"local/unknown")<<std::string(100,'z');
     assert(!filesystem.EnsureLocalCapacity(cfg.gpus[0],100,meta.logical_path));
     assert(fs::file_size(root/"local/unknown")==100 && fs::file_size(remote)==100);
-    auto invalid=cfg;invalid.measured_joint_admission=false;bool rejected=false;
+    auto invalid=cfg;invalid.compact_measured_planning=false;bool rejected=false;
     try {TokenFS bad(invalid);bad.Init();}catch(const std::runtime_error&){rejected=true;}
     assert(rejected);
   }
@@ -442,7 +452,9 @@ int main() {
   }
   TokenFSTestAccess::lookup_during_eviction(root/"lookup-race");
   TokenFSTestAccess::readable_peer(root/"peer-storage");
+  TokenFSTestAccess::shared_placement(root/"caller-only-placement",true,false,true);
   TokenFSTestAccess::shared_placement(root/"shared-placement");
+  TokenFSTestAccess::stale_advisory_plan(root/"independent-stale-plan",false);
   TokenFSTestAccess::shared_placement(root/"compact-shared-placement",true);
   TokenFSTestAccess::shared_placement(root/"adaptive-shared-placement",true,true);
   TokenFSTestAccess::compact_plan_invariants(root/"compact-invariants");
