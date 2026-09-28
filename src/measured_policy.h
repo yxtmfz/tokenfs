@@ -33,6 +33,7 @@ struct Options {
   bool shared_value=false;
   bool causal_window=false;
   bool burst_reuse=false;
+  bool adaptive_control=false;
 };
 struct Decision {
   bool allowed=false;
@@ -40,6 +41,8 @@ struct Decision {
   double incoming_us=0, displaced_us=0, copy_us=0;
   bool costs_calibrated=false;
   double burst_remaining=0;
+  double uncertainty_us=0;
+  bool explore_headroom=false;
   uint64_t incoming_count=0;
   uint64_t affinity_incoming_count=0;
   uint64_t affinity_adjusted_items=0;
@@ -79,6 +82,18 @@ class MeasuredPolicy {
         if(positions.empty())domain.erase(old.first);
         if(domain.empty())recent_domains_.erase(old.second);
       }
+    }
+    if(o.adaptive_control) {
+      const double n=recent_history_.size();double repeats=0,collision=0;
+      for(size_t i=1;i<recent_history_.size();++i)
+        repeats+=recent_history_[i].first==recent_history_[i-1].first;
+      for(const auto& [key,positions]:recent_shared_) {
+        (void)key;const double count=positions.size();collision+=count*(count-1);
+      }
+      const double iid=n>1?collision/(n*(n-1)):0;
+      const double adjacent=n>1?repeats/(n-1):0;
+      // A continuous signal: random interleavings do not imply overdue reuse.
+      temporal_strength_=n>=8 && iid<1?std::clamp(4*(adjacent-iid)/(1-iid),0.0,1.0):0;
     }
     auto& d=domains_[gpu];
     if(d.last_observation && observations_-d.last_observation>=std::max<size_t>(8,o.affinity_window/4)) {
@@ -181,7 +196,7 @@ class MeasuredPolicy {
   }
   bool HasReuseEvidence(int gpu,const std::string& key,const Options& o) const {
     std::lock_guard<std::mutex> lock(mu_);
-    return EffectiveCount(gpu,key,o,true)>=2 || BurstRemaining(key,o)>0;
+    return o.adaptive_control || EffectiveCount(gpu,key,o,true)>=2 || BurstRemaining(key,o)>0;
   }
   std::vector<Item> Ranked(int gpu,std::vector<Item> items,const Options& o) const {
     std::lock_guard<std::mutex> lock(mu_);Sort(gpu,items,o);return items;
@@ -190,6 +205,7 @@ class MeasuredPolicy {
                 uint64_t used,uint64_t quota,const Options& o) const {
     std::lock_guard<std::mutex> lock(mu_);Decision result;
     if(incoming.bytes>quota){result.reason="oversize";return result;}
+    const uint64_t needed=used>quota ? used-quota+incoming.bytes : (incoming.bytes>quota-used ? incoming.bytes-(quota-used) : 0);
     const auto frequency=Count(gpu,incoming.key);
     result.incoming_count=frequency;
     result.affinity_incoming_count=EffectiveCount(gpu,incoming.key,o,true);
@@ -201,6 +217,14 @@ class MeasuredPolicy {
       result.survival_adjusted_items+=Survival(gpu,resident.key,o)<1.0;
     result.costs_calibrated=remote_.n && local_.n && copy_.n;
     result.burst_remaining=BurstRemaining(incoming.key,o);
+    // Bounded exploration uses only existing free headroom, never a victim.
+    // Stop exploring if a measured verified copy costs more than one remote read.
+    if(o.adaptive_control && !needed && (!copy_.n || copy_.mean<=(remote_.n?remote_.mean:0.01))) {
+      result.allowed=true;result.explore_headroom=true;result.reason="free_headroom_exploration";
+      result.incoming_us=Value(gpu,incoming,o,true);
+      result.copy_us=incoming.bytes*(copy_.n?copy_.mean:(remote_.n?remote_.mean:0.01));
+      return result;
+    }
     if(o.admission && result.affinity_incoming_count<2 && result.burst_remaining<=0){result.reason="no_reuse";return result;}
     if(o.admission && o.affinity_gate && !o.affinity_recent_demand) {
       const auto found=affinity_counts_.find(incoming.key);
@@ -213,11 +237,12 @@ class MeasuredPolicy {
       if(!own || own*2<peak){result.reason="affinity";return result;}
     }
     Sort(gpu,residents,o);
-    uint64_t freed=0;const auto needed=used>quota ? used-quota+incoming.bytes : (incoming.bytes>quota-used ? incoming.bytes-(quota-used) : 0);
+    uint64_t freed=0;double victim_uncertainty=0;
     for(const auto& victim:residents) {
       if(freed>=needed)break;
       freed+=victim.bytes;result.victims.push_back(victim.key);
       result.displaced_us+=Value(gpu,victim,o,false);
+      victim_uncertainty+=std::sqrt(double(EffectiveCount(gpu,victim.key,o,false)))*victim.bytes*victim.coverage;
     }
     if(freed<needed){result.reason="pinned_capacity";return result;}
     result.incoming_us=Value(gpu,incoming,o,true);
@@ -225,7 +250,13 @@ class MeasuredPolicy {
     // half its service time as potential savings. This prior is recorded, then
     // replaced by online measurements; no synthetic delay is injected.
     result.copy_us=o.cost ? incoming.bytes*(copy_.n?copy_.mean:(remote_.n?remote_.mean:0.01)) : 0;
-    const double charged_loss=o.joint_admission?result.displaced_us:0;
+    if(o.adaptive_control && !result.victims.empty()) {
+      // A heuristic noise margin, not a statistical confidence interval. Only
+      // weak temporal evidence is penalized; burst benefit stays responsive.
+      result.uncertainty_us=(1-temporal_strength_)*SavingRate()*
+          (std::sqrt(double(result.affinity_incoming_count))*incoming.bytes+victim_uncertainty);
+    }
+    const double charged_loss=o.joint_admission?result.displaced_us+result.uncertainty_us:0;
     if(o.admission && result.incoming_us<=charged_loss+result.copy_us) {
       result.reason=result.incoming_us<=result.copy_us?"copy_cost":"victim_loss";
       return result;
@@ -312,7 +343,7 @@ class MeasuredPolicy {
     // loses value as its next reuse becomes overdue. Arrivals and residents use
     // exactly the same forecast; there is no phase label or cache-state oracle.
     const double gap=double(positions->back()-positions->front())/(positions->size()-1);
-    return std::exp2(-double(observations_-positions->back())/std::max(4.0,gap));
+    return std::exp2(-(o.adaptive_control?temporal_strength_:1.0)*double(observations_-positions->back())/std::max(4.0,gap));
   }
   double BurstRemaining(const std::string& key,const Options& o) const {
     if(!o.burst_reuse || !o.causal_window || !o.shared_value || key!=active_burst_key_ || completed_bursts_.size()<8)return 0;
@@ -355,6 +386,7 @@ class MeasuredPolicy {
   std::unordered_map<std::string,std::deque<uint64_t>> recent_shared_;
   std::unordered_map<int,std::unordered_map<std::string,std::deque<uint64_t>>> recent_domains_;
   uint64_t observations_=0;
+  double temporal_strength_=0;
   std::string active_burst_key_;
   uint64_t active_burst_length_=0,completed_burst_reads_=0;
   std::deque<uint64_t> completed_bursts_;

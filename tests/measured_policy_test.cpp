@@ -5,6 +5,38 @@ using namespace tokenfs_policy;
 int main(){
  {
   Options o;o.causal_window=true;o.shared_value=true;o.burst_reuse=true;
+  o.adaptive_control=true;o.shift_reset=true;
+  MeasuredPolicy p;
+  p.Observe(0,"first",o);
+  const auto explore=p.Plan(0,{"first",100,0},{},0,100,o);
+  assert(explore.allowed && explore.explore_headroom && explore.victims.empty());
+  assert(!p.Plan(0,{"first",101,0},{},0,100,o).allowed);
+  assert(!p.Plan(0,{"first",100,0},{},100,100,o).allowed);
+  // Exploration cannot displace existing data, even with no reuse evidence.
+  assert(!p.Plan(0,{"first",100,0},{{"resident",100,0}},100,100,o).allowed);
+  p.ReadSample(false,100,100);p.CopySample(100,1000);
+  assert(!p.Plan(0,{"first",100,0},{},0,100,o).allowed); // too-expensive copying
+  MeasuredPolicy balanced;balanced.ReadSample(false,100,100);balanced.ReadSample(true,100,20);balanced.CopySample(100,20);
+  for(int j=0;j<8;++j)for(int k=0;k<8;++k)balanced.Observe(k%3,"k"+std::to_string(k),o);
+  balanced.Observe(0,"k0",o);
+  const auto cautious=balanced.Plan(0,{"k0",100,0},{{"k1",100,0}},100,100,o);
+  Options old=o;old.adaptive_control=false;
+  const auto eager=balanced.Plan(0,{"k0",100,0},{{"k1",100,0}},100,100,old);
+  assert(!cautious.allowed && cautious.uncertainty_us>0 && eager.allowed);
+  assert(cautious.displaced_us>eager.displaced_us); // iid-like gaps do not imply stale heat
+  // Real continuing bursts retain the prior responsive estimate and no noise charge.
+  MeasuredPolicy bursts;bursts.ReadSample(false,100,100);bursts.ReadSample(true,100,20);bursts.CopySample(100,20);
+  for(int k=0;k<12;++k)for(int j=0;j<4;++j)bursts.Observe(j%3,"run"+std::to_string(k),o);
+  bursts.Observe(0,"new",o);
+  const auto responsive=bursts.Plan(0,{"new",100,0},{{"run0",100,0}},100,100,o);
+  assert(responsive.allowed && responsive.uncertainty_us==0 && responsive.burst_remaining>2);
+  // Sparse counts do not permanently freeze the cache when a genuinely hot key emerges.
+  for(int j=0;j<24;++j)balanced.Observe(0,"new-hot",o);
+  assert(balanced.Plan(0,{"new-hot",100,0},{{"k1",100,0}},100,100,o).allowed);
+ }
+
+ {
+  Options o;o.causal_window=true;o.shared_value=true;o.burst_reuse=true;
   MeasuredPolicy p;p.ReadSample(false,100,100);p.ReadSample(true,100,20);p.CopySample(100,40);
   // Learn unequal observed runs; no fixed test burst length in the policy.
   for(int k=0;k<12;++k)for(int j=0;j<(k%2?3:5);++j)p.Observe(j%3,"old"+std::to_string(k),o);
