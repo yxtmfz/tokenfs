@@ -8,6 +8,63 @@
 
 namespace {
 struct TokenFSTestAccess {
+  static void foreground_fill(const fs::path& root,int threshold,bool adaptive=false) {
+    Config cfg;cfg.mount_point=root/"mnt";cfg.metadata_db=root/"state.db";
+    cfg.foreground_read_fill=true;cfg.readonly_canonical=true;cfg.peer_cache_reads=true;
+    cfg.shared_pool_cache=!adaptive;cfg.shared_value_placement=adaptive;cfg.checksum="fnv1a64";
+    cfg.backend_direct_io=true;cfg.affinity_placement=false;cfg.lean_read_accounting=true;
+    cfg.speculative_copy_may_evict=true;cfg.local_eviction_policy=adaptive?"value_aware":"sieve";
+    cfg.read_through_cache=!adaptive;cfg.read_through_min_reads=threshold;
+    cfg.measured_policy=adaptive;cfg.measured_causal_window=adaptive;cfg.compact_measured_planning=adaptive;
+    cfg.measured_burst_reuse=adaptive;cfg.adaptive_reuse_control=adaptive;
+    cfg.gpus.push_back({0,"/gpu0",root/"local",8192,"remote"});
+    cfg.gpus.push_back({1,"/gpu1",root/"peer",8192,"remote"});
+    cfg.backends.emplace("remote",BackendConfig{"remote","directory",root/"remote"});
+    TokenFS filesystem(cfg);filesystem.Init();
+    if(adaptive){filesystem.measured_.ReadSample(false,4096,1000000);filesystem.measured_.ReadSample(true,4096,1);filesystem.measured_.CopySample(4096,10);}
+    auto drain=[&]{std::promise<void> done;auto ready=done.get_future();assert(filesystem.SubmitBackground([&]{done.set_value();}));ready.wait();};
+    for(const std::string key:{"full","partial","reordered","oversize"}) {
+      const size_t size=key=="oversize"?12288:4096;
+      std::ofstream(root/"remote/gpu0"/key)<<std::string(size,'k');
+      for(int pass=0;pass<threshold;++pass) {
+        const auto path="/gpu0/"+key;fuse_file_info fi{};fi.flags=O_RDONLY;
+        assert(filesystem.Open(path.c_str(),&fi)==0);
+        char bytes[12288];
+        if(key=="partial")assert(filesystem.Read(path.c_str(),bytes,1024,0,&fi)==1024);
+        else if(key=="reordered")assert(filesystem.Read(path.c_str(),bytes,2048,2048,&fi)==2048);
+        else {
+          assert(filesystem.Read(path.c_str(),bytes,size/2,0,&fi)==int(size/2));
+          assert(filesystem.metadata_.Get(path)->tier=="remote"); // No partial READY.
+          assert(filesystem.Read(path.c_str(),bytes,size/2,size/2,&fi)==int(size/2));
+        }
+        assert(filesystem.Release(path.c_str(),&fi)==0);drain();
+        auto meta=*filesystem.metadata_.Get(path);
+        auto peer=filesystem.ReadablePeer(path,-1);
+        if(pass+1<threshold || key=="oversize")assert(meta.tier=="remote" && !peer);
+        else {assert(meta.tier=="local" || peer);assert(filesystem.ChecksumFile(meta.tier=="local"?meta.physical_path:peer->physical_path)==filesystem.ChecksumFile(root/"remote/gpu0"/key));}
+        assert(filesystem.fills_.UsedBytes()==0);
+      }
+    }
+    // Both destination types use the same verified capture, including peer READY.
+    auto source=root/"remote/gpu0/peerfill";std::ofstream(source)<<std::string(4096,'p');
+    int fd=open(source.c_str(),O_RDONLY);auto fill=filesystem.fills_.Acquire("/gpu0/peerfill",fd,4096);
+    assert(fill && fill->Append(0,std::string(4096,'p').data(),4096,fd));close(fd);
+    FileMeta meta;meta.logical_path="/gpu0/peerfill";meta.gpu_id=0;meta.tier="remote";
+    meta.physical_path=source;meta.has_remote_copy=true;meta.size_bytes=4096;meta.state="COMMITTED";
+    filesystem.metadata_.Upsert(meta);
+    filesystem.CreateCrossGpuReplica(cfg.gpus[1],cfg.gpus[0],"peerfill",meta,fill);
+    auto peer=filesystem.metadata_.GetLocalReplica(meta.logical_path,1);assert(peer && peer->state=="READY");
+    assert(filesystem.ChecksumFile(peer->physical_path)==filesystem.ChecksumFile(source));
+    auto tmp=root/"manual-copy";std::error_code ec;
+    assert(filesystem.CopyOrFill(source,tmp,4096,fill,ec) && !ec);
+    std::ofstream(tmp,std::ios::binary|std::ios::trunc)<<"corruption";
+    assert(filesystem.ChecksumFile(tmp)!=std::optional<std::string>(fill->Checksum()));
+    std::ofstream(root/"replacement")<<std::string(4096,'q');fs::rename(root/"replacement",source);
+    ec.clear();assert(!filesystem.CopyOrFill(source,tmp,4096,fill,ec) && !ec);
+    assert(filesystem.ChecksumFile(tmp)==filesystem.ChecksumFile(source));
+    auto invalid=cfg;invalid.readonly_canonical=false;bool rejected=false;
+    try {TokenFS bad(invalid);bad.Init();}catch(const std::runtime_error&){rejected=true;}assert(rejected);
+  }
   static void request_trace_roundtrip(const fs::path& root) {
     Config cfg;cfg.mount_point=root/"mnt";cfg.metadata_db=root/"state.db";
     cfg.request_trace_path=(root/"trace.json").string();cfg.checksum="fnv1a64";
@@ -277,6 +334,9 @@ struct TokenFSTestAccess {
 int main() {
   const fs::path root = fs::temp_directory_path() / ("tokenfs-policy-test-" + std::to_string(getpid()));
   fs::create_directory(root);
+  TokenFSTestAccess::foreground_fill(root/"fill-sieve1",1);
+  TokenFSTestAccess::foreground_fill(root/"fill-sieve2",2);
+  TokenFSTestAccess::foreground_fill(root/"fill-adaptive",1,true);
   TokenFSTestAccess::request_trace_roundtrip(root/"request-trace");
   TokenFSTestAccess::burst_first_read(root/"burst-first-read");
   auto observe = [](MetadataStore& db, const std::string& key, int gpu) {

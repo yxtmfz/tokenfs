@@ -49,3 +49,5 @@ jobs:
         run: python3 -m unittest tests.adaptive_control_test
       - name: Test bounded request-correlated diagnostics
         run: python3 -m unittest tests.tail_diagnostic_test
+      - name: Test fair read-fill pilot controls
+        run: python3 -m unittest tests.read_fill_study_test
