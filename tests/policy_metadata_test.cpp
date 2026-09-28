@@ -8,8 +8,9 @@
 
 namespace {
 struct TokenFSTestAccess {
-  static void foreground_fill(const fs::path& root,int threshold,bool adaptive=false) {
+  static void foreground_fill(const fs::path& root,int threshold,bool adaptive=false,bool incremental=false) {
     Config cfg;cfg.mount_point=root/"mnt";cfg.metadata_db=root/"state.db";
+    cfg.incremental_copy_cost=incremental;
     cfg.foreground_read_fill=true;cfg.request_read_costs=true;cfg.readonly_canonical=true;cfg.peer_cache_reads=true;
     cfg.shared_pool_cache=!adaptive;cfg.shared_value_placement=adaptive;cfg.checksum="fnv1a64";
     cfg.backend_direct_io=true;cfg.affinity_placement=false;cfg.lean_read_accounting=true;
@@ -62,6 +63,17 @@ struct TokenFSTestAccess {
     std::ofstream(root/"replacement")<<std::string(4096,'q');fs::rename(root/"replacement",source);
     ec.clear();assert(!filesystem.CopyOrFill(source,tmp,4096,fill,ec) && !ec);
     assert(filesystem.ChecksumFile(tmp)==filesystem.ChecksumFile(source));
+    if(adaptive) {
+      filesystem.FlushBufferedMetrics();
+      sqlite3* conn=nullptr;assert(sqlite3_open(cfg.metadata_db.c_str(),&conn)==SQLITE_OK);
+      sqlite3_stmt* stmt=nullptr;assert(sqlite3_prepare_v2(conn,"SELECT name,value FROM metrics WHERE name LIKE 'copy_cost_%'",-1,&stmt,nullptr)==SQLITE_OK);
+      std::map<std::string,uint64_t> costs;
+      while(sqlite3_step(stmt)==SQLITE_ROW)costs[reinterpret_cast<const char*>(sqlite3_column_text(stmt,0))]=sqlite3_column_int64(stmt,1);
+      sqlite3_finalize(stmt);sqlite3_close(conn);
+      assert(costs["copy_cost_samples"]>0 && costs["copy_cost_remaining_us"]>0);
+      assert(costs["copy_cost_full_us"]==costs["copy_cost_remaining_us"]+costs["copy_cost_planning_us"]+costs["copy_cost_capture_us"]);
+      assert(costs["copy_cost_charged_us"]==costs[incremental?"copy_cost_remaining_us":"copy_cost_full_us"]);
+    }
     auto invalid=cfg;invalid.readonly_canonical=false;bool rejected=false;
     try {TokenFS bad(invalid);bad.Init();}catch(const std::runtime_error&){rejected=true;}assert(rejected);
   }
@@ -346,6 +358,7 @@ int main() {
   TokenFSTestAccess::foreground_fill(root/"fill-sieve1",1);
   TokenFSTestAccess::foreground_fill(root/"fill-sieve2",2);
   TokenFSTestAccess::foreground_fill(root/"fill-adaptive",1,true);
+  TokenFSTestAccess::foreground_fill(root/"fill-incremental",1,true,true);
   TokenFSTestAccess::request_trace_roundtrip(root/"request-trace");
   TokenFSTestAccess::burst_first_read(root/"burst-first-read");
   auto observe = [](MetadataStore& db, const std::string& key, int gpu) {

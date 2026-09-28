@@ -8,6 +8,7 @@
 #include "request_trace.h"
 #include "read_fill.h"
 #include "request_read_cost.h"
+#include "copy_cost.h"
 
 #include <algorithm>
 #include <cerrno>
@@ -75,6 +76,7 @@ struct Config {
   bool measured_shift_reset = false;
   bool measured_causal_window = false;
   bool measured_burst_reuse = false;
+  bool incremental_copy_cost = false;
   bool adaptive_reuse_control = false;
   bool profile_control_path = false;
   std::string request_trace_path;
@@ -1395,6 +1397,8 @@ class TokenFS {
       : config_(std::move(config)), trace_(config_.request_trace_path), fills_(config_.read_fill_buffer_bytes), metadata_(config_.metadata_db) {}
 
   void Init() {
+    if(config_.incremental_copy_cost && (!config_.foreground_read_fill || !config_.request_read_costs || !config_.adaptive_reuse_control))
+      throw std::runtime_error("incremental copy cost requires captured request-level adaptive control");
     if(config_.foreground_read_fill && (!config_.readonly_canonical || !config_.peer_cache_reads ||
        !(config_.shared_value_placement || config_.shared_pool_cache) || config_.checksum!="fnv1a64" ||
        config_.read_fill_buffer_bytes==0 || config_.read_fill_buffer_bytes>64*1024*1024))
@@ -2469,7 +2473,8 @@ class TokenFS {
 
   bool EnsureLocalCapacity(const GpuConfig& gpu, uint64_t required_size,
                            const std::string& protected_logical_path,
-                           const fs::path* existing_file = nullptr) {
+                           const fs::path* existing_file = nullptr, uint64_t* planning_us = nullptr) {
+    const auto planning_start=Clock::now();
     std::lock_guard<std::mutex> layout_lock(layout_mu_);
     if (required_size > gpu.local_quota_bytes) {
       return false;
@@ -2490,6 +2495,7 @@ class TokenFS {
       committed_plan=plan;
       AddBufferedMetric("measured_commit_"+plan.reason,1);
       if(!plan.allowed)return false;
+      if(planning_us)*planning_us=ElapsedMicros(planning_start);
       std::ostringstream detail;
       detail << plan.reason << ";incoming=" << plan.incoming_us
              << ";displaced=" << plan.displaced_us << ";copy=" << plan.copy_us
@@ -2937,6 +2943,17 @@ class TokenFS {
     AddBufferedMetric("read_fill_committed_capture_us",fill->CaptureUs());
   }
 
+  void RecordCopyCost(uint64_t size,const CopyCostSample& sample) {
+    if(!config_.measured_policy)return;
+    measured_.CopySample(size,sample.Charge(config_.incremental_copy_cost));
+    AddBufferedMetric("copy_cost_samples",1);
+    AddBufferedMetric("copy_cost_full_us",sample.Full());
+    AddBufferedMetric("copy_cost_planning_us",sample.planning_us);
+    AddBufferedMetric("copy_cost_capture_us",sample.capture_us);
+    AddBufferedMetric("copy_cost_remaining_us",sample.Remaining());
+    AddBufferedMetric("copy_cost_charged_us",sample.Charge(config_.incremental_copy_cost));
+  }
+
   void AccountRequestReadCost(const Handle& handle,const std::optional<RequestReadCost::Sample>& sample) {
     if(!sample)return;
     const auto tier=handle.tier=="local"?"local":"remote";
@@ -2960,6 +2977,7 @@ class TokenFS {
     }
     std::lock_guard<std::mutex> copy_lock(copy_mu_);
     const auto copy_start=Clock::now();
+    uint64_t planning_us=0;
     const uint64_t size = FileSizeNoThrow(source);
     fs::path local = CrossGpuReplicaPath(caller_gpu, owner_gpu, rel);
     if (!config_.speculative_copy_may_evict &&
@@ -2969,7 +2987,7 @@ class TokenFS {
       return;
     }
     if (!EnsureLocalCapacity(caller_gpu, size, meta.logical_path,
-                             fs::exists(local) ? &local : nullptr)) {
+                             fs::exists(local) ? &local : nullptr,&planning_us)) {
       metadata_.AddMetric("cross_gpu_replica_skip_no_space", 1);
       return;
     }
@@ -3034,7 +3052,7 @@ class TokenFS {
     metadata_.RecordReplicaPromotion(meta.logical_path);
     metadata_.RecordPolicyEvent("REPLICATE_READY", meta.logical_path, caller_gpu.gpu_id, size, "cross_gpu");
     if(reused)RecordReadFillCommit(size,fill);
-    if(config_.measured_policy) measured_.CopySample(size,ElapsedMicros(copy_start)+(reused?fill->CaptureUs():0));
+    RecordCopyCost(size,{ElapsedMicros(copy_start),planning_us,reused?fill->CaptureUs():0});
     metadata_.AddMetric("cross_gpu_replica_create_count", 1);
     metadata_.AddMetric("cross_gpu_replica_create_bytes", size);
   }
@@ -3077,6 +3095,7 @@ class TokenFS {
                      bool allow_eviction = true,std::shared_ptr<ReadFillPool::Buffer> fill={}) {
     std::lock_guard<std::mutex> copy_lock(copy_mu_);
     const auto copy_start=Clock::now();
+    uint64_t planning_us=0;
     if (auto current = metadata_.Get(meta.logical_path); current && current->tier == "local") return 0;
     const uint64_t size = FileSizeNoThrow(meta.physical_path);
     fs::path local = gpu.local_root / rel;
@@ -3087,7 +3106,7 @@ class TokenFS {
       return 0;
     }
     if (!EnsureLocalCapacity(gpu, size, meta.logical_path,
-                             fs::exists(local) ? &local : nullptr)) {
+                             fs::exists(local) ? &local : nullptr,&planning_us)) {
       metadata_.AddMetric(metric_prefix + "_skip_no_space", 1);
       return 0;
     }
@@ -3162,9 +3181,9 @@ class TokenFS {
     metadata_.RecordPolicyEvent("PROMOTE_READY", meta.logical_path, gpu.gpu_id, size, metric_prefix);
     if(reused)RecordReadFillCommit(size,fill);
     if(config_.measured_policy) {
-      const auto elapsed=ElapsedMicros(copy_start)+(reused?fill->CaptureUs():0);
-      measured_.CopySample(size,elapsed);
-      AddBufferedMetric("measured_verified_copy_us",elapsed);
+      const CopyCostSample sample{ElapsedMicros(copy_start),planning_us,reused?fill->CaptureUs():0};
+      RecordCopyCost(size,sample);
+      AddBufferedMetric("measured_verified_copy_us",sample.Full());
       SetBufferedMetricMax("measured_history_entries_max",measured_.Entries());
     }
     metadata_.AddMetric("migration_to_local_commit", 1);
@@ -3995,6 +4014,7 @@ Config LoadConfig(const fs::path& path) {
   if(root["policy"] && root["policy"]["foreground_read_fill"]) config.foreground_read_fill=root["policy"]["foreground_read_fill"].as<bool>();
   if(root["policy"] && root["policy"]["request_read_costs"]) config.request_read_costs=root["policy"]["request_read_costs"].as<bool>();
   if(root["policy"] && root["policy"]["read_fill_buffer_bytes"]) config.read_fill_buffer_bytes=root["policy"]["read_fill_buffer_bytes"].as<uint64_t>();
+  if(root["policy"] && root["policy"]["incremental_copy_cost"]) config.incremental_copy_cost=root["policy"]["incremental_copy_cost"].as<bool>();
   if(root["policy"] && root["policy"]["measured_burst_reuse"]) config.measured_burst_reuse=root["policy"]["measured_burst_reuse"].as<bool>();
   if(root["policy"] && root["policy"]["compact_measured_planning"]) config.compact_measured_planning=root["policy"]["compact_measured_planning"].as<bool>();
   if(root["policy"] && root["policy"]["measured_causal_window"]) config.measured_causal_window=root["policy"]["measured_causal_window"].as<bool>();
