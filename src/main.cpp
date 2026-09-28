@@ -77,6 +77,7 @@ struct Config {
   bool measured_causal_window = false;
   bool measured_burst_reuse = false;
   bool incremental_copy_cost = false;
+  bool coalesce_pending_reads = false;
   bool adaptive_reuse_control = false;
   bool profile_control_path = false;
   std::string request_trace_path;
@@ -210,6 +211,7 @@ struct Handle {
   bool pending_physical_dedup = false;
   fs::path dedup_primary_path;
   std::shared_ptr<ReadFillPool::Buffer> read_fill;
+  std::shared_ptr<ReadFillPool::Buffer> borrowed_capture;
   std::shared_ptr<RequestReadCost> read_cost;
 };
 
@@ -1397,6 +1399,8 @@ class TokenFS {
       : config_(std::move(config)), trace_(config_.request_trace_path), fills_(config_.read_fill_buffer_bytes), metadata_(config_.metadata_db) {}
 
   void Init() {
+    if(config_.coalesce_pending_reads && (!config_.foreground_read_fill || !config_.request_read_costs))
+      throw std::runtime_error("pending read sharing requires immutable captured request-level reads");
     if(config_.incremental_copy_cost && (!config_.foreground_read_fill || !config_.request_read_costs || !config_.adaptive_reuse_control))
       throw std::runtime_error("incremental copy cost requires captured request-level adaptive control");
     if(config_.foreground_read_fill && (!config_.readonly_canonical || !config_.peer_cache_reads ||
@@ -1723,16 +1727,29 @@ class TokenFS {
       }
       if(config_.local_eviction_policy=="sieve" && meta.tier=="local")
         sieve_.Hit(resident_gpu_id,path);
-      bool affinity_reset=false;
-      if((config_.measured_policy || config_.measured_track_affinity || (config_.private_cache_domains && config_.read_through_cache && config_.read_through_min_reads>1)) && measured_.Observe(caller_gpu_id,path,MeasuredOptions(),meta.tier=="local",&affinity_reset))
-        AddBufferedMetric("measured_shift_resets",1);
-      if(affinity_reset)AddBufferedMetric("measured_affinity_context_resets",1);
-      AddBufferedMetric("read_open_count", 1);
-      AddBufferedMetric(meta.tier == "local" ? "local_read_open_count" : "remote_read_open_count", 1);
+
     }
     int fd = open(meta.physical_path.c_str(), fi->flags | ((!writable && config_.backend_direct_io) ? O_DIRECT : 0));
     if (fd < 0) {
       return -errno;
+    }
+    std::shared_ptr<ReadFillPool::Buffer> borrowed_capture;
+    if(config_.coalesce_pending_reads && !writable && meta.tier=="remote") {
+      bool pending=false;
+      {std::lock_guard<std::mutex> pending_lock(shared_placement_mu_);pending=shared_placement_inflight_.count(path)!=0;}
+      if(pending) {
+        borrowed_capture=fills_.FindComplete(path,meta.physical_path.string(),meta.size_bytes);
+        if(borrowed_capture && !borrowed_capture->MatchesFd(fd))borrowed_capture.reset();
+        if(borrowed_capture) {meta.tier="inflight";meta.backend_id="inflight";AddBufferedMetric("inflight_capture_borrowed",1);}
+      }
+    }
+    if(!writable) {
+      bool affinity_reset=false;
+      if((config_.measured_policy || config_.measured_track_affinity || (config_.private_cache_domains && config_.read_through_cache && config_.read_through_min_reads>1)) && measured_.Observe(caller_gpu_id,path,MeasuredOptions(),meta.tier!="remote",&affinity_reset))
+        AddBufferedMetric("measured_shift_resets",1);
+      if(affinity_reset)AddBufferedMetric("measured_affinity_context_resets",1);
+      AddBufferedMetric("read_open_count",1);
+      AddBufferedMetric(meta.tier+"_read_open_count",1);
     }
     if (writable) {
       meta.state = "CREATING";
@@ -1740,6 +1757,7 @@ class TokenFS {
     }
     Handle handle;
     handle.fd = fd;
+    handle.borrowed_capture=std::move(borrowed_capture);
     handle.logical_path = path;
     handle.gpu_id = gpu->gpu_id;
     handle.caller_gpu_id = caller_gpu_id;
@@ -1756,13 +1774,14 @@ class TokenFS {
       SetBufferedMetricMax("read_fill_buffer_peak_bytes",fills_.PeakBytes());
     }
     const bool deferred_fill=bool(handle.read_fill);
+    const bool coalesced=bool(handle.borrowed_capture);
     fi->fh = StoreHandle(std::move(handle));
     fi->direct_io = config_.fuse_direct_io;
     if(diagnostic.Enabled()){diagnostic.e.handle=fi->fh;diagnostic.e.caller=caller_gpu_id;diagnostic.e.tier=meta.tier;}
     layout_lock.unlock();
     // Pin the selected source before future placement work; this miss remains a miss.
     if (!writable && (config_.shared_value_placement || config_.shared_pool_cache)) {
-      if (meta.tier != "local" && !deferred_fill) ScheduleSharedPlacement(*metadata_.Get(path), caller_gpu_id);
+      if (meta.tier == "remote" && !deferred_fill && !coalesced) ScheduleSharedPlacement(*metadata_.Get(path), caller_gpu_id);
     } else if (!writable && !borrowed_peer) {
       FileMeta canonical = *metadata_.Get(path);
       MaybeManageCrossGpuReplica(canonical, caller_gpu_id);
@@ -1772,7 +1791,7 @@ class TokenFS {
       }
       if (caller_gpu_id == gpu->gpu_id) MaybeSchedulePrefetch(*gpu, rel);
     }
-    AddBufferedMetric(meta.tier == "local" ? "open_local" : "open_remote", 1);
+    AddBufferedMetric("open_"+meta.tier,1);
     if(config_.profile_control_path)RecordLatency("open_control",meta.tier,ElapsedMicros(open_start));
     return 0;
   }
@@ -1788,7 +1807,10 @@ class TokenFS {
     if(diagnostic.Enabled()){diagnostic.e.handle=fi->fh;diagnostic.e.path=handle->logical_path;diagnostic.e.caller=handle->caller_gpu_id;diagnostic.e.tier=handle->tier;}
     ApplyQos(*handle, false, size);
     ssize_t n;
-    if (config_.backend_direct_io) {
+    if(handle->borrowed_capture) {
+      n=handle->borrowed_capture->ReadCaptured(handle->fd,buf,size,offset);
+      if(n<0){AddBufferedMetric("inflight_source_error_count",1);return static_cast<int>(n);}
+    } else if (config_.backend_direct_io) {
       // Both tiers use the same 4 KiB aligned bounce buffer; no silent buffered fallback.
       const off_t aligned_offset = offset / 4096 * 4096;
       const size_t skip = static_cast<size_t>(offset - aligned_offset);
@@ -1827,16 +1849,12 @@ class TokenFS {
     AddBufferedMetric("qos_gpu" + std::to_string(handle->caller_gpu_id) +
                           "_read_bytes",
                       static_cast<uint64_t>(n));
-    AddBufferedMetric(handle->tier == "local" ? "read_local_ops"
-                                               : "read_remote_ops",
-                      1);
-    AddBufferedMetric(handle->tier == "local" ? "read_local_bytes"
-                                               : "read_remote_bytes",
-                      static_cast<uint64_t>(n));
+    AddBufferedMetric("read_"+handle->tier+"_ops",1);
+    AddBufferedMetric("read_"+handle->tier+"_bytes",static_cast<uint64_t>(n));
     const uint64_t latency_us = ElapsedMicros(start);
     RecordLatency("read", handle->tier, latency_us);
     if (n > 0) {
-      if(!config_.request_read_costs && (config_.measured_policy || config_.measured_track_affinity)) measured_.ReadSample(handle->tier=="local",static_cast<uint64_t>(n),latency_us);
+      if(!config_.request_read_costs && handle->tier!="inflight" && (config_.measured_policy || config_.measured_track_affinity)) measured_.ReadSample(handle->tier=="local",static_cast<uint64_t>(n),latency_us);
       MaybeAdaptivePromote(*handle, latency_us);
     }
     if(handle->read_cost)AccountRequestReadCost(*handle,n>0?handle->read_cost->Add(offset,n,latency_us):handle->read_cost->Finish());
@@ -2956,11 +2974,11 @@ class TokenFS {
 
   void AccountRequestReadCost(const Handle& handle,const std::optional<RequestReadCost::Sample>& sample) {
     if(!sample)return;
-    const auto tier=handle.tier=="local"?"local":"remote";
+    const auto& tier=handle.tier;
     AddBufferedMetric(std::string("request_cost_")+tier+"_samples",1);
     AddBufferedMetric(std::string("request_cost_")+tier+"_bytes",sample->bytes);
     AddBufferedMetric(std::string("request_cost_")+tier+"_us",sample->micros);
-    if(config_.measured_policy || config_.measured_track_affinity)
+    if(handle.tier!="inflight" && (config_.measured_policy || config_.measured_track_affinity))
       measured_.ReadSample(handle.tier=="local",sample->bytes,sample->micros);
   }
 
@@ -4014,6 +4032,7 @@ Config LoadConfig(const fs::path& path) {
   if(root["policy"] && root["policy"]["foreground_read_fill"]) config.foreground_read_fill=root["policy"]["foreground_read_fill"].as<bool>();
   if(root["policy"] && root["policy"]["request_read_costs"]) config.request_read_costs=root["policy"]["request_read_costs"].as<bool>();
   if(root["policy"] && root["policy"]["read_fill_buffer_bytes"]) config.read_fill_buffer_bytes=root["policy"]["read_fill_buffer_bytes"].as<uint64_t>();
+  if(root["policy"] && root["policy"]["coalesce_pending_reads"]) config.coalesce_pending_reads=root["policy"]["coalesce_pending_reads"].as<bool>();
   if(root["policy"] && root["policy"]["incremental_copy_cost"]) config.incremental_copy_cost=root["policy"]["incremental_copy_cost"].as<bool>();
   if(root["policy"] && root["policy"]["measured_burst_reuse"]) config.measured_burst_reuse=root["policy"]["measured_burst_reuse"].as<bool>();
   if(root["policy"] && root["policy"]["compact_measured_planning"]) config.compact_measured_planning=root["policy"]["compact_measured_planning"].as<bool>();

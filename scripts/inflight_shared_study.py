@@ -1,0 +1,154 @@
+#!/usr/bin/env python3
+"""Twelve fixed checks of bounded in-flight read sharing on every comparator."""
+from __future__ import annotations
+import argparse,json,math,random,shutil,statistics,time
+from pathlib import Path
+from evidence_benchmark import MIB,dump,run_case,sha
+from measured_study import check_mount,digest
+import request_cost_study as previous
+VARIANTS=['InflightHP','AdaptiveHP','PoolSIEVE1','PoolSIEVE2']
+SOURCES=previous.SOURCES+['src/copy_cost.h','scripts/inflight_shared_study.py',
+ 'tests/inflight_shared_study_test.py','docs/inflight-shared-read-plan.md',
+ 'scripts/tail_diagnostic_analysis.py','tests/tail_diagnostic_test.py','scripts/readiness_diagnostic_study.py']
+
+def configuration(name,case,remote,quota,direct):
+    if name not in VARIANTS:raise ValueError(name)
+    cfg=previous.configuration('AdaptiveHP' if name=='InflightHP' else name,case,remote,quota,direct)
+    cfg['policy']['coalesce_pending_reads']=name!='AdaptiveHP'
+    return cfg
+
+def expected_spec(stage='development'):
+    if stage!='development':raise ValueError('development only')
+    return dict(stage=stage,blocks=[dict(id=f'{scene}-{seed}',scenario=scene,
+      seed=seed,variants=VARIANTS,quota_mib=24,shard_mib=2,requests=576)
+      for scene,seed in [('moving_shared',3241),('moving_shared',3261),('uniform',3262)]])
+
+def validate_spec(spec):
+    if spec!=expected_spec():raise ValueError('fixed twelve-run inflight-read matrix mismatch')
+
+def trace(block):return previous.trace(block)
+def arm_order(block):
+    order=VARIANTS.copy();random.Random(3260).shuffle(order)
+    if block['seed']==3261:return list(reversed(order))
+    if block['seed']==3262:return order[2:]+order[:2]
+    return order
+
+def run(args):
+    root=args.output.resolve();remote=args.remote_root.resolve();binary=args.binary.resolve()
+    repo=Path(__file__).resolve().parents[1];spec=json.loads(args.spec.read_text())
+    verify=False
+    if spec['stage'] not in ['development']:raise ValueError('stage')
+    if 'CMAKE_BUILD_TYPE:STRING=Release' not in (binary.parent/'CMakeCache.txt').read_text():raise ValueError('Release required')
+    hashes={p:sha(repo/p) for p in SOURCES};identity=check_mount(remote,verify)
+    frozen=json.loads(args.freeze.read_text())
+    if frozen['source_hashes']!=hashes or frozen['binary_sha256']!=sha(binary) or frozen['specs'][spec['stage']]!=sha(args.spec):
+        raise ValueError('pilot freeze mismatch')
+    validate_spec(spec)
+    root.mkdir(parents=True,exist_ok=False);data_root=remote/('aj-'+root.name);data_root.mkdir(exist_ok=False)
+    manifest=dict(spec=spec,spec_sha256=digest(spec),source_hashes=hashes,binary_sha256=sha(binary),
+        output=str(root),remote_data=str(data_root),verify=verify,backend_direct=True,
+        topology='three logical cache partitions on one shared host disk; access policy varied explicitly; serialized callers; no physical GPUs',
+        created_utc=time.strftime('%Y-%m-%dT%H:%M:%SZ',time.gmtime()),**identity)
+    dump(root/'manifest.json',manifest)
+    for b in spec['blocks']:
+        block=root/b['id'];block.mkdir();data=data_root/b['id'];(data/'gpu0').mkdir(parents=True)
+        events=trace(b);expected={}
+        for key in sorted({e['key'] for e in events}):
+            path=data/'gpu0'/f'shard-{key:06d}.tokens'
+            payload=random.Random(b['seed']*100000+key).randbytes(MIB)
+            with path.open('wb') as f:
+                for _ in range(b['shard_mib']):f.write(payload)
+                f.flush()
+                import os
+                os.fsync(f.fileno())
+            expected[str(key)]=sha(path)
+        order=arm_order(b)
+        dump(block/'trace.json',events);dump(block/'objects.json',expected)
+        dump(block/'input.json',dict(spec=b,order=order,trace_sha256=digest(events),objects_sha256=digest(expected)))
+        for name in order:
+            case=block/name;cfg=configuration(name,case,data,b['quota_mib'],True)
+            result=run_case(binary,case,data,name,events,expected,b['quota_mib'],verify,True,configuration=cfg)
+            print(json.dumps(dict(block=b['id'],strategy=name,mib_s=result['effective_mib_s'],wall_s=result['job_wall_s'],
+                resets=result['metrics'].get('measured_shift_resets',0),affinity_rejects=result['metrics'].get('measured_precheck_affinity',0),
+                joint_rejects=result['metrics'].get('measured_precheck_victim_loss',0))),flush=True)
+        shutil.rmtree(data)
+    if not audit(root)['passed']:raise RuntimeError('batch audit failed')
+    if not verify:report(root)
+
+def audit(root):
+    m=json.loads((root/'manifest.json').read_text());errors=[];checked=0;seen=set()
+    validate_spec(m['spec'])
+    if digest(m['spec'])!=m['spec_sha256']:errors.append('spec changed')
+    for b in m['spec']['blocks']:
+        block=root/b['id'];events=trace(b);order=arm_order(b)
+        if not (block/'input.json').exists():errors.append(b['id']+':missing block');continue
+        expected=json.loads((block/'objects.json').read_text())
+        if json.loads((block/'input.json').read_text())!=dict(spec=b,order=order,trace_sha256=digest(events),objects_sha256=digest(expected)) or json.loads((block/'trace.json').read_text())!=events:errors.append(b['id']+':input changed')
+        for name in order:
+            seen.add((b['id'],name));case=block/name
+            if not (case/'result.json').exists():errors.append(str(case)+':missing result');continue
+            r=json.loads((case/'result.json').read_text());rows=json.loads((case/'requests.json').read_text());metrics=r['metrics']
+            total=sum(e['bytes'] for e in events)
+            cfg=configuration(name,Path(m['output'])/b['id']/name,Path(m['remote_data'])/b['id'],b['quota_mib'],True)
+            checks=[json.loads((case/'config.json').read_text())==cfg,r['strategy']==name,r['status']=='ok',r['verify_every_request']==m['verify'],
+                len(events)==len(rows),all(all(row.get(k)==v for k,v in e.items()) for row,e in zip(rows,events)),
+                0<=metrics.get('peer_cache_read_bytes',0)<=metrics.get('read_local_bytes',0),
+                all(v<=g['local_quota_mib']*MIB for v,g in zip(r['retained_cache_bytes'],cfg['gpus'])),
+                sum(g['local_quota_mib'] for g in cfg['gpus'])==24,
+                total==r['logical_bytes']==metrics.get('read_bytes',0),len(events)==metrics.get('read_open_count',0),
+                total==sum(metrics.get('read_'+tier+'_bytes',0) for tier in ['local','remote','inflight']),
+                metrics.get('private_domain_read_count',0)==(sum(e['caller']!=0 for e in events) if cfg['policy']['private_cache_domains'] else 0),
+                all(metrics.get(f'qos_gpu{g}_read_bytes',0)==sum(e['bytes'] for e in events if e['caller']==g) for g in range(3)),
+                metrics.get('background_submitted',0)==metrics.get('background_completed',0),
+                not any(v for k,v in metrics.items() if k.endswith('error_count')),
+                max(r['retained_cache_bytes'])<=(0 if name=='RemoteOnly' else b['quota_mib']*MIB),
+                all(isinstance(r[k],(int,float)) and math.isfinite(r[k]) and r[k]>=0 for k in ['job_wall_s','effective_mib_s','completed_with_background_s','daemon_cpu_s','daemon_peak_rss_kib','request_p50_s','request_p99_s']),
+                r['job_wall_s']>0,r['completed_with_background_s']>=r['job_wall_s'],
+                abs(r['effective_mib_s']-total/MIB/r['job_wall_s'])<1e-8]
+            previous=0
+            for row in rows:
+                checks.append(previous<=row['issued_s']<=row['completed_s']<=r['job_wall_s'])
+                checks.append(0<=row['seconds']<=row['completed_s']-row['issued_s']+1e-6)
+                previous=row['completed_s']
+                if m['verify']:checks.append(row['sha256']==expected[str(row['key'])])
+            if not all(checks):errors.append(f"{b['id']}/{name}: failed { [i for i,v in enumerate(checks) if not v] }")
+            checked+=1
+    actual={(p.parent.parent.name,p.parent.name) for p in root.glob('*/*/result.json')}
+    if actual-seen:errors.append('unexpected case')
+    if list(root.rglob('failure.json')):errors.append('failed attempt present')
+    answer=dict(passed=not errors,checked_runs=checked,expected_runs=sum(len(b['variants']) for b in m['spec']['blocks']),errors=errors)
+    dump(root/'batch-audit.json',answer);return answer
+
+
+def report(root):
+    a=audit(root)
+    if not a['passed']:raise ValueError(a)
+    m=json.loads((root/'manifest.json').read_text())
+    if m['verify']:return
+    rows=[];pairs=[]
+    for scene in ['moving_shared','uniform']:
+        blocks=[b for b in m['spec']['blocks'] if b['scenario']==scene]
+        rs={(b['id'],n):json.loads((root/b['id']/n/'result.json').read_text()) for b in blocks for n in b['variants']}
+        for name in blocks[0]['variants']:
+            vals=[rs[b['id'],name] for b in blocks]
+            fns=dict(mib_s=lambda r:r['effective_mib_s'],wall_s=lambda r:r['job_wall_s'],cpu_s=lambda r:r['daemon_cpu_s'],p99_ms=lambda r:r['request_p99_s']*1000,remote_mib=lambda r:r['metrics'].get('read_remote_bytes',0)/MIB,inflight_mib=lambda r:r['metrics'].get('read_inflight_bytes',0)/MIB,copy_mib=lambda r:sum(r['metrics'].get(k,0) for k in ['promote_bytes','cross_gpu_replica_create_bytes'])/MIB,first_read_selections=lambda r:r['metrics'].get('shared_burst_first_read_selected',0),forecast_plans=lambda r:r['metrics'].get('measured_burst_forecast_plans',0),explorations=lambda r:r['metrics'].get('shared_free_exploration_selected',0),uncertainty_plans=lambda r:r['metrics'].get('measured_uncertainty_plans',0),open_ms=lambda r:r['metrics'].get('open_control_latency_us_total',0)/r['metrics']['read_open_count']/1000,layout_wait_ms=lambda r:r['metrics'].get('open_layout_wait_us',0)/r['metrics']['read_open_count']/1000)
+            rows.append(dict(scenario=scene,strategy=name,n=len(vals),**{k:statistics.mean(f(r) for r in vals) for k,f in fns.items()}))
+        for baseline in [n for n in blocks[0]['variants'] if n!='InflightHP']:
+            per=[]
+            for b in blocks:
+                x=rs[b['id'],'InflightHP'];y=rs[b['id'],baseline]
+                per.append(dict(seed=b['seed'],gain_pct=(y['job_wall_s']/x['job_wall_s']-1)*100,drain_gain_pct=(y['completed_with_background_s']/x['completed_with_background_s']-1)*100,p99_change_pct=(x['request_p99_s']/y['request_p99_s']-1)*100))
+            gain=(math.exp(statistics.mean(math.log1p(p['gain_pct']/100) for p in per))-1)*100
+            pairs.append(dict(scenario=scene,treatment='InflightHP',baseline=baseline,n=len(per),paired_gain_pct=gain,wins=sum(p['gain_pct']>0 for p in per),per_seed=per,pilot_speed_gate=gain>=5 and all(p['gain_pct']>0 for p in per),nonregression_gate=all(p['gain_pct']>=0 for p in per),tail_gate=all(p['p99_change_pct']<=0 for p in per)))
+    dump(root/'summary.json',rows);dump(root/'comparisons.json',pairs)
+    print(json.dumps(pairs),flush=True)
+
+if __name__=='__main__':
+    p=argparse.ArgumentParser(description=__doc__)
+    p.add_argument('operation',choices=['run','audit','report']);p.add_argument('--output',type=Path,required=True)
+    for name in ['spec','binary','remote-root','freeze']:p.add_argument('--'+name,type=Path)
+    args=p.parse_args()
+    if args.operation=='run':run(args)
+    elif args.operation=='report':report(args.output)
+    else:
+        review=audit(args.output);print(json.dumps(review));raise SystemExit(0 if review['passed'] else 1)

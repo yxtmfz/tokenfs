@@ -1,0 +1,134 @@
+[
+  {
+    "scenario": "moving_shared",
+    "treatment": "InflightHP",
+    "baseline": "AdaptiveHP",
+    "n": 2,
+    "paired_gain_pct": 32.55625478490705,
+    "wins": 2,
+    "per_seed": [
+      {
+        "seed": 3241,
+        "gain_pct": 41.619700874866105,
+        "drain_gain_pct": 41.609654184716895,
+        "p99_change_pct": -16.261512490682385
+      },
+      {
+        "seed": 3261,
+        "gain_pct": 24.072855500004977,
+        "drain_gain_pct": 24.06426920369318,
+        "p99_change_pct": -14.513358364779872
+      }
+    ],
+    "pilot_speed_gate": true,
+    "nonregression_gate": true,
+    "tail_gate": true
+  },
+  {
+    "scenario": "moving_shared",
+    "treatment": "InflightHP",
+    "baseline": "PoolSIEVE1",
+    "n": 2,
+    "paired_gain_pct": 2.8641124810976804,
+    "wins": 2,
+    "per_seed": [
+      {
+        "seed": 3241,
+        "gain_pct": 3.801565154014841,
+        "drain_gain_pct": 3.8024797237771635,
+        "p99_change_pct": -9.541942976402861
+      },
+      {
+        "seed": 3261,
+        "gain_pct": 1.935126130558773,
+        "drain_gain_pct": 2.243432075466001,
+        "p99_change_pct": -6.650776185592077
+      }
+    ],
+    "pilot_speed_gate": false,
+    "nonregression_gate": true,
+    "tail_gate": true
+  },
+  {
+    "scenario": "moving_shared",
+    "treatment": "InflightHP",
+    "baseline": "PoolSIEVE2",
+    "n": 2,
+    "paired_gain_pct": 17.753182634349752,
+    "wins": 2,
+    "per_seed": [
+      {
+        "seed": 3241,
+        "gain_pct": 18.726809921085085,
+        "drain_gain_pct": 18.722664571348346,
+        "p99_change_pct": -1.0441572752211026
+      },
+      {
+        "seed": 3261,
+        "gain_pct": 16.787539644456096,
+        "drain_gain_pct": 17.092071165132317,
+        "p99_change_pct": -5.807364093792799
+      }
+    ],
+    "pilot_speed_gate": true,
+    "nonregression_gate": true,
+    "tail_gate": true
+  },
+  {
+    "scenario": "uniform",
+    "treatment": "InflightHP",
+    "baseline": "AdaptiveHP",
+    "n": 1,
+    "paired_gain_pct": 9.972272411951465,
+    "wins": 1,
+    "per_seed": [
+      {
+        "seed": 3262,
+        "gain_pct": 9.972272411951465,
+        "drain_gain_pct": 9.970371788415422,
+        "p99_change_pct": 3.5839063667629567
+      }
+    ],
+    "pilot_speed_gate": true,
+    "nonregression_gate": true,
+    "tail_gate": false
+  },
+  {
+    "scenario": "uniform",
+    "treatment": "InflightHP",
+    "baseline": "PoolSIEVE1",
+    "n": 1,
+    "paired_gain_pct": 19.47887999189064,
+    "wins": 1,
+    "per_seed": [
+      {
+        "seed": 3262,
+        "gain_pct": 19.47887999189064,
+        "drain_gain_pct": 19.47457835135662,
+        "p99_change_pct": -13.424867996033097
+      }
+    ],
+    "pilot_speed_gate": true,
+    "nonregression_gate": true,
+    "tail_gate": true
+  },
+  {
+    "scenario": "uniform",
+    "treatment": "InflightHP",
+    "baseline": "PoolSIEVE2",
+    "n": 1,
+    "paired_gain_pct": 19.84834276956824,
+    "wins": 1,
+    "per_seed": [
+      {
+        "seed": 3262,
+        "gain_pct": 19.84834276956824,
+        "drain_gain_pct": 19.843911230062815,
+        "p99_change_pct": -15.951749132069292
+      }
+    ],
+    "pilot_speed_gate": true,
+    "nonregression_gate": true,
+    "tail_gate": true
+  }
+]
