@@ -1,3 +1,5 @@
+> 最新回归：[取消5%门槛后的12组完整结果](reports/latest/paper-experiments/31_planning_efficiency/README.md)。已实现决策等价的规划计算优化；按正吞吐、p99及排空后吞吐不退化的新标准，9项中6项通过。固定热点相对SIEVE仍慢9.01%，另有两项约0.10/0.08ms的p99小幅增加。未宣称全部达标，历史门槛与原始负结果保留。
+
 > 最新结果：[共享放置与联合准入12组实测](reports/latest/paper-experiments/30_component_ablation/README.md)。跨域放置三条件吞吐均提高，但固定热点未达5%门槛；联合决策固定热点/随机提高10.49%/13.95%，迁移热点降低4.01%。完整版对SIEVE-1hit两个热点分别降低1.43%/2.99%、随机提高21.63%。整体门槛未通过，全部结果和原始证据保留，未扩量。
 
 > 下一轮准备：[共享放置与联合准入消融](reports/latest/paper-experiments/29_component_ablation_preflight/README.md)。已补单变量对照与固定12组输入，尚未运行；第28轮实测结论不变。

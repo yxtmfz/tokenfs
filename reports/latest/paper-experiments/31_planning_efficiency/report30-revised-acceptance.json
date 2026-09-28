@@ -1,0 +1,90 @@
+{
+  "reason": "User removed the 5% minimum after seeing report30; historical data and original gates unchanged.",
+  "acceptance_version": "positive-throughput-v2",
+  "new_experiments": false,
+  "passed": 6,
+  "total": 9,
+  "comparisons": [
+    {
+      "block": "stationary_shared-3271",
+      "baseline": "CallerOnly",
+      "gain_pct": 4.759611528530239,
+      "p99_change_pct": -2.842553445094087,
+      "drain_gain_pct": 4.757703033235261,
+      "original_frozen_screen": false,
+      "revised_positive_gain_screen": true
+    },
+    {
+      "block": "stationary_shared-3271",
+      "baseline": "Independent",
+      "gain_pct": 10.488827756052999,
+      "p99_change_pct": -5.365493442007441,
+      "drain_gain_pct": 10.487071630472888,
+      "original_frozen_screen": true,
+      "revised_positive_gain_screen": true
+    },
+    {
+      "block": "stationary_shared-3271",
+      "baseline": "PoolSIEVE1",
+      "gain_pct": -1.4307158639622841,
+      "p99_change_pct": -6.666600539068634,
+      "drain_gain_pct": -1.4299810834882964,
+      "original_frozen_screen": false,
+      "revised_positive_gain_screen": false
+    },
+    {
+      "block": "moving_shared-3272",
+      "baseline": "CallerOnly",
+      "gain_pct": 18.57135622003616,
+      "p99_change_pct": -6.408037226850915,
+      "drain_gain_pct": 18.5492961517431,
+      "original_frozen_screen": true,
+      "revised_positive_gain_screen": true
+    },
+    {
+      "block": "moving_shared-3272",
+      "baseline": "Independent",
+      "gain_pct": -4.005554109841947,
+      "p99_change_pct": 3.5126419037002643,
+      "drain_gain_pct": -4.019409573225696,
+      "original_frozen_screen": false,
+      "revised_positive_gain_screen": false
+    },
+    {
+      "block": "moving_shared-3272",
+      "baseline": "PoolSIEVE1",
+      "gain_pct": -2.989192451461198,
+      "p99_change_pct": -2.5121028009196245,
+      "drain_gain_pct": -3.004994510316239,
+      "original_frozen_screen": false,
+      "revised_positive_gain_screen": false
+    },
+    {
+      "block": "uniform-3273",
+      "baseline": "CallerOnly",
+      "gain_pct": 1.9619567777479752,
+      "p99_change_pct": -3.5467864839768604,
+      "drain_gain_pct": 1.9646045673495705,
+      "original_frozen_screen": true,
+      "revised_positive_gain_screen": true
+    },
+    {
+      "block": "uniform-3273",
+      "baseline": "Independent",
+      "gain_pct": 13.947560740922693,
+      "p99_change_pct": -12.822484160313696,
+      "drain_gain_pct": 14.142055259698472,
+      "original_frozen_screen": true,
+      "revised_positive_gain_screen": true
+    },
+    {
+      "block": "uniform-3273",
+      "baseline": "PoolSIEVE1",
+      "gain_pct": 21.625330878375017,
+      "p99_change_pct": -16.705054325085232,
+      "drain_gain_pct": 21.79667019226499,
+      "original_frozen_screen": true,
+      "revised_positive_gain_screen": true
+    }
+  ]
+}
