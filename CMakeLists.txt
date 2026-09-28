@@ -33,6 +33,9 @@ target_link_libraries(tokenfs PRIVATE
 
 include(CTest)
 if(BUILD_TESTING)
+  add_executable(request_trace_test tests/request_trace_test.cpp)
+  target_compile_options(request_trace_test PRIVATE -UNDEBUG)
+  add_test(NAME request_trace COMMAND request_trace_test)
   add_executable(policy_metadata_test tests/policy_metadata_test.cpp)
   target_include_directories(policy_metadata_test PRIVATE ${FUSE3_INCLUDE_DIRS})
   target_compile_options(policy_metadata_test PRIVATE ${FUSE3_CFLAGS_OTHER} -UNDEBUG)

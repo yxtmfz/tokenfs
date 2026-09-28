@@ -1,3 +1,5 @@
+> 最新进展：已完成[六组请求级尾延迟诊断](../reports/latest/paper-experiments/23_request_tail_diagnostic/README.md)。诊断中吞吐略有优势，但p99仍更慢；报告22正式结论不变。诊断不代表新的策略提速验证。
+
 最新见 [三个缺口优化实测与未通过门槛](../reports/latest/paper-experiments/22_adaptive_control/README.md) 和 [冻结方案](adaptive-control-sieve-plan.md)。四项平均吞吐比较均正向，但逐种子不退化及p99尚未全部闭合。
 
 当前优先查看 [新版与两种共享SIEVE的真实对照](../reports/latest/paper-experiments/21_burst_reuse_sieve/README.md) 和 [冻结小规模方案](burst-reuse-sieve-plan.md)：热点变化场景超过原SIEVE-2hit 5.12%，但SIEVE-1hit及随机负对照的未通过结果一并保留。

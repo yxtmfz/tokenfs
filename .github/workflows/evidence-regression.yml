@@ -47,3 +47,5 @@ jobs:
         run: python3 -m unittest tests.burst_reuse_test
       - name: Test adaptive control study gates
         run: python3 -m unittest tests.adaptive_control_test
+      - name: Test bounded request-correlated diagnostics
+        run: python3 -m unittest tests.tail_diagnostic_test
