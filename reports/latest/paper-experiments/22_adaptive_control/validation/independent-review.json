@@ -1,0 +1,69 @@
+{
+  "passed": true,
+  "errors": [],
+  "stages": {
+    "correctness": {
+      "passed": true,
+      "checked_runs": 6,
+      "expected_runs": 6,
+      "errors": []
+    },
+    "development": {
+      "passed": true,
+      "checked_runs": 18,
+      "expected_runs": 18,
+      "errors": []
+    }
+  },
+  "mechanisms": [
+    {
+      "block": "moving_shared-3201",
+      "first_read_selections": 46,
+      "committed_first_read_forecasts": 46,
+      "free_explorations": 12,
+      "uncertainty_plans": 0,
+      "copies": 52
+    },
+    {
+      "block": "moving_shared-3202",
+      "first_read_selections": 36,
+      "committed_first_read_forecasts": 36,
+      "free_explorations": 12,
+      "uncertainty_plans": 0,
+      "copies": 43
+    },
+    {
+      "block": "moving_shared-3203",
+      "first_read_selections": 47,
+      "committed_first_read_forecasts": 47,
+      "free_explorations": 12,
+      "uncertainty_plans": 0,
+      "copies": 57
+    },
+    {
+      "block": "uniform-3211",
+      "first_read_selections": 0,
+      "committed_first_read_forecasts": 0,
+      "free_explorations": 12,
+      "uncertainty_plans": 891,
+      "copies": 33
+    },
+    {
+      "block": "uniform-3212",
+      "first_read_selections": 0,
+      "committed_first_read_forecasts": 0,
+      "free_explorations": 12,
+      "uncertainty_plans": 788,
+      "copies": 24
+    },
+    {
+      "block": "uniform-3213",
+      "first_read_selections": 0,
+      "committed_first_read_forecasts": 0,
+      "free_explorations": 12,
+      "uncertainty_plans": 848,
+      "copies": 31
+    }
+  ],
+  "interpretation": "18 development speed runs, 6 content runs; synthetic logical domains, no significance or physical GPU inference claim; compare both SIEVE admission thresholds"
+}

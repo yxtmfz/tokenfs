@@ -7,14 +7,16 @@
 
 namespace {
 struct TokenFSTestAccess {
-  static void shared_placement(const fs::path& root,bool compact=false) {
+  static void shared_placement(const fs::path& root,bool compact=false,bool adaptive=false) {
     Config cfg;cfg.mount_point=root/"mnt";cfg.metadata_db=root/"state.db";
     cfg.readonly_canonical=true;cfg.peer_cache_reads=true;cfg.shared_value_placement=true;
     cfg.measured_policy=true;cfg.measured_causal_window=true;cfg.compact_measured_planning=compact;cfg.measured_cost=false;cfg.checksum="fnv1a64";
     cfg.speculative_copy_may_evict=true;
+    cfg.adaptive_reuse_control=adaptive;cfg.measured_burst_reuse=adaptive;cfg.measured_cost=adaptive;
     for(int id=0;id<3;++id)cfg.gpus.push_back({id,"/gpu"+std::to_string(id),root/("local"+std::to_string(id)),1024,"remote"});
     cfg.backends.emplace("remote",BackendConfig{"remote","directory",root/"remote"});
     TokenFS filesystem(cfg);filesystem.Init();
+    if(adaptive){filesystem.measured_.ReadSample(false,1024,1000000);filesystem.measured_.ReadSample(true,1024,1);filesystem.measured_.CopySample(1024,20);}
     for(const auto& key:{"hot","incoming"}) {
       auto remote=root/"remote/gpu0"/key;std::ofstream(remote)<<std::string(1024,key[0]);
       FileMeta meta;meta.logical_path=std::string("/gpu0/")+key;meta.gpu_id=0;
@@ -117,6 +119,28 @@ struct TokenFSTestAccess {
     bool rejected=false;try {TokenFS bad(invalid);bad.Init();}catch(const std::runtime_error&){rejected=true;}
     assert(rejected);
     invalid=cfg;invalid.affinity_placement=true;rejected=false;
+    try {TokenFS bad(invalid);bad.Init();}catch(const std::runtime_error&){rejected=true;}
+    assert(rejected);
+  }
+  static void stale_advisory_plan(const fs::path& root) {
+    Config cfg;cfg.mount_point=root/"mnt";cfg.metadata_db=root/"state.db";
+    cfg.readonly_canonical=true;cfg.peer_cache_reads=true;cfg.shared_value_placement=true;
+    cfg.measured_policy=true;cfg.measured_causal_window=true;cfg.compact_measured_planning=true;
+    cfg.measured_burst_reuse=true;cfg.adaptive_reuse_control=true;cfg.speculative_copy_may_evict=true;
+    cfg.gpus.push_back({0,"/gpu0",root/"local",100,"remote"});
+    cfg.backends.emplace("remote",BackendConfig{"remote","directory",root/"remote"});
+    TokenFS filesystem(cfg);filesystem.Init();
+    auto remote=root/"remote/gpu0/new";std::ofstream(remote)<<std::string(100,'x');
+    FileMeta meta;meta.logical_path="/gpu0/new";meta.gpu_id=0;meta.tier="remote";meta.backend_id="remote";
+    meta.physical_path=remote;meta.size_bytes=100;meta.has_remote_copy=true;meta.state="COMMITTED";filesystem.metadata_.Upsert(meta);
+    filesystem.measured_.Observe(0,meta.logical_path,filesystem.MeasuredOptions());
+    auto plan=filesystem.MeasuredPlan(cfg.gpus[0],meta);
+    assert(plan.allowed && plan.explore_headroom);
+    // New untracked bytes arrive between advisory selection and execution.
+    std::ofstream(root/"local/unknown")<<std::string(100,'z');
+    assert(!filesystem.EnsureLocalCapacity(cfg.gpus[0],100,meta.logical_path));
+    assert(fs::file_size(root/"local/unknown")==100 && fs::file_size(remote)==100);
+    auto invalid=cfg;invalid.measured_joint_admission=false;bool rejected=false;
     try {TokenFS bad(invalid);bad.Init();}catch(const std::runtime_error&){rejected=true;}
     assert(rejected);
   }
@@ -253,7 +277,9 @@ int main() {
   TokenFSTestAccess::readable_peer(root/"peer-storage");
   TokenFSTestAccess::shared_placement(root/"shared-placement");
   TokenFSTestAccess::shared_placement(root/"compact-shared-placement",true);
+  TokenFSTestAccess::shared_placement(root/"adaptive-shared-placement",true,true);
   TokenFSTestAccess::compact_plan_invariants(root/"compact-invariants");
+  TokenFSTestAccess::stale_advisory_plan(root/"stale-advisory");
   TokenFSTestAccess::signed_eviction_audit_score();
   TokenFSTestAccess::sieve_verified_residents(root/"sieve-storage");
   fs::remove_all(root);

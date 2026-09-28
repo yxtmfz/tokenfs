@@ -1,0 +1,31 @@
+{
+  "stage": "correctness",
+  "blocks": [
+    {
+      "id": "moving_shared-3199",
+      "scenario": "moving_shared",
+      "seed": 3199,
+      "variants": [
+        "AdaptiveHP",
+        "PoolSIEVE2",
+        "PoolSIEVE1"
+      ],
+      "quota_mib": 24,
+      "shard_mib": 2,
+      "requests": 96
+    },
+    {
+      "id": "uniform-3198",
+      "scenario": "uniform",
+      "seed": 3198,
+      "variants": [
+        "AdaptiveHP",
+        "PoolSIEVE2",
+        "PoolSIEVE1"
+      ],
+      "quota_mib": 24,
+      "shard_mib": 2,
+      "requests": 96
+    }
+  ]
+}

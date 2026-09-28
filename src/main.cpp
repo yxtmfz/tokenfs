@@ -72,6 +72,8 @@ struct Config {
   bool measured_shift_reset = false;
   bool measured_causal_window = false;
   bool measured_burst_reuse = false;
+  bool adaptive_reuse_control = false;
+  bool profile_control_path = false;
   bool compact_measured_planning = false;
   bool lean_read_accounting = false;
   bool private_cache_domains = false;
@@ -1392,6 +1394,8 @@ class TokenFS {
       throw std::runtime_error("shared placement requires peer reads, a compatible policy and one placement mode");
     if(config_.lean_read_accounting && (!config_.readonly_canonical || config_.affinity_placement || config_.prefetch_on_read || (!config_.measured_policy && !config_.read_through_cache)))
       throw std::runtime_error("lean accounting requires immutable readers without legacy affinity or prefetch consumers");
+    if(config_.adaptive_reuse_control && (!config_.measured_burst_reuse || !config_.compact_measured_planning || !config_.measured_joint_admission))
+      throw std::runtime_error("adaptive reuse requires compact burst-aware joint control");
     if(config_.measured_burst_reuse && (!config_.measured_causal_window || !config_.shared_value_placement || !config_.measured_admission || !config_.measured_cost))
       throw std::runtime_error("burst reuse requires causal shared cost-based admission");
     if(config_.compact_measured_planning && (!config_.measured_policy || !config_.measured_causal_window || !config_.readonly_canonical))
@@ -1585,7 +1589,12 @@ class TokenFS {
   }
 
   int Open(const char* cpath, fuse_file_info* fi) {
+    const auto open_start=Clock::now();
     std::unique_lock<std::mutex> layout_lock(layout_mu_);
+    if(config_.profile_control_path) {
+      const auto wait=ElapsedMicros(open_start);
+      AddBufferedMetric("open_layout_wait_us",wait);SetBufferedMetricMax("open_layout_wait_us_max",wait);
+    }
     if (config_.readonly_canonical && IsWritable(fi->flags)) return -EROFS;
     const std::string path = Normalize(cpath);
     auto parsed = ParseGpuPath(path);
@@ -1732,6 +1741,7 @@ class TokenFS {
       if (caller_gpu_id == gpu->gpu_id) MaybeSchedulePrefetch(*gpu, rel);
     }
     AddBufferedMetric(meta.tier == "local" ? "open_local" : "open_remote", 1);
+    if(config_.profile_control_path)RecordLatency("open_control",meta.tier,ElapsedMicros(open_start));
     return 0;
   }
 
@@ -2318,7 +2328,7 @@ class TokenFS {
     return {static_cast<size_t>(config_.measured_window),config_.measured_aging,
             config_.measured_admission,config_.measured_cost,
             config_.measured_value_victim,config_.measured_size_aware,config_.measured_frequency_admission,config_.measured_shift_reset,static_cast<size_t>(config_.measured_shift_window),
-            config_.measured_track_affinity,config_.measured_affinity_gate,config_.measured_joint_admission,static_cast<size_t>(config_.measured_affinity_window),config_.measured_affinity_recent_demand,config_.measured_affinity_handover_epoch,config_.shared_value_placement,config_.measured_causal_window,config_.measured_burst_reuse};
+            config_.measured_track_affinity,config_.measured_affinity_gate,config_.measured_joint_admission,static_cast<size_t>(config_.measured_affinity_window),config_.measured_affinity_recent_demand,config_.measured_affinity_handover_epoch,config_.shared_value_placement,config_.measured_causal_window,config_.measured_burst_reuse,config_.adaptive_reuse_control};
   }
 
   double MarginalCoverage(const FileMeta& meta, int location) {
@@ -2370,6 +2380,7 @@ class TokenFS {
     }
     const auto plan=measured_.Plan(gpu.gpu_id,{incoming.logical_path,incoming.size_bytes,0},
         std::move(residents),known_used?*known_used:DirectoryBytes(gpu.local_root),gpu.local_quota_bytes,MeasuredOptions());
+    if(plan.uncertainty_us>0)AddBufferedMetric("measured_uncertainty_plans",1);
     if(plan.burst_remaining>0)AddBufferedMetric("measured_burst_forecast_plans",1);
     if(plan.survival_adjusted_items) {
       AddBufferedMetric("measured_survival_discounted_plans",1);
@@ -2420,9 +2431,10 @@ class TokenFS {
              << ";frequency=" << plan.incoming_count << ";calibrated=" << plan.costs_calibrated
              << ";affinity_count=" << plan.affinity_incoming_count
              << ";affinity_adjusted_items=" << plan.affinity_adjusted_items
-             << ";burst_remaining=" << plan.burst_remaining;
+             << ";burst_remaining=" << plan.burst_remaining << ";uncertainty=" << plan.uncertainty_us
+             << ";explore=" << plan.explore_headroom;
       metadata_.RecordPolicyEvent("ADMIT",protected_logical_path,gpu.gpu_id,required_size,
-          detail.str(),plan.incoming_us-plan.displaced_us-plan.copy_us);
+          detail.str(),plan.incoming_us-plan.displaced_us-plan.uncertainty_us-plan.copy_us);
     }
     if (used + required_size <= gpu.local_quota_bytes) {
       return true;
@@ -2671,12 +2683,13 @@ class TokenFS {
   }
 
   void PlaceShared(const std::string& path, int caller) {
+    const auto plan_start=Clock::now();
     auto parsed=ParseGpuPath(path);if(!parsed)return;
     const auto [owner,rel]=*parsed;
     std::optional<GpuConfig> destination;
     FileMeta incoming;
     {
-      std::lock_guard<std::mutex> lock(layout_mu_);
+      std::unique_lock<std::mutex> lock(layout_mu_);
       auto current=metadata_.Get(path);
       if(!current || current->state!="COMMITTED" || !current->has_remote_copy)return;
       if(current->tier=="local" || ReadablePeer(path,-1)) {
@@ -2693,25 +2706,35 @@ class TokenFS {
         std::stable_sort(locations.begin(),locations.end(),[caller](const auto& a,const auto& b){return (a.gpu_id==caller)>(b.gpu_id==caller);});
         std::optional<PlanningSnapshot> snapshot;
         if(config_.compact_measured_planning)snapshot=SnapshotMeasuredResidents(path);
+        std::unordered_map<int,uint64_t> usage;
+        if(config_.adaptive_reuse_control) {
+          for(const auto& gpu:locations)usage[gpu.gpu_id]=DirectoryBytes(gpu.local_root);
+          // This is an advisory snapshot only. Final admission rechecks live
+          // quota, pins and values under the layout lock before any eviction.
+          lock.unlock();
+        }
         for(const auto& gpu:locations) {
-          const auto plan=MeasuredPlan(gpu,incoming,snapshot?&*snapshot:nullptr);
+          const auto plan=MeasuredPlan(gpu,incoming,snapshot?&*snapshot:nullptr,config_.adaptive_reuse_control?std::optional<uint64_t>(usage.at(gpu.gpu_id)):std::nullopt);
           AddBufferedMetric("shared_placement_plans",1);
-          const double net=plan.incoming_us-plan.copy_us-(config_.measured_joint_admission?plan.displaced_us:0);
+          const double net=plan.incoming_us-plan.copy_us-(config_.measured_joint_admission?plan.displaced_us+plan.uncertainty_us:0);
+          if(plan.allowed && plan.explore_headroom) {best=net;destination=gpu;chosen=plan;break;}
           if(plan.allowed && net>best) {best=net;destination=gpu;chosen=plan;}
           // Zero charged displacement is the exact upper bound: incoming value
           // and copy cost are location-independent on this shared-host backend.
           if(config_.measured_causal_window && plan.allowed &&
-              (!config_.measured_joint_admission || plan.displaced_us==0))break;
+              (!config_.measured_joint_admission || plan.displaced_us+plan.uncertainty_us==0))break;
         }
         if(!destination){AddBufferedMetric("shared_placement_no_gain",1);return;}
         std::ostringstream detail;detail<<"caller="<<caller<<";incoming="<<chosen.incoming_us
-          <<";victim_loss="<<chosen.displaced_us<<";copy="<<chosen.copy_us<<";burst_remaining="<<chosen.burst_remaining;
+          <<";victim_loss="<<chosen.displaced_us<<";copy="<<chosen.copy_us<<";burst_remaining="<<chosen.burst_remaining<<";uncertainty="<<chosen.uncertainty_us<<";explore="<<chosen.explore_headroom;
         metadata_.RecordPolicyEvent("SHARED_PLACE",path,destination->gpu_id,incoming.size_bytes,detail.str(),best);
         AddBufferedMetric("shared_placement_selected",1);
+        if(chosen.explore_headroom)AddBufferedMetric("shared_free_exploration_selected",1);
         if(chosen.burst_remaining>0 && chosen.affinity_incoming_count<2)AddBufferedMetric("shared_burst_first_read_selected",1);
         if(destination->gpu_id!=caller)AddBufferedMetric("shared_placement_relocated",1);
       }
     }
+    if(config_.profile_control_path)RecordLatency("shared_plan","background",ElapsedMicros(plan_start));
     // Existing copy/commit path rechecks quota and benefit using current evidence.
     if(destination->gpu_id==owner->gpu_id)PromoteToLocal(*destination,rel,incoming,"promote",true);
     else CreateCrossGpuReplica(*destination,*owner,rel,incoming);
@@ -3844,6 +3867,8 @@ Config LoadConfig(const fs::path& path) {
   if(root["policy"] && root["policy"]["measured_joint_admission"]) config.measured_joint_admission=root["policy"]["measured_joint_admission"].as<bool>();
   if(root["policy"] && root["policy"]["measured_affinity_window"]) config.measured_affinity_window=root["policy"]["measured_affinity_window"].as<uint64_t>();
   if(root["policy"] && root["policy"]["lean_read_accounting"]) config.lean_read_accounting=root["policy"]["lean_read_accounting"].as<bool>();
+  if(root["policy"] && root["policy"]["adaptive_reuse_control"]) config.adaptive_reuse_control=root["policy"]["adaptive_reuse_control"].as<bool>();
+  if(root["policy"] && root["policy"]["profile_control_path"]) config.profile_control_path=root["policy"]["profile_control_path"].as<bool>();
   if(root["policy"] && root["policy"]["measured_burst_reuse"]) config.measured_burst_reuse=root["policy"]["measured_burst_reuse"].as<bool>();
   if(root["policy"] && root["policy"]["compact_measured_planning"]) config.compact_measured_planning=root["policy"]["compact_measured_planning"].as<bool>();
   if(root["policy"] && root["policy"]["measured_causal_window"]) config.measured_causal_window=root["policy"]["measured_causal_window"].as<bool>();
