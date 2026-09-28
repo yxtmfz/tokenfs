@@ -8,6 +8,53 @@
 
 namespace {
 struct TokenFSTestAccess {
+  static void inflight_reads(const fs::path& root,bool enabled) {
+    Config cfg;cfg.mount_point=root/"mnt";cfg.metadata_db=root/"state.db";
+    cfg.foreground_read_fill=true;cfg.request_read_costs=true;cfg.coalesce_pending_reads=enabled;
+    cfg.readonly_canonical=true;cfg.peer_cache_reads=true;cfg.shared_pool_cache=true;cfg.checksum="fnv1a64";
+    cfg.backend_direct_io=true;cfg.affinity_placement=false;cfg.lean_read_accounting=true;
+    cfg.read_through_cache=true;cfg.read_through_min_reads=1;cfg.local_eviction_policy="sieve";
+    cfg.gpus.push_back({0,"/gpu0",root/"local",8192,"remote"});
+    cfg.backends.emplace("remote",BackendConfig{"remote","directory",root/"remote"});
+    TokenFS filesystem(cfg);filesystem.Init();
+    std::ofstream(root/"remote/gpu0/k")<<std::string(4096,'z');
+    // Deterministically put placement behind a barrier, without sleeps or
+    // changing the production state machine. The next open must stay correct
+    // before READY, after READY, and while its own memory pin remains live.
+    std::promise<void> started,proceed;auto started_f=started.get_future();
+    auto proceed_f=proceed.get_future().share();
+    assert(filesystem.SubmitBackground([&]{started.set_value();proceed_f.wait();}));started_f.wait();
+    fuse_file_info a{},b{},c{};a.flags=b.flags=c.flags=O_RDONLY;char bytes[4096]{};
+    assert(filesystem.Open("/gpu0/k",&a)==0);
+    assert(filesystem.Read("/gpu0/k",bytes,4096,0,&a)==4096);
+    assert(filesystem.Release("/gpu0/k",&a)==0);
+    assert(filesystem.metadata_.Get("/gpu0/k")->tier=="remote");
+    assert(filesystem.Open("/gpu0/k",&b)==0);
+    assert(filesystem.FindHandle(&b)->tier==(enabled?"inflight":"remote"));
+    assert(filesystem.Read("/gpu0/k",bytes,2048,0,&b)==2048);
+    assert(filesystem.Read("/gpu0/k",bytes+2048,2048,2048,&b)==2048);
+    assert(std::string(bytes,4096)==std::string(4096,'z'));
+    assert(filesystem.Read("/gpu0/k",bytes,4096,4096,&b)==0);
+    assert(filesystem.metadata_.Get("/gpu0/k")->tier=="remote");
+    proceed.set_value();std::promise<void> drained;auto drained_f=drained.get_future();
+    assert(filesystem.SubmitBackground([&]{drained.set_value();}));drained_f.wait();
+    assert(filesystem.metadata_.Get("/gpu0/k")->tier=="local");
+    assert(filesystem.Open("/gpu0/k",&c)==0 && filesystem.FindHandle(&c)->tier=="local");
+    assert(filesystem.Read("/gpu0/k",bytes,4096,0,&c)==4096);
+    assert(filesystem.Release("/gpu0/k",&c)==0);
+    if(enabled)assert(filesystem.fills_.UsedBytes()==4096);
+    assert(filesystem.Release("/gpu0/k",&b)==0 && filesystem.fills_.UsedBytes()==0);
+    sqlite3* conn=nullptr;assert(sqlite3_open(cfg.metadata_db.c_str(),&conn)==SQLITE_OK);
+    sqlite3_stmt* stmt=nullptr;assert(sqlite3_prepare_v2(conn,"SELECT name,value FROM metrics",-1,&stmt,nullptr)==SQLITE_OK);
+    std::map<std::string,uint64_t> m;
+    while(sqlite3_step(stmt)==SQLITE_ROW)m[reinterpret_cast<const char*>(sqlite3_column_text(stmt,0))]=sqlite3_column_int64(stmt,1);
+    sqlite3_finalize(stmt);sqlite3_close(conn);
+    assert(m["read_bytes"]==12288 && m["read_local_bytes"]==4096);
+    assert(m["read_remote_bytes"]==(enabled?4096:8192) && m["read_inflight_bytes"]==(enabled?4096:0));
+    assert(m["request_cost_inflight_samples"]==(enabled?1:0));
+    auto invalid=cfg;invalid.foreground_read_fill=false;invalid.coalesce_pending_reads=true;bool rejected=false;
+    try{TokenFS bad(invalid);bad.Init();}catch(const std::runtime_error&){rejected=true;}assert(rejected);
+  }
   static void foreground_fill(const fs::path& root,int threshold,bool adaptive=false,bool incremental=false) {
     Config cfg;cfg.mount_point=root/"mnt";cfg.metadata_db=root/"state.db";
     cfg.incremental_copy_cost=incremental;
@@ -355,6 +402,8 @@ struct TokenFSTestAccess {
 int main() {
   const fs::path root = fs::temp_directory_path() / ("tokenfs-policy-test-" + std::to_string(getpid()));
   fs::create_directory(root);
+  TokenFSTestAccess::inflight_reads(root/"inflight-enabled",true);
+  TokenFSTestAccess::inflight_reads(root/"inflight-disabled",false);
   TokenFSTestAccess::foreground_fill(root/"fill-sieve1",1);
   TokenFSTestAccess::foreground_fill(root/"fill-sieve2",2);
   TokenFSTestAccess::foreground_fill(root/"fill-adaptive",1,true);

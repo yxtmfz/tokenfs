@@ -1,4 +1,5 @@
 """Correlate monotonic client intervals and daemon handles; overlap is not causality."""
+from contextlib import closing
 import json,math,statistics,sqlite3
 from collections import Counter,defaultdict
 from pathlib import Path
@@ -9,6 +10,13 @@ def intersection_ns(start,end,intervals):
     for a,b in clipped:
         total+=max(0,b-max(a,last));last=max(last,b)
     return total
+
+def read_access_metrics(case):
+    # The benchmark Python process may still hold connections and a committed
+    # WAL. immutable=1 would silently ignore that WAL and read a stale snapshot.
+    with closing(sqlite3.connect((Path(case)/'state.db').resolve().as_uri()+'?mode=ro',uri=True)) as db:
+        return ({(p,g):n for p,g,n in db.execute('SELECT logical_path,gpu_id,read_count FROM gpu_access')},
+                dict(db.execute('SELECT name,value FROM metrics')))
 
 def analyze_case(case):
     case=Path(case)
@@ -59,9 +67,9 @@ def analyze_case(case):
     assert sum(e['bytes'] for e in groups['read'])==result['logical_bytes']==metrics['read_bytes']
     assert sum(e['bytes'] for e in groups['read'] if e['tier']=='remote')==metrics['read_remote_bytes']
     counts=Counter((f"/gpu0/shard-{r['key']:06d}.tokens",r['caller']) for r in requests)
-    with sqlite3.connect((case/'state.db').resolve().as_uri()+'?mode=ro&immutable=1',uri=True) as db:
-        assert dict(((p,g),n) for p,g,n in db.execute('SELECT logical_path,gpu_id,read_count FROM gpu_access'))==dict(counts)
-        assert dict(db.execute('SELECT name,value FROM metrics'))==metrics
+    accesses,durable_metrics=read_access_metrics(case)
+    assert accesses==dict(counts)
+    assert durable_metrics==metrics
     tail=sorted(rows,key=lambda r:r['response_ms'],reverse=True)[:math.ceil(len(rows)*.01)]
     keys=[k for k in rows[0] if k.endswith('_ms')]
     summarize=lambda rs:{k:statistics.mean(r[k] for r in rs) for k in keys} if rs else None

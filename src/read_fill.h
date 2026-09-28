@@ -1,11 +1,12 @@
 #pragma once
 #include <algorithm>
+#include <cerrno>
 #include <chrono>
 #include <cstring>
 #include <iomanip>
 #include <memory>
 #include <mutex>
-#include <set>
+#include <unordered_map>
 #include <sstream>
 #include <string>
 #include <vector>
@@ -15,10 +16,13 @@
 // Transient capture only, never a readable cache. Complete immutable-source
 // reads can supply a normal verified cache commit without rereading the source.
 class ReadFillPool {
+ public:
+  class Buffer;
+ private:
   struct Budget {
     std::mutex mu;
     uint64_t used=0,peak=0;
-    std::set<std::string> paths;
+    std::unordered_map<std::string,std::weak_ptr<Buffer>> paths;
   };
  public:
   static uint64_t NowNs() {
@@ -54,6 +58,21 @@ class ReadFillPool {
       return dispatched_ && !invalid_ && size==data_.size() &&
         stat(source.c_str(),&current)==0 && SameSource(current);
     }
+    bool MatchesFd(int fd) const {
+      std::lock_guard<std::mutex> lock(mu_);struct stat current{};
+      return dispatched_ && !invalid_ && fstat(fd,&current)==0 && SameSource(current);
+    }
+    // Only complete immutable bytes can be borrowed. A checked copy prevents
+    // source changes, partial data and invalid offsets from leaking to readers.
+    ssize_t ReadCaptured(int fd,char* out,size_t count,off_t offset) const {
+      std::lock_guard<std::mutex> lock(mu_);struct stat current{};
+      if(!dispatched_ || invalid_ || fstat(fd,&current)!=0 || !SameSource(current))return -ESTALE;
+      if(offset<0)return -EINVAL;
+      if(uint64_t(offset)>=data_.size())return 0;
+      const auto n=std::min(count,data_.size()-size_t(offset));
+      if(n)std::memcpy(out,data_.data()+offset,n);
+      return static_cast<ssize_t>(n);
+    }
     void AddCaptureNs(uint64_t n){std::lock_guard<std::mutex> lock(mu_);capture_ns_+=n;}
     uint64_t CaptureUs() const {std::lock_guard<std::mutex> lock(mu_);return (capture_ns_+999)/1000;}
     // Accessed only after Append has published a complete, immutable buffer.
@@ -88,10 +107,20 @@ class ReadFillPool {
     if(size>limit_-budget_->used || budget_->paths.count(path))return {};
     // Allocate before charging: an allocation failure leaves the budget intact.
     std::shared_ptr<Buffer> buffer;
-    try {budget_->paths.insert(path);buffer=std::make_shared<Buffer>(budget_,path,source);}
+    try {budget_->paths.emplace(path,std::weak_ptr<Buffer>{});buffer=std::make_shared<Buffer>(budget_,path,source);budget_->paths.at(path)=buffer;}
     catch(const std::bad_alloc&){budget_->paths.erase(path);return {};}
     budget_->used+=size;budget_->peak=std::max(budget_->peak,budget_->used);
     buffer->AddCaptureNs(NowNs()-started);return buffer;
+  }
+  std::shared_ptr<Buffer> FindComplete(const std::string& path,const std::string& source,uint64_t size) {
+    std::shared_ptr<Buffer> found;
+    {
+      std::lock_guard<std::mutex> lock(budget_->mu);
+      const auto it=budget_->paths.find(path);
+      if(it!=budget_->paths.end())found=it->second.lock();
+    }
+    // Never destroy the last buffer while holding its budget mutex.
+    return found && found->Matches(source,size)?found:std::shared_ptr<Buffer>{};
   }
   uint64_t PeakBytes() const {std::lock_guard<std::mutex> lock(budget_->mu);return budget_->peak;}
   uint64_t UsedBytes() const {std::lock_guard<std::mutex> lock(budget_->mu);return budget_->used;}

@@ -21,3 +21,16 @@ Same total retained storage and transient RAM cap for all arms. Detailed trace
 OFF in speed runs. No reruns, seed replacement, large-scale run, or threshold
 retuning. Report every outcome and remaining limits, including fairness of RAM
 capacity and the absence of physical GPU/LLM inference or latest H/P/J closure.
+
+Speed protocol frozen before execution: moving_shared 3241 (known regression),
+moving_shared 3261 (new), uniform 3262 (new). Order shuffle 3260, reverse second
+hotspot, rotate uniform. 576 reads x 2 MiB each, 24 MiB disk quota, 4 MiB capture
+budget in all arms. Disk reads remain O_DIRECT; captured-memory reads explicitly
+count as inflight. No memory service times enter local/remote cost estimators.
+Primary gates: both hotspot seeds faster, paired >=5% against BOTH fair SIEVE
+baselines, no per-seed p99 regression; uniform speed/p99 no regression. Report
+new/old HP pairs separately. Small development screen, not significance or an
+independent confirmation after choosing this mechanism. Checksum all retained
+replicas; native tests verify captured read contents and deterministic pre-READY
+concurrency. The two diagnostic attempts and any report-generation errors stay
+in the evidence archive; do not replace them with speed results.

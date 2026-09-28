@@ -6,6 +6,7 @@ Linux only for execution; trace/config/report unit tests also run on macOS.
 """
 from __future__ import annotations
 
+from contextlib import closing
 import argparse
 import csv
 import hashlib
@@ -156,7 +157,7 @@ def loader(mount, verify):
 
 
 def metrics(db):
-    with sqlite3.connect(db, timeout=30) as con:
+    with closing(sqlite3.connect(db, timeout=30)) as con:
         return dict(con.execute("SELECT name,value FROM metrics"))
 
 
@@ -174,7 +175,7 @@ def drain(db, timeout=120):
 def finalize_case_metrics(case, result, returncode):
     if returncode != 0: raise RuntimeError("daemon exit failed")
     final_metrics=metrics(case / "state.db")
-    for key in ["read_bytes","read_open_count","read_local_bytes","read_remote_bytes","background_submitted","background_completed"]:
+    for key in ["read_bytes","read_open_count","read_local_bytes","read_remote_bytes","read_inflight_bytes","background_submitted","background_completed"]:
         if final_metrics.get(key,0)!=result["metrics"].get(key,0):
             raise RuntimeError("final I/O accounting changed: "+key)
     result["metrics"]=final_metrics
@@ -267,10 +268,10 @@ def run_case(binary, case, remote, strategy, events, expected, quota_mib, verify
                       foreground_service_sum_s=sum(r["seconds"] for r in rows),
                       drain_s=drain_seconds, completed_with_background_s=wall + drain_seconds,
                       metrics=m, retained_cache_bytes=cache_bytes, verified_replicas=checked,
-                      verify_every_request=verify, cache_mode=("client O_DIRECT both tiers; server caches uncontrolled" if backend_direct else "warm backend; empty application cache; FUSE direct_io"),
+                      verify_every_request=verify, cache_mode=("client O_DIRECT disk tiers; bounded captured-memory sharing" if configuration and configuration.get("policy",{}).get("coalesce_pending_reads") else "client O_DIRECT both tiers; server caches uncontrolled" if backend_direct else "warm backend; empty application cache; FUSE direct_io"),
                       request_p50_s=percentile([r["response_seconds"] for r in rows], .5),
                       request_p99_s=percentile([r["response_seconds"] for r in rows], .99))
-        with sqlite3.connect(case / "state.db") as con:
+        with closing(sqlite3.connect(case / "state.db")) as con:
             con.row_factory = sqlite3.Row
             dump(case / "policy-events.json", [dict(r) for r in con.execute("SELECT * FROM policy_events ORDER BY seq")])
             dump(case / "files.json", [dict(r) for r in con.execute("SELECT * FROM files ORDER BY logical_path")])
