@@ -1,0 +1,986 @@
+{
+  "source": "report28 completed batch",
+  "new_server_runs": 0,
+  "descriptive_only": true,
+  "limitations": [
+    "No per-request tier/lock/copy timestamps in these speed runs: no causal phase attribution.",
+    "Single uniform run per strategy: requests are dependent observations, not independent repetitions.",
+    "30 ms exceedance and max are post-hoc descriptions, not replacements for frozen p99."
+  ],
+  "input_sha256": {
+    "moving_shared-3241/InflightHP/result.json": "6484b84886023e40f4d130ee4e1a18d96d99598924a2d4677bad5ca06678536b",
+    "moving_shared-3241/InflightHP/requests.json": "68b869062fa26676b26c5fd94ae26ee9c747de032e0db386017f810d0356bace",
+    "moving_shared-3241/InflightHP/policy-events.json": "86f030c51361f032db6ab79148003df76276aa3e7a52e59f5f2c88b8c8fd8404",
+    "moving_shared-3241/InflightHP/config.json": "d88c6b94790aabd8e82c2457e0e203ff4f8e05fb0cd728970afacbd83c51fa9e",
+    "moving_shared-3241/AdaptiveHP/result.json": "d757830689bbfcca5220b406b3e3a9a14f93798400c1f5ac8c23525f0c17d542",
+    "moving_shared-3241/AdaptiveHP/requests.json": "5add9e37f96cab586472e7fcb3d2224385c7a88b73d26e75f25e8531aa7dcf2b",
+    "moving_shared-3241/AdaptiveHP/policy-events.json": "b6fb7ecf600a1d0ca4f2745914235c2afb43a1e2425bba00c36df46f338cc322",
+    "moving_shared-3241/AdaptiveHP/config.json": "f8a2bc5edac806c42f6052d955f442877b6c3b4af8f86768fe5f13da94b50b76",
+    "moving_shared-3241/PoolSIEVE1/result.json": "0c1bf34841a70bfc2e0b1516d66dfeab01671ad0dd5d6888b4a4070c5774db5e",
+    "moving_shared-3241/PoolSIEVE1/requests.json": "9e643593de06354301a33902accb1f36c2d7176e348288ccdda689cfd1c99d9b",
+    "moving_shared-3241/PoolSIEVE1/policy-events.json": "29149c94f6ec7310cecb54214b861c72ad05ef30eb26514c86cdcadac342f957",
+    "moving_shared-3241/PoolSIEVE1/config.json": "fdc14c347e6dc98306ec30ecf6ef0238c068880106900c2613a7a1dbddf7fb40",
+    "moving_shared-3241/PoolSIEVE2/result.json": "70c2938c707c9f687e6f5df7ffc9b0a42b728faa84fe28b1e37538902feab316",
+    "moving_shared-3241/PoolSIEVE2/requests.json": "9fec4d9f15e9c68e487ef272746f3f664119d60e69fc21ce8b7f68b8c874cd21",
+    "moving_shared-3241/PoolSIEVE2/policy-events.json": "85f8f8ee0bc2e9a157793e2bd43cb2766af83bda397506e908bc2b0e5de0bb34",
+    "moving_shared-3241/PoolSIEVE2/config.json": "4979e9fb112d42991ab21c8f59611a43469d4a45d3817a46c477fac9e6f60d56",
+    "moving_shared-3261/InflightHP/result.json": "8a6df3c63f5650758646fa9e831f362ce7b79bc684eb45299d7463f9a2281617",
+    "moving_shared-3261/InflightHP/requests.json": "78f864346077f291df9e3775f96bd31d575b6aef2c93f0c1f73e62cf0569590f",
+    "moving_shared-3261/InflightHP/policy-events.json": "a99a08edd6a239d64bf26f0f3cd5578c2a19d61052e45ec8d306f222c9039be5",
+    "moving_shared-3261/InflightHP/config.json": "9904ecff384e24c74512444f98387eb9433b47c542cf5d05993881bd0075ace8",
+    "moving_shared-3261/AdaptiveHP/result.json": "1605782e64226a2e9eac06fbd6a2801b0d0d519d00be59082fd8e742030bf2f7",
+    "moving_shared-3261/AdaptiveHP/requests.json": "95a9510297510acabf78613185a8488b410c184383cd5428e514504684a3f3ac",
+    "moving_shared-3261/AdaptiveHP/policy-events.json": "d945cb72ef42255a0f37bb3d7bcbfc733f6c40a1c79fa19f194f04ca318fbffe",
+    "moving_shared-3261/AdaptiveHP/config.json": "3228a3e23bb3f3ee54528e133f3391f6ade6eddb3c5165e7344718e0319728ce",
+    "moving_shared-3261/PoolSIEVE1/result.json": "87a7cd64a20ffaaaa29c35f8dcdef9ac0b293b966faa3ba0618a62fde9f1b52a",
+    "moving_shared-3261/PoolSIEVE1/requests.json": "fbda0a7313d34855ff5ef900d5d0d92c1a0a118d81bf88f4750618520687d6ed",
+    "moving_shared-3261/PoolSIEVE1/policy-events.json": "74a3eaac96c2e9648708d6a34d161cf55ff4a0c2ed5675e952883f5c61380677",
+    "moving_shared-3261/PoolSIEVE1/config.json": "c0aafa3865e563683693d446799d29178568849f62e51b562f607d0f1d63c654",
+    "moving_shared-3261/PoolSIEVE2/result.json": "9ca2da0b52c4cd18ea77c2ac9d65987dad1bfe8f0605d502d8721367bcce528e",
+    "moving_shared-3261/PoolSIEVE2/requests.json": "d37a3e8e31abefa5f2670cb146e5059d45aa637f72ea313be290675787330824",
+    "moving_shared-3261/PoolSIEVE2/policy-events.json": "74a3eaac96c2e9648708d6a34d161cf55ff4a0c2ed5675e952883f5c61380677",
+    "moving_shared-3261/PoolSIEVE2/config.json": "b940e35cd3d7a95ffaee13914753f0d577be75221bd808f979fed1bef206c190",
+    "uniform-3262/InflightHP/result.json": "e382cbd6c0255f728d7c689e0fe00635d9a1a8ca7b4c3d3c1ee7d6ecc378730e",
+    "uniform-3262/InflightHP/requests.json": "71e79b04d0ce81c50ec89ad102e9a852b58fc5b8c73dd055302c90a79251ec53",
+    "uniform-3262/InflightHP/policy-events.json": "960249ba857d6e82268ac2281e57c7562eaeae88395622088dd5e46250d8ae7a",
+    "uniform-3262/InflightHP/config.json": "b84bc2d0b8bd685a6d3d12a44ec759b0fc101738c9b2984888494b49bb9e2f1d",
+    "uniform-3262/AdaptiveHP/result.json": "50fa13706902fc71379342c7e3089e3f204132f7cd953a2c34a4290eefafbab6",
+    "uniform-3262/AdaptiveHP/requests.json": "b9c8e12b8f4e33b8081ef45c6751f99bb3361f568fb69be72773523d27e80af6",
+    "uniform-3262/AdaptiveHP/policy-events.json": "169ea128e20fe7a015a664e9dd11afd72a1a8f289b982ec00fcfd1274ff80b80",
+    "uniform-3262/AdaptiveHP/config.json": "356cd8bac94ffbceafefc6bd27e380855d5fbbb1b71db450d1d48fd16f82c778",
+    "uniform-3262/PoolSIEVE1/result.json": "850220c1a3fa21d1e4e1ff523f380a77905c2b21cf165e788053897dae786bc3",
+    "uniform-3262/PoolSIEVE1/requests.json": "fc28c7fc3cc5a68a163851964f11fff68bfe40817d67babee92aac323b9302d1",
+    "uniform-3262/PoolSIEVE1/policy-events.json": "012f039db2a6e1eccfddc385aaeaeeaa4dc0ff2b5c4bec6bf9b4b9a2ffb8ac57",
+    "uniform-3262/PoolSIEVE1/config.json": "a1be41d36c2b771d6c18da67506affe9adf673f6305a1fd2da3e7b14be115da1",
+    "uniform-3262/PoolSIEVE2/result.json": "3d22d5636c51cb8b5677bf5ef05a9f2ee3b82dbcaf41e1c5a2aaf6725165df78",
+    "uniform-3262/PoolSIEVE2/requests.json": "a337366597057333fa582e20a4c5f34be5f3d18309ecddb2c508823bde2077e3",
+    "uniform-3262/PoolSIEVE2/policy-events.json": "def8c4922eed3bef0f511378e6ed8bab5fb0653e1c73f9b876058c2d1693119b",
+    "uniform-3262/PoolSIEVE2/config.json": "6124557b34a33607483c740b3bc1477569fbcde48ba3d633464f1effe4d1771e"
+  },
+  "rows": [
+    {
+      "block": "moving_shared-3241",
+      "strategy": "InflightHP",
+      "n": 576,
+      "mib_s": 174.61005674779403,
+      "wall_s": 6.597558133,
+      "drain_ms": 1.940007321536541,
+      "cpu_s": 2.47,
+      "p50_ms": 10.68327,
+      "p95_ms": 26.148210000000002,
+      "p99_ms": 28.162249,
+      "max_ms": 31.822484999999997,
+      "above_30ms": 1,
+      "remote_mib": 98.0,
+      "inflight_mib": 304.0,
+      "copies": 49,
+      "relocated": 28,
+      "uncertainty_plans": 0,
+      "top_requests": [
+        {
+          "index": 0,
+          "key": 5,
+          "caller": 2,
+          "response_ms": 31.822484999999997,
+          "open_read_close_ms": 31.398138999999997
+        },
+        {
+          "index": 64,
+          "key": 80,
+          "caller": 0,
+          "response_ms": 29.543028999999997,
+          "open_read_close_ms": 29.332939999999997
+        },
+        {
+          "index": 408,
+          "key": 20,
+          "caller": 1,
+          "response_ms": 29.245643,
+          "open_read_close_ms": 29.035111
+        },
+        {
+          "index": 8,
+          "key": 66,
+          "caller": 0,
+          "response_ms": 28.732685,
+          "open_read_close_ms": 28.518003
+        },
+        {
+          "index": 248,
+          "key": 126,
+          "caller": 0,
+          "response_ms": 28.256542999999997,
+          "open_read_close_ms": 28.045613
+        },
+        {
+          "index": 208,
+          "key": 116,
+          "caller": 0,
+          "response_ms": 28.162249,
+          "open_read_close_ms": 27.956518
+        },
+        {
+          "index": 216,
+          "key": 11,
+          "caller": 0,
+          "response_ms": 28.085295,
+          "open_read_close_ms": 27.879311
+        },
+        {
+          "index": 12,
+          "key": 0,
+          "caller": 0,
+          "response_ms": 27.900916000000002,
+          "open_read_close_ms": 27.660871
+        }
+      ]
+    },
+    {
+      "block": "moving_shared-3241",
+      "strategy": "AdaptiveHP",
+      "n": 576,
+      "mib_s": 123.29503287263536,
+      "wall_s": 9.343442093,
+      "drain_ms": 2.084401436150074,
+      "cpu_s": 2.87,
+      "p50_ms": 11.307132,
+      "p95_ms": 30.529561,
+      "p99_ms": 33.631189,
+      "max_ms": 35.113121,
+      "above_30ms": 33,
+      "remote_mib": 290.0,
+      "inflight_mib": 0.0,
+      "copies": 44,
+      "relocated": 30,
+      "uncertainty_plans": 0,
+      "top_requests": [
+        {
+          "index": 469,
+          "key": 17,
+          "caller": 1,
+          "response_ms": 35.113121,
+          "open_read_close_ms": 34.868660000000006
+        },
+        {
+          "index": 485,
+          "key": 185,
+          "caller": 1,
+          "response_ms": 34.460506,
+          "open_read_close_ms": 34.239534
+        },
+        {
+          "index": 553,
+          "key": 202,
+          "caller": 1,
+          "response_ms": 33.885322,
+          "open_read_close_ms": 33.679198
+        },
+        {
+          "index": 321,
+          "key": 144,
+          "caller": 0,
+          "response_ms": 33.652837999999996,
+          "open_read_close_ms": 33.327352999999995
+        },
+        {
+          "index": 217,
+          "key": 11,
+          "caller": 2,
+          "response_ms": 33.652144,
+          "open_read_close_ms": 33.447494
+        },
+        {
+          "index": 205,
+          "key": 115,
+          "caller": 0,
+          "response_ms": 33.631189,
+          "open_read_close_ms": 33.308794000000006
+        },
+        {
+          "index": 325,
+          "key": 11,
+          "caller": 0,
+          "response_ms": 33.436375,
+          "open_read_close_ms": 33.128394
+        },
+        {
+          "index": 245,
+          "key": 9,
+          "caller": 0,
+          "response_ms": 33.348507,
+          "open_read_close_ms": 32.989867
+        }
+      ]
+    },
+    {
+      "block": "moving_shared-3241",
+      "strategy": "PoolSIEVE1",
+      "n": 576,
+      "mib_s": 168.21524462441158,
+      "wall_s": 6.848368604,
+      "drain_ms": 2.074114978313446,
+      "cpu_s": 2.58,
+      "p50_ms": 10.710035,
+      "p95_ms": 27.330992,
+      "p99_ms": 31.132936,
+      "max_ms": 102.959131,
+      "above_30ms": 8,
+      "remote_mib": 116.0,
+      "inflight_mib": 336.0,
+      "copies": 56,
+      "relocated": 0,
+      "uncertainty_plans": 0,
+      "top_requests": [
+        {
+          "index": 500,
+          "key": 16,
+          "caller": 1,
+          "response_ms": 102.959131,
+          "open_read_close_ms": 102.68517100000001
+        },
+        {
+          "index": 12,
+          "key": 0,
+          "caller": 0,
+          "response_ms": 33.31237,
+          "open_read_close_ms": 33.132297
+        },
+        {
+          "index": 224,
+          "key": 8,
+          "caller": 0,
+          "response_ms": 32.072866999999995,
+          "open_read_close_ms": 31.898875
+        },
+        {
+          "index": 0,
+          "key": 5,
+          "caller": 2,
+          "response_ms": 32.014959000000005,
+          "open_read_close_ms": 31.593726000000004
+        },
+        {
+          "index": 236,
+          "key": 123,
+          "caller": 0,
+          "response_ms": 31.385574,
+          "open_read_close_ms": 31.219454
+        },
+        {
+          "index": 212,
+          "key": 12,
+          "caller": 1,
+          "response_ms": 31.132936,
+          "open_read_close_ms": 30.823964999999998
+        },
+        {
+          "index": 412,
+          "key": 167,
+          "caller": 1,
+          "response_ms": 30.958347,
+          "open_read_close_ms": 30.69515
+        },
+        {
+          "index": 68,
+          "key": 1,
+          "caller": 0,
+          "response_ms": 30.742060000000002,
+          "open_read_close_ms": 30.569087000000003
+        }
+      ]
+    },
+    {
+      "block": "moving_shared-3241",
+      "strategy": "PoolSIEVE2",
+      "n": 576,
+      "mib_s": 147.06876809362032,
+      "wall_s": 7.833070304,
+      "drain_ms": 2.029736526310444,
+      "cpu_s": 2.87,
+      "p50_ms": 11.101790000000001,
+      "p95_ms": 26.830187,
+      "p99_ms": 28.459410000000002,
+      "max_ms": 30.741847,
+      "above_30ms": 3,
+      "remote_mib": 208.0,
+      "inflight_mib": 242.0,
+      "copies": 55,
+      "relocated": 0,
+      "uncertainty_plans": 0,
+      "top_requests": [
+        {
+          "index": 408,
+          "key": 20,
+          "caller": 1,
+          "response_ms": 30.741847,
+          "open_read_close_ms": 30.478231
+        },
+        {
+          "index": 324,
+          "key": 11,
+          "caller": 0,
+          "response_ms": 30.539654,
+          "open_read_close_ms": 30.315813000000002
+        },
+        {
+          "index": 0,
+          "key": 5,
+          "caller": 2,
+          "response_ms": 30.074638,
+          "open_read_close_ms": 29.708126
+        },
+        {
+          "index": 1,
+          "key": 5,
+          "caller": 1,
+          "response_ms": 29.750704,
+          "open_read_close_ms": 29.406565
+        },
+        {
+          "index": 212,
+          "key": 12,
+          "caller": 1,
+          "response_ms": 29.316466,
+          "open_read_close_ms": 29.010859
+        },
+        {
+          "index": 8,
+          "key": 66,
+          "caller": 0,
+          "response_ms": 28.459410000000002,
+          "open_read_close_ms": 28.235248000000002
+        },
+        {
+          "index": 41,
+          "key": 2,
+          "caller": 0,
+          "response_ms": 28.455129,
+          "open_read_close_ms": 28.238969
+        },
+        {
+          "index": 36,
+          "key": 73,
+          "caller": 1,
+          "response_ms": 28.330075,
+          "open_read_close_ms": 28.029117
+        }
+      ]
+    },
+    {
+      "block": "moving_shared-3261",
+      "strategy": "InflightHP",
+      "n": 576,
+      "mib_s": 170.41633821943893,
+      "wall_s": 6.759915229,
+      "drain_ms": 2.078481949865818,
+      "cpu_s": 2.65,
+      "p50_ms": 11.005101,
+      "p95_ms": 26.542541,
+      "p99_ms": 28.363440999999998,
+      "max_ms": 32.634044,
+      "above_30ms": 2,
+      "remote_mib": 92.0,
+      "inflight_mib": 280.0,
+      "copies": 46,
+      "relocated": 31,
+      "uncertainty_plans": 0,
+      "top_requests": [
+        {
+          "index": 0,
+          "key": 4,
+          "caller": 0,
+          "response_ms": 32.634044,
+          "open_read_close_ms": 32.162864
+        },
+        {
+          "index": 4,
+          "key": 0,
+          "caller": 0,
+          "response_ms": 30.231652,
+          "open_read_close_ms": 29.982554
+        },
+        {
+          "index": 236,
+          "key": 123,
+          "caller": 1,
+          "response_ms": 28.934027,
+          "open_read_close_ms": 28.655815
+        },
+        {
+          "index": 20,
+          "key": 5,
+          "caller": 0,
+          "response_ms": 28.590205,
+          "open_read_close_ms": 28.336061
+        },
+        {
+          "index": 404,
+          "key": 22,
+          "caller": 1,
+          "response_ms": 28.524632,
+          "open_read_close_ms": 28.301874
+        },
+        {
+          "index": 196,
+          "key": 15,
+          "caller": 0,
+          "response_ms": 28.363440999999998,
+          "open_read_close_ms": 28.137858
+        },
+        {
+          "index": 232,
+          "key": 13,
+          "caller": 0,
+          "response_ms": 28.226188,
+          "open_read_close_ms": 27.994414
+        },
+        {
+          "index": 200,
+          "key": 12,
+          "caller": 0,
+          "response_ms": 28.151196,
+          "open_read_close_ms": 27.939511
+        }
+      ]
+    },
+    {
+      "block": "moving_shared-3261",
+      "strategy": "AdaptiveHP",
+      "n": 576,
+      "mib_s": 137.35183052946832,
+      "wall_s": 8.387219854,
+      "drain_ms": 1.9982270896434784,
+      "cpu_s": 2.51,
+      "p50_ms": 10.960147,
+      "p95_ms": 30.686694,
+      "p99_ms": 33.178799000000005,
+      "max_ms": 37.001224,
+      "above_30ms": 39,
+      "remote_mib": 184.0,
+      "inflight_mib": 0.0,
+      "copies": 46,
+      "relocated": 31,
+      "uncertainty_plans": 0,
+      "top_requests": [
+        {
+          "index": 181,
+          "key": 109,
+          "caller": 0,
+          "response_ms": 37.001224,
+          "open_read_close_ms": 36.780122999999996
+        },
+        {
+          "index": 229,
+          "key": 11,
+          "caller": 1,
+          "response_ms": 33.935608,
+          "open_read_close_ms": 33.711594999999996
+        },
+        {
+          "index": 485,
+          "key": 185,
+          "caller": 0,
+          "response_ms": 33.746586,
+          "open_read_close_ms": 33.487282
+        },
+        {
+          "index": 561,
+          "key": 204,
+          "caller": 1,
+          "response_ms": 33.464736,
+          "open_read_close_ms": 33.240385999999994
+        },
+        {
+          "index": 405,
+          "key": 22,
+          "caller": 1,
+          "response_ms": 33.231588,
+          "open_read_close_ms": 33.005023
+        },
+        {
+          "index": 193,
+          "key": 8,
+          "caller": 0,
+          "response_ms": 33.178799000000005,
+          "open_read_close_ms": 32.958016
+        },
+        {
+          "index": 265,
+          "key": 9,
+          "caller": 0,
+          "response_ms": 33.121917,
+          "open_read_close_ms": 32.84543
+        },
+        {
+          "index": 545,
+          "key": 200,
+          "caller": 1,
+          "response_ms": 32.910244999999996,
+          "open_read_close_ms": 32.681055
+        }
+      ]
+    },
+    {
+      "block": "moving_shared-3261",
+      "strategy": "PoolSIEVE1",
+      "n": 576,
+      "mib_s": 167.18117168086815,
+      "wall_s": 6.890728115,
+      "drain_ms": 22.96633180230856,
+      "cpu_s": 2.7,
+      "p50_ms": 10.809660000000001,
+      "p95_ms": 26.931146,
+      "p99_ms": 30.384228,
+      "max_ms": 33.79978,
+      "above_30ms": 11,
+      "remote_mib": 116.0,
+      "inflight_mib": 310.0,
+      "copies": 52,
+      "relocated": 0,
+      "uncertainty_plans": 0,
+      "top_requests": [
+        {
+          "index": 24,
+          "key": 6,
+          "caller": 0,
+          "response_ms": 33.79978,
+          "open_read_close_ms": 33.564426000000005
+        },
+        {
+          "index": 44,
+          "key": 75,
+          "caller": 0,
+          "response_ms": 33.519293999999995,
+          "open_read_close_ms": 33.293715
+        },
+        {
+          "index": 31,
+          "key": 3,
+          "caller": 1,
+          "response_ms": 33.196051,
+          "open_read_close_ms": 32.948177
+        },
+        {
+          "index": 0,
+          "key": 4,
+          "caller": 0,
+          "response_ms": 31.975620000000003,
+          "open_read_close_ms": 31.533602000000002
+        },
+        {
+          "index": 404,
+          "key": 22,
+          "caller": 1,
+          "response_ms": 30.402176,
+          "open_read_close_ms": 30.173717999999997
+        },
+        {
+          "index": 232,
+          "key": 13,
+          "caller": 0,
+          "response_ms": 30.384228,
+          "open_read_close_ms": 30.154251
+        },
+        {
+          "index": 252,
+          "key": 14,
+          "caller": 0,
+          "response_ms": 30.248676,
+          "open_read_close_ms": 30.018814000000003
+        },
+        {
+          "index": 399,
+          "key": 21,
+          "caller": 1,
+          "response_ms": 30.119837999999998,
+          "open_read_close_ms": 29.898048
+        }
+      ]
+    },
+    {
+      "block": "moving_shared-3261",
+      "strategy": "PoolSIEVE2",
+      "n": 576,
+      "mib_s": 145.91996606679828,
+      "wall_s": 7.894738678,
+      "drain_ms": 23.01981020718813,
+      "cpu_s": 2.8,
+      "p50_ms": 11.020567999999999,
+      "p95_ms": 27.273799,
+      "p99_ms": 30.112164,
+      "max_ms": 114.81859,
+      "above_30ms": 6,
+      "remote_mib": 194.0,
+      "inflight_mib": 230.0,
+      "copies": 52,
+      "relocated": 0,
+      "uncertainty_plans": 0,
+      "top_requests": [
+        {
+          "index": 396,
+          "key": 21,
+          "caller": 2,
+          "response_ms": 114.81859,
+          "open_read_close_ms": 114.372564
+        },
+        {
+          "index": 312,
+          "key": 10,
+          "caller": 0,
+          "response_ms": 35.064623000000005,
+          "open_read_close_ms": 34.827323
+        },
+        {
+          "index": 0,
+          "key": 4,
+          "caller": 0,
+          "response_ms": 31.689805,
+          "open_read_close_ms": 31.193198
+        },
+        {
+          "index": 28,
+          "key": 3,
+          "caller": 0,
+          "response_ms": 31.57314,
+          "open_read_close_ms": 31.311849000000002
+        },
+        {
+          "index": 252,
+          "key": 14,
+          "caller": 0,
+          "response_ms": 31.136384,
+          "open_read_close_ms": 30.902175
+        },
+        {
+          "index": 1,
+          "key": 4,
+          "caller": 0,
+          "response_ms": 30.112164,
+          "open_read_close_ms": 29.825001
+        },
+        {
+          "index": 544,
+          "key": 200,
+          "caller": 1,
+          "response_ms": 29.835259,
+          "open_read_close_ms": 29.60642
+        },
+        {
+          "index": 388,
+          "key": 20,
+          "caller": 1,
+          "response_ms": 29.163919,
+          "open_read_close_ms": 28.928087
+        }
+      ]
+    },
+    {
+      "block": "uniform-3262",
+      "strategy": "InflightHP",
+      "n": 576,
+      "mib_s": 101.75218559342363,
+      "wall_s": 11.321624133,
+      "drain_ms": 2.032732591032982,
+      "cpu_s": 3.03,
+      "p50_ms": 23.372783000000002,
+      "p95_ms": 28.273406,
+      "p99_ms": 32.75311,
+      "max_ms": 34.912936,
+      "above_30ms": 12,
+      "remote_mib": 566.0,
+      "inflight_mib": 2.0,
+      "copies": 21,
+      "relocated": 10,
+      "uncertainty_plans": 734,
+      "top_requests": [
+        {
+          "index": 1,
+          "key": 5,
+          "caller": 0,
+          "response_ms": 34.912936,
+          "open_read_close_ms": 34.627077
+        },
+        {
+          "index": 465,
+          "key": 12,
+          "caller": 0,
+          "response_ms": 34.123581,
+          "open_read_close_ms": 33.877291
+        },
+        {
+          "index": 3,
+          "key": 8,
+          "caller": 0,
+          "response_ms": 34.038992,
+          "open_read_close_ms": 33.735651
+        },
+        {
+          "index": 2,
+          "key": 12,
+          "caller": 1,
+          "response_ms": 33.765463000000004,
+          "open_read_close_ms": 33.377681
+        },
+        {
+          "index": 403,
+          "key": 1,
+          "caller": 2,
+          "response_ms": 33.267683,
+          "open_read_close_ms": 33.033243
+        },
+        {
+          "index": 0,
+          "key": 13,
+          "caller": 0,
+          "response_ms": 32.75311,
+          "open_read_close_ms": 32.294393
+        },
+        {
+          "index": 18,
+          "key": 19,
+          "caller": 2,
+          "response_ms": 32.26462,
+          "open_read_close_ms": 31.968612
+        },
+        {
+          "index": 7,
+          "key": 16,
+          "caller": 0,
+          "response_ms": 32.160494,
+          "open_read_close_ms": 31.849042
+        }
+      ]
+    },
+    {
+      "block": "uniform-3262",
+      "strategy": "AdaptiveHP",
+      "n": 576,
+      "mib_s": 92.52530966375257,
+      "wall_s": 12.450647333,
+      "drain_ms": 2.020222134888172,
+      "cpu_s": 3.0,
+      "p50_ms": 25.579862,
+      "p95_ms": 28.367489,
+      "p99_ms": 31.619883,
+      "max_ms": 134.708392,
+      "above_30ms": 13,
+      "remote_mib": 710.0,
+      "inflight_mib": 0.0,
+      "copies": 15,
+      "relocated": 2,
+      "uncertainty_plans": 460,
+      "top_requests": [
+        {
+          "index": 236,
+          "key": 23,
+          "caller": 0,
+          "response_ms": 134.708392,
+          "open_read_close_ms": 134.292417
+        },
+        {
+          "index": 1,
+          "key": 5,
+          "caller": 0,
+          "response_ms": 35.923320000000004,
+          "open_read_close_ms": 35.60325
+        },
+        {
+          "index": 2,
+          "key": 12,
+          "caller": 1,
+          "response_ms": 35.34942,
+          "open_read_close_ms": 34.996449
+        },
+        {
+          "index": 525,
+          "key": 1,
+          "caller": 0,
+          "response_ms": 32.367213,
+          "open_read_close_ms": 32.046355999999996
+        },
+        {
+          "index": 0,
+          "key": 13,
+          "caller": 0,
+          "response_ms": 32.152269999999994,
+          "open_read_close_ms": 31.720901
+        },
+        {
+          "index": 122,
+          "key": 19,
+          "caller": 2,
+          "response_ms": 31.619883,
+          "open_read_close_ms": 31.356001000000003
+        },
+        {
+          "index": 546,
+          "key": 14,
+          "caller": 2,
+          "response_ms": 31.337274999999998,
+          "open_read_close_ms": 31.072044
+        },
+        {
+          "index": 139,
+          "key": 22,
+          "caller": 1,
+          "response_ms": 31.235778,
+          "open_read_close_ms": 30.964192
+        }
+      ]
+    },
+    {
+      "block": "uniform-3262",
+      "strategy": "PoolSIEVE1",
+      "n": 576,
+      "mib_s": 85.16332392832092,
+      "wall_s": 13.526949711,
+      "drain_ms": 1.9415831193327904,
+      "cpu_s": 6.42,
+      "p50_ms": 25.120068,
+      "p95_ms": 34.511432,
+      "p99_ms": 37.832007000000004,
+      "max_ms": 45.866675,
+      "above_30ms": 166,
+      "remote_mib": 558.0,
+      "inflight_mib": 24.0,
+      "copies": 278,
+      "relocated": 0,
+      "uncertainty_plans": 0,
+      "top_requests": [
+        {
+          "index": 26,
+          "key": 14,
+          "caller": 1,
+          "response_ms": 45.866675,
+          "open_read_close_ms": 45.626264
+        },
+        {
+          "index": 42,
+          "key": 22,
+          "caller": 2,
+          "response_ms": 42.074854,
+          "open_read_close_ms": 41.722404
+        },
+        {
+          "index": 36,
+          "key": 21,
+          "caller": 1,
+          "response_ms": 41.842286,
+          "open_read_close_ms": 41.581864
+        },
+        {
+          "index": 49,
+          "key": 17,
+          "caller": 1,
+          "response_ms": 41.59932,
+          "open_read_close_ms": 41.373163999999996
+        },
+        {
+          "index": 53,
+          "key": 12,
+          "caller": 0,
+          "response_ms": 38.639497,
+          "open_read_close_ms": 38.326384999999995
+        },
+        {
+          "index": 2,
+          "key": 12,
+          "caller": 1,
+          "response_ms": 37.832007000000004,
+          "open_read_close_ms": 37.458995
+        },
+        {
+          "index": 64,
+          "key": 23,
+          "caller": 2,
+          "response_ms": 37.825853,
+          "open_read_close_ms": 37.517224
+        },
+        {
+          "index": 138,
+          "key": 6,
+          "caller": 0,
+          "response_ms": 37.812734,
+          "open_read_close_ms": 37.550697
+        }
+      ]
+    },
+    {
+      "block": "uniform-3262",
+      "strategy": "PoolSIEVE2",
+      "n": 576,
+      "mib_s": 84.90078647901039,
+      "wall_s": 13.568778898,
+      "drain_ms": 1.9343839958310127,
+      "cpu_s": 6.33,
+      "p50_ms": 25.499240999999998,
+      "p95_ms": 34.693149999999996,
+      "p99_ms": 38.969413,
+      "max_ms": 43.720663,
+      "above_30ms": 165,
+      "remote_mib": 584.0,
+      "inflight_mib": 28.0,
+      "copies": 268,
+      "relocated": 0,
+      "uncertainty_plans": 0,
+      "top_requests": [
+        {
+          "index": 352,
+          "key": 17,
+          "caller": 0,
+          "response_ms": 43.720663,
+          "open_read_close_ms": 43.332731
+        },
+        {
+          "index": 351,
+          "key": 14,
+          "caller": 1,
+          "response_ms": 42.798829,
+          "open_read_close_ms": 42.518247
+        },
+        {
+          "index": 69,
+          "key": 14,
+          "caller": 2,
+          "response_ms": 41.861862,
+          "open_read_close_ms": 41.611794
+        },
+        {
+          "index": 73,
+          "key": 6,
+          "caller": 2,
+          "response_ms": 40.042439,
+          "open_read_close_ms": 39.784484
+        },
+        {
+          "index": 64,
+          "key": 23,
+          "caller": 2,
+          "response_ms": 39.431087,
+          "open_read_close_ms": 39.16773
+        },
+        {
+          "index": 72,
+          "key": 23,
+          "caller": 1,
+          "response_ms": 38.969413,
+          "open_read_close_ms": 38.735527999999995
+        },
+        {
+          "index": 63,
+          "key": 5,
+          "caller": 1,
+          "response_ms": 38.670521,
+          "open_read_close_ms": 38.404513
+        },
+        {
+          "index": 53,
+          "key": 12,
+          "caller": 0,
+          "response_ms": 38.383621,
+          "open_read_close_ms": 38.136654
+        }
+      ]
+    }
+  ]
+}

@@ -24,6 +24,15 @@ int main(){
   const auto eager=balanced.Plan(0,{"k0",100,0},{{"k1",100,0}},100,100,old);
   assert(!cautious.allowed && cautious.uncertainty_us>0 && eager.allowed);
   assert(cautious.displaced_us>eager.displaced_us); // iid-like gaps do not imply stale heat
+  // Joint ablation changes only charged victim loss, preserving all estimates.
+  Options independent=o;independent.joint_admission=false;
+  const auto uncoupled=balanced.Plan(0,{"k0",100,0},{{"k1",100,0}},100,100,independent);
+  assert(uncoupled.allowed && uncoupled.reason=="independent_gain");
+  assert(uncoupled.incoming_us==cautious.incoming_us && uncoupled.copy_us==cautious.copy_us);
+  assert(uncoupled.displaced_us==cautious.displaced_us && uncoupled.uncertainty_us==cautious.uncertainty_us);
+  assert(uncoupled.victims==cautious.victims && uncoupled.burst_remaining==cautious.burst_remaining);
+  assert(!balanced.Plan(0,{"k0",101,0},{},0,100,independent).allowed);
+  assert(!balanced.Plan(0,{"k0",100,0},{},100,100,independent).allowed);
   // Real continuing bursts retain the prior responsive estimate and no noise charge.
   MeasuredPolicy bursts;bursts.ReadSample(false,100,100);bursts.ReadSample(true,100,20);bursts.CopySample(100,20);
   for(int k=0;k<12;++k)for(int j=0;j<4;++j)bursts.Observe(j%3,"run"+std::to_string(k),o);

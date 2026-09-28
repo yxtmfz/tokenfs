@@ -89,6 +89,8 @@ struct Config {
   bool private_cache_domains = false;
   bool peer_cache_reads = false;
   bool shared_value_placement = false;
+  // Ablation: keep shared demand/read paths, restrict only the destination set.
+  bool shared_caller_only = false;
   bool shared_pool_cache = false;
   bool measured_track_affinity = false;
   bool measured_affinity_gate = false;
@@ -1399,6 +1401,8 @@ class TokenFS {
       : config_(std::move(config)), trace_(config_.request_trace_path), fills_(config_.read_fill_buffer_bytes), metadata_(config_.metadata_db) {}
 
   void Init() {
+    if(config_.shared_caller_only && !config_.shared_value_placement)
+      throw std::runtime_error("caller-only placement requires shared value placement");
     if(config_.coalesce_pending_reads && (!config_.foreground_read_fill || !config_.request_read_costs))
       throw std::runtime_error("pending read sharing requires immutable captured request-level reads");
     if(config_.incremental_copy_cost && (!config_.foreground_read_fill || !config_.request_read_costs || !config_.adaptive_reuse_control))
@@ -1415,8 +1419,8 @@ class TokenFS {
       throw std::runtime_error("shared placement requires peer reads, a compatible policy and one placement mode");
     if(config_.lean_read_accounting && (!config_.readonly_canonical || config_.affinity_placement || config_.prefetch_on_read || (!config_.measured_policy && !config_.read_through_cache)))
       throw std::runtime_error("lean accounting requires immutable readers without legacy affinity or prefetch consumers");
-    if(config_.adaptive_reuse_control && (!config_.measured_burst_reuse || !config_.compact_measured_planning || !config_.measured_joint_admission))
-      throw std::runtime_error("adaptive reuse requires compact burst-aware joint control");
+    if(config_.adaptive_reuse_control && (!config_.measured_burst_reuse || !config_.compact_measured_planning))
+      throw std::runtime_error("adaptive reuse requires compact burst-aware control");
     if(config_.measured_burst_reuse && (!config_.measured_causal_window || !config_.shared_value_placement || !config_.measured_admission || !config_.measured_cost))
       throw std::runtime_error("burst reuse requires causal shared cost-based admission");
     if(config_.compact_measured_planning && (!config_.measured_policy || !config_.measured_causal_window || !config_.readonly_canonical))
@@ -2792,6 +2796,8 @@ class TokenFS {
         double best=0;tokenfs_policy::Decision chosen;
         // Prefer the caller for an equal net gain; compare all permitted locations.
         auto locations=config_.gpus;
+        if(config_.shared_caller_only)
+          std::erase_if(locations,[caller](const auto& gpu){return gpu.gpu_id!=caller;});
         std::stable_sort(locations.begin(),locations.end(),[caller](const auto& a,const auto& b){return (a.gpu_id==caller)>(b.gpu_id==caller);});
         std::optional<PlanningSnapshot> snapshot;
         if(config_.compact_measured_planning)snapshot=SnapshotMeasuredResidents(path);
@@ -4014,6 +4020,7 @@ Config LoadConfig(const fs::path& path) {
   YAML::Node root = YAML::LoadFile(path.string());
   Config config;
   if(root["policy"] && root["policy"]["shared_value_placement"]) config.shared_value_placement=root["policy"]["shared_value_placement"].as<bool>();
+  if(root["policy"] && root["policy"]["shared_caller_only"]) config.shared_caller_only=root["policy"]["shared_caller_only"].as<bool>();
   if(root["policy"] && root["policy"]["shared_pool_cache"]) config.shared_pool_cache=root["policy"]["shared_pool_cache"].as<bool>();
   if(root["policy"] && root["policy"]["peer_cache_reads"]) config.peer_cache_reads=root["policy"]["peer_cache_reads"].as<bool>();
   if(root["policy"] && root["policy"]["private_cache_domains"]) config.private_cache_domains=root["policy"]["private_cache_domains"].as<bool>();
