@@ -1,3 +1,5 @@
+> 最新修复：已完成[18组小规模开发试验及成本计量修复](../reports/latest/paper-experiments/25_request_cost_repair/README.md)。最新版本对SIEVE-2hit吞吐和p99均改善，但对SIEVE-1hit吞吐仍未稳定领先；报告24失败完整保留，未进入大规模验证。
+
 > 最新进展：已完成[六组请求级尾延迟诊断](../reports/latest/paper-experiments/23_request_tail_diagnostic/README.md)。诊断中吞吐略有优势，但p99仍更慢；报告22正式结论不变。诊断不代表新的策略提速验证。
 
 最新见 [三个缺口优化实测与未通过门槛](../reports/latest/paper-experiments/22_adaptive_control/README.md) 和 [冻结方案](adaptive-control-sieve-plan.md)。四项平均吞吐比较均正向，但逐种子不退化及p99尚未全部闭合。

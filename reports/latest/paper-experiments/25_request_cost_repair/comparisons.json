@@ -1,0 +1,52 @@
+[
+  {
+    "scenario": "moving_shared",
+    "treatment": "AdaptiveHP",
+    "baseline": "PoolSIEVE2",
+    "n": 2,
+    "paired_gain_pct": 6.248903775850589,
+    "wins": 2,
+    "per_seed": [
+      {
+        "seed": 3241,
+        "gain_pct": 1.026281781771754,
+        "drain_gain_pct": 1.0334262573844066,
+        "p99_change_pct": -8.021606910310231
+      },
+      {
+        "seed": 3242,
+        "gain_pct": 11.741512747693816,
+        "drain_gain_pct": 11.737070868656097,
+        "p99_change_pct": -4.799386025483432
+      }
+    ],
+    "pilot_speed_gate": true,
+    "nonregression_gate": true,
+    "tail_gate": true
+  },
+  {
+    "scenario": "moving_shared",
+    "treatment": "AdaptiveHP",
+    "baseline": "PoolSIEVE1",
+    "n": 2,
+    "paired_gain_pct": -1.4069239750716056,
+    "wins": 1,
+    "per_seed": [
+      {
+        "seed": 3241,
+        "gain_pct": -4.134136291644552,
+        "drain_gain_pct": -4.121490608566969,
+        "p99_change_pct": -6.137232274421944
+      },
+      {
+        "seed": 3242,
+        "gain_pct": 1.3978726528709684,
+        "drain_gain_pct": 1.3979777824354889,
+        "p99_change_pct": -5.600708884669436
+      }
+    ],
+    "pilot_speed_gate": false,
+    "nonregression_gate": false,
+    "tail_gate": true
+  }
+]
