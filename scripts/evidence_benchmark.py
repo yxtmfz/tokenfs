@@ -106,9 +106,10 @@ def config_for(strategy, case, remote, quota_mib, backend_direct=False):
                 backends=[dict(id="remote", type="nvmeof", root=str(remote))])
 
 
-def worker(connection, gpu, mount, verify):
+def worker(connection, gpu, mount, verify, diagnostic=False):
     # Use exec: /proc/PID/environ must expose TOKENFS_GPU_ID to FUSE.
     env = dict(os.environ, TOKENFS_GPU_ID=str(gpu))
+    if diagnostic: env["TOKENFS_REQUEST_DIAGNOSTIC"]="1"
     proc = subprocess.Popen([sys.executable, __file__, "--loader", str(mount),
                              "--verify" if verify else "--no-verify"],
                             stdin=subprocess.PIPE, stdout=subprocess.PIPE, text=True, env=env)
@@ -131,6 +132,7 @@ def worker(connection, gpu, mount, verify):
 
 
 def loader(mount, verify):
+    diagnostic=os.environ.get("TOKENFS_REQUEST_DIAGNOSTIC")=="1"
     print(json.dumps({"ready": True}), flush=True)
     for line in sys.stdin:
         event = json.loads(line)
@@ -139,11 +141,15 @@ def loader(mount, verify):
         h = hashlib.sha256() if verify else None
         try:
             with (Path(mount) / "gpu0" / f"shard-{event['key']:06d}.tokens").open("rb", buffering=0) as f:
+                opened=time.monotonic_ns() if diagnostic else 0
                 for data in iter(lambda: f.read(MIB), b""):
                     count += len(data)
                     if h: h.update(data)
+                read_done=time.monotonic_ns() if diagnostic else 0
+            closed=time.monotonic_ns() if diagnostic else 0
             result = {"bytes": count, "seconds": (time.monotonic_ns() - start) / 1e9,
                       "sha256": h.hexdigest() if h else None}
+            if diagnostic: result.update(start_ns=start,opened_ns=opened,read_done_ns=read_done,closed_ns=closed)
         except Exception as exc:
             result = {"error": repr(exc)}
         print(json.dumps(result), flush=True)
@@ -189,7 +195,7 @@ def run_case(binary, case, remote, strategy, events, expected, quota_mib, verify
             time.sleep(.02)
         for gpu in range(3):
             parent, child = mp.Pipe()
-            w = mp.Process(target=worker, args=(child, gpu, mount, verify))
+            w = mp.Process(target=worker, args=(child, gpu, mount, verify, bool(configuration and configuration["policy"].get("request_trace_path"))))
             w.start()
             if not parent.poll(15) or not parent.recv().get("ready"): raise RuntimeError("loader startup")
             workers.append((parent, w))

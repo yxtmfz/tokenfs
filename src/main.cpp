@@ -5,6 +5,7 @@
 #include <yaml-cpp/yaml.h>
 #include "measured_policy.h"
 #include "sieve_policy.h"
+#include "request_trace.h"
 
 #include <algorithm>
 #include <cerrno>
@@ -74,6 +75,7 @@ struct Config {
   bool measured_burst_reuse = false;
   bool adaptive_reuse_control = false;
   bool profile_control_path = false;
+  std::string request_trace_path;
   bool compact_measured_planning = false;
   bool lean_read_accounting = false;
   bool private_cache_domains = false;
@@ -1383,7 +1385,7 @@ class TokenFS {
   friend struct TokenFSTestAccess;
  public:
   explicit TokenFS(Config config)
-      : config_(std::move(config)), metadata_(config_.metadata_db) {}
+      : config_(std::move(config)), trace_(config_.request_trace_path), metadata_(config_.metadata_db) {}
 
   void Init() {
     if (config_.peer_cache_reads && (!config_.readonly_canonical || config_.private_cache_domains))
@@ -1436,6 +1438,7 @@ class TokenFS {
     background_cv_.notify_all();
     if (background_worker_.joinable()) background_worker_.join();
     FlushBufferedMetrics();
+    if(!trace_.Dump())std::cerr<<"request trace output failed\n";
   }
 
   bool SubmitBackground(std::function<void()> task) {
@@ -1451,10 +1454,13 @@ class TokenFS {
   }
 
   int GetAttr(const char* cpath, struct stat* stbuf, fuse_file_info*) {
+    RequestTrace::Span diagnostic(trace_,"getattr");
+    if(diagnostic.Enabled())diagnostic.e.path=cpath;
     // Eviction removes the old cache path before committing the remote layout.
     // Serialize lookup/stat with that transition so a valid canonical object
     // cannot transiently become ENOENT in FUSE's lookup before Open is called.
     std::lock_guard<std::mutex> layout_lock(layout_mu_);
+    if(diagnostic.Enabled())diagnostic.e.wait_ns=RequestTrace::Now()-diagnostic.e.start_ns;
     memset(stbuf, 0, sizeof(*stbuf));
     const std::string path = Normalize(cpath);
     if (path == "/") {
@@ -1589,8 +1595,11 @@ class TokenFS {
   }
 
   int Open(const char* cpath, fuse_file_info* fi) {
+    RequestTrace::Span diagnostic(trace_,"open");
+    if(diagnostic.Enabled())diagnostic.e.path=cpath;
     const auto open_start=Clock::now();
     std::unique_lock<std::mutex> layout_lock(layout_mu_);
+    if(diagnostic.Enabled())diagnostic.e.wait_ns=RequestTrace::Now()-diagnostic.e.start_ns;
     if(config_.profile_control_path) {
       const auto wait=ElapsedMicros(open_start);
       AddBufferedMetric("open_layout_wait_us",wait);SetBufferedMetricMax("open_layout_wait_us_max",wait);
@@ -1727,6 +1736,7 @@ class TokenFS {
     handle.state = meta.state;
     fi->fh = StoreHandle(std::move(handle));
     fi->direct_io = config_.fuse_direct_io;
+    if(diagnostic.Enabled()){diagnostic.e.handle=fi->fh;diagnostic.e.caller=caller_gpu_id;diagnostic.e.tier=meta.tier;}
     layout_lock.unlock();
     // Pin the selected source before future placement work; this miss remains a miss.
     if (!writable && (config_.shared_value_placement || config_.shared_pool_cache)) {
@@ -1747,11 +1757,13 @@ class TokenFS {
 
   int Read(const char*, char* buf, size_t size, off_t offset,
            fuse_file_info* fi) {
+    RequestTrace::Span diagnostic(trace_,"read");
     const auto start = Clock::now();
     auto* handle = FindHandle(fi);
     if (handle == nullptr) {
       return -EBADF;
     }
+    if(diagnostic.Enabled()){diagnostic.e.handle=fi->fh;diagnostic.e.path=handle->logical_path;diagnostic.e.caller=handle->caller_gpu_id;diagnostic.e.tier=handle->tier;}
     ApplyQos(*handle, false, size);
     ssize_t n;
     if (config_.backend_direct_io) {
@@ -1761,18 +1773,27 @@ class TokenFS {
       const size_t aligned_size = (size + skip + 4095) / 4096 * 4096;
       void* aligned = nullptr;
       if (posix_memalign(&aligned, 4096, std::max<size_t>(4096, aligned_size)) != 0) return -ENOMEM;
+      const auto pread_start=diagnostic.Enabled()?RequestTrace::Now():0;
       n = pread(handle->fd, aligned, aligned_size, aligned_offset);
       const int saved_errno = errno;
+      if(diagnostic.Enabled())diagnostic.e.pread_ns=RequestTrace::Now()-pread_start;
       if (n >= 0) {
         n = n <= static_cast<ssize_t>(skip) ? 0 : std::min<ssize_t>(size, n - skip);
         if (n) memcpy(buf, static_cast<char*>(aligned) + skip, n);
       }
       free(aligned);
       errno = saved_errno;
-    } else n = pread(handle->fd, buf, size, offset);
+    } else {
+      const auto pread_start=diagnostic.Enabled()?RequestTrace::Now():0;
+      n = pread(handle->fd, buf, size, offset);
+      const int saved_errno=errno;
+      if(diagnostic.Enabled())diagnostic.e.pread_ns=RequestTrace::Now()-pread_start;
+      errno=saved_errno;
+    }
     if (n < 0) {
       return -errno;
     }
+    if(diagnostic.Enabled())diagnostic.e.bytes=static_cast<uint64_t>(n);
     AddBufferedMetric("read_ops", 1);
     AddBufferedMetric("read_bytes", static_cast<uint64_t>(n));
     if (handle->backend_id == "local-peer")
@@ -1836,6 +1857,7 @@ class TokenFS {
   }
 
   int Release(const char*, fuse_file_info* fi) {
+    RequestTrace::Span diagnostic(trace_,"release");
     std::lock_guard<std::mutex> lock(handles_mu_);
     auto it = handles_.find(fi->fh);
     if (it == handles_.end()) {
@@ -1843,6 +1865,7 @@ class TokenFS {
       return 0;
     }
     bool should_dedup = false;
+    if(diagnostic.Enabled()){diagnostic.e.wait_ns=RequestTrace::Now()-diagnostic.e.start_ns;diagnostic.e.handle=fi->fh;diagnostic.e.path=it->second.logical_path;diagnostic.e.caller=it->second.caller_gpu_id;diagnostic.e.tier=it->second.tier;}
     if (it->second.fd >= 0) {
       if (it->second.writable) {
         int rc = CommitHandle(it->second);
@@ -1861,7 +1884,9 @@ class TokenFS {
       ApplyPhysicalDedup(it->second);
     }
     handles_.erase(it);
+    const auto flush_start=diagnostic.Enabled()?RequestTrace::Now():0;
     FlushBufferedMetrics();
+    if(diagnostic.Enabled())diagnostic.e.flush_ns=RequestTrace::Now()-flush_start;
     return 0;
   }
 
@@ -2872,13 +2897,17 @@ class TokenFS {
       return;
     }
     ApplyBackgroundQos(caller_gpu.gpu_id, size, "cross_gpu_replica");
+    RequestTrace::Span diagnostic(trace_,"copy_pipeline");
+    if(diagnostic.Enabled()){diagnostic.e.path=meta.logical_path;diagnostic.e.caller=caller_gpu.gpu_id;diagnostic.e.bytes=size;}
     fs::create_directories(local.parent_path());
     fs::path tmp = local;
     tmp += config_.temp_suffix + ".xgpu";
     std::error_code ec;
     fs::remove(tmp, ec);
     ec.clear();
+    const auto copy_io_start=diagnostic.Enabled()?RequestTrace::Now():0;
     fs::copy_file(source, tmp, fs::copy_options::overwrite_existing, ec);
+    if(diagnostic.Enabled())diagnostic.e.copy_ns=RequestTrace::Now()-copy_io_start;
     if (ec) {
       fs::remove(tmp, ec);
       metadata_.AddMetric("cross_gpu_replica_error_count", 1);
@@ -2895,8 +2924,10 @@ class TokenFS {
       metadata_.AddMetric("local_cache_fsync_skipped_bytes", size);
     }
     if (config_.checksum != "none") {
+      const auto verify_start=diagnostic.Enabled()?RequestTrace::Now():0;
       auto source_hash = ChecksumFile(source);
       auto copy_hash = ChecksumFile(tmp);
+      if(diagnostic.Enabled())diagnostic.e.verify_ns=RequestTrace::Now()-verify_start;
       if (!source_hash || !copy_hash || *source_hash != *copy_hash) {
         fs::remove(tmp, ec);
         metadata_.AddMetric("copy_checksum_error_count", 1);
@@ -2983,6 +3014,8 @@ class TokenFS {
     }
     ApplyBackgroundQos(gpu.gpu_id, size, metric_prefix);
 
+    RequestTrace::Span diagnostic(trace_,"copy_pipeline");
+    if(diagnostic.Enabled()){diagnostic.e.path=meta.logical_path;diagnostic.e.caller=gpu.gpu_id;diagnostic.e.bytes=size;}
     fs::create_directories(local.parent_path());
     fs::path tmp = local;
     tmp += config_.temp_suffix + ".promote";
@@ -2998,7 +3031,9 @@ class TokenFS {
       metadata_.Upsert(migrating);
     }
 
+    const auto copy_io_start=diagnostic.Enabled()?RequestTrace::Now():0;
     fs::copy_file(source, tmp, fs::copy_options::overwrite_existing, ec);
+    if(diagnostic.Enabled())diagnostic.e.copy_ns=RequestTrace::Now()-copy_io_start;
     if (ec) {
       fs::remove(tmp, ec);
       return -ec.value();
@@ -3023,8 +3058,10 @@ class TokenFS {
     }
 
     if (config_.checksum != "none") {
+      const auto verify_start=diagnostic.Enabled()?RequestTrace::Now():0;
       auto source_hash = ChecksumFile(source);
       auto copy_hash = ChecksumFile(tmp);
+      if(diagnostic.Enabled())diagnostic.e.verify_ns=RequestTrace::Now()-verify_start;
       if (!source_hash || !copy_hash || *source_hash != *copy_hash) {
         fs::remove(tmp, ec);
         metadata_.AddMetric("copy_checksum_error_count", 1);
@@ -3784,6 +3821,7 @@ class TokenFS {
   std::thread background_worker_;
   bool background_stopping_ = false;
   Config config_;
+  RequestTrace trace_;
   tokenfs_policy::MeasuredPolicy measured_;
   tokenfs_policy::SievePolicy sieve_;
   MetadataStore metadata_;
@@ -3869,6 +3907,7 @@ Config LoadConfig(const fs::path& path) {
   if(root["policy"] && root["policy"]["lean_read_accounting"]) config.lean_read_accounting=root["policy"]["lean_read_accounting"].as<bool>();
   if(root["policy"] && root["policy"]["adaptive_reuse_control"]) config.adaptive_reuse_control=root["policy"]["adaptive_reuse_control"].as<bool>();
   if(root["policy"] && root["policy"]["profile_control_path"]) config.profile_control_path=root["policy"]["profile_control_path"].as<bool>();
+  if(root["policy"] && root["policy"]["request_trace_path"]) config.request_trace_path=root["policy"]["request_trace_path"].as<std::string>();
   if(root["policy"] && root["policy"]["measured_burst_reuse"]) config.measured_burst_reuse=root["policy"]["measured_burst_reuse"].as<bool>();
   if(root["policy"] && root["policy"]["compact_measured_planning"]) config.compact_measured_planning=root["policy"]["compact_measured_planning"].as<bool>();
   if(root["policy"] && root["policy"]["measured_causal_window"]) config.measured_causal_window=root["policy"]["measured_causal_window"].as<bool>();

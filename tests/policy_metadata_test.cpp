@@ -4,9 +4,44 @@
 #undef main
 #include <cassert>
 #include <future>
+#include <map>
 
 namespace {
 struct TokenFSTestAccess {
+  static void request_trace_roundtrip(const fs::path& root) {
+    Config cfg;cfg.mount_point=root/"mnt";cfg.metadata_db=root/"state.db";
+    cfg.request_trace_path=(root/"trace.json").string();cfg.checksum="fnv1a64";
+    cfg.readonly_canonical=true;cfg.backend_direct_io=true;cfg.affinity_placement=false;
+    cfg.read_through_cache=true;cfg.read_through_min_reads=100;cfg.lean_read_accounting=true;
+    cfg.gpus.push_back({0,"/gpu0",root/"local",16384,"remote"});
+    cfg.backends.emplace("remote",BackendConfig{"remote","directory",root/"remote"});
+    {
+      TokenFS filesystem(cfg);filesystem.Init();
+      std::ofstream(root/"remote/gpu0/k")<<std::string(8192,'z');
+      for(int pass=0;pass<2;++pass){
+        fuse_file_info fi{};fi.flags=O_RDONLY;
+        assert(filesystem.Open("/gpu0/k",&fi)==0);
+        char buffer[8192];assert(filesystem.Read("/gpu0/k",buffer,8192,0,&fi)==8192);
+        assert(std::string(buffer,8192)==std::string(8192,'z'));
+        assert(filesystem.Read("/gpu0/k",buffer,8192,8192,&fi)==0);
+        assert(filesystem.Release("/gpu0/k",&fi)==0);
+        if(pass==0){auto meta=*filesystem.metadata_.Get("/gpu0/k");assert(filesystem.PromoteToLocal(cfg.gpus[0],"k",meta,"promote")==0);}
+      }
+      assert(!fs::exists(cfg.request_trace_path));
+    }
+    auto trace=YAML::LoadFile(cfg.request_trace_path);assert(trace["dropped"].as<int>()==0);
+    std::map<uint64_t,uint64_t> bytes;int opens=0,releases=0,copies=0;
+    for(auto e:trace["events"]){
+      auto op=e["op"].as<std::string>();
+      assert(e["end_ns"].as<uint64_t>()>=e["start_ns"].as<uint64_t>());
+      if(op=="open")++opens;
+      if(op=="release")++releases;
+      if(op=="copy_pipeline")++copies;
+      if(op=="read"){bytes[e["handle"].as<uint64_t>()]+=e["bytes"].as<uint64_t>();assert(e["pread_ns"].as<uint64_t>()>0);}
+    }
+    assert(opens==2 && releases==2 && copies==1 && bytes.size()==2);
+    for(auto [handle,n]:bytes)assert(n==8192 && handle>0);
+  }
   static void shared_placement(const fs::path& root,bool compact=false,bool adaptive=false) {
     Config cfg;cfg.mount_point=root/"mnt";cfg.metadata_db=root/"state.db";
     cfg.readonly_canonical=true;cfg.peer_cache_reads=true;cfg.shared_value_placement=true;
@@ -242,6 +277,7 @@ struct TokenFSTestAccess {
 int main() {
   const fs::path root = fs::temp_directory_path() / ("tokenfs-policy-test-" + std::to_string(getpid()));
   fs::create_directory(root);
+  TokenFSTestAccess::request_trace_roundtrip(root/"request-trace");
   TokenFSTestAccess::burst_first_read(root/"burst-first-read");
   auto observe = [](MetadataStore& db, const std::string& key, int gpu) {
     return db.IncrementReadCount(key, gpu, 70, 55, 2, 10, 3, 4, 2, 3);
