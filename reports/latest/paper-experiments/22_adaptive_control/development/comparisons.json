@@ -1,0 +1,126 @@
+[
+  {
+    "scenario": "moving_shared",
+    "treatment": "AdaptiveHP",
+    "baseline": "PoolSIEVE2",
+    "n": 3,
+    "paired_gain_pct": 5.502487176031545,
+    "wins": 3,
+    "per_seed": [
+      {
+        "seed": 3201,
+        "gain_pct": 5.000218944115842,
+        "drain_gain_pct": 4.99737583908102,
+        "p99_change_pct": 1.0828331696396631
+      },
+      {
+        "seed": 3202,
+        "gain_pct": 4.957056990594766,
+        "drain_gain_pct": 4.952608453258911,
+        "p99_change_pct": 4.348051382356122
+      },
+      {
+        "seed": 3203,
+        "gain_pct": 6.558045250385125,
+        "drain_gain_pct": 6.5613053530156895,
+        "p99_change_pct": 2.2495238717566313
+      }
+    ],
+    "pilot_speed_gate": true,
+    "nonregression_gate": true,
+    "tail_gate": false
+  },
+  {
+    "scenario": "moving_shared",
+    "treatment": "AdaptiveHP",
+    "baseline": "PoolSIEVE1",
+    "n": 3,
+    "paired_gain_pct": 0.8110520337966554,
+    "wins": 2,
+    "per_seed": [
+      {
+        "seed": 3201,
+        "gain_pct": -0.636126154986072,
+        "drain_gain_pct": -0.6398457616917042,
+        "p99_change_pct": -5.7537416259555325
+      },
+      {
+        "seed": 3202,
+        "gain_pct": 0.6306331144812827,
+        "drain_gain_pct": 0.6287437387346051,
+        "p99_change_pct": -0.7035367920164681
+      },
+      {
+        "seed": 3203,
+        "gain_pct": 2.4626823472148063,
+        "drain_gain_pct": 2.462529084060394,
+        "p99_change_pct": 1.0414257520471315
+      }
+    ],
+    "pilot_speed_gate": false,
+    "nonregression_gate": false,
+    "tail_gate": false
+  },
+  {
+    "scenario": "uniform",
+    "treatment": "AdaptiveHP",
+    "baseline": "PoolSIEVE2",
+    "n": 3,
+    "paired_gain_pct": 2.533985675152284,
+    "wins": 1,
+    "per_seed": [
+      {
+        "seed": 3211,
+        "gain_pct": -0.4614744457344555,
+        "drain_gain_pct": -0.4646796917296414,
+        "p99_change_pct": 2.805252166441341
+      },
+      {
+        "seed": 3212,
+        "gain_pct": 8.711772108399018,
+        "drain_gain_pct": 8.712989739800282,
+        "p99_change_pct": -1.4713394206142594
+      },
+      {
+        "seed": 3213,
+        "gain_pct": -0.3824767361425674,
+        "drain_gain_pct": -0.3825094316406652,
+        "p99_change_pct": 6.6214340781947545
+      }
+    ],
+    "pilot_speed_gate": false,
+    "nonregression_gate": false,
+    "tail_gate": false
+  },
+  {
+    "scenario": "uniform",
+    "treatment": "AdaptiveHP",
+    "baseline": "PoolSIEVE1",
+    "n": 3,
+    "paired_gain_pct": 2.7297401047762904,
+    "wins": 2,
+    "per_seed": [
+      {
+        "seed": 3211,
+        "gain_pct": 0.728738378453464,
+        "drain_gain_pct": 0.7276104207472267,
+        "p99_change_pct": -8.66639409255403
+      },
+      {
+        "seed": 3212,
+        "gain_pct": 8.512685062780045,
+        "drain_gain_pct": 8.513378333104015,
+        "p99_change_pct": -8.729061812439987
+      },
+      {
+        "seed": 3213,
+        "gain_pct": -0.8130207855852167,
+        "drain_gain_pct": -0.8153756022225012,
+        "p99_change_pct": -9.689579006062365
+      }
+    ],
+    "pilot_speed_gate": false,
+    "nonregression_gate": false,
+    "tail_gate": true
+  }
+]

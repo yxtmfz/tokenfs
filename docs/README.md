@@ -1,3 +1,5 @@
+最新见 [三个缺口优化实测与未通过门槛](../reports/latest/paper-experiments/22_adaptive_control/README.md) 和 [冻结方案](adaptive-control-sieve-plan.md)。四项平均吞吐比较均正向，但逐种子不退化及p99尚未全部闭合。
+
 当前优先查看 [新版与两种共享SIEVE的真实对照](../reports/latest/paper-experiments/21_burst_reuse_sieve/README.md) 和 [冻结小规模方案](burst-reuse-sieve-plan.md)：热点变化场景超过原SIEVE-2hit 5.12%，但SIEVE-1hit及随机负对照的未通过结果一并保留。
 
 # AURA-KV / TokenFS 文档导航

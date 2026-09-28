@@ -1,5 +1,7 @@
 # AURA-KV / TokenFS
 
+> 最新缺口优化：[18组实测速率、p99与逐种子边界](reports/latest/paper-experiments/22_adaptive_control/README.md)。热点场景对共享SIEVE-2hit/1hit分别 **+5.50%/+0.81%**，随机场景 **+2.53%/+2.73%**；但部分种子仍略慢，尾延迟未全面通过，三个严格闭合目标仍未达成。源码、负结果、分段计量和完整证据一并保留。
+
 > 最新SIEVE对照：[18次真实测速与完整证据](reports/latest/paper-experiments/21_burst_reuse_sieve/README.md)。热点变化场景中新版相对原共享SIEVE-2hit **+5.12%（3/3更快）**，相对同期旧完整版+5.44%；对SIEVE-1hit仍−0.28%，随机访问对两种SIEVE仍约−4.8%。新增短期复用预测、7组内容校验与完整审计；仅原SIEVE-2hit先导门槛通过，未证明全面优于SIEVE。
 
 > 最新收尾实测：[热点、亲和、联合与整体速度四表](reports/latest/paper-experiments/20_compact_planning_closeout/README.md)。固定18次测速＋6组内容检查：热点 +8.35%、亲和 +14.65%、联合控制 +5.88%，三个组件比较均3/3提速；完整版本相对基础共享 +19.68%，相对同容量共享SIEVE仍 −1.96%。联合通过本轮先导筛选；强基线、尾延迟及完整版本中热点≥5%的目标仍未闭合。数据完整不等于全部论文主张成立。
