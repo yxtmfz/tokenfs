@@ -34,6 +34,7 @@ struct Options {
   bool causal_window=false;
   bool burst_reuse=false;
   bool adaptive_control=false;
+  bool efficient_planning=false;
 };
 struct Decision {
   bool allowed=false;
@@ -70,12 +71,15 @@ class MeasuredPolicy {
       }
     }
     if(o.causal_window) {
+      if(!recent_history_.empty() && recent_history_.back().first==key)++adjacent_repeats_;
+      if(auto it=recent_shared_.find(key);it!=recent_shared_.end())collision_pairs_+=2*it->second.size();
       recent_history_.push_back({key,gpu});
       recent_shared_[key].push_back(observations_);
       recent_domains_[gpu][key].push_back(observations_);
       while(recent_history_.size()>std::max<size_t>(2,o.window)) {
         const auto old=recent_history_.front();recent_history_.pop_front();
-        auto& shared=recent_shared_.at(old.first);shared.pop_front();
+        if(!recent_history_.empty() && recent_history_.front().first==old.first)--adjacent_repeats_;
+        auto& shared=recent_shared_.at(old.first);collision_pairs_-=2*(shared.size()-1);shared.pop_front();
         if(shared.empty())recent_shared_.erase(old.first);
         auto& domain=recent_domains_.at(old.second);
         auto& positions=domain.at(old.first);positions.pop_front();
@@ -84,11 +88,15 @@ class MeasuredPolicy {
       }
     }
     if(o.adaptive_control) {
-      const double n=recent_history_.size();double repeats=0,collision=0;
-      for(size_t i=1;i<recent_history_.size();++i)
-        repeats+=recent_history_[i].first==recent_history_[i-1].first;
-      for(const auto& [key,positions]:recent_shared_) {
-        (void)key;const double count=positions.size();collision+=count*(count-1);
+      const double n=recent_history_.size();
+      double repeats=adjacent_repeats_,collision=collision_pairs_;
+      if(!o.efficient_planning) {
+        repeats=collision=0;
+        for(size_t i=1;i<recent_history_.size();++i)
+          repeats+=recent_history_[i].first==recent_history_[i-1].first;
+        for(const auto& [key,positions]:recent_shared_) {
+          (void)key;const double count=positions.size();collision+=count*(count-1);
+        }
       }
       const double iid=n>1?collision/(n*(n-1)):0;
       const double adjacent=n>1?repeats/(n-1):0;
@@ -368,6 +376,23 @@ class MeasuredPolicy {
     return std::max(past,BurstRemaining(item.key,o))*(o.cost?SavingRate()*item.bytes:1.0)*item.coverage;
   }
   void Sort(int gpu,std::vector<Item>& items,const Options& o) const {
+    if(o.efficient_planning && o.value_victim) {
+      // Value is pure under mu_: compute it once per resident, not twice per
+      // sort comparison. Keep the same floating-point operation and tie order.
+      struct Scored {Item item;double score;};
+      std::vector<Scored> scored;scored.reserve(items.size());
+      for(auto& item:items) {
+        const double score=Value(gpu,item,o,false)/(o.size_aware?std::max<uint64_t>(1,item.bytes):1);
+        scored.push_back({std::move(item),score});
+      }
+      std::sort(scored.begin(),scored.end(),[](const Scored& a,const Scored& b){
+        if(a.score!=b.score)return a.score<b.score;
+        if(a.item.recency!=b.item.recency)return a.item.recency<b.item.recency;
+        return a.item.key<b.item.key;
+      });
+      items.clear();for(auto& value:scored)items.push_back(std::move(value.item));
+      return;
+    }
     std::sort(items.begin(),items.end(),[&](const Item& a,const Item& b){
       if(o.value_victim) {
         const double av=Value(gpu,a,o,false)/(o.size_aware?std::max<uint64_t>(1,a.bytes):1);
@@ -386,6 +411,7 @@ class MeasuredPolicy {
   std::unordered_map<std::string,std::deque<uint64_t>> recent_shared_;
   std::unordered_map<int,std::unordered_map<std::string,std::deque<uint64_t>>> recent_domains_;
   uint64_t observations_=0;
+  uint64_t adjacent_repeats_=0,collision_pairs_=0;
   double temporal_strength_=0;
   std::string active_burst_key_;
   uint64_t active_burst_length_=0,completed_burst_reads_=0;

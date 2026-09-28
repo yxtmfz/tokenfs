@@ -59,3 +59,5 @@ jobs:
         run: python3 -m unittest tests.inflight_shared_study_test
       - name: Test isolated shared-placement and joint ablations
         run: python3 -m unittest tests.component_ablation_test
+      - name: Test positive-gain acceptance and planning efficiency controls
+        run: python3 -m unittest tests.planning_efficiency_test
