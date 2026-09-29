@@ -8,9 +8,30 @@
 
 namespace {
 struct TokenFSTestAccess {
+  static void background_metric_fence(const fs::path& root,bool batched) {
+    Config cfg;cfg.mount_point=root/"mnt";cfg.metadata_db=root/"state.db";
+    cfg.batch_background_metrics=batched;
+    TokenFS filesystem(cfg);filesystem.Init();
+    sqlite3* db=nullptr;assert(sqlite3_open(cfg.metadata_db.c_str(),&db)==SQLITE_OK);
+    auto metric=[&](const char* name){
+      sqlite3_stmt* stmt=nullptr;assert(sqlite3_prepare_v2(db,"SELECT value FROM metrics WHERE name=?",-1,&stmt,nullptr)==SQLITE_OK);
+      sqlite3_bind_text(stmt,1,name,-1,SQLITE_TRANSIENT);const int rc=sqlite3_step(stmt);
+      uint64_t value=rc==SQLITE_ROW?sqlite3_column_int64(stmt,0):0;sqlite3_finalize(stmt);return value;
+    };
+    for(int pass=1;pass<=3;++pass) {
+      assert(filesystem.SubmitBackground([&]{filesystem.AddBackgroundMetric("fence_value",7);}));
+      const auto limit=std::chrono::steady_clock::now()+std::chrono::seconds(3);
+      while(metric("background_completed")<uint64_t(pass)) {
+        assert(std::chrono::steady_clock::now()<limit);std::this_thread::yield();
+      }
+      // A durable completion must never get ahead of its batched counters.
+      assert(metric("fence_value")==uint64_t(pass*7));
+    }
+    assert(metric("background_error_count")==0);sqlite3_close(db);
+  }
   static void inflight_reads(const fs::path& root,bool enabled) {
     Config cfg;cfg.mount_point=root/"mnt";cfg.metadata_db=root/"state.db";
-    cfg.foreground_read_fill=true;cfg.request_read_costs=true;cfg.coalesce_pending_reads=enabled;
+    cfg.foreground_read_fill=true;cfg.request_read_costs=true;cfg.coalesce_pending_reads=enabled;cfg.batch_background_metrics=true;
     cfg.readonly_canonical=true;cfg.peer_cache_reads=true;cfg.shared_pool_cache=true;cfg.checksum="fnv1a64";
     cfg.backend_direct_io=true;cfg.affinity_placement=false;cfg.lean_read_accounting=true;
     cfg.read_through_cache=true;cfg.read_through_min_reads=1;cfg.local_eviction_policy="sieve";
@@ -59,7 +80,7 @@ struct TokenFSTestAccess {
   }
   static void foreground_fill(const fs::path& root,int threshold,bool adaptive=false,bool incremental=false) {
     Config cfg;cfg.mount_point=root/"mnt";cfg.metadata_db=root/"state.db";
-    cfg.incremental_copy_cost=incremental;
+    cfg.incremental_copy_cost=incremental;cfg.batch_background_metrics=true;
     cfg.foreground_read_fill=true;cfg.request_read_costs=true;cfg.readonly_canonical=true;cfg.peer_cache_reads=true;
     cfg.shared_pool_cache=!adaptive;cfg.shared_value_placement=adaptive;cfg.checksum="fnv1a64";
     cfg.backend_direct_io=true;cfg.affinity_placement=false;cfg.lean_read_accounting=true;
@@ -409,9 +430,30 @@ struct TokenFSTestAccess {
 };
 }
 
+void MetricBatchTransactions(const fs::path& path) {
+  MetadataStore store(path);store.Open();sqlite3* db=nullptr;assert(sqlite3_open(path.c_str(),&db)==SQLITE_OK);
+  auto exec=[&](const char* sql){assert(sqlite3_exec(db,sql,nullptr,nullptr,nullptr)==SQLITE_OK);};
+  auto values=[&]{std::map<std::string,uint64_t> out;sqlite3_stmt* stmt=nullptr;
+    assert(sqlite3_prepare_v2(db,"SELECT name,value FROM metrics",-1,&stmt,nullptr)==SQLITE_OK);
+    while(sqlite3_step(stmt)==SQLITE_ROW)out[reinterpret_cast<const char*>(sqlite3_column_text(stmt,0))]=sqlite3_column_int64(stmt,1);
+    sqlite3_finalize(stmt);return out;};
+  store.ApplyMetricBatch({{"a",2},{"b",3}},{{"a",7},{"peak",4}});
+  store.ApplyMetricBatch({{"a",2},{"b",5}},{{"a",6},{"peak",2}});
+  store.ApplyMetricBatch({},{});
+  const auto before=values();assert(before.at("a")==9 && before.at("b")==8 && before.at("peak")==4);
+  exec("CREATE TRIGGER reject_max BEFORE INSERT ON metrics WHEN NEW.name='reject' BEGIN SELECT RAISE(ABORT,'injected failure'); END;");
+  bool rejected=false;try {store.ApplyMetricBatch({{"a",100},{"new",99}},{{"reject",1}});}catch(const std::runtime_error&){rejected=true;}
+  assert(rejected && values()==before); // Delta work must roll back with a later maximum failure.
+  exec("DROP TRIGGER reject_max;");store.ApplyMetricBatch({{"a",1}},{{"peak",8}});
+  assert(values().at("a")==10 && values().at("peak")==8);sqlite3_close(db);
+}
+
 int main() {
   const fs::path root = fs::temp_directory_path() / ("tokenfs-policy-test-" + std::to_string(getpid()));
   fs::create_directory(root);
+  MetricBatchTransactions(root/"metric-batches.db");
+  TokenFSTestAccess::background_metric_fence(root/"metric-fence-on",true);
+  TokenFSTestAccess::background_metric_fence(root/"metric-fence-off",false);
   TokenFSTestAccess::inflight_reads(root/"inflight-enabled",true);
   TokenFSTestAccess::inflight_reads(root/"inflight-disabled",false);
   TokenFSTestAccess::foreground_fill(root/"fill-sieve1",1);

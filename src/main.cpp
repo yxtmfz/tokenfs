@@ -86,6 +86,7 @@ struct Config {
   bool persistent_reuse_immediate_decay = false;
   bool measured_static_reuse_value = false;
   bool profile_control_path = false;
+  bool batch_background_metrics = false;
   std::string request_trace_path;
   bool foreground_read_fill = false;
   bool request_read_costs = false;
@@ -687,18 +688,22 @@ class MetadataStore {
     std::lock_guard<std::mutex> lock(mu_);
     Exec("BEGIN IMMEDIATE;");
     try {
-      for (const auto& [name, value] : deltas) {
-        sqlite3_stmt* stmt = nullptr;
-        Prepare("INSERT INTO metrics(name,value) VALUES(?,?) ON CONFLICT(name) DO UPDATE SET value=value+excluded.value;", &stmt);
-        sqlite3_bind_text(stmt, 1, name.c_str(), -1, SQLITE_TRANSIENT);
-        sqlite3_bind_int64(stmt, 2, value); StepDone(stmt);
-      }
-      for (const auto& [name, value] : maxima) {
-        sqlite3_stmt* stmt = nullptr;
-        Prepare("INSERT INTO metrics(name,value) VALUES(?,?) ON CONFLICT(name) DO UPDATE SET value=MAX(value,excluded.value);", &stmt);
-        sqlite3_bind_text(stmt, 1, name.c_str(), -1, SQLITE_TRANSIENT);
-        sqlite3_bind_int64(stmt, 2, value); StepDone(stmt);
-      }
+      // Rebind one statement per operation; preserve the FULL-WAL transaction
+      // and delta-before-maximum semantics, including rollback on any failure.
+      auto apply=[&](const auto& values,const char* sql) {
+        if(values.empty())return;
+        sqlite3_stmt* raw=nullptr;Prepare(sql,&raw);
+        std::unique_ptr<sqlite3_stmt,decltype(&sqlite3_finalize)> stmt(raw,sqlite3_finalize);
+        for(const auto& [name,value]:values) {
+          sqlite3_bind_text(raw,1,name.c_str(),-1,SQLITE_TRANSIENT);
+          sqlite3_bind_int64(raw,2,static_cast<sqlite3_int64>(value));
+          if(sqlite3_step(raw)!=SQLITE_DONE)throw std::runtime_error(sqlite3_errmsg(db_));
+          if(sqlite3_reset(raw)!=SQLITE_OK)throw std::runtime_error(sqlite3_errmsg(db_));
+          sqlite3_clear_bindings(raw);
+        }
+      };
+      apply(deltas,"INSERT INTO metrics(name,value) VALUES(?,?) ON CONFLICT(name) DO UPDATE SET value=value+excluded.value;");
+      apply(maxima,"INSERT INTO metrics(name,value) VALUES(?,?) ON CONFLICT(name) DO UPDATE SET value=MAX(value,excluded.value);");
       Exec("COMMIT;");
     } catch (...) { Exec("ROLLBACK;"); throw; }
   }
@@ -1449,7 +1454,11 @@ class TokenFS {
           task = std::move(background_tasks_.front());
           background_tasks_.pop_front();
         }
-        try { task(); }
+        try {
+          task();
+          // Completion is published only after auxiliary statistics are durable.
+          if(config_.batch_background_metrics)FlushBufferedMetrics();
+        }
         catch (const std::exception& e) {
           std::cerr << "background task failed: " << e.what() << std::endl;
           metadata_.AddMetric("background_error_count", 1);
@@ -2565,13 +2574,13 @@ class TokenFS {
           rc = ec ? -ec.value() : 0;
           if (!rc) {
             metadata_.RemoveLocalReplica(key, candidate.replica_gpu);
-            metadata_.AddMetric("evict_count", 1);
-            metadata_.AddMetric("cross_gpu_replica_delete_count", 1);
+            AddBackgroundMetric("evict_count", 1);
+            AddBackgroundMetric("cross_gpu_replica_delete_count", 1);
           }
         } else rc = EvictLocalFile(gpu, candidate.meta);
-        if (rc) { metadata_.AddMetric("evict_error_count", 1); return false; }
+        if (rc) { AddBackgroundMetric("evict_error_count", 1); return false; }
         sieve_.Removed(gpu.gpu_id, key);
-        metadata_.AddMetric("evict_policy_sieve", 1);
+        AddBackgroundMetric("evict_policy_sieve", 1);
         metadata_.RecordPolicyEvent("EVICT", key, gpu.gpu_id, bytes, "sieve", 0);
         used = used > bytes ? used - bytes : 0;
       }
@@ -2600,7 +2609,7 @@ class TokenFS {
     } else candidates=metadata_.LocalEvictionCandidates(gpu.gpu_id, protected_logical_path);
     const uint64_t now = UnixNowSeconds();
     if(config_.compact_measured_planning) {
-      metadata_.AddMetric("evict_policy_measured",1);
+      AddBackgroundMetric("evict_policy_measured",1);
     } else if(config_.measured_policy) {
       std::vector<tokenfs_policy::Item> items;
       for(const auto& c:candidates)items.push_back({c.meta.logical_path,c.meta.size_bytes,c.last_access_at,MarginalCoverage(c.meta,gpu.gpu_id)});
@@ -2608,9 +2617,9 @@ class TokenFS {
       std::unordered_map<std::string,size_t> order;
       for(size_t i=0;i<ranked.size();++i)order[ranked[i].key]=i;
       std::sort(candidates.begin(),candidates.end(),[&](const auto& a,const auto& b){return order.at(a.meta.logical_path)<order.at(b.meta.logical_path);});
-      metadata_.AddMetric("evict_policy_measured",1);
+      AddBackgroundMetric("evict_policy_measured",1);
     } else if (policy == "lru") {
-      metadata_.AddMetric("evict_policy_lru", 1);
+      AddBackgroundMetric("evict_policy_lru", 1);
       std::sort(candidates.begin(), candidates.end(),
                 [](const EvictionCandidate& lhs,
                    const EvictionCandidate& rhs) {
@@ -2623,7 +2632,7 @@ class TokenFS {
                   return lhs.meta.size_bytes > rhs.meta.size_bytes;
                 });
     } else if (policy == "lfu") {
-      metadata_.AddMetric("evict_policy_lfu", 1);
+      AddBackgroundMetric("evict_policy_lfu", 1);
       std::sort(candidates.begin(), candidates.end(),
                 [](const EvictionCandidate& lhs,
                    const EvictionCandidate& rhs) {
@@ -2636,7 +2645,7 @@ class TokenFS {
                   return lhs.meta.size_bytes > rhs.meta.size_bytes;
                 });
     } else {
-      metadata_.AddMetric("evict_policy_value_aware", 1);
+      AddBackgroundMetric("evict_policy_value_aware", 1);
       std::sort(candidates.begin(), candidates.end(),
                 [now](const EvictionCandidate& lhs,
                       const EvictionCandidate& rhs) {
@@ -2651,7 +2660,7 @@ class TokenFS {
 
     for (auto candidate : candidates) {
       if (IsOpenLogicalPath(candidate.meta.logical_path)) {
-        metadata_.AddMetric("evict_skip_open", 1);
+        AddBackgroundMetric("evict_skip_open", 1);
         continue;
       }
 
@@ -2667,12 +2676,12 @@ class TokenFS {
         rc = ec ? -ec.value() : 0;
         if (!rc) {
           metadata_.RemoveLocalReplica(candidate.meta.logical_path, candidate.replica_gpu);
-          metadata_.AddMetric("evict_count", 1);
-          metadata_.AddMetric("cross_gpu_replica_delete_count", 1);
+          AddBackgroundMetric("evict_count", 1);
+          AddBackgroundMetric("cross_gpu_replica_delete_count", 1);
         }
       } else rc = EvictLocalFile(gpu, candidate.meta);
       if (rc != 0) {
-        metadata_.AddMetric("evict_error_count", 1);
+        AddBackgroundMetric("evict_error_count", 1);
         continue;
       }
       metadata_.RecordPolicyEvent("EVICT", candidate.meta.logical_path, gpu.gpu_id, candidate_size,
@@ -3006,7 +3015,7 @@ class TokenFS {
       source = meta.physical_path;
     }
     if (!fs::exists(source)) {
-      metadata_.AddMetric("cross_gpu_replica_skip_missing_source", 1);
+      AddBackgroundMetric("cross_gpu_replica_skip_missing_source", 1);
       return;
     }
     std::lock_guard<std::mutex> copy_lock(copy_mu_);
@@ -3017,12 +3026,12 @@ class TokenFS {
     if (!config_.speculative_copy_may_evict &&
         !HasLocalCapacity(caller_gpu, size,
                           fs::exists(local) ? &local : nullptr)) {
-      metadata_.AddMetric("cross_gpu_replica_skip_no_headroom", 1);
+      AddBackgroundMetric("cross_gpu_replica_skip_no_headroom", 1);
       return;
     }
     if (!EnsureLocalCapacity(caller_gpu, size, meta.logical_path,
                              fs::exists(local) ? &local : nullptr,&planning_us)) {
-      metadata_.AddMetric("cross_gpu_replica_skip_no_space", 1);
+      AddBackgroundMetric("cross_gpu_replica_skip_no_space", 1);
       return;
     }
     ApplyBackgroundQos(caller_gpu.gpu_id, size, "cross_gpu_replica");
@@ -3039,7 +3048,7 @@ class TokenFS {
     if(diagnostic.Enabled())diagnostic.e.copy_ns=RequestTrace::Now()-copy_io_start;
     if (ec) {
       fs::remove(tmp, ec);
-      metadata_.AddMetric("cross_gpu_replica_error_count", 1);
+      AddBackgroundMetric("cross_gpu_replica_error_count", 1);
       return;
     }
     if (config_.durable_local_cache) {
@@ -3049,8 +3058,8 @@ class TokenFS {
         close(fd);
       }
     } else {
-      metadata_.AddMetric("local_cache_fsync_skipped", 1);
-      metadata_.AddMetric("local_cache_fsync_skipped_bytes", size);
+      AddBackgroundMetric("local_cache_fsync_skipped", 1);
+      AddBackgroundMetric("local_cache_fsync_skipped_bytes", size);
     }
     if (config_.checksum != "none") {
       const auto verify_start=diagnostic.Enabled()?RequestTrace::Now():0;
@@ -3060,14 +3069,14 @@ class TokenFS {
       if (!source_hash || !copy_hash || *source_hash != *copy_hash ||
           (reused && !fill->Matches(source.string(),size))) {
         fs::remove(tmp, ec);
-        metadata_.AddMetric("copy_checksum_error_count", 1);
+        AddBackgroundMetric("copy_checksum_error_count", 1);
         return;
       }
     }
     fs::rename(tmp, local, ec);
     if (ec) {
       fs::remove(tmp, ec);
-      metadata_.AddMetric("cross_gpu_replica_error_count", 1);
+      AddBackgroundMetric("cross_gpu_replica_error_count", 1);
       return;
     }
     if (auto latest = metadata_.Get(meta.logical_path)) meta = *latest;
@@ -3087,8 +3096,8 @@ class TokenFS {
     metadata_.RecordPolicyEvent("REPLICATE_READY", meta.logical_path, caller_gpu.gpu_id, size, "cross_gpu");
     if(reused)RecordReadFillCommit(size,fill);
     RecordCopyCost(size,{ElapsedMicros(copy_start),planning_us,reused?fill->CaptureUs():0});
-    metadata_.AddMetric("cross_gpu_replica_create_count", 1);
-    metadata_.AddMetric("cross_gpu_replica_create_bytes", size);
+    AddBackgroundMetric("cross_gpu_replica_create_count", 1);
+    AddBackgroundMetric("cross_gpu_replica_create_bytes", size);
   }
 
   void ReconcileCrossGpuReplicas(const FileMeta& meta) {
@@ -3136,12 +3145,12 @@ class TokenFS {
     const fs::path source = meta.physical_path;
     if (!allow_eviction &&
         !HasLocalCapacity(gpu, size, fs::exists(local) ? &local : nullptr)) {
-      metadata_.AddMetric(metric_prefix + "_skip_no_headroom", 1);
+      AddBackgroundMetric(metric_prefix + "_skip_no_headroom", 1);
       return 0;
     }
     if (!EnsureLocalCapacity(gpu, size, meta.logical_path,
                              fs::exists(local) ? &local : nullptr,&planning_us)) {
-      metadata_.AddMetric(metric_prefix + "_skip_no_space", 1);
+      AddBackgroundMetric(metric_prefix + "_skip_no_space", 1);
       return 0;
     }
     ApplyBackgroundQos(gpu.gpu_id, size, metric_prefix);
@@ -3156,7 +3165,7 @@ class TokenFS {
     fs::remove(tmp, ec);
     ec.clear();
 
-    metadata_.AddMetric("migration_to_local_begin", 1);
+    AddBackgroundMetric("migration_to_local_begin", 1);
     if (config_.durable_local_cache) {
       FileMeta migrating = meta;
       migrating.state = "COPYING_TO_LOCAL";
@@ -3186,8 +3195,8 @@ class TokenFS {
       }
       close(fd);
     } else {
-      metadata_.AddMetric("local_cache_fsync_skipped", 1);
-      metadata_.AddMetric("local_cache_fsync_skipped_bytes", size);
+      AddBackgroundMetric("local_cache_fsync_skipped", 1);
+      AddBackgroundMetric("local_cache_fsync_skipped_bytes", size);
     }
 
     if (config_.checksum != "none") {
@@ -3198,7 +3207,7 @@ class TokenFS {
       if (!source_hash || !copy_hash || *source_hash != *copy_hash ||
           (reused && !fill->Matches(source.string(),size))) {
         fs::remove(tmp, ec);
-        metadata_.AddMetric("copy_checksum_error_count", 1);
+        AddBackgroundMetric("copy_checksum_error_count", 1);
         return -EIO;
       }
     }
@@ -3220,10 +3229,10 @@ class TokenFS {
       AddBufferedMetric("measured_verified_copy_us",sample.Full());
       SetBufferedMetricMax("measured_history_entries_max",measured_.Entries());
     }
-    metadata_.AddMetric("migration_to_local_commit", 1);
-    metadata_.AddMetric("local_cache_create_count", 1);
-    metadata_.AddMetric(metric_prefix + "_count", 1);
-    metadata_.AddMetric(metric_prefix + "_bytes", size);
+    AddBackgroundMetric("migration_to_local_commit", 1);
+    AddBackgroundMetric("local_cache_create_count", 1);
+    AddBackgroundMetric(metric_prefix + "_count", 1);
+    AddBackgroundMetric(metric_prefix + "_bytes", size);
     return 0;
   }
 
@@ -3445,10 +3454,10 @@ class TokenFS {
       meta.last_demoted_at = UnixNowSeconds();
       meta.state = "COMMITTED";
       metadata_.Upsert(meta);
-      metadata_.AddMetric("local_cache_delete_count", 1);
-      metadata_.AddMetric("local_cache_delete_bytes", size);
-      metadata_.AddMetric("evict_count", 1);
-      metadata_.AddMetric("evict_bytes", size);
+      AddBackgroundMetric("local_cache_delete_count", 1);
+      AddBackgroundMetric("local_cache_delete_bytes", size);
+      AddBackgroundMetric("evict_count", 1);
+      AddBackgroundMetric("evict_bytes", size);
       return 0;
     }
 
@@ -3462,7 +3471,7 @@ class TokenFS {
     FileMeta migrating = meta;
     migrating.state = "COPYING_TO_REMOTE";
     metadata_.Upsert(migrating);
-    metadata_.AddMetric("migration_to_remote_begin", 1);
+    AddBackgroundMetric("migration_to_remote_begin", 1);
 
     fs::copy_file(source, tmp, fs::copy_options::overwrite_existing, ec);
     if (ec) {
@@ -3493,9 +3502,9 @@ class TokenFS {
     meta.state = "COMMITTED";
     metadata_.Upsert(meta);
     fs::remove(source, ec);
-    metadata_.AddMetric("migration_to_remote_commit", 1);
-    metadata_.AddMetric("evict_count", 1);
-    metadata_.AddMetric("evict_bytes", size);
+    AddBackgroundMetric("migration_to_remote_commit", 1);
+    AddBackgroundMetric("evict_count", 1);
+    AddBackgroundMetric("evict_bytes", size);
     return 0;
   }
 
@@ -3795,6 +3804,11 @@ class TokenFS {
     AddBufferedMetric(op + "_" + tier + "_latency_bucket_" + bucket, 1);
   }
 
+  void AddBackgroundMetric(const std::string& name,uint64_t delta) {
+    if(config_.batch_background_metrics)AddBufferedMetric(name,delta);
+    else metadata_.AddMetric(name,delta);
+  }
+
   void AddBufferedMetric(const std::string& name, uint64_t delta) {
     if (delta == 0) {
       return;
@@ -3812,6 +3826,8 @@ class TokenFS {
   }
 
   void FlushBufferedMetrics() {
+    // A concurrent flush must finish before background_completed can advance.
+    std::lock_guard<std::mutex> flush_lock(flush_metrics_mu_);
     std::unordered_map<std::string, uint64_t> pending;
     std::unordered_map<std::string, uint64_t> pending_max;
     {
@@ -3874,10 +3890,10 @@ class TokenFS {
 
   void ApplyBackgroundQos(int gpu_id, uint64_t bytes,
                           const std::string& activity) {
-    metadata_.AddMetric("qos_background_ops", 1);
-    metadata_.AddMetric("qos_background_bytes", bytes);
-    metadata_.AddMetric("qos_background_" + activity + "_ops", 1);
-    metadata_.AddMetric("qos_background_" + activity + "_bytes", bytes);
+    AddBackgroundMetric("qos_background_ops", 1);
+    AddBackgroundMetric("qos_background_bytes", bytes);
+    AddBackgroundMetric("qos_background_" + activity + "_ops", 1);
+    AddBackgroundMetric("qos_background_" + activity + "_bytes", bytes);
 
     Clock::duration delay{};
     if (config_.qos_background_iops_per_gpu > 0) {
@@ -3908,12 +3924,12 @@ class TokenFS {
     }
     const auto delay_us =
         std::chrono::duration_cast<std::chrono::microseconds>(delay).count();
-    metadata_.AddMetric("qos_delay_us_total", static_cast<uint64_t>(delay_us));
-    metadata_.AddMetric("qos_delay_ops", 1);
-    metadata_.AddMetric("qos_background_delay_ops", 1);
-    metadata_.AddMetric("qos_background_delay_us_total",
+    AddBackgroundMetric("qos_delay_us_total", static_cast<uint64_t>(delay_us));
+    AddBackgroundMetric("qos_delay_ops", 1);
+    AddBackgroundMetric("qos_background_delay_ops", 1);
+    AddBackgroundMetric("qos_background_delay_us_total",
                         static_cast<uint64_t>(delay_us));
-    metadata_.AddMetric("qos_gpu" + std::to_string(gpu_id) +
+    AddBackgroundMetric("qos_gpu" + std::to_string(gpu_id) +
                             "_background_delay_us_total",
                         static_cast<uint64_t>(delay_us));
     std::this_thread::sleep_for(delay);
@@ -3974,6 +3990,7 @@ class TokenFS {
   std::mutex shared_placement_mu_;
   std::set<std::string> shared_placement_inflight_;
   std::mutex buffered_metrics_mu_;
+  std::mutex flush_metrics_mu_;
   std::unordered_map<std::string, uint64_t> buffered_metrics_;
   std::unordered_map<std::string, uint64_t> buffered_metric_max_;
   std::mutex qos_mu_;
@@ -4051,6 +4068,7 @@ Config LoadConfig(const fs::path& path) {
   if(root["policy"] && root["policy"]["measured_static_reuse_value"]) config.measured_static_reuse_value=root["policy"]["measured_static_reuse_value"].as<bool>();
   if(root["policy"] && root["policy"]["adaptive_reuse_control"]) config.adaptive_reuse_control=root["policy"]["adaptive_reuse_control"].as<bool>();
   if(root["policy"] && root["policy"]["profile_control_path"]) config.profile_control_path=root["policy"]["profile_control_path"].as<bool>();
+  if(root["policy"] && root["policy"]["batch_background_metrics"]) config.batch_background_metrics=root["policy"]["batch_background_metrics"].as<bool>();
   if(root["policy"] && root["policy"]["request_trace_path"]) config.request_trace_path=root["policy"]["request_trace_path"].as<std::string>();
   if(root["policy"] && root["policy"]["foreground_read_fill"]) config.foreground_read_fill=root["policy"]["foreground_read_fill"].as<bool>();
   if(root["policy"] && root["policy"]["request_read_costs"]) config.request_read_costs=root["policy"]["request_read_costs"].as<bool>();
