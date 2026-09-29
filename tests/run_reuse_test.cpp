@@ -40,6 +40,19 @@ int main() {
     auto novel=o;novel.novel_reuse_decay=true;
     assert(loss(o)>0 && loss(novel)==loss(o));
   }
+  {
+    Options o;o.causal_window=true;o.shared_value=true;o.burst_reuse=true;o.admission=false;
+    MeasuredPolicy p;p.ReadSample(false,100,100);p.ReadSample(true,100,20);p.CopySample(100,20);
+    for(int i=0;i<49;++i)p.Observe(0,(i/4)%2?"a":"b",o);
+    auto memory=o;memory.retained_capture=true;
+    auto raw=p.Plan(0,{"b",100,0},{},0,100,o);
+    auto marginal=p.Plan(0,{"b",100,0},{},0,100,memory);
+    assert(raw.burst_remaining>0 && marginal.burst_remaining==0);
+    assert(marginal.incoming_us==raw.incoming_us/4); // completed four-read runs
+    memory.static_reuse_value=true;
+    auto symmetric=p.Plan(0,{"a",100,0},{{"a",100,0}},100,100,memory);
+    assert(symmetric.incoming_us==symmetric.displaced_us);
+  }
   RunReuse r;uint64_t t=0;
   auto run=[&](const std::string& k,int n){for(int i=0;i<n;++i)r.Observe(k,++t,128);};
   run("hot",4);run("a",28);run("hot",4);run("b",28);run("hot",4);

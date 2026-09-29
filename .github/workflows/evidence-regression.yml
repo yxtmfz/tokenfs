@@ -69,3 +69,5 @@ jobs:
         run: python3 -m unittest tests.integrated_hpj_guarded_study_test
       - name: Test frozen-binary reverse-order invariants
         run: python3 -m unittest tests.integrated_hpj_reverse_test
+      - name: Test retained capture ablation controls
+        run: python3 -m unittest tests.integrated_hpj_retained_test

@@ -42,6 +42,7 @@ struct Options {
   bool persistent_reuse_immediate_decay=false;
   bool static_reuse_value=false;
   bool novel_reuse_decay=false;
+  bool retained_capture=false;
 };
 struct Decision {
   bool allowed=false;
@@ -386,7 +387,14 @@ class MeasuredPolicy {
     }
     return std::exp2(-(o.adaptive_control?temporal_strength_:1.0)*double(observations_-positions->back())/std::max(4.0,gap));
   }
+  double DiskReuseScale(const Options& o) const {
+    // A completed run contributes one potential disk miss when its retained
+    // capture is gone. Adjacent reads are already served by the shared RAM tier.
+    return o.retained_capture && completed_burst_reads_?
+      double(completed_bursts_.size())/completed_burst_reads_:1.0;
+  }
   double BurstRemaining(const std::string& key,const Options& o) const {
+    if(o.retained_capture)return 0;
     if(!o.burst_reuse || !o.causal_window || !o.shared_value || key!=active_burst_key_ || completed_bursts_.size()<8)return 0;
     // Conditional residual length of completed runs only. The active run is
     // censored: never use its eventual length. Two zero-residual pseudo-runs
@@ -413,7 +421,7 @@ class MeasuredPolicy {
     if(o.static_reuse_value) {
       double repeats=double(EffectiveCount(gpu,item.key,o,incoming));
       if(!o.frequency_admission)repeats=std::max(0.0,repeats-1.0);
-      return repeats*(o.cost?SavingRate()*item.bytes:1.0)*item.coverage;
+      return repeats*DiskReuseScale(o)*(o.cost?SavingRate()*item.bytes:1.0)*item.coverage;
     }
     double past=std::max(RecentValue(gpu,item.key,o,incoming),PersistentEstimate(item.key,o));
     if(o.novel_reuse_decay && o.persistent_run_reuse && o.causal_window && o.shared_value && o.burst_reuse)
@@ -423,7 +431,7 @@ class MeasuredPolicy {
       past*=1.0-(o.adaptive_control?temporal_strength_:1.0)*(1.0-run_reuse_.CompetitionSurvival(item.key));
     // These are overlapping estimates, not independent demand to add together.
     // Use the same value for incoming and resident copies of the current key.
-    return std::max(past,BurstRemaining(item.key,o))*(o.cost?SavingRate()*item.bytes:1.0)*item.coverage;
+    return std::max(past*DiskReuseScale(o),BurstRemaining(item.key,o))*(o.cost?SavingRate()*item.bytes:1.0)*item.coverage;
   }
   void Sort(int gpu,std::vector<Item>& items,const Options& o) const {
     if(o.efficient_planning && o.value_victim) {

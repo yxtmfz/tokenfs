@@ -3,6 +3,7 @@
 #include <cerrno>
 #include <chrono>
 #include <cstring>
+#include <deque>
 #include <iomanip>
 #include <memory>
 #include <mutex>
@@ -13,8 +14,8 @@
 #include <sys/stat.h>
 #include <unistd.h>
 
-// Transient capture only, never a readable cache. Complete immutable-source
-// reads can supply a normal verified cache commit without rereading the source.
+// Bounded immutable captures. Optional LRU retention shares the SAME byte budget
+// with active readers/copies; admission and copy completion do not set lifetime.
 class ReadFillPool {
  public:
   class Buffer;
@@ -98,11 +99,24 @@ class ReadFillPool {
     std::vector<char> data_;mutable std::mutex mu_;
     size_t filled_=0;bool invalid_=false,dispatched_=false;uint64_t capture_ns_=0;
   };
-  explicit ReadFillPool(uint64_t limit):limit_(limit),budget_(std::make_shared<Budget>()){}
+  explicit ReadFillPool(uint64_t limit,bool retain=false):limit_(limit),budget_(std::make_shared<Budget>()),retain_(retain){}
+  void Retain(const std::shared_ptr<Buffer>& buffer) {
+    if(!retain_ || !buffer || !buffer->Dispatched())return;
+    std::lock_guard<std::mutex> lock(retained_mu_);
+    std::erase(retained_,buffer);retained_.push_back(buffer);
+  }
   std::shared_ptr<Buffer> Acquire(const std::string& path,int fd,uint64_t size) {
     const auto started=NowNs();struct stat source{};
     if(size==0 || size>limit_ || fstat(fd,&source)!=0 || !S_ISREG(source.st_mode) ||
         source.st_size<0 || uint64_t(source.st_size)!=size)return {};
+    // Drop only unpinned retained captures. Active readers/copies remain charged
+    // even after LRU removal, so pressure can safely reject a new allocation.
+    std::lock_guard<std::mutex> retained_lock(retained_mu_);
+    while(size>limit_-UsedBytes()) {
+      auto it=std::find_if(retained_.begin(),retained_.end(),[](const auto& b){return b.use_count()==1;});
+      if(it==retained_.end())return {};
+      retained_.erase(it); // Destructor acquires budget_->mu; do not hold it here.
+    }
     std::lock_guard<std::mutex> lock(budget_->mu);
     if(size>limit_-budget_->used || budget_->paths.count(path))return {};
     // Allocate before charging: an allocation failure leaves the budget intact.
@@ -120,9 +134,17 @@ class ReadFillPool {
       if(it!=budget_->paths.end())found=it->second.lock();
     }
     // Never destroy the last buffer while holding its budget mutex.
-    return found && found->Matches(source,size)?found:std::shared_ptr<Buffer>{};
+    if(found && found->Matches(source,size)) {Retain(found);return found;}
+    if(found && retain_) {
+      std::lock_guard<std::mutex> lock(retained_mu_);std::erase(retained_,found);
+    }
+    return {};
   }
   uint64_t PeakBytes() const {std::lock_guard<std::mutex> lock(budget_->mu);return budget_->peak;}
   uint64_t UsedBytes() const {std::lock_guard<std::mutex> lock(budget_->mu);return budget_->used;}
- private:uint64_t limit_;std::shared_ptr<Budget> budget_;
+ private:
+  uint64_t limit_;std::shared_ptr<Budget> budget_;bool retain_;
+  std::mutex retained_mu_;
+  // Owned by the pool, not Budget: Buffer -> Budget never forms a strong cycle.
+  std::deque<std::shared_ptr<Buffer>> retained_;
 };

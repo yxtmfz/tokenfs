@@ -34,5 +34,24 @@ int main(){
   int replaced=open(path.c_str(),O_RDONLY);assert(!b->MatchesFd(replaced));
   assert(b->ReadCaptured(replaced,bytes,8,0)==-ESTALE);close(replaced);b.reset();
   assert(!pool.Acquire("large",fd,9));
+  close(fd);fd=open(path.c_str(),O_RDONLY);assert(fd>=0);
+  std::weak_ptr<ReadFillPool::Buffer> lifetime;
+  {
+    ReadFillPool retained(16,true);
+    auto capture=[&](const char* key){auto x=retained.Acquire(key,fd,8);assert(x);assert(x->Append(0,"abcdefgh",8,fd));retained.Retain(x);return x;};
+    auto a=capture("a"),c=capture("b");a.reset();c.reset();
+    assert(retained.UsedBytes()==16);
+    a=retained.FindComplete("a",path.string(),8);assert(a);a.reset();
+    c=capture("c");assert(!retained.FindComplete("b",path.string(),8));
+    a=retained.FindComplete("a",path.string(),8);assert(a);
+    assert(!retained.Acquire("d",fd,8)); // two live reader/copy pins, no overcommit
+    a.reset();auto d=capture("d");assert(!retained.FindComplete("a",path.string(),8));
+    assert(retained.UsedBytes()==16 && retained.PeakBytes()==16);
+    c.reset();d.reset();lifetime=retained.FindComplete("d",path.string(),8);
+    std::ofstream(root/"changed")<<"ijklmnop";std::filesystem::rename(root/"changed",path);
+    assert(!retained.FindComplete("c",path.string(),8));
+    assert(retained.UsedBytes()==8); // invalid retained bytes can be reclaimed
+  }
+  assert(lifetime.expired()); // no Buffer -> Budget -> Buffer ownership cycle
   close(fd);std::filesystem::remove_all(root);
 }

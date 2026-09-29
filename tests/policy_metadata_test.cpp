@@ -29,9 +29,9 @@ struct TokenFSTestAccess {
     }
     assert(metric("background_error_count")==0);sqlite3_close(db);
   }
-  static void inflight_reads(const fs::path& root,bool enabled) {
+  static void inflight_reads(const fs::path& root,bool enabled,bool retained=false) {
     Config cfg;cfg.mount_point=root/"mnt";cfg.metadata_db=root/"state.db";
-    cfg.foreground_read_fill=true;cfg.request_read_costs=true;cfg.coalesce_pending_reads=enabled;cfg.batch_background_metrics=true;
+    cfg.foreground_read_fill=true;cfg.request_read_costs=true;cfg.coalesce_pending_reads=enabled;cfg.retain_read_fill=retained;cfg.batch_background_metrics=true;
     cfg.readonly_canonical=true;cfg.peer_cache_reads=true;cfg.shared_pool_cache=true;cfg.checksum="fnv1a64";
     cfg.backend_direct_io=true;cfg.affinity_placement=false;cfg.lean_read_accounting=true;
     cfg.read_through_cache=true;cfg.read_through_min_reads=1;cfg.local_eviction_policy="sieve";
@@ -60,23 +60,43 @@ struct TokenFSTestAccess {
     proceed.set_value();std::promise<void> drained;auto drained_f=drained.get_future();
     assert(filesystem.SubmitBackground([&]{drained.set_value();}));drained_f.wait();
     assert(filesystem.metadata_.Get("/gpu0/k")->tier=="local");
-    assert(filesystem.Open("/gpu0/k",&c)==0 && filesystem.FindHandle(&c)->tier=="local");
+    assert(filesystem.Open("/gpu0/k",&c)==0 && filesystem.FindHandle(&c)->tier==(retained?"inflight":"local"));
     assert(filesystem.Read("/gpu0/k",bytes,4096,0,&c)==4096);
     assert(filesystem.Release("/gpu0/k",&c)==0);
     if(enabled)assert(filesystem.fills_.UsedBytes()==4096);
-    assert(filesystem.Release("/gpu0/k",&b)==0 && filesystem.fills_.UsedBytes()==0);
+    assert(filesystem.Release("/gpu0/k",&b)==0 && filesystem.fills_.UsedBytes()==(retained?4096:0));
     sqlite3* conn=nullptr;assert(sqlite3_open(cfg.metadata_db.c_str(),&conn)==SQLITE_OK);
     sqlite3_stmt* stmt=nullptr;assert(sqlite3_prepare_v2(conn,"SELECT name,value FROM metrics",-1,&stmt,nullptr)==SQLITE_OK);
     std::map<std::string,uint64_t> m;
     while(sqlite3_step(stmt)==SQLITE_ROW)m[reinterpret_cast<const char*>(sqlite3_column_text(stmt,0))]=sqlite3_column_int64(stmt,1);
     sqlite3_finalize(stmt);sqlite3_close(conn);
-    assert(m["read_bytes"]==12288 && m["read_local_bytes"]==4096);
-    assert(m["read_remote_bytes"]==(enabled?4096:8192) && m["read_inflight_bytes"]==(enabled?4096:0));
-    assert(m["request_cost_inflight_samples"]==(enabled?1:0));
+    assert(m["read_bytes"]==12288 && m["read_local_bytes"]==(retained?0:4096));
+    assert(m["read_remote_bytes"]==(enabled?4096:8192) && m["read_inflight_bytes"]==(enabled?(retained?8192:4096):0));
+    assert(m["request_cost_inflight_samples"]==(enabled?(retained?2:1):0));
     auto invalid=cfg;invalid.shared_caller_only=true;bool rejected=false;
     try{TokenFS bad(invalid);bad.Init();}catch(const std::runtime_error&){rejected=true;}assert(rejected);
     invalid=cfg;invalid.foreground_read_fill=false;invalid.coalesce_pending_reads=true;rejected=false;
     try{TokenFS bad(invalid);bad.Init();}catch(const std::runtime_error&){rejected=true;}assert(rejected);
+  }
+  static void retained_rejected(const fs::path& root) {
+    Config cfg;cfg.mount_point=root/"mnt";cfg.metadata_db=root/"state.db";
+    cfg.foreground_read_fill=true;cfg.request_read_costs=true;cfg.coalesce_pending_reads=true;cfg.retain_read_fill=true;
+    cfg.readonly_canonical=true;cfg.peer_cache_reads=true;cfg.shared_pool_cache=true;cfg.checksum="fnv1a64";
+    cfg.backend_direct_io=true;cfg.affinity_placement=false;cfg.lean_read_accounting=true;
+    cfg.read_through_cache=true;cfg.read_through_min_reads=1000;cfg.local_eviction_policy="sieve";
+    cfg.gpus.push_back({0,"/gpu0",root/"local",8192,"remote"});
+    cfg.backends.emplace("remote",BackendConfig{"remote","directory",root/"remote"});
+    TokenFS filesystem(cfg);filesystem.Init();std::ofstream(root/"remote/gpu0/k")<<std::string(4096,'q');
+    for(int i=0;i<3;++i) {
+      fuse_file_info fi{};fi.flags=O_RDONLY;char bytes[4096]{};
+      assert(filesystem.Open("/gpu0/k",&fi)==0);
+      assert(filesystem.FindHandle(&fi)->tier==(i?"inflight":"remote"));
+      assert(filesystem.Read("/gpu0/k",bytes,4096,0,&fi)==4096 && std::string(bytes,4096)==std::string(4096,'q'));
+      assert(filesystem.Release("/gpu0/k",&fi)==0);
+      assert(filesystem.metadata_.Get("/gpu0/k")->tier=="remote");
+      assert(filesystem.shared_placement_inflight_.empty());
+    }
+    assert(filesystem.fills_.UsedBytes()==4096);
   }
   static void foreground_fill(const fs::path& root,int threshold,bool adaptive=false,bool incremental=false) {
     Config cfg;cfg.mount_point=root/"mnt";cfg.metadata_db=root/"state.db";
@@ -456,6 +476,8 @@ int main() {
   TokenFSTestAccess::background_metric_fence(root/"metric-fence-off",false);
   TokenFSTestAccess::inflight_reads(root/"inflight-enabled",true);
   TokenFSTestAccess::inflight_reads(root/"inflight-disabled",false);
+  TokenFSTestAccess::inflight_reads(root/"retained-after-ready",true,true);
+  TokenFSTestAccess::retained_rejected(root/"retained-rejected");
   TokenFSTestAccess::foreground_fill(root/"fill-sieve1",1);
   TokenFSTestAccess::foreground_fill(root/"fill-sieve2",2);
   TokenFSTestAccess::foreground_fill(root/"fill-adaptive",1,true);
