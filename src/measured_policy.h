@@ -39,6 +39,7 @@ struct Options {
   bool burst_interval_survival=false;
   bool reuse_scaled_exploration=false;
   bool persistent_run_reuse=false;
+  bool persistent_reuse_immediate_decay=false;
 };
 struct Decision {
   bool allowed=false;
@@ -394,7 +395,7 @@ class MeasuredPolicy {
   }
   double PersistentEstimate(const std::string& key,const Options& o) const {
     return o.persistent_run_reuse && o.causal_window && o.shared_value && o.burst_reuse?
-      run_reuse_.Estimate(key,observations_,o.window):0.0;
+      run_reuse_.Estimate(key,observations_,o.window,o.persistent_reuse_immediate_decay):0.0;
   }
   double RecentValue(int gpu,const std::string& key,const Options& o,bool incoming) const {
     double repeats=double(EffectiveCount(gpu,key,o,incoming));

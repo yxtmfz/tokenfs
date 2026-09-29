@@ -31,14 +31,14 @@ class RunReuse {
       if(it!=entries_.end() && it->second.generation==old.second)entries_.erase(it);
     }
   }
-  double Estimate(const std::string& key,uint64_t at,size_t horizon) const {
+  double Estimate(const std::string& key,uint64_t at,size_t horizon,bool immediate_decay=false) const {
     auto it=entries_.find(key);if(it==entries_.end())return 0;
     const auto& e=it->second;
     if(!e.gap.n || !e.length.n)return 0; // A single burst is not recurrence.
     const double interval=std::max(4.0,e.gap.mean);
     // One observed standard deviation is a heuristic grace for irregular
     // arrivals, not a statistical confidence bound. Stale keys still decay.
-    const double grace=interval+std::sqrt(std::max(0.0,e.gap.variance));
+    const double grace=immediate_decay?0.0:interval+std::sqrt(std::max(0.0,e.gap.variance));
     const double overdue=std::max(0.0,double(at-e.last_seen)-grace);
     const double confidence=double(e.gap.n)/(e.gap.n+1.0);
     return std::max<size_t>(2,horizon)/interval*e.length.mean*confidence*

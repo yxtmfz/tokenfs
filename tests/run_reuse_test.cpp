@@ -13,6 +13,7 @@ int main() {
   run("c",140);assert(r.Estimate("hot",t,128)>0); // survives request-window expiry
   assert(r.Estimate("c",t,128)==0); // one burst is not recurring reuse
   const double aged=r.Estimate("hot",t,128);
+  assert(r.Estimate("hot",t,128,true)<aged);
   run("c",140);assert(r.Estimate("hot",t,128)<aged);
   for(int i=0;i<200;++i)run("scan"+std::to_string(i),1);
   assert(r.Entries()<=128 && r.Runs()<=128 && r.Estimate("hot",t,128)==0);
@@ -29,6 +30,8 @@ int main() {
   assert(loss(old)==0 && loss(o)>0);
   const auto symmetric=p.Plan(0,{"hot",100,0},{{"hot",100,0}},100,100,o);
   assert(symmetric.incoming_us==symmetric.displaced_us && symmetric.persistent_reuse_adjusted_items==2);
+  Options faster=o;faster.persistent_reuse_immediate_decay=true;
+  assert(loss(faster)>0 && loss(faster)<loss(o));
   const auto before=loss(o);obs("moving",128);assert(loss(o)<before);
   assert(p.Plan(0,{"moving",100,0},{{"hot",100,0}},100,100,o).allowed);
   assert(!p.Plan(0,{"oversize",101,0},{},0,100,o).allowed);
