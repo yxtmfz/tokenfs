@@ -1,0 +1,21 @@
+{
+  "criterion": "throughput > 0%; p99 change < 0%; existing drain/mechanism checks retained",
+  "comparisons": 8,
+  "passing_comparisons": 5,
+  "passed": false,
+  "failures": [
+    {
+      "block": "moving_shared-3293-r2",
+      "baseline": "NoAffinity"
+    },
+    {
+      "block": "moving_shared-3293-r2",
+      "baseline": "NoJoint"
+    },
+    {
+      "block": "moving_shared-3293-r2",
+      "baseline": "PoolSIEVE1"
+    }
+  ],
+  "statistical_confirmation": false
+}

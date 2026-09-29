@@ -1,0 +1,45 @@
+{
+  "host": "cn13",
+  "utc": "2026-09-29T12:55:47Z",
+  "addresses": {
+    "returncode": 0,
+    "stdout": "[{\"ifindex\":1,\"ifname\":\"lo\",\"flags\":[\"LOOPBACK\",\"UP\",\"LOWER_UP\"],\"mtu\":65536,\"qdisc\":\"noqueue\",\"operstate\":\"UNKNOWN\",\"group\":\"default\",\"txqlen\":1000,\"addr_info\":[{\"family\":\"inet\",\"local\":\"127.0.0.1\",\"prefixlen\":8,\"scope\":\"host\",\"label\":\"lo\",\"valid_life_time\":4294967295,\"preferred_life_time\":4294967295}]},{\"ifindex\":2,\"ifname\":\"eno3\",\"flags\":[\"BROADCAST\",\"MULTICAST\",\"UP\",\"LOWER_UP\"],\"mtu\":1500,\"qdisc\":\"mq\",\"operstate\":\"UP\",\"group\":\"default\",\"txqlen\":1000,\"altnames\":[\"enp1s0f0\"],\"addr_info\":[{\"family\":\"inet\",\"local\":\"28.10.10.13\",\"prefixlen\":24,\"broadcast\":\"28.10.10.255\",\"scope\":\"global\",\"label\":\"eno3\",\"valid_life_time\":4294967295,\"preferred_life_time\":4294967295}]},{\"ifindex\":6,\"ifname\":\"ibp175s0\",\"flags\":[\"BROADCAST\",\"MULTICAST\",\"UP\",\"LOWER_UP\"],\"mtu\":2044,\"qdisc\":\"mq\",\"operstate\":\"UP\",\"group\":\"default\",\"txqlen\":1000,\"addr_info\":[{\"family\":\"inet\",\"local\":\"89.89.10.13\",\"prefixlen\":24,\"broadcast\":\"89.89.10.255\",\"scope\":\"global\",\"label\":\"ibp175s0\",\"valid_life_time\":4294967295,\"preferred_life_time\":4294967295}]}]\n",
+    "stderr": ""
+  },
+  "nvidia": {
+    "error": "[Errno 2] No such file or directory: 'nvidia-smi'"
+  },
+  "pci_display": {
+    "returncode": 0,
+    "stdout": "03:00.0 VGA compatible controller [0300]: Matrox Electronics Systems Ltd. Integrated Matrox G200eW3 Graphics Controller [102b:0536] (rev 04)\n",
+    "stderr": ""
+  },
+  "gpu_devices": [],
+  "mounts": {
+    "returncode": 0,
+    "stdout": "/dev/mapper/ubuntu--vg-ubuntu--lv / ext4\n/dev/sda2 /boot ext4\n/dev/mapper/ubuntu--vg-lv--0 /home ext4\n",
+    "stderr": ""
+  },
+  "nvme": {
+    "nvme1": {
+      "transport": "pcie",
+      "address": "0000:d8:00.0",
+      "model": "INTEL SSDPEDME016T4F"
+    },
+    "nvme2": {
+      "transport": "pcie",
+      "address": "0000:3b:00.0",
+      "model": "INTEL SSDPEDME016T4F"
+    },
+    "nvme0": {
+      "transport": "pcie",
+      "address": "0000:86:00.0",
+      "model": "INTEL SSDPEDME016T4F"
+    }
+  },
+  "own_tokenfs_processes": {
+    "returncode": 0,
+    "stdout": "",
+    "stderr": ""
+  }
+}

@@ -450,6 +450,11 @@ class MetadataStore {
 
   void Upsert(const FileMeta& meta) {
     std::lock_guard<std::mutex> lock(mu_);
+    UpsertLocked(meta);
+  }
+
+ private:
+  void UpsertLocked(const FileMeta& meta) {
     const auto now = UnixNow();
     const char* sql =
         "INSERT INTO files(logical_path,gpu_id,tier,backend_id,physical_path,"
@@ -546,6 +551,7 @@ class MetadataStore {
     StepDone(stmt);
   }
 
+ public:
   void CommitLocalCache(const FileMeta& meta, int gpu_id, const fs::path& local, uint64_t size) {
     std::lock_guard<std::mutex> lock(mu_);
     sqlite3_stmt* stmt = nullptr;
@@ -575,12 +581,26 @@ class MetadataStore {
                               uint64_t trend_min_reads,
                               uint64_t hot_read_threshold,
                               uint64_t warm_read_threshold,
-                              uint64_t max_local_replicas, bool legacy_affinity=true, int replica_gpu=-1) {
+                              uint64_t max_local_replicas, bool legacy_affinity=true, int replica_gpu=-1,
+                              const FileMeta* discovered=nullptr) {
     std::lock_guard<std::mutex> lock(mu_);
+    if(discovered && (discovered->logical_path!=logical_path || discovered->read_count!=0))
+      throw std::runtime_error("invalid initial read metadata");
     const auto now = UnixNow();
     const auto event_now = UnixNowMillis();
     Exec("BEGIN IMMEDIATE;");
     try {
+      if(discovered) {
+        // Register an unknown object and its first read in one FULL-WAL
+        // transaction. A failed read-accounting write rolls both back.
+        {
+          auto lease=CachedStatement("SELECT 1 FROM files WHERE logical_path=?;");
+          sqlite3_bind_text(lease.get(),1,logical_path.c_str(),-1,SQLITE_TRANSIENT);
+          const int rc=sqlite3_step(lease.get());
+          if(rc!=SQLITE_DONE)throw std::runtime_error(rc==SQLITE_ROW?"initial read metadata already exists":sqlite3_errmsg(db_));
+        }
+        UpsertLocked(*discovered);
+      }
       auto execute=[&](const char* sql,auto bind) {
         auto lease=CachedStatement(sql);auto* stmt=lease.get();bind(stmt);
         if(sqlite3_step(stmt)!=SQLITE_DONE)throw std::runtime_error(sqlite3_errmsg(db_));
@@ -1666,6 +1686,7 @@ class TokenFS {
     }
     const auto [gpu, rel] = *parsed;
     FileMeta meta;
+    std::optional<FileMeta> discovered;
     if (auto existing = metadata_.Get(path)) {
       meta = *existing;
     } else {
@@ -1701,7 +1722,8 @@ class TokenFS {
         meta.local_cache_owner_gpu = -1;
         meta.replica_state = "REMOTE_ONLY";
       }
-      metadata_.Upsert(meta);
+      if(IsWritable(fi->flags))metadata_.Upsert(meta);
+      else discovered=meta;
     }
     const bool writable = IsWritable(fi->flags);
     const int caller_gpu_id = DetectCallerGpuId(gpu->gpu_id);
@@ -1710,12 +1732,15 @@ class TokenFS {
     // Update policy state on every logical read, including local fast hits.
     if (!writable) {
       auto record_read=[&](int replica_gpu) {
-        return metadata_.IncrementReadCount(path, caller_gpu_id,
+        const auto count=metadata_.IncrementReadCount(path, caller_gpu_id,
           config_.affinity_dominant_threshold_x100, config_.affinity_shared_threshold_x100,
           config_.affinity_short_window_sec,
           config_.trend_prediction ? config_.affinity_long_window_sec : config_.affinity_short_window_sec,
           config_.affinity_trend_min_reads, config_.affinity_hot_read_threshold,
-          config_.affinity_warm_read_threshold, config_.max_local_replicas_per_file,!config_.lean_read_accounting,replica_gpu);
+          config_.affinity_warm_read_threshold, config_.max_local_replicas_per_file,!config_.lean_read_accounting,replica_gpu,
+          discovered?&*discovered:nullptr);
+        discovered.reset();
+        return count;
       };
       int touched_replica=-1;
       if(!config_.lean_read_accounting) {

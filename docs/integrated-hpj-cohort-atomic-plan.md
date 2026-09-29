@@ -1,0 +1,9 @@
+# Atomic first-read registration and strict dual-metric acceptance
+
+Continue cn7 logical domains with cn13 NVMe/TCP storage, as explicitly selected by the user after fresh hardware inspection. cn7/cn8 are physical hosts; neither exposed a compute GPU. Do not claim physical GPU performance.
+
+Report60 satisfies both-order throughput, but its second-round p99 fails against NoAffinity, NoJoint and SIEVE. All twelve Full tail requests across the two rounds are first references. A two-arm diagnostic with the unchanged report60 binary finds ~21 ms pread and ~3 ms daemon Open in tail requests, negligible ~0.002 ms layout waiting, and little copy overlap. These are associations, not causal proof. Source inspection identifies two durable commits for cold discovery and its first read count.
+
+Register a discovered file and its first read accounting atomically in one FULL-WAL transaction. Preserve rollback, durable counts and all I/O/copy validation. Reject stale discoveries instead of overwriting existing metadata. This is a common execution optimization for every arm, not a new policy contribution. Keep the exact same hotspot/affinity/joint configuration, trace seed3293, 576x2MiB requests, 24MiB disk, 4MiB shared capture and reversed five-arm orders from report60. Retain all ten runs regardless of outcome; no selective repetitions.
+
+Acceptance v3 requires throughput gain >0 and p99 change <0 in EVERY one of eight paired comparisons, plus the prior drain/mechanism conditions. Ties do not pass. Historical v2 reports remain unchanged. Diagnostic timing is excluded. Native atomic rollback/retry/reopen and all existing tests must pass before speed runs; if the final candidate passes, independently verify content and archive evidence before claiming completion. No significance or unseen-workload claim follows from this development input.

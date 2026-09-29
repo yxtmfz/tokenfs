@@ -579,11 +579,35 @@ void CachedAccountingRollback(const fs::path& path) {
   MetadataStore reopened(path);reopened.Open();assert(reopened.Get("/gpu0/k")->read_count==202);
 }
 
+void AtomicFirstRead(const fs::path& path) {
+  {
+    MetadataStore store(path);store.Open();FileMeta f;
+    f.logical_path="/gpu0/new";f.gpu_id=0;f.state="COMMITTED";f.tier="remote";
+    f.physical_path="/remote/new";f.has_remote_copy=true;f.size_bytes=4096;
+    auto record=[&](const FileMeta* initial){return store.IncrementReadCount(f.logical_path,1,70,55,2,10,3,4,2,3,false,-1,initial);};
+    sqlite3* db=nullptr;assert(sqlite3_open(path.c_str(),&db)==SQLITE_OK);
+    assert(sqlite3_exec(db,"CREATE TRIGGER reject_first_access BEFORE INSERT ON gpu_access BEGIN SELECT RAISE(ABORT,'injected'); END;",nullptr,nullptr,nullptr)==SQLITE_OK);
+    bool failed=false;try{record(&f);}catch(const std::runtime_error&){failed=true;}
+    assert(failed && !store.Get(f.logical_path));
+    assert(sqlite3_exec(db,"DROP TRIGGER reject_first_access;",nullptr,nullptr,nullptr)==SQLITE_OK);
+    assert(record(&f)==1);
+    auto actual=store.Get(f.logical_path);assert(actual && actual->read_count==1 && actual->size_bytes==4096 && actual->has_remote_copy);
+    // A stale discovery cannot overwrite a newer layout or reset its counts.
+    f.physical_path="/wrong";failed=false;
+    try{record(&f);}catch(const std::runtime_error&){failed=true;}
+    assert(failed && store.Get(f.logical_path)->physical_path=="/remote/new");
+    assert(record(nullptr)==2);sqlite3_close(db);
+  }
+  MetadataStore reopened(path);reopened.Open();
+  assert(reopened.Get("/gpu0/new")->read_count==2);
+}
+
 int main() {
   const fs::path root = fs::temp_directory_path() / ("tokenfs-policy-test-" + std::to_string(getpid()));
   fs::create_directory(root);
   MetricBatchTransactions(root/"metric-batches.db");
   CachedAccountingRollback(root/"cached-accounting.db");
+  AtomicFirstRead(root/"atomic-first-read.db");
   ReusedQueriesAndAtomicReplica(root/"query-reuse.db");
   TokenFSTestAccess::telemetry_retry_and_release_lock(root/"telemetry-retry");
   TokenFSTestAccess::background_metric_fence(root/"metric-fence-on",true);
