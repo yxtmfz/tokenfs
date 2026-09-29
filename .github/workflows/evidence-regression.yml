@@ -61,3 +61,7 @@ jobs:
         run: python3 -m unittest tests.component_ablation_test
       - name: Test positive-gain acceptance and planning efficiency controls
         run: python3 -m unittest tests.planning_efficiency_test
+      - name: Test burst recurrence comparison controls
+        run: python3 -m unittest tests.burst_interval_study_test tests.headroom_exploration_test
+      - name: Test balanced stationary repeats and stability summaries
+        run: python3 -m unittest tests.stationary_stability_test

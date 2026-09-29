@@ -35,6 +35,8 @@ struct Options {
   bool burst_reuse=false;
   bool adaptive_control=false;
   bool efficient_planning=false;
+  bool burst_interval_survival=false;
+  bool reuse_scaled_exploration=false;
 };
 struct Decision {
   bool allowed=false;
@@ -44,6 +46,7 @@ struct Decision {
   double burst_remaining=0;
   double uncertainty_us=0;
   bool explore_headroom=false;
+  double exploration_reads=1;
   uint64_t incoming_count=0;
   uint64_t affinity_incoming_count=0;
   uint64_t affinity_adjusted_items=0;
@@ -225,9 +228,12 @@ class MeasuredPolicy {
       result.survival_adjusted_items+=Survival(gpu,resident.key,o)<1.0;
     result.costs_calibrated=remote_.n && local_.n && copy_.n;
     result.burst_remaining=BurstRemaining(incoming.key,o);
-    // Bounded exploration uses only existing free headroom, never a victim.
-    // Stop exploring if a measured verified copy costs more than one remote read.
-    if(o.adaptive_control && !needed && (!copy_.n || copy_.mean<=(remote_.n?remote_.mean:0.01))) {
+    // Exploration is quota bounded, never displacing a resident. Completed
+    // runs may justify more than one remote read of exploration cost; the
+    // current unfinished run is censored and cannot inflate this budget.
+    if(o.reuse_scaled_exploration && o.burst_reuse && !completed_bursts_.empty())
+      result.exploration_reads=std::max(1.0,double(completed_burst_reads_)/completed_bursts_.size());
+    if(o.adaptive_control && !needed && (!copy_.n || copy_.mean<=result.exploration_reads*(remote_.n?remote_.mean:0.01))) {
       result.allowed=true;result.explore_headroom=true;result.reason="free_headroom_exploration";
       result.incoming_us=Value(gpu,incoming,o,true);
       result.copy_us=incoming.bytes*(copy_.n?copy_.mean:(remote_.n?remote_.mean:0.01));
@@ -350,7 +356,19 @@ class MeasuredPolicy {
     // Past inter-arrival spacing sets the half-life. An unrequested resident
     // loses value as its next reuse becomes overdue. Arrivals and residents use
     // exactly the same forecast; there is no phase label or cache-state oracle.
-    const double gap=double(positions->back()-positions->front())/(positions->size()-1);
+    double gap=double(positions->back()-positions->front())/(positions->size()-1);
+    if(o.burst_interval_survival && o.burst_reuse) {
+      // Consecutive reads within a run do not measure how soon that run will
+      // recur. Use completed between-run gaps when recurrence was observed.
+      // One-off bursts retain the original short half-life. No future run,
+      // workload label or permanent hot-key exemption is used.
+      uint64_t elapsed=0,intervals=0;
+      for(size_t i=1;i<positions->size();++i) {
+        const auto distance=(*positions)[i]-(*positions)[i-1];
+        if(distance>1){elapsed+=distance;++intervals;}
+      }
+      if(intervals)gap=double(elapsed)/intervals;
+    }
     return std::exp2(-(o.adaptive_control?temporal_strength_:1.0)*double(observations_-positions->back())/std::max(4.0,gap));
   }
   double BurstRemaining(const std::string& key,const Options& o) const {
