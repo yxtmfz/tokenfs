@@ -41,6 +41,7 @@ struct Options {
   bool persistent_run_reuse=false;
   bool persistent_reuse_immediate_decay=false;
   bool static_reuse_value=false;
+  bool novel_reuse_decay=false;
 };
 struct Decision {
   bool allowed=false;
@@ -414,7 +415,9 @@ class MeasuredPolicy {
       if(!o.frequency_admission)repeats=std::max(0.0,repeats-1.0);
       return repeats*(o.cost?SavingRate()*item.bytes:1.0)*item.coverage;
     }
-    const double past=std::max(RecentValue(gpu,item.key,o,incoming),PersistentEstimate(item.key,o));
+    double past=std::max(RecentValue(gpu,item.key,o,incoming),PersistentEstimate(item.key,o));
+    if(o.novel_reuse_decay && o.persistent_run_reuse && o.causal_window && o.shared_value && o.burst_reuse)
+      past*=run_reuse_.CompetitionSurvival(item.key);
     // These are overlapping estimates, not independent demand to add together.
     // Use the same value for incoming and resident copies of the current key.
     return std::max(past,BurstRemaining(item.key,o))*(o.cost?SavingRate()*item.bytes:1.0)*item.coverage;

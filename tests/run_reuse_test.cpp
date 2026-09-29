@@ -3,6 +3,31 @@
 #include <iostream>
 using namespace tokenfs_policy;
 int main() {
+  {
+    RunReuse summary;uint64_t at=0;
+    auto run=[&](const std::string& k,int n){for(int i=0;i<n;++i)summary.Observe(k,++at,128);};
+    run("old",4);run("x",4);run("old",4);
+    const double initial=summary.CompetitionSurvival("old");assert(initial==1);
+    for(int i=0;i<12;++i)run("scan"+std::to_string(i),4);
+    assert(summary.CompetitionSurvival("old")==initial); // A scan is not a new working set.
+    run("new",4);run("separator",4);run("new",4);
+    assert(summary.CompetitionSurvival("old")==.5 && summary.CompetitionSurvival("new")==1);
+    run("new",4);assert(summary.CompetitionSurvival("old")==.5); // censored active burst
+    run("old",4);assert(summary.CompetitionSurvival("old")==1); // renewed demand restores evidence
+  }
+
+  {
+    Options o;o.causal_window=true;o.shared_value=true;o.burst_reuse=true;
+    o.persistent_run_reuse=true;o.persistent_reuse_immediate_decay=true;o.admission=false;
+    MeasuredPolicy p;p.ReadSample(false,100,100);p.ReadSample(true,100,20);p.CopySample(100,20);
+    auto run=[&](const std::string& k){for(int i=0;i<4;++i)p.Observe(0,k,o);};
+    run("old");run("separator0");run("old");run("new");run("separator1");run("new");
+    auto loss=[&](Options x){return p.Plan(0,{"new",100,0},{{"old",100,0}},100,100,x).displaced_us;};
+    auto novel=o;novel.novel_reuse_decay=true;
+    assert(loss(novel)==.5*loss(o) && loss(o)>0);
+    auto same=p.Plan(0,{"new",100,0},{{"new",100,0}},100,100,novel);
+    assert(same.incoming_us==same.displaced_us);
+  }
   RunReuse r;uint64_t t=0;
   auto run=[&](const std::string& k,int n){for(int i=0;i<n;++i)r.Observe(k,++t,128);};
   run("hot",4);run("a",28);run("hot",4);run("b",28);run("hot",4);

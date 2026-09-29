@@ -16,11 +16,17 @@ class RunReuse {
   void Observe(const std::string& key,uint64_t at,size_t limit) {
     limit=std::max<size_t>(2,limit);
     if(active_length_ && key==active_) {
-      ++active_length_;entries_.at(key).last_seen=at;
+      ++active_length_;entries_.at(key).last_seen=at;entries_.at(key).novelty_seen=novelty_;
     } else {
       if(active_length_)entries_.at(active_).length.Add(active_length_,limit);
       auto& entry=entries_[key];
-      if(entry.last_start)entry.gap.Add(at-entry.last_start,limit);
+      if(entry.last_start) {
+        // A return in a distinct run establishes new recurring demand.
+        // Adjacent repeats and one-off scans never advance this clock.
+        if(!entry.gap.n)++novelty_;
+        entry.gap.Add(at-entry.last_start,limit);
+      }
+      entry.novelty_seen=novelty_;
       entry.last_start=entry.last_seen=at;entry.generation=++generation_;
       recent_.emplace_back(key,generation_);
       active_=key;active_length_=1;
@@ -44,6 +50,10 @@ class RunReuse {
     return std::max<size_t>(2,horizon)/interval*e.length.mean*confidence*
            std::exp2(-overdue/interval);
   }
+  double CompetitionSurvival(const std::string& key) const {
+    const auto it=entries_.find(key);
+    return it==entries_.end()?1.0:std::exp2(-double(novelty_-it->second.novelty_seen));
+  }
   size_t Entries() const {return entries_.size();}
   size_t Runs() const {return recent_.size();}
  private:
@@ -55,10 +65,10 @@ class RunReuse {
       mean+=alpha*delta;variance=(1-alpha)*(variance+alpha*delta*delta);
     }
   };
-  struct Entry {Moment gap,length;uint64_t last_start=0,last_seen=0,generation=0;};
+  struct Entry {Moment gap,length;uint64_t last_start=0,last_seen=0,generation=0,novelty_seen=0;};
   std::unordered_map<std::string,Entry> entries_;
   std::deque<std::pair<std::string,uint64_t>> recent_;
   std::string active_;
-  uint64_t active_length_=0,generation_=0;
+  uint64_t active_length_=0,generation_=0,novelty_=0;
 };
 }
