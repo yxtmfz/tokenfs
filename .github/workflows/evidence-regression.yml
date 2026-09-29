@@ -67,3 +67,5 @@ jobs:
         run: python3 -m unittest tests.stationary_stability_test
       - name: Test gated recurrence integrated controls
         run: python3 -m unittest tests.integrated_hpj_guarded_study_test
+      - name: Test frozen-binary reverse-order invariants
+        run: python3 -m unittest tests.integrated_hpj_reverse_test

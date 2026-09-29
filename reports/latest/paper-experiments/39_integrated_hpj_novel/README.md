@@ -63,3 +63,7 @@ H：仅最终时变热度估值对比静态近期频率估值，保持执行与�
 来源、程序、配置哈希在manifest/freeze中；独立复核核对全部请求字节、SQLite计数与顺序、三层服务成本、复制及队列完成、错误、24MiB磁盘和4MiB缓冲上限，从原始墙钟重算所有速率和p99。源码、原始数据和审计脚本均归档。测速不逐请求哈希，保留副本在计时外校验；未做真实GPU或LLM端到端实验。cn7通过已有cn13 NVMe/TCP，未用cn14。每次576×2MiB、3串行逻辑消费者，同步FULL-WAL不变；服务端缓存及其他用户IO未全局隔离。
 
 复算：将原始归档解压为integrated-hpj-novel-data、源码为integrated-hpj-novel-source，validation/review-integrated-hpj.py放在两者同级，用Python3.12运行并传参数integrated-hpj-novel。[草稿PR20](https://github.com/yxtmfz/tokenfs/pull/20)，未合并。所有负结果保留，不等同于三个创新点全面通过。
+
+## 本轮候选与发现的副作用
+
+本轮在时变价值中加入新对象跨突发重访的竞争衰减。移动输入 Full 的远端读取降至106MiB，复制53次，无净收益拒绝0次；但在本轮仍比SIEVE慢1.29%左右。固定输入Full与SIEVE均复制30次，Full仍慢4.10%。均匀输入Full读远端544MiB、复制28次，较前轮的520MiB/22次增加；这是机制回归，不能只解释为噪声。后续候选用已观测时间聚集性约束衰减，防止把随机重访一概当作工作集迁移。跨轮速率只用于开发诊断，不能替代同轮消融。
