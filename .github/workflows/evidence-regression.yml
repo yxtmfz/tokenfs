@@ -81,3 +81,7 @@ jobs:
         run: python3 -m unittest tests.integrated_hpj_calibrated_reverse_test
       - name: Test telemetry repair preserves strict ablation controls
         run: python3 -m unittest tests.integrated_hpj_telemetry_test
+      - name: Test telemetry reverse controls and read-path ablations
+        run: python3 -m unittest tests.integrated_hpj_telemetry_reverse_test tests.integrated_hpj_readpath_test
+      - name: Test read-path reverse-order invariants
+        run: python3 -m unittest tests.integrated_hpj_readpath_reverse_test

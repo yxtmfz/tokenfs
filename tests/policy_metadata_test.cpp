@@ -534,10 +534,37 @@ void MetricBatchTransactions(const fs::path& path) {
   assert(values().at("a")==10 && values().at("peak")==8);sqlite3_close(db);
 }
 
+void ReusedQueriesAndAtomicReplica(const fs::path& path) {
+  MetadataStore store(path);store.Open();sqlite3* db=nullptr;assert(sqlite3_open(path.c_str(),&db)==SQLITE_OK);
+  auto exec=[&](const char* sql){assert(sqlite3_exec(db,sql,nullptr,nullptr,nullptr)==SQLITE_OK);};
+  assert(!store.Get("/gpu0/k") && !store.GetLocalReplica("/gpu0/k",1));
+  assert(store.LocalReplicas("/gpu0/k").empty());
+  FileMeta f;f.logical_path="/gpu0/k";f.gpu_id=0;f.tier="remote";f.physical_path="/remote/k";f.has_remote_copy=true;f.state="COMMITTED";store.Upsert(f);
+  assert(store.Get(f.logical_path)->tier=="remote");
+  // A schema invalidation must recompile the query, not keep stale results.
+  exec("CREATE INDEX query_test ON files(tier);");
+  f.size_bytes=17;store.Upsert(f);assert(store.Get(f.logical_path)->size_bytes==17);
+  LocalReplica replica;replica.logical_path=f.logical_path;replica.gpu_id=1;replica.physical_path="/local/k";replica.state="READY";replica.size_bytes=4096;
+  exec("CREATE TRIGGER reject_promotion BEFORE UPDATE OF last_promoted_at ON files BEGIN SELECT RAISE(ABORT,'injected'); END;");
+  bool rejected=false;try{store.UpsertLocalReplica(replica,true);}catch(const std::runtime_error&){rejected=true;}
+  assert(rejected && !store.GetLocalReplica(f.logical_path,1) && store.LocalReplicas(f.logical_path).empty());
+  exec("DROP TRIGGER reject_promotion;");store.UpsertLocalReplica(replica,true);
+  assert(store.GetLocalReplica(f.logical_path,1)->size_bytes==4096);
+  assert(store.LocalReplicas(f.logical_path).size()==1 && store.Get(f.logical_path)->target_local_replica_count>=1);
+  std::vector<std::future<void>> readers;
+  for(int i=0;i<4;++i)readers.push_back(std::async(std::launch::async,[&]{for(int j=0;j<50;++j){assert(store.Get(f.logical_path)->size_bytes==17);assert(store.GetLocalReplica(f.logical_path,1)->state=="READY");assert(store.LocalReplicas(f.logical_path).size()==1);}}));
+  for(auto& reader:readers)reader.get();
+  store.RemoveLocalReplica(f.logical_path,1);assert(!store.GetLocalReplica(f.logical_path,1) && store.LocalReplicas(f.logical_path).empty());
+  store.Remove(f.logical_path);assert(!store.Get(f.logical_path));
+  rejected=false;try{store.UpsertLocalReplica(replica,true);}catch(const std::runtime_error&){rejected=true;}
+  assert(rejected && store.LocalReplicas(f.logical_path).empty());sqlite3_close(db);
+}
+
 int main() {
   const fs::path root = fs::temp_directory_path() / ("tokenfs-policy-test-" + std::to_string(getpid()));
   fs::create_directory(root);
   MetricBatchTransactions(root/"metric-batches.db");
+  ReusedQueriesAndAtomicReplica(root/"query-reuse.db");
   TokenFSTestAccess::telemetry_retry_and_release_lock(root/"telemetry-retry");
   TokenFSTestAccess::background_metric_fence(root/"metric-fence-on",true);
   TokenFSTestAccess::background_metric_fence(root/"metric-fence-off",false);

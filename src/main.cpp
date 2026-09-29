@@ -242,6 +242,7 @@ class MetadataStore {
   explicit MetadataStore(const fs::path& db_path) : db_path_(db_path) {}
 
   ~MetadataStore() {
+    for(const auto& [sql,stmt]:read_statements_){(void)sql;sqlite3_finalize(stmt);}
     if (db_ != nullptr) {
       sqlite3_close(db_);
     }
@@ -391,17 +392,15 @@ class MetadataStore {
         "COALESCE(target_local_replica_count,0),"
         "COALESCE(affinity_state,'UNKNOWN'),COALESCE(affinity_updated_at,0) "
         "FROM files WHERE logical_path=?;";
-    sqlite3_stmt* stmt = nullptr;
-    Prepare(sql, &stmt);
+    auto lease=ReadStatement(sql);
+    auto* stmt=lease.get();
     sqlite3_bind_text(stmt, 1, logical_path.c_str(), -1, SQLITE_TRANSIENT);
     int rc = sqlite3_step(stmt);
     if (rc == SQLITE_DONE) {
-      sqlite3_finalize(stmt);
       return std::nullopt;
     }
     if (rc != SQLITE_ROW) {
       std::string err = sqlite3_errmsg(db_);
-      sqlite3_finalize(stmt);
       throw std::runtime_error(err);
     }
     FileMeta meta;
@@ -444,7 +443,6 @@ class MetadataStore {
     meta.affinity_state = ColumnText(stmt, 28);
     meta.affinity_updated_at =
         static_cast<uint64_t>(sqlite3_column_int64(stmt, 29));
-    sqlite3_finalize(stmt);
     return meta;
   }
 
@@ -776,21 +774,18 @@ class MetadataStore {
   std::optional<LocalReplica> GetLocalReplica(const std::string& logical_path,
                                                int gpu_id) {
     std::lock_guard<std::mutex> lock(mu_);
-    sqlite3_stmt* stmt = nullptr;
-    Prepare("SELECT logical_path,gpu_id,physical_path,size_bytes,"
+    auto lease=ReadStatement("SELECT logical_path,gpu_id,physical_path,size_bytes,"
             "cache_generation,created_at,last_access_at,state "
-            "FROM local_replicas WHERE logical_path=? AND gpu_id=?;",
-            &stmt);
+            "FROM local_replicas WHERE logical_path=? AND gpu_id=?;");
+    auto* stmt=lease.get();
     sqlite3_bind_text(stmt, 1, logical_path.c_str(), -1, SQLITE_TRANSIENT);
     sqlite3_bind_int(stmt, 2, gpu_id);
     int rc = sqlite3_step(stmt);
     if (rc == SQLITE_DONE) {
-      sqlite3_finalize(stmt);
       return std::nullopt;
     }
     if (rc != SQLITE_ROW) {
       std::string err = sqlite3_errmsg(db_);
-      sqlite3_finalize(stmt);
       throw std::runtime_error(err);
     }
     LocalReplica replica;
@@ -804,18 +799,16 @@ class MetadataStore {
     replica.last_access_at =
         static_cast<uint64_t>(sqlite3_column_int64(stmt, 6));
     replica.state = ColumnText(stmt, 7);
-    sqlite3_finalize(stmt);
     return replica;
   }
 
   std::vector<LocalReplica> LocalReplicas(const std::string& logical_path) {
     std::lock_guard<std::mutex> lock(mu_);
-    sqlite3_stmt* stmt = nullptr;
-    Prepare("SELECT logical_path,gpu_id,physical_path,size_bytes,"
+    auto lease=ReadStatement("SELECT logical_path,gpu_id,physical_path,size_bytes,"
             "cache_generation,created_at,last_access_at,state "
             "FROM local_replicas WHERE logical_path=? "
-            "ORDER BY last_access_at ASC,created_at ASC;",
-            &stmt);
+            "ORDER BY last_access_at ASC,created_at ASC;");
+    auto* stmt=lease.get();
     sqlite3_bind_text(stmt, 1, logical_path.c_str(), -1, SQLITE_TRANSIENT);
     std::vector<LocalReplica> out;
     while (true) {
@@ -825,7 +818,6 @@ class MetadataStore {
       }
       if (rc != SQLITE_ROW) {
         std::string err = sqlite3_errmsg(db_);
-        sqlite3_finalize(stmt);
         throw std::runtime_error(err);
       }
       LocalReplica replica;
@@ -841,12 +833,13 @@ class MetadataStore {
       replica.state = ColumnText(stmt, 7);
       out.push_back(std::move(replica));
     }
-    sqlite3_finalize(stmt);
     return out;
   }
 
-  void UpsertLocalReplica(const LocalReplica& replica) {
+  void UpsertLocalReplica(const LocalReplica& replica,bool publish_promotion=false) {
     std::lock_guard<std::mutex> lock(mu_);
+    if(publish_promotion)Exec("BEGIN IMMEDIATE;");
+    try {
     sqlite3_stmt* stmt = nullptr;
     const auto physical = replica.physical_path.string();
     Prepare("INSERT INTO local_replicas(logical_path,gpu_id,physical_path,"
@@ -871,6 +864,13 @@ class MetadataStore {
                        static_cast<sqlite3_int64>(replica.last_access_at));
     sqlite3_bind_text(stmt, 8, replica.state.c_str(), -1, SQLITE_TRANSIENT);
     StepDone(stmt);
+    if(publish_promotion) {
+      Prepare("UPDATE files SET last_promoted_at=?,target_local_replica_count=MAX(target_local_replica_count,1) WHERE logical_path=?;",&stmt);
+      sqlite3_bind_int64(stmt,1,UnixNow());sqlite3_bind_text(stmt,2,replica.logical_path.c_str(),-1,SQLITE_TRANSIENT);StepDone(stmt);
+      if(sqlite3_changes(db_)!=1)throw std::runtime_error("replica publication requires its canonical metadata");
+      Exec("COMMIT;");
+    }
+    }catch(...){if(publish_promotion)Exec("ROLLBACK;");throw;}
   }
 
   void TouchLocalReplica(const std::string& logical_path, int gpu_id) {
@@ -1428,6 +1428,17 @@ class MetadataStore {
     sqlite3_finalize(stmt);
   }
 
+  // The three hot read queries are serialized by mu_. Reuse their compiled
+  // programs, never their results; reset ends each snapshot before writes.
+  struct ResetReadStatement {
+    void operator()(sqlite3_stmt* stmt) const {sqlite3_reset(stmt);sqlite3_clear_bindings(stmt);}
+  };
+  std::unique_ptr<sqlite3_stmt,ResetReadStatement> ReadStatement(const char* sql) {
+    auto& stmt=read_statements_[sql];
+    if(!stmt)Prepare(sql,&stmt);
+    return std::unique_ptr<sqlite3_stmt,ResetReadStatement>(stmt);
+  }
+  std::unordered_map<std::string,sqlite3_stmt*> read_statements_;
   uint64_t access_sequence_ = 0;
   fs::path db_path_;
   sqlite3* db_ = nullptr;
@@ -3145,8 +3156,7 @@ class TokenFS {
     replica.last_access_at = now;
     replica.state = "READY";
     if(config_.local_eviction_policy=="sieve")sieve_.Ready(caller_gpu.gpu_id,meta.logical_path);
-    metadata_.UpsertLocalReplica(replica);
-    metadata_.RecordReplicaPromotion(meta.logical_path);
+    metadata_.UpsertLocalReplica(replica,true);
     RecordPolicyEvent("REPLICATE_READY", meta.logical_path, caller_gpu.gpu_id, size, "cross_gpu");
     if(reused)RecordReadFillCommit(size,fill);
     RecordCopyCost(size,{ElapsedMicros(copy_start),planning_us,reused?fill->CaptureUs():0});
