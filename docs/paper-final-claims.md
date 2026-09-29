@@ -13,3 +13,7 @@ Report actual completed logical bytes/wall second, all empirical p99 observation
 ## Independent results now available
 
 See [report66](../reports/latest/paper-experiments/66_independent_final/README.md).34 speed runs and480 request-level content checks completed. Overall public replay throughput improves20.503% with3/3 paired throughput/p99 gains; moving aggregate improves only0.251% with mixed signs. Hotspot ablation does not establish a stable marginal improvement (moving−0.511%, public+0.505%, mixed signs). Placement and victim-loss admission show limited empirical benefits under the stated logical-domain scope; strict per-input gates pass18/26 overall. Do not describe all three modules as independently established performance innovations. No statistical or physical-GPU confirmation.
+
+## Follow-up hotspot candidate rejected
+
+[Report67](../reports/latest/paper-experiments/67_hotspot_object_prior/README.md) investigates two already inspected report66 inputs, with24 timed runs and480 content checks. A distinct-object newcomer prior reduces copies but fails the throughput/p99 requirements: H strict0/4, all three ablations plus SIEVE4/16. The candidate is not adopted; native production code is retained. Its development outcomes do not replace or extend report66's independent claims. First-reference requests dominate the moving-input tail; lower copying alone does not establish lower p99.

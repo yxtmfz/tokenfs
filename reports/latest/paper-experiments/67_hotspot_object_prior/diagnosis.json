@@ -1,0 +1,191 @@
+{
+  "source_report": 66,
+  "analysis_type": "offline diagnostic using complete inputs; not online policy inputs",
+  "scenes": [
+    {
+      "input": "moving_shared-73501",
+      "requests": 1152,
+      "distinct_keys": 60,
+      "logical_disk_object_capacity": 12,
+      "logical_capture_object_capacity": 2,
+      "arms": [
+        {
+          "variant": "Full",
+          "remote_reads": 72,
+          "copy_admissions": 66,
+          "copy_admissions_of_single_run_keys": 34,
+          "top_one_percent_requests": 12,
+          "top_one_percent_first_references": 12
+        },
+        {
+          "variant": "NoHotspot",
+          "remote_reads": 79,
+          "copy_admissions": 28,
+          "copy_admissions_of_single_run_keys": 4,
+          "top_one_percent_requests": 12,
+          "top_one_percent_first_references": 12
+        }
+      ]
+    },
+    {
+      "input": "moving_shared-73502",
+      "requests": 1152,
+      "distinct_keys": 65,
+      "logical_disk_object_capacity": 12,
+      "logical_capture_object_capacity": 2,
+      "arms": [
+        {
+          "variant": "Full",
+          "remote_reads": 75,
+          "copy_admissions": 66,
+          "copy_admissions_of_single_run_keys": 36,
+          "top_one_percent_requests": 12,
+          "top_one_percent_first_references": 12
+        },
+        {
+          "variant": "NoHotspot",
+          "remote_reads": 85,
+          "copy_admissions": 28,
+          "copy_admissions_of_single_run_keys": 4,
+          "top_one_percent_requests": 12,
+          "top_one_percent_first_references": 12
+        }
+      ]
+    },
+    {
+      "input": "moving_shared-73503",
+      "requests": 1152,
+      "distinct_keys": 60,
+      "logical_disk_object_capacity": 12,
+      "logical_capture_object_capacity": 2,
+      "arms": [
+        {
+          "variant": "Full",
+          "remote_reads": 71,
+          "copy_admissions": 67,
+          "copy_admissions_of_single_run_keys": 36,
+          "top_one_percent_requests": 12,
+          "top_one_percent_first_references": 12
+        },
+        {
+          "variant": "NoHotspot",
+          "remote_reads": 79,
+          "copy_admissions": 28,
+          "copy_admissions_of_single_run_keys": 4,
+          "top_one_percent_requests": 12,
+          "top_one_percent_first_references": 11
+        }
+      ]
+    },
+    {
+      "input": "public_toolagent-73601",
+      "requests": 1152,
+      "distinct_keys": 752,
+      "logical_disk_object_capacity": 12,
+      "logical_capture_object_capacity": 2,
+      "arms": [
+        {
+          "variant": "Full",
+          "remote_reads": 862,
+          "copy_admissions": 34,
+          "copy_admissions_of_single_run_keys": 11,
+          "top_one_percent_requests": 12,
+          "top_one_percent_first_references": 10
+        },
+        {
+          "variant": "NoHotspot",
+          "remote_reads": 874,
+          "copy_admissions": 25,
+          "copy_admissions_of_single_run_keys": 11,
+          "top_one_percent_requests": 12,
+          "top_one_percent_first_references": 11
+        }
+      ]
+    },
+    {
+      "input": "public_toolagent-73602",
+      "requests": 1152,
+      "distinct_keys": 758,
+      "logical_disk_object_capacity": 12,
+      "logical_capture_object_capacity": 2,
+      "arms": [
+        {
+          "variant": "Full",
+          "remote_reads": 877,
+          "copy_admissions": 41,
+          "copy_admissions_of_single_run_keys": 6,
+          "top_one_percent_requests": 12,
+          "top_one_percent_first_references": 11
+        },
+        {
+          "variant": "NoHotspot",
+          "remote_reads": 874,
+          "copy_admissions": 28,
+          "copy_admissions_of_single_run_keys": 6,
+          "top_one_percent_requests": 12,
+          "top_one_percent_first_references": 11
+        }
+      ]
+    },
+    {
+      "input": "public_toolagent-73603",
+      "requests": 1152,
+      "distinct_keys": 816,
+      "logical_disk_object_capacity": 12,
+      "logical_capture_object_capacity": 2,
+      "arms": [
+        {
+          "variant": "Full",
+          "remote_reads": 903,
+          "copy_admissions": 30,
+          "copy_admissions_of_single_run_keys": 8,
+          "top_one_percent_requests": 12,
+          "top_one_percent_first_references": 9
+        },
+        {
+          "variant": "NoHotspot",
+          "remote_reads": 938,
+          "copy_admissions": 21,
+          "copy_admissions_of_single_run_keys": 8,
+          "top_one_percent_requests": 12,
+          "top_one_percent_first_references": 11
+        }
+      ]
+    },
+    {
+      "input": "stationary_shared-73701",
+      "requests": 1152,
+      "distinct_keys": 65,
+      "logical_disk_object_capacity": 12,
+      "logical_capture_object_capacity": 2,
+      "arms": [
+        {
+          "variant": "Full",
+          "remote_reads": 76,
+          "copy_admissions": 66,
+          "copy_admissions_of_single_run_keys": 49,
+          "top_one_percent_requests": 12,
+          "top_one_percent_first_references": 12
+        }
+      ]
+    },
+    {
+      "input": "uniform-73702",
+      "requests": 1152,
+      "distinct_keys": 24,
+      "logical_disk_object_capacity": 12,
+      "logical_capture_object_capacity": 2,
+      "arms": [
+        {
+          "variant": "Full",
+          "remote_reads": 537,
+          "copy_admissions": 43,
+          "copy_admissions_of_single_run_keys": 0,
+          "top_one_percent_requests": 12,
+          "top_one_percent_first_references": 8
+        }
+      ]
+    }
+  ],
+  "limits": "First-reference classification is observable from the prefix, but single-run classification uses the full trace only for diagnosis. Counts are logical requests, not packet or device metrics."
+}

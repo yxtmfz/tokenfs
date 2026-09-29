@@ -1,0 +1,73 @@
+diff --git a/src/run_reuse.h b/src/run_reuse.h
+index 9fb8480..edd14d2 100644
+--- a/src/run_reuse.h
++++ b/src/run_reuse.h
+@@ -23,7 +23,7 @@ class RunReuse {
+       if(entry.last_start) {
+         // A return in a distinct run establishes new recurring demand.
+         // Adjacent repeats and one-off scans never advance this clock.
+-        if(!entry.gap.n)++novelty_;
++        if(!entry.gap.n){++novelty_;++returning_entries_;}
+         entry.gap.Add(at-entry.last_start,limit);
+         return_gaps_.push_back(at-entry.last_start);return_gap_sum_+=at-entry.last_start;
+       }
+@@ -36,7 +36,10 @@ class RunReuse {
+     while(recent_.size()>limit) {
+       const auto old=recent_.front();recent_.pop_front();
+       auto it=entries_.find(old.first);
+-      if(it!=entries_.end() && it->second.generation==old.second)entries_.erase(it);
++      if(it!=entries_.end() && it->second.generation==old.second) {
++        if(it->second.gap.n)--returning_entries_;
++        entries_.erase(it);
++      }
+     }
+   }
+   double Estimate(const std::string& key,uint64_t at,size_t horizon,bool immediate_decay=false) const {
+@@ -59,10 +62,11 @@ class RunReuse {
+   double NewcomerDiskPrior(const std::string& key) const {
+     const auto it=entries_.find(key);
+     if(it==entries_.end() || it->second.gap.n || recent_.size()<=entries_.size())return 0;
+-    // Transfer bounded evidence from observed returns, not the current run's
+-    // eventual length. One pseudo-object shrinks sparse histories; at most one
+-    // future disk read is credited to a not-yet-recurring object.
+-    return std::min(1.0,double(recent_.size()-entries_.size())/(entries_.size()+1.0));
++    // An object is one trial: repeated returns by a single established hot
++    // object cannot establish that unrelated newcomers will also return.
++    // One pseudo-object shrinks sparse evidence. The bounded numerator is
++    // maintained on first return and history expiry, so planning stays O(1).
++    return double(returning_entries_)/(entries_.size()+1.0);
+   }
+   // New objects borrow a between-run interval, not the adjacent-read gap
+   // within their first burst. Observed return gaps are bounded by the same
+@@ -90,5 +94,6 @@ class RunReuse {
+   std::deque<uint64_t> return_gaps_;uint64_t return_gap_sum_=0;
+   std::string active_;
+   uint64_t active_length_=0,generation_=0,novelty_=0;
++  size_t returning_entries_=0;
+ };
+ }
+diff --git a/tests/run_reuse_test.cpp b/tests/run_reuse_test.cpp
+index 4827143..8ab2c4e 100644
+--- a/tests/run_reuse_test.cpp
++++ b/tests/run_reuse_test.cpp
+@@ -3,6 +3,20 @@
+ #include <iostream>
+ using namespace tokenfs_policy;
+ int main() {
++  {
++    RunReuse r;uint64_t at=0;
++    auto run=[&](const std::string& key){r.Observe(key,++at,128);};
++    run("hot");run("separator");run("hot");run("new");
++    const double one=r.NewcomerDiskPrior("new");assert(one==.25);
++    run("hot");run("new"); // two different returning objects, not just more runs
++    run("fresh");assert(r.NewcomerDiskPrior("fresh")==.4);
++    for(int i=0;i<20;++i){run("hot");run("new");}
++    assert(r.NewcomerDiskPrior("fresh")==.4); // recurrent popularity cannot inflate it
++    for(int i=0;i<200;++i)run("scan"+std::to_string(i));
++    assert(r.NewcomerDiskPrior("scan199")==0); // expired evidence is subtracted
++    r.Observe("last",++at,2);assert(r.Entries()<=2);
++    assert(r.NewcomerDiskPrior("last")==0);
++  }
+   {
+     RunReuse summary;uint64_t at=0;
+     auto run=[&](const std::string& k,int n){for(int i=0;i<n;++i)summary.Observe(k,++at,128);};
