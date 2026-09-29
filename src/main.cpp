@@ -2282,7 +2282,7 @@ class TokenFS {
         fs::path("/proc") / std::to_string(ctx->pid) / "environ";
     std::ifstream in(environ_path, std::ios::binary);
     if (!in) {
-      metadata_.AddMetric("affinity_caller_env_unreadable", 1);
+      AddBufferedMetric("affinity_caller_env_unreadable", 1);
       return fallback_gpu_id;
     }
     std::string env((std::istreambuf_iterator<char>(in)),
@@ -2332,11 +2332,13 @@ class TokenFS {
       auto parsed = parse_gpu(*value);
       if (parsed && KnownGpuId(*parsed)) {
         if (*parsed != fallback_gpu_id) {
-          metadata_.AddMetric("affinity_cross_gpu_caller_count", 1);
+          // Caller identity is read fresh; only this diagnostic counter joins
+          // the existing durable telemetry fence instead of a separate fsync.
+          AddBufferedMetric("affinity_cross_gpu_caller_count", 1);
         }
         return *parsed;
       }
-      metadata_.AddMetric("affinity_caller_env_invalid", 1);
+      AddBufferedMetric("affinity_caller_env_invalid", 1);
     }
     return fallback_gpu_id;
   }

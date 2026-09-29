@@ -1,0 +1,7 @@
+# Co-commit background completion with its telemetry
+
+Preserve report62's failed ten-run atomic-first-read matrix. The unchanged policy and actual counts still show fewer remote reads, but double-metric acceptance fails. Each successful background operation currently commits telemetry and then its completion marker separately. Share one FULL-WAL commit while preserving the ordering fence: completion cannot become durable ahead of the metrics; failed attempts requeue telemetry without duplicating completion. All five arms receive the same execution path. Keep atomic first-read registration from report62 and all prior policy parameters.
+
+A distinct-object-return-probability prototype passed native tests but the causal fixed-cost replay loses hotspot's remote-read advantage (61 versus61 misses); do not speed-test it. Retain the prior expected-reuse estimator. This discarded prototype is not a measured performance result.
+
+Use the same moving3293,576x2MiB,24MiB disk,4MiB captures, five strategies, two reversed orders. Strict acceptance_v3: throughput>0 and p99 change<0 in all eight comparisons, plus drain/mechanism checks. Preserve all runs and failures; no selective repeats or historical-result mixing. This remains cn7 logical domains with cn13 NVMe/TCP, not physical GPUs. Run all regression checks before speed and content verification before final delivery. No broad sweep or independent-input claim.
