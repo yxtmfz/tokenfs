@@ -88,6 +88,7 @@ struct Config {
   bool novel_reuse_decay = false;
   bool profile_control_path = false;
   bool batch_background_metrics = false;
+  bool batch_policy_events = false;
   std::string request_trace_path;
   bool foreground_read_fill = false;
   bool retain_read_fill = false;
@@ -226,6 +227,14 @@ struct Handle {
   std::shared_ptr<ReadFillPool::Buffer> read_fill;
   std::shared_ptr<ReadFillPool::Buffer> borrowed_capture;
   std::shared_ptr<RequestReadCost> read_cost;
+};
+
+struct PolicyEvent {
+  std::string action, path;
+  int gpu;
+  uint64_t bytes;
+  std::string reason;
+  double score;
 };
 
 class MetadataStore {
@@ -688,7 +697,8 @@ class MetadataStore {
   }
 
   void ApplyMetricBatch(const std::unordered_map<std::string, uint64_t>& deltas,
-                        const std::unordered_map<std::string, uint64_t>& maxima) {
+                        const std::unordered_map<std::string, uint64_t>& maxima,
+                        const std::vector<PolicyEvent>& events = {}) {
     std::lock_guard<std::mutex> lock(mu_);
     Exec("BEGIN IMMEDIATE;");
     try {
@@ -708,6 +718,21 @@ class MetadataStore {
       };
       apply(deltas,"INSERT INTO metrics(name,value) VALUES(?,?) ON CONFLICT(name) DO UPDATE SET value=value+excluded.value;");
       apply(maxima,"INSERT INTO metrics(name,value) VALUES(?,?) ON CONFLICT(name) DO UPDATE SET value=MAX(value,excluded.value);");
+      if(!events.empty()) {
+        sqlite3_stmt* raw=nullptr;
+        Prepare("INSERT INTO policy_events(action,logical_path,gpu_id,bytes,reason,score) VALUES(?,?,?,?,?,?);",&raw);
+        std::unique_ptr<sqlite3_stmt,decltype(&sqlite3_finalize)> stmt(raw,sqlite3_finalize);
+        for(const auto& e:events) {
+          sqlite3_bind_text(raw,1,e.action.c_str(),-1,SQLITE_TRANSIENT);
+          sqlite3_bind_text(raw,2,e.path.c_str(),-1,SQLITE_TRANSIENT);
+          sqlite3_bind_int(raw,3,e.gpu);sqlite3_bind_int64(raw,4,e.bytes);
+          sqlite3_bind_text(raw,5,e.reason.c_str(),-1,SQLITE_TRANSIENT);
+          sqlite3_bind_double(raw,6,e.score);
+          if(sqlite3_step(raw)!=SQLITE_DONE)throw std::runtime_error(sqlite3_errmsg(db_));
+          if(sqlite3_reset(raw)!=SQLITE_OK)throw std::runtime_error(sqlite3_errmsg(db_));
+          sqlite3_clear_bindings(raw);
+        }
+      }
       Exec("COMMIT;");
     } catch (...) { Exec("ROLLBACK;"); throw; }
   }
@@ -1451,6 +1476,8 @@ class TokenFS {
     }
     fs::create_directories(config_.mount_point);
     metadata_.Open();
+    if(config_.batch_policy_events && !config_.batch_background_metrics)
+      throw std::runtime_error("batched policy events require a durable background metric fence");
     RecoverIncompleteFiles();
     background_worker_ = std::thread([this] {
       for (;;) {
@@ -1956,6 +1983,7 @@ class TokenFS {
     std::unique_lock<std::mutex> lock(handles_mu_);
     auto it = handles_.find(fi->fh);
     if (it == handles_.end()) {
+      lock.unlock();
       FlushBufferedMetrics();
       return 0;
     }
@@ -1967,6 +1995,7 @@ class TokenFS {
         if (rc != 0) {
           close(it->second.fd);
           handles_.erase(it);
+          lock.unlock();
           FlushBufferedMetrics();
           return rc;
         }
@@ -1983,8 +2012,10 @@ class TokenFS {
     const auto fallback_path=fallback?it->second.logical_path:std::string{};
     const int fallback_caller=it->second.caller_gpu_id;
     handles_.erase(it);
+    // No handle remains to protect. Do not hold the pin table across SQLite
+    // telemetry fsyncs: background capacity checks also need this mutex.
+    lock.unlock();
     if(fallback) {
-      lock.unlock();
       AddBufferedMetric("read_fill_partial_fallback",1);
       if(auto meta=metadata_.Get(fallback_path))ScheduleSharedPlacement(*meta,fallback_caller);
     }
@@ -2568,7 +2599,7 @@ class TokenFS {
              << ";affinity_adjusted_items=" << plan.affinity_adjusted_items
              << ";burst_remaining=" << plan.burst_remaining << ";uncertainty=" << plan.uncertainty_us
              << ";explore=" << plan.explore_headroom;
-      metadata_.RecordPolicyEvent("ADMIT",protected_logical_path,gpu.gpu_id,required_size,
+      RecordPolicyEvent("ADMIT",protected_logical_path,gpu.gpu_id,required_size,
           detail.str(),plan.incoming_us-plan.displaced_us-plan.uncertainty_us-plan.copy_us);
     }
     if (used + required_size <= gpu.local_quota_bytes) {
@@ -2604,7 +2635,7 @@ class TokenFS {
         if (rc) { AddBackgroundMetric("evict_error_count", 1); return false; }
         sieve_.Removed(gpu.gpu_id, key);
         AddBackgroundMetric("evict_policy_sieve", 1);
-        metadata_.RecordPolicyEvent("EVICT", key, gpu.gpu_id, bytes, "sieve", 0);
+        RecordPolicyEvent("EVICT", key, gpu.gpu_id, bytes, "sieve", 0);
         used = used > bytes ? used - bytes : 0;
       }
       return true;
@@ -2707,7 +2738,7 @@ class TokenFS {
         AddBackgroundMetric("evict_error_count", 1);
         continue;
       }
-      metadata_.RecordPolicyEvent("EVICT", candidate.meta.logical_path, gpu.gpu_id, candidate_size,
+      RecordPolicyEvent("EVICT", candidate.meta.logical_path, gpu.gpu_id, candidate_size,
           config_.measured_policy?"measured":policy,
           config_.measured_policy?static_cast<double>(measured_.Frequency(gpu.gpu_id,candidate.meta.logical_path)):EvictionAuditScore(policy,candidate,now));
       used = used > candidate_size ? used - candidate_size : 0;
@@ -2864,7 +2895,7 @@ class TokenFS {
         if(!destination){AddBufferedMetric("shared_placement_no_gain",1);return;}
         std::ostringstream detail;detail<<"caller="<<caller<<";incoming="<<chosen.incoming_us
           <<";victim_loss="<<chosen.displaced_us<<";copy="<<chosen.copy_us<<";burst_remaining="<<chosen.burst_remaining<<";uncertainty="<<chosen.uncertainty_us<<";explore="<<chosen.explore_headroom<<";exploration_reads="<<chosen.exploration_reads;
-        metadata_.RecordPolicyEvent("SHARED_PLACE",path,destination->gpu_id,incoming.size_bytes,detail.str(),best);
+        RecordPolicyEvent("SHARED_PLACE",path,destination->gpu_id,incoming.size_bytes,detail.str(),best);
         AddBufferedMetric("shared_placement_selected",1);
         if(chosen.explore_headroom)AddBufferedMetric("shared_free_exploration_selected",1);
         if(chosen.burst_remaining>0 && chosen.affinity_incoming_count<2)AddBufferedMetric("shared_burst_first_read_selected",1);
@@ -3116,7 +3147,7 @@ class TokenFS {
     if(config_.local_eviction_policy=="sieve")sieve_.Ready(caller_gpu.gpu_id,meta.logical_path);
     metadata_.UpsertLocalReplica(replica);
     metadata_.RecordReplicaPromotion(meta.logical_path);
-    metadata_.RecordPolicyEvent("REPLICATE_READY", meta.logical_path, caller_gpu.gpu_id, size, "cross_gpu");
+    RecordPolicyEvent("REPLICATE_READY", meta.logical_path, caller_gpu.gpu_id, size, "cross_gpu");
     if(reused)RecordReadFillCommit(size,fill);
     RecordCopyCost(size,{ElapsedMicros(copy_start),planning_us,reused?fill->CaptureUs():0});
     AddBackgroundMetric("cross_gpu_replica_create_count", 1);
@@ -3244,7 +3275,7 @@ class TokenFS {
     if(config_.local_eviction_policy=="sieve")sieve_.Ready(gpu.gpu_id,meta.logical_path);
     metadata_.CommitLocalCache(meta, gpu.gpu_id, local, size);
     meta = *metadata_.Get(meta.logical_path);
-    metadata_.RecordPolicyEvent("PROMOTE_READY", meta.logical_path, gpu.gpu_id, size, metric_prefix);
+    RecordPolicyEvent("PROMOTE_READY", meta.logical_path, gpu.gpu_id, size, metric_prefix);
     if(reused)RecordReadFillCommit(size,fill);
     if(config_.measured_policy) {
       const CopyCostSample sample{ElapsedMicros(copy_start),planning_us,reused?fill->CaptureUs():0};
@@ -3832,6 +3863,17 @@ class TokenFS {
     else metadata_.AddMetric(name,delta);
   }
 
+  void RecordPolicyEvent(const std::string& action,const std::string& path,int gpu,
+                         uint64_t bytes,const std::string& reason,double score=0) {
+    if(!config_.batch_policy_events) {
+      metadata_.RecordPolicyEvent(action,path,gpu,bytes,reason,score);return;
+    }
+    // Diagnostic events are not the cache-state transaction. Publish them in
+    // order at the existing FULL-WAL telemetry fence, before task completion.
+    std::lock_guard<std::mutex> lock(buffered_metrics_mu_);
+    buffered_policy_events_.push_back({action,path,gpu,bytes,reason,score});
+  }
+
   void AddBufferedMetric(const std::string& name, uint64_t delta) {
     if (delta == 0) {
       return;
@@ -3853,15 +3895,27 @@ class TokenFS {
     std::lock_guard<std::mutex> flush_lock(flush_metrics_mu_);
     std::unordered_map<std::string, uint64_t> pending;
     std::unordered_map<std::string, uint64_t> pending_max;
+    std::vector<PolicyEvent> events;
     {
       std::lock_guard<std::mutex> lock(buffered_metrics_mu_);
-      if (buffered_metrics_.empty() && buffered_metric_max_.empty()) {
+      if (buffered_metrics_.empty() && buffered_metric_max_.empty() && buffered_policy_events_.empty()) {
         return;
       }
       pending.swap(buffered_metrics_);
       pending_max.swap(buffered_metric_max_);
+      events.swap(buffered_policy_events_);
     }
-    metadata_.ApplyMetricBatch(pending, pending_max);
+    try {metadata_.ApplyMetricBatch(pending, pending_max, events);}
+    catch (...) {
+      // The transaction rolled back. Retain observations for retry, ahead of
+      // newer events, without duplicating already durable data.
+      std::lock_guard<std::mutex> lock(buffered_metrics_mu_);
+      for(const auto& [key,value]:pending)buffered_metrics_[key]+=value;
+      for(const auto& [key,value]:pending_max)buffered_metric_max_[key]=std::max(buffered_metric_max_[key],value);
+      events.insert(events.end(),buffered_policy_events_.begin(),buffered_policy_events_.end());
+      buffered_policy_events_.swap(events);
+      throw;
+    }
   }
 
   void ApplyQos(const Handle& handle, bool write, uint64_t bytes) {
@@ -4016,6 +4070,7 @@ class TokenFS {
   std::mutex flush_metrics_mu_;
   std::unordered_map<std::string, uint64_t> buffered_metrics_;
   std::unordered_map<std::string, uint64_t> buffered_metric_max_;
+  std::vector<PolicyEvent> buffered_policy_events_;
   std::mutex qos_mu_;
   std::unordered_map<std::string, Clock::time_point> qos_next_;
 };
@@ -4093,6 +4148,7 @@ Config LoadConfig(const fs::path& path) {
   if(root["policy"] && root["policy"]["adaptive_reuse_control"]) config.adaptive_reuse_control=root["policy"]["adaptive_reuse_control"].as<bool>();
   if(root["policy"] && root["policy"]["profile_control_path"]) config.profile_control_path=root["policy"]["profile_control_path"].as<bool>();
   if(root["policy"] && root["policy"]["batch_background_metrics"]) config.batch_background_metrics=root["policy"]["batch_background_metrics"].as<bool>();
+  if(root["policy"] && root["policy"]["batch_policy_events"]) config.batch_policy_events=root["policy"]["batch_policy_events"].as<bool>();
   if(root["policy"] && root["policy"]["request_trace_path"]) config.request_trace_path=root["policy"]["request_trace_path"].as<std::string>();
   if(root["policy"] && root["policy"]["bounded_cost_warmup"]) config.bounded_cost_warmup=root["policy"]["bounded_cost_warmup"].as<bool>();
   if(root["policy"] && root["policy"]["capture_local_reads"]) config.capture_local_reads=root["policy"]["capture_local_reads"].as<bool>();

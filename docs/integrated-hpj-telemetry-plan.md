@@ -1,0 +1,9 @@
+# Telemetry and pin-lock regression: one fixed full matrix
+
+Moving diagnosis reused calibrated binary09f2: Full277.30MiB/s vs SIEVE297.54, mean open1.911vs1.573ms, Full mean telemetry flush0.677ms. Timing is instrumented; do not merge into final speed data. Per-event policy inserts each used their own FULL-WAL transaction, and Release kept the handle/pin mutex while waiting for telemetry fsync. This is a plausible execution bottleneck, not proof that it explains the entire gap.
+
+Repair: drop the pin-table mutex after erasing the completed handle, before telemetry I/O. Opt-in batch_policy_events (defaultfalse) logs ordered policy telemetry in the existing metric transaction and fences it before background completion. Cache metadata READY, checksums, eviction state and FULL-WAL remain unchanged. Failed telemetry transactions restore counters/maxima and prepend old events for retry. Telemetry may be lost on process crash before its fence, as already with buffered auxiliary metrics; this option is not an audit log durability guarantee. Apply to ALL five arms, including SIEVE. No cost/threshold changes, extra capacity, injected sleeps or data changes.
+
+Freeze the same15run matrix:stationary3271,moving3293,uniform3273;576x2MiB,24MiB disk,4MiB total retained capture. H/P/J are Full minus one module; only overall compares Full with shared SIEVE. All four reuse each Full. Keep positive throughput,p99 nonincrease,drain nondecrease,actual action gates. No cherry-picking or dropping uniform. A whole reverse repetition is permitted only as another small verification, not selective winning runs. Mechanism-inactive H/J stationary rows remain unsupported.
+
+Native tests must verify event order, rollback and retry without lost/duplicated metrics/events, signed event scores, completion fencing, and pin-lock availability while Release blocks on telemetry. All prior invariants and single-flag ablation controls must pass before real speed runs.

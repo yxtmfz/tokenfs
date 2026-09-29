@@ -29,6 +29,59 @@ struct TokenFSTestAccess {
     }
     assert(metric("background_error_count")==0);sqlite3_close(db);
   }
+  static void telemetry_retry_and_release_lock(const fs::path& root) {
+    Config cfg;cfg.mount_point=root/"mnt";cfg.metadata_db=root/"state.db";
+    cfg.batch_background_metrics=true;cfg.batch_policy_events=true;
+    cfg.request_read_costs=true;cfg.readonly_canonical=true;
+    cfg.gpus.push_back({0,"/gpu0",root/"local",8192,"remote"});
+    cfg.backends.emplace("remote",BackendConfig{"remote","directory",root/"remote"});
+    TokenFS filesystem(cfg);filesystem.Init();
+    sqlite3* db=nullptr;assert(sqlite3_open(cfg.metadata_db.c_str(),&db)==SQLITE_OK);
+    auto exec=[&](const char* sql){assert(sqlite3_exec(db,sql,nullptr,nullptr,nullptr)==SQLITE_OK);};
+    auto events=[&]{std::vector<std::string> out;sqlite3_stmt* st=nullptr;
+      assert(sqlite3_prepare_v2(db,"SELECT action FROM policy_events ORDER BY seq",-1,&st,nullptr)==SQLITE_OK);
+      while(sqlite3_step(st)==SQLITE_ROW)out.emplace_back(reinterpret_cast<const char*>(sqlite3_column_text(st,0)));
+      sqlite3_finalize(st);return out;};
+    exec("CREATE TRIGGER reject_event BEFORE INSERT ON policy_events WHEN NEW.action='reject' BEGIN SELECT RAISE(ABORT,'injected'); END;");
+    filesystem.AddBufferedMetric("retry_delta",7);filesystem.SetBufferedMetricMax("retry_peak",9);
+    filesystem.RecordPolicyEvent("first","/gpu0/k",0,4096,"test",-3.5);
+    filesystem.RecordPolicyEvent("reject","/gpu0/k",0,4096,"test");
+    bool failed=false;try{filesystem.FlushBufferedMetrics();}catch(const std::runtime_error&){failed=true;}
+    assert(failed && events().empty());
+    assert(filesystem.buffered_metrics_.at("retry_delta")==7);
+    assert(filesystem.buffered_metric_max_.at("retry_peak")==9);
+    filesystem.RecordPolicyEvent("newer","/gpu0/k",0,4096,"test");
+    exec("DROP TRIGGER reject_event;");filesystem.FlushBufferedMetrics();filesystem.FlushBufferedMetrics();
+    assert((events()==std::vector<std::string>{"first","reject","newer"}));
+    // Completion is durable only after the event batch, for the real worker.
+    assert(filesystem.SubmitBackground([&]{filesystem.RecordPolicyEvent("background","/gpu0/k",0,0,"test");}));
+    const auto deadline=std::chrono::steady_clock::now()+std::chrono::seconds(3);
+    while(true) {
+      sqlite3_stmt* st=nullptr;assert(sqlite3_prepare_v2(db,"SELECT value FROM metrics WHERE name='background_completed'",-1,&st,nullptr)==SQLITE_OK);
+      const bool done=sqlite3_step(st)==SQLITE_ROW && sqlite3_column_int64(st,0)==1;sqlite3_finalize(st);
+      if(done)break;assert(std::chrono::steady_clock::now()<deadline);std::this_thread::yield();
+    }
+    assert(events().back()=="background");
+    std::ofstream(root/"remote/gpu0/k")<<std::string(4096,'x');
+    fuse_file_info fi{};fi.flags=O_RDONLY;char bytes[2048];
+    assert(filesystem.Open("/gpu0/k",&fi)==0);
+    assert(filesystem.Read("/gpu0/k",bytes,sizeof(bytes),0,&fi)==2048);
+    // Hold the telemetry fence. A partial read accounts its sample in Release;
+    // after that marker, the handle table must become available even though
+    // Release is still waiting for this fence. The old implementation fails.
+    std::unique_lock<std::mutex> fence(filesystem.flush_metrics_mu_);
+    auto released=std::async(std::launch::async,[&]{return filesystem.Release("/gpu0/k",&fi);});
+    const auto until=std::chrono::steady_clock::now()+std::chrono::seconds(3);
+    bool accounted=false;
+    while(!accounted) {
+      {std::lock_guard<std::mutex> lock(filesystem.buffered_metrics_mu_);accounted=filesystem.buffered_metrics_["request_cost_remote_samples"]==1;}
+      assert(std::chrono::steady_clock::now()<until);std::this_thread::yield();
+    }
+    while(!filesystem.handles_mu_.try_lock()) {assert(std::chrono::steady_clock::now()<until);std::this_thread::yield();}
+    assert(filesystem.handles_.empty());filesystem.handles_mu_.unlock();
+    assert(released.wait_for(std::chrono::milliseconds(0))==std::future_status::timeout);
+    fence.unlock();assert(released.get()==0);sqlite3_close(db);
+  }
   static void inflight_reads(const fs::path& root,bool enabled,bool retained=false) {
     Config cfg;cfg.mount_point=root/"mnt";cfg.metadata_db=root/"state.db";
     cfg.foreground_read_fill=true;cfg.request_read_costs=true;cfg.coalesce_pending_reads=enabled;cfg.retain_read_fill=retained;cfg.capture_local_reads=retained;cfg.read_fill_buffer_bytes=4096;cfg.batch_background_metrics=true;
@@ -485,6 +538,7 @@ int main() {
   const fs::path root = fs::temp_directory_path() / ("tokenfs-policy-test-" + std::to_string(getpid()));
   fs::create_directory(root);
   MetricBatchTransactions(root/"metric-batches.db");
+  TokenFSTestAccess::telemetry_retry_and_release_lock(root/"telemetry-retry");
   TokenFSTestAccess::background_metric_fence(root/"metric-fence-on",true);
   TokenFSTestAccess::background_metric_fence(root/"metric-fence-off",false);
   TokenFSTestAccess::inflight_reads(root/"inflight-enabled",true);
