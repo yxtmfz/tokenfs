@@ -1,0 +1,781 @@
+{
+  "passed": true,
+  "source_files_verified": 72,
+  "batch": {
+    "passed": true,
+    "checked_runs": 15,
+    "expected_runs": 15,
+    "errors": []
+  },
+  "requests": 8640,
+  "mechanisms": [
+    {
+      "block": "stationary_shared-3271-r1",
+      "seed": 3271,
+      "repeat": 1,
+      "strategy": "Full",
+      "copy_count": 12,
+      "reused_copy_count": 12,
+      "source_copy_count": 0,
+      "inflight_bytes": 956301312,
+      "inflight_opens": 456,
+      "remote_bytes": 62914560,
+      "local_bytes": 188743680,
+      "rss_kib": 25384,
+      "staging_peak_bytes": 4194304,
+      "capture_us": 54960,
+      "committed_capture_us": 13240,
+      "capture_complete": 120,
+      "capture_unavailable": 0
+    },
+    {
+      "block": "stationary_shared-3271-r1",
+      "seed": 3271,
+      "repeat": 1,
+      "strategy": "NoHotspot",
+      "copy_count": 12,
+      "reused_copy_count": 12,
+      "source_copy_count": 0,
+      "inflight_bytes": 956301312,
+      "inflight_opens": 456,
+      "remote_bytes": 62914560,
+      "local_bytes": 188743680,
+      "rss_kib": 25528,
+      "staging_peak_bytes": 4194304,
+      "capture_us": 50928,
+      "committed_capture_us": 14550,
+      "capture_complete": 120,
+      "capture_unavailable": 0
+    },
+    {
+      "block": "stationary_shared-3271-r1",
+      "seed": 3271,
+      "repeat": 1,
+      "strategy": "NoAffinity",
+      "copy_count": 16,
+      "reused_copy_count": 16,
+      "source_copy_count": 0,
+      "inflight_bytes": 956301312,
+      "inflight_opens": 456,
+      "remote_bytes": 98566144,
+      "local_bytes": 153092096,
+      "rss_kib": 24680,
+      "staging_peak_bytes": 4194304,
+      "capture_us": 46935,
+      "committed_capture_us": 17033,
+      "capture_complete": 120,
+      "capture_unavailable": 0
+    },
+    {
+      "block": "stationary_shared-3271-r1",
+      "seed": 3271,
+      "repeat": 1,
+      "strategy": "NoJoint",
+      "copy_count": 12,
+      "reused_copy_count": 12,
+      "source_copy_count": 0,
+      "inflight_bytes": 956301312,
+      "inflight_opens": 456,
+      "remote_bytes": 62914560,
+      "local_bytes": 188743680,
+      "rss_kib": 26292,
+      "staging_peak_bytes": 4194304,
+      "capture_us": 43337,
+      "committed_capture_us": 11368,
+      "capture_complete": 120,
+      "capture_unavailable": 0
+    },
+    {
+      "block": "stationary_shared-3271-r1",
+      "seed": 3271,
+      "repeat": 1,
+      "strategy": "PoolSIEVE1",
+      "copy_count": 30,
+      "reused_copy_count": 30,
+      "source_copy_count": 0,
+      "inflight_bytes": 956301312,
+      "inflight_opens": 456,
+      "remote_bytes": 62914560,
+      "local_bytes": 188743680,
+      "rss_kib": 25944,
+      "staging_peak_bytes": 4194304,
+      "capture_us": 45444,
+      "committed_capture_us": 37023,
+      "capture_complete": 120,
+      "capture_unavailable": 0
+    },
+    {
+      "block": "moving_shared-3293-r1",
+      "seed": 3293,
+      "repeat": 1,
+      "strategy": "Full",
+      "copy_count": 25,
+      "reused_copy_count": 25,
+      "source_copy_count": 0,
+      "inflight_bytes": 954204160,
+      "inflight_opens": 455,
+      "remote_bytes": 140509184,
+      "local_bytes": 113246208,
+      "rss_kib": 26148,
+      "staging_peak_bytes": 4194304,
+      "capture_us": 45092,
+      "committed_capture_us": 28481,
+      "capture_complete": 121,
+      "capture_unavailable": 0
+    },
+    {
+      "block": "moving_shared-3293-r1",
+      "seed": 3293,
+      "repeat": 1,
+      "strategy": "NoHotspot",
+      "copy_count": 21,
+      "reused_copy_count": 21,
+      "source_copy_count": 0,
+      "inflight_bytes": 954204160,
+      "inflight_opens": 455,
+      "remote_bytes": 155189248,
+      "local_bytes": 98566144,
+      "rss_kib": 26144,
+      "staging_peak_bytes": 4194304,
+      "capture_us": 45014,
+      "committed_capture_us": 24639,
+      "capture_complete": 121,
+      "capture_unavailable": 0
+    },
+    {
+      "block": "moving_shared-3293-r1",
+      "seed": 3293,
+      "repeat": 1,
+      "strategy": "NoAffinity",
+      "copy_count": 25,
+      "reused_copy_count": 25,
+      "source_copy_count": 0,
+      "inflight_bytes": 954204160,
+      "inflight_opens": 455,
+      "remote_bytes": 165675008,
+      "local_bytes": 88080384,
+      "rss_kib": 26180,
+      "staging_peak_bytes": 4194304,
+      "capture_us": 44772,
+      "committed_capture_us": 32630,
+      "capture_complete": 121,
+      "capture_unavailable": 0
+    },
+    {
+      "block": "moving_shared-3293-r1",
+      "seed": 3293,
+      "repeat": 1,
+      "strategy": "NoJoint",
+      "copy_count": 26,
+      "reused_copy_count": 26,
+      "source_copy_count": 0,
+      "inflight_bytes": 954204160,
+      "inflight_opens": 455,
+      "remote_bytes": 146800640,
+      "local_bytes": 106954752,
+      "rss_kib": 26136,
+      "staging_peak_bytes": 4194304,
+      "capture_us": 42833,
+      "committed_capture_us": 28692,
+      "capture_complete": 121,
+      "capture_unavailable": 0
+    },
+    {
+      "block": "moving_shared-3293-r1",
+      "seed": 3293,
+      "repeat": 1,
+      "strategy": "PoolSIEVE1",
+      "copy_count": 55,
+      "reused_copy_count": 55,
+      "source_copy_count": 0,
+      "inflight_bytes": 954204160,
+      "inflight_opens": 455,
+      "remote_bytes": 115343360,
+      "local_bytes": 138412032,
+      "rss_kib": 25628,
+      "staging_peak_bytes": 4194304,
+      "capture_us": 45408,
+      "committed_capture_us": 60602,
+      "capture_complete": 121,
+      "capture_unavailable": 0
+    },
+    {
+      "block": "uniform-3273-r1",
+      "seed": 3273,
+      "repeat": 1,
+      "strategy": "Full",
+      "copy_count": 13,
+      "reused_copy_count": 13,
+      "source_copy_count": 0,
+      "inflight_bytes": 75497472,
+      "inflight_opens": 36,
+      "remote_bytes": 788529152,
+      "local_bytes": 343932928,
+      "rss_kib": 26276,
+      "staging_peak_bytes": 4194304,
+      "capture_us": 193272,
+      "committed_capture_us": 19582,
+      "capture_complete": 540,
+      "capture_unavailable": 0
+    },
+    {
+      "block": "uniform-3273-r1",
+      "seed": 3273,
+      "repeat": 1,
+      "strategy": "NoHotspot",
+      "copy_count": 21,
+      "reused_copy_count": 21,
+      "source_copy_count": 0,
+      "inflight_bytes": 75497472,
+      "inflight_opens": 36,
+      "remote_bytes": 557842432,
+      "local_bytes": 574619648,
+      "rss_kib": 26600,
+      "staging_peak_bytes": 4194304,
+      "capture_us": 200380,
+      "committed_capture_us": 18034,
+      "capture_complete": 539,
+      "capture_unavailable": 1
+    },
+    {
+      "block": "uniform-3273-r1",
+      "seed": 3273,
+      "repeat": 1,
+      "strategy": "NoAffinity",
+      "copy_count": 20,
+      "reused_copy_count": 20,
+      "source_copy_count": 0,
+      "inflight_bytes": 79691776,
+      "inflight_opens": 38,
+      "remote_bytes": 547356672,
+      "local_bytes": 580911104,
+      "rss_kib": 26016,
+      "staging_peak_bytes": 4194304,
+      "capture_us": 203024,
+      "committed_capture_us": 26548,
+      "capture_complete": 538,
+      "capture_unavailable": 0
+    },
+    {
+      "block": "uniform-3273-r1",
+      "seed": 3273,
+      "repeat": 1,
+      "strategy": "NoJoint",
+      "copy_count": 243,
+      "reused_copy_count": 243,
+      "source_copy_count": 0,
+      "inflight_bytes": 75497472,
+      "inflight_opens": 36,
+      "remote_bytes": 576716800,
+      "local_bytes": 555745280,
+      "rss_kib": 26800,
+      "staging_peak_bytes": 4194304,
+      "capture_us": 204443,
+      "committed_capture_us": 270901,
+      "capture_complete": 540,
+      "capture_unavailable": 0
+    },
+    {
+      "block": "uniform-3273-r1",
+      "seed": 3273,
+      "repeat": 1,
+      "strategy": "PoolSIEVE1",
+      "copy_count": 285,
+      "reused_copy_count": 285,
+      "source_copy_count": 0,
+      "inflight_bytes": 73400320,
+      "inflight_opens": 35,
+      "remote_bytes": 597688320,
+      "local_bytes": 536870912,
+      "rss_kib": 27876,
+      "staging_peak_bytes": 4194304,
+      "capture_us": 196209,
+      "committed_capture_us": 260894,
+      "capture_complete": 541,
+      "capture_unavailable": 0
+    }
+  ],
+  "pairs": [
+    {
+      "block": "stationary_shared-3271-r1",
+      "scenario": "stationary_shared",
+      "seed": 3271,
+      "treatment": "Full",
+      "baseline": "NoHotspot",
+      "n": 1,
+      "gain_pct": 3.5277984346064883,
+      "p99_change_pct": -1.0605212817232812,
+      "drain_gain_pct": 3.501884283526291,
+      "mechanism_active": false,
+      "executed_actions_changed": false,
+      "pilot_screen": false,
+      "acceptance_version": "positive-throughput-v2",
+      "interpretation": "uninstrumented integrated development; n1 per known input; no statistical confirmation"
+    },
+    {
+      "block": "stationary_shared-3271-r1",
+      "scenario": "stationary_shared",
+      "seed": 3271,
+      "treatment": "Full",
+      "baseline": "NoAffinity",
+      "n": 1,
+      "gain_pct": 10.222175120717502,
+      "p99_change_pct": -1.2054516374837565,
+      "drain_gain_pct": 10.21515611202506,
+      "mechanism_active": true,
+      "executed_actions_changed": true,
+      "pilot_screen": true,
+      "acceptance_version": "positive-throughput-v2",
+      "interpretation": "uninstrumented integrated development; n1 per known input; no statistical confirmation"
+    },
+    {
+      "block": "stationary_shared-3271-r1",
+      "scenario": "stationary_shared",
+      "seed": 3271,
+      "treatment": "Full",
+      "baseline": "NoJoint",
+      "n": 1,
+      "gain_pct": -4.465731900127468,
+      "p99_change_pct": 1.4218384556440977,
+      "drain_gain_pct": -4.46701774915913,
+      "mechanism_active": false,
+      "executed_actions_changed": false,
+      "pilot_screen": false,
+      "acceptance_version": "positive-throughput-v2",
+      "interpretation": "uninstrumented integrated development; n1 per known input; no statistical confirmation"
+    },
+    {
+      "block": "stationary_shared-3271-r1",
+      "scenario": "stationary_shared",
+      "seed": 3271,
+      "treatment": "Full",
+      "baseline": "PoolSIEVE1",
+      "n": 1,
+      "gain_pct": 0.8500687460905709,
+      "p99_change_pct": -3.5675977129196457,
+      "drain_gain_pct": 0.8436796740079799,
+      "mechanism_active": true,
+      "executed_actions_changed": true,
+      "pilot_screen": true,
+      "acceptance_version": "positive-throughput-v2",
+      "interpretation": "uninstrumented integrated development; n1 per known input; no statistical confirmation"
+    },
+    {
+      "block": "moving_shared-3293-r1",
+      "scenario": "moving_shared",
+      "seed": 3293,
+      "treatment": "Full",
+      "baseline": "NoHotspot",
+      "n": 1,
+      "gain_pct": 1.1474727273955931,
+      "p99_change_pct": -0.2034019475536053,
+      "drain_gain_pct": 1.1468375396901598,
+      "mechanism_active": true,
+      "executed_actions_changed": true,
+      "pilot_screen": true,
+      "acceptance_version": "positive-throughput-v2",
+      "interpretation": "uninstrumented integrated development; n1 per known input; no statistical confirmation"
+    },
+    {
+      "block": "moving_shared-3293-r1",
+      "scenario": "moving_shared",
+      "seed": 3293,
+      "treatment": "Full",
+      "baseline": "NoAffinity",
+      "n": 1,
+      "gain_pct": 4.058058312777568,
+      "p99_change_pct": -2.549918944108831,
+      "drain_gain_pct": 4.056935328204392,
+      "mechanism_active": true,
+      "executed_actions_changed": true,
+      "pilot_screen": true,
+      "acceptance_version": "positive-throughput-v2",
+      "interpretation": "uninstrumented integrated development; n1 per known input; no statistical confirmation"
+    },
+    {
+      "block": "moving_shared-3293-r1",
+      "scenario": "moving_shared",
+      "seed": 3293,
+      "treatment": "Full",
+      "baseline": "NoJoint",
+      "n": 1,
+      "gain_pct": -1.6261112597020566,
+      "p99_change_pct": -1.671902716906759,
+      "drain_gain_pct": -1.6253117370285786,
+      "mechanism_active": true,
+      "executed_actions_changed": true,
+      "pilot_screen": false,
+      "acceptance_version": "positive-throughput-v2",
+      "interpretation": "uninstrumented integrated development; n1 per known input; no statistical confirmation"
+    },
+    {
+      "block": "moving_shared-3293-r1",
+      "scenario": "moving_shared",
+      "seed": 3293,
+      "treatment": "Full",
+      "baseline": "PoolSIEVE1",
+      "n": 1,
+      "gain_pct": -1.1904170476954468,
+      "p99_change_pct": -2.379409796989218,
+      "drain_gain_pct": -1.184972242219151,
+      "mechanism_active": true,
+      "executed_actions_changed": true,
+      "pilot_screen": false,
+      "acceptance_version": "positive-throughput-v2",
+      "interpretation": "uninstrumented integrated development; n1 per known input; no statistical confirmation"
+    },
+    {
+      "block": "uniform-3273-r1",
+      "scenario": "uniform",
+      "seed": 3273,
+      "treatment": "Full",
+      "baseline": "NoHotspot",
+      "n": 1,
+      "gain_pct": -12.864926868391791,
+      "p99_change_pct": 4.005230090422862,
+      "drain_gain_pct": -12.863047494972257,
+      "mechanism_active": true,
+      "executed_actions_changed": true,
+      "pilot_screen": false,
+      "acceptance_version": "positive-throughput-v2",
+      "interpretation": "uninstrumented integrated development; n1 per known input; no statistical confirmation"
+    },
+    {
+      "block": "uniform-3273-r1",
+      "scenario": "uniform",
+      "seed": 3273,
+      "treatment": "Full",
+      "baseline": "NoAffinity",
+      "n": 1,
+      "gain_pct": -12.724943528117072,
+      "p99_change_pct": 2.6950340833297615,
+      "drain_gain_pct": -12.557005167677248,
+      "mechanism_active": true,
+      "executed_actions_changed": true,
+      "pilot_screen": false,
+      "acceptance_version": "positive-throughput-v2",
+      "interpretation": "uninstrumented integrated development; n1 per known input; no statistical confirmation"
+    },
+    {
+      "block": "uniform-3273-r1",
+      "scenario": "uniform",
+      "seed": 3273,
+      "treatment": "Full",
+      "baseline": "NoJoint",
+      "n": 1,
+      "gain_pct": -3.578355030681757,
+      "p99_change_pct": -1.9046832698553895,
+      "drain_gain_pct": -3.4119384792817176,
+      "mechanism_active": true,
+      "executed_actions_changed": true,
+      "pilot_screen": false,
+      "acceptance_version": "positive-throughput-v2",
+      "interpretation": "uninstrumented integrated development; n1 per known input; no statistical confirmation"
+    },
+    {
+      "block": "uniform-3273-r1",
+      "scenario": "uniform",
+      "seed": 3273,
+      "treatment": "Full",
+      "baseline": "PoolSIEVE1",
+      "n": 1,
+      "gain_pct": -5.245689741325821,
+      "p99_change_pct": -5.450438370497556,
+      "drain_gain_pct": -5.245885919304483,
+      "mechanism_active": true,
+      "executed_actions_changed": true,
+      "pilot_screen": false,
+      "acceptance_version": "positive-throughput-v2",
+      "interpretation": "uninstrumented integrated development; n1 per known input; no statistical confirmation"
+    }
+  ],
+  "rollup": [
+    {
+      "scenario": "stationary_shared",
+      "seed": 3271,
+      "strategy": "Full",
+      "n": 1,
+      "rates": [
+        318.605556053767
+      ],
+      "mean_mib_s": 318.605556053767,
+      "hot_evictions": [
+        0
+      ],
+      "copies": [
+        12
+      ],
+      "adjusted_plans": [
+        73
+      ]
+    },
+    {
+      "scenario": "stationary_shared",
+      "seed": 3271,
+      "strategy": "NoHotspot",
+      "n": 1,
+      "rates": [
+        307.74879874898016
+      ],
+      "mean_mib_s": 307.74879874898016,
+      "hot_evictions": [
+        0
+      ],
+      "copies": [
+        12
+      ],
+      "adjusted_plans": [
+        0
+      ]
+    },
+    {
+      "scenario": "stationary_shared",
+      "seed": 3271,
+      "strategy": "NoAffinity",
+      "n": 1,
+      "rates": [
+        289.0575836530389
+      ],
+      "mean_mib_s": 289.0575836530389,
+      "hot_evictions": [
+        6
+      ],
+      "copies": [
+        16
+      ],
+      "adjusted_plans": [
+        49
+      ]
+    },
+    {
+      "scenario": "stationary_shared",
+      "seed": 3271,
+      "strategy": "NoJoint",
+      "n": 1,
+      "rates": [
+        333.49871453528425
+      ],
+      "mean_mib_s": 333.49871453528425,
+      "hot_evictions": [
+        0
+      ],
+      "copies": [
+        12
+      ],
+      "adjusted_plans": [
+        73
+      ]
+    },
+    {
+      "scenario": "stationary_shared",
+      "seed": 3271,
+      "strategy": "PoolSIEVE1",
+      "n": 1,
+      "rates": [
+        315.9200187120524
+      ],
+      "mean_mib_s": 315.9200187120524,
+      "hot_evictions": [
+        0
+      ],
+      "copies": [
+        30
+      ],
+      "adjusted_plans": [
+        0
+      ]
+    },
+    {
+      "scenario": "moving_shared",
+      "seed": 3293,
+      "strategy": "Full",
+      "n": 1,
+      "rates": [
+        261.2751936538962
+      ],
+      "mean_mib_s": 261.2751936538962,
+      "hot_evictions": [
+        null
+      ],
+      "copies": [
+        25
+      ],
+      "adjusted_plans": [
+        189
+      ]
+    },
+    {
+      "scenario": "moving_shared",
+      "seed": 3293,
+      "strategy": "NoHotspot",
+      "n": 1,
+      "rates": [
+        258.31114372779615
+      ],
+      "mean_mib_s": 258.31114372779615,
+      "hot_evictions": [
+        null
+      ],
+      "copies": [
+        21
+      ],
+      "adjusted_plans": [
+        0
+      ]
+    },
+    {
+      "scenario": "moving_shared",
+      "seed": 3293,
+      "strategy": "NoAffinity",
+      "n": 1,
+      "rates": [
+        251.0859782416424
+      ],
+      "mean_mib_s": 251.0859782416424,
+      "hot_evictions": [
+        null
+      ],
+      "copies": [
+        25
+      ],
+      "adjusted_plans": [
+        91
+      ]
+    },
+    {
+      "scenario": "moving_shared",
+      "seed": 3293,
+      "strategy": "NoJoint",
+      "n": 1,
+      "rates": [
+        265.594048379697
+      ],
+      "mean_mib_s": 265.594048379697,
+      "hot_evictions": [
+        null
+      ],
+      "copies": [
+        26
+      ],
+      "adjusted_plans": [
+        172
+      ]
+    },
+    {
+      "scenario": "moving_shared",
+      "seed": 3293,
+      "strategy": "PoolSIEVE1",
+      "n": 1,
+      "rates": [
+        264.4229292820859
+      ],
+      "mean_mib_s": 264.4229292820859,
+      "hot_evictions": [
+        null
+      ],
+      "copies": [
+        55
+      ],
+      "adjusted_plans": [
+        0
+      ]
+    },
+    {
+      "scenario": "uniform",
+      "seed": 3273,
+      "strategy": "Full",
+      "n": 1,
+      "rates": [
+        90.56217680397633
+      ],
+      "mean_mib_s": 90.56217680397633,
+      "hot_evictions": [
+        null
+      ],
+      "copies": [
+        13
+      ],
+      "adjusted_plans": [
+        164
+      ]
+    },
+    {
+      "scenario": "uniform",
+      "seed": 3273,
+      "strategy": "NoHotspot",
+      "n": 1,
+      "rates": [
+        103.93309324156054
+      ],
+      "mean_mib_s": 103.93309324156054,
+      "hot_evictions": [
+        null
+      ],
+      "copies": [
+        21
+      ],
+      "adjusted_plans": [
+        0
+      ]
+    },
+    {
+      "scenario": "uniform",
+      "seed": 3273,
+      "strategy": "NoAffinity",
+      "n": 1,
+      "rates": [
+        103.76639152694493
+      ],
+      "mean_mib_s": 103.76639152694493,
+      "hot_evictions": [
+        null
+      ],
+      "copies": [
+        20
+      ],
+      "adjusted_plans": [
+        198
+      ]
+    },
+    {
+      "scenario": "uniform",
+      "seed": 3273,
+      "strategy": "NoJoint",
+      "n": 1,
+      "rates": [
+        93.92307799021016
+      ],
+      "mean_mib_s": 93.92307799021016,
+      "hot_evictions": [
+        null
+      ],
+      "copies": [
+        243
+      ],
+      "adjusted_plans": [
+        457
+      ]
+    },
+    {
+      "scenario": "uniform",
+      "seed": 3273,
+      "strategy": "PoolSIEVE1",
+      "n": 1,
+      "rates": [
+        95.57578600566713
+      ],
+      "mean_mib_s": 95.57578600566713,
+      "hot_evictions": [
+        null
+      ],
+      "copies": [
+        285
+      ],
+      "adjusted_plans": [
+        0
+      ]
+    }
+  ],
+  "all_gates_passed": false,
+  "limits": "integrated frozen development matrix, known inputs; no statistical confirmation or physical GPUs"
+}

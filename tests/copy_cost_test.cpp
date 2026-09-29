@@ -26,4 +26,21 @@ int main() {
     const auto next=p.Plan(0,{"k",1000,0},{},0,1000,o);
     assert(next.copy_us==a.Charge(incremental));
   }
+  {
+    using namespace tokenfs_policy;
+    MeasuredPolicy p;Options o;o.adaptive_control=true;o.bounded_cost_warmup=true;
+    p.ReadSample(false,100,100,true);p.ReadSample(true,100,20,true);
+    p.CopySample(100,100000,true);
+    auto free=p.Plan(0,{"cold",100,0},{},0,100,o);
+    assert(free.allowed && free.explore_headroom && free.victims.empty());
+    assert(!p.Plan(0,{"cold",101,0},{},0,100,o).allowed);
+    auto full=p.Plan(0,{"cold",100,0},{{"resident",100,0}},100,100,o);
+    assert(!full.allowed && !full.explore_headroom); // no paid displacement as calibration
+    for(int i=0;i<19;++i)p.CopySample(100,100,true);
+    auto mean=p.Plan(0,{"cold",100,0},{},0,100,o);
+    assert(std::abs(mean.copy_us-(100000.0+1900.0)/20)<1e-7);
+    p.CopySample(100,100,true);
+    assert(std::abs(p.Plan(0,{"cold",100,0},{},0,100,o).copy_us-(mean.copy_us*.95+5))<1e-7);
+  }
+
 }

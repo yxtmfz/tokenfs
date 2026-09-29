@@ -43,6 +43,7 @@ struct Options {
   bool static_reuse_value=false;
   bool novel_reuse_decay=false;
   bool retained_capture=false;
+  bool bounded_cost_warmup=false;
 };
 struct Decision {
   bool allowed=false;
@@ -194,14 +195,14 @@ class MeasuredPolicy {
     }
     return reset;
   }
-  void ReadSample(bool local,uint64_t bytes,uint64_t micros) {
+  void ReadSample(bool local,uint64_t bytes,uint64_t micros,bool warmup=false) {
     if(!bytes || !micros)return;
     std::lock_guard<std::mutex> lock(mu_);
-    Update(local?local_:remote_,double(micros)/bytes);
+    Update(local?local_:remote_,double(micros)/bytes,warmup);
   }
-  void CopySample(uint64_t bytes,uint64_t micros) {
+  void CopySample(uint64_t bytes,uint64_t micros,bool warmup=false) {
     if(!bytes || !micros)return;
-    std::lock_guard<std::mutex> lock(mu_);Update(copy_,double(micros)/bytes);
+    std::lock_guard<std::mutex> lock(mu_);Update(copy_,double(micros)/bytes,warmup);
   }
   size_t Entries() const {
     std::lock_guard<std::mutex> lock(mu_);size_t n=0;
@@ -249,8 +250,8 @@ class MeasuredPolicy {
     // current unfinished run is censored and cannot inflate this budget.
     if(o.reuse_scaled_exploration && o.burst_reuse && !completed_bursts_.empty())
       result.exploration_reads=std::max(1.0,double(completed_burst_reads_)/completed_bursts_.size());
-    if(o.adaptive_control && !needed && (!copy_.n || copy_.mean<=result.exploration_reads*(remote_.n?remote_.mean:0.01))) {
-      result.allowed=true;result.explore_headroom=true;result.reason="free_headroom_exploration";
+    if(o.adaptive_control && !needed && (o.bounded_cost_warmup || !copy_.n || copy_.mean<=result.exploration_reads*(remote_.n?remote_.mean:0.01))) {
+      result.allowed=true;result.explore_headroom=true;result.reason=o.bounded_cost_warmup?"capacity_bounded_calibration":"free_headroom_exploration";
       result.incoming_us=Value(gpu,incoming,o,true);
       result.copy_us=incoming.bytes*(copy_.n?copy_.mean:(remote_.n?remote_.mean:0.01));
       return result;
@@ -297,7 +298,13 @@ class MeasuredPolicy {
   struct Rate {double mean=0;uint64_t n=0;};
   struct Forecast {uint64_t count=0,at=0;};
   struct Domain {uint64_t last_observation=0,epoch_reads=0;bool epoch_pending=false;std::unordered_map<std::string,Forecast> forecasts;size_t misses=0;std::deque<std::string> history;std::unordered_map<std::string,uint64_t> counts;};
-  static void Update(Rate& r,double value) {r.mean=r.n?0.95*r.mean+0.05*value:value;++r.n;}
+  static void Update(Rate& r,double value,bool warmup) {
+    // Use equal weights while collecting the first 20 samples, then retain
+    // the existing 5% EWMA. A single slow first sample must not carry >50%
+    // weight after twelve later observations.
+    const double alpha=warmup?1.0/std::min<uint64_t>(20,r.n+1):0.05;
+    r.mean=r.n?(1.0-alpha)*r.mean+alpha*value:value;++r.n;
+  }
   uint64_t Count(int gpu,const std::string& key) const {
     const auto domain=domains_.find(gpu);if(domain==domains_.end())return 0;
     const auto item=domain->second.counts.find(key);return item==domain->second.counts.end()?0:item->second;

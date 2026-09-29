@@ -73,3 +73,7 @@ jobs:
         run: python3 -m unittest tests.integrated_hpj_retained_test
       - name: Test symmetric read capture ablation controls
         run: python3 -m unittest tests.integrated_hpj_symmetric_test
+      - name: Test symmetric capture reverse-order invariants
+        run: python3 -m unittest tests.integrated_hpj_symmetric_reverse_test
+      - name: Test bounded cost calibration ablations
+        run: python3 -m unittest tests.integrated_hpj_calibrated_test

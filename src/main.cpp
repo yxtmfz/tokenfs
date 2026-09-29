@@ -92,6 +92,7 @@ struct Config {
   bool foreground_read_fill = false;
   bool retain_read_fill = false;
   bool capture_local_reads = false;
+  bool bounded_cost_warmup = false;
   bool request_read_costs = false;
   uint64_t read_fill_buffer_bytes = 4*1024*1024;
   bool compact_measured_planning = false;
@@ -1894,7 +1895,7 @@ class TokenFS {
     const uint64_t latency_us = ElapsedMicros(start);
     RecordLatency("read", handle->tier, latency_us);
     if (n > 0) {
-      if(!config_.request_read_costs && handle->tier!="inflight" && (config_.measured_policy || config_.measured_track_affinity)) measured_.ReadSample(handle->tier=="local",static_cast<uint64_t>(n),latency_us);
+      if(!config_.request_read_costs && handle->tier!="inflight" && (config_.measured_policy || config_.measured_track_affinity)) measured_.ReadSample(handle->tier=="local",static_cast<uint64_t>(n),latency_us,config_.bounded_cost_warmup);
       MaybeAdaptivePromote(*handle, latency_us);
     }
     if(handle->read_cost)AccountRequestReadCost(*handle,n>0?handle->read_cost->Add(offset,n,latency_us):handle->read_cost->Finish());
@@ -2456,7 +2457,7 @@ class TokenFS {
     return {static_cast<size_t>(config_.measured_window),config_.measured_aging,
             config_.measured_admission,config_.measured_cost,
             config_.measured_value_victim,config_.measured_size_aware,config_.measured_frequency_admission,config_.measured_shift_reset,static_cast<size_t>(config_.measured_shift_window),
-            config_.measured_track_affinity,config_.measured_affinity_gate,config_.measured_joint_admission,static_cast<size_t>(config_.measured_affinity_window),config_.measured_affinity_recent_demand,config_.measured_affinity_handover_epoch,config_.shared_value_placement,config_.measured_causal_window,config_.measured_burst_reuse,config_.adaptive_reuse_control,config_.efficient_measured_planning,config_.burst_interval_survival,config_.reuse_scaled_exploration,config_.persistent_run_reuse,config_.persistent_reuse_immediate_decay,config_.measured_static_reuse_value,config_.novel_reuse_decay,config_.retain_read_fill && config_.capture_local_reads};
+            config_.measured_track_affinity,config_.measured_affinity_gate,config_.measured_joint_admission,static_cast<size_t>(config_.measured_affinity_window),config_.measured_affinity_recent_demand,config_.measured_affinity_handover_epoch,config_.shared_value_placement,config_.measured_causal_window,config_.measured_burst_reuse,config_.adaptive_reuse_control,config_.efficient_measured_planning,config_.burst_interval_survival,config_.reuse_scaled_exploration,config_.persistent_run_reuse,config_.persistent_reuse_immediate_decay,config_.measured_static_reuse_value,config_.novel_reuse_decay,config_.retain_read_fill && config_.capture_local_reads,config_.bounded_cost_warmup};
   }
 
   double MarginalCoverage(const FileMeta& meta, int location) {
@@ -3010,7 +3011,7 @@ class TokenFS {
 
   void RecordCopyCost(uint64_t size,const CopyCostSample& sample) {
     if(!config_.measured_policy)return;
-    measured_.CopySample(size,sample.Charge(config_.incremental_copy_cost));
+    measured_.CopySample(size,sample.Charge(config_.incremental_copy_cost),config_.bounded_cost_warmup);
     AddBufferedMetric("copy_cost_samples",1);
     AddBufferedMetric("copy_cost_full_us",sample.Full());
     AddBufferedMetric("copy_cost_planning_us",sample.planning_us);
@@ -3026,7 +3027,7 @@ class TokenFS {
     AddBufferedMetric(std::string("request_cost_")+tier+"_bytes",sample->bytes);
     AddBufferedMetric(std::string("request_cost_")+tier+"_us",sample->micros);
     if(handle.tier!="inflight" && (config_.measured_policy || config_.measured_track_affinity))
-      measured_.ReadSample(handle.tier=="local",sample->bytes,sample->micros);
+      measured_.ReadSample(handle.tier=="local",sample->bytes,sample->micros,config_.bounded_cost_warmup);
   }
 
   void CreateCrossGpuReplica(const GpuConfig& caller_gpu,
@@ -4093,6 +4094,7 @@ Config LoadConfig(const fs::path& path) {
   if(root["policy"] && root["policy"]["profile_control_path"]) config.profile_control_path=root["policy"]["profile_control_path"].as<bool>();
   if(root["policy"] && root["policy"]["batch_background_metrics"]) config.batch_background_metrics=root["policy"]["batch_background_metrics"].as<bool>();
   if(root["policy"] && root["policy"]["request_trace_path"]) config.request_trace_path=root["policy"]["request_trace_path"].as<std::string>();
+  if(root["policy"] && root["policy"]["bounded_cost_warmup"]) config.bounded_cost_warmup=root["policy"]["bounded_cost_warmup"].as<bool>();
   if(root["policy"] && root["policy"]["capture_local_reads"]) config.capture_local_reads=root["policy"]["capture_local_reads"].as<bool>();
   if(root["policy"] && root["policy"]["retain_read_fill"]) config.retain_read_fill=root["policy"]["retain_read_fill"].as<bool>();
   if(root["policy"] && root["policy"]["foreground_read_fill"]) config.foreground_read_fill=root["policy"]["foreground_read_fill"].as<bool>();

@@ -1,0 +1,7 @@
+{
+  "passed": true,
+  "command": "c++ -std=c++20 -O1 -g -fsanitize=address,undefined -pthread tests/read_fill_test.cpp",
+  "test": "read_fill_test",
+  "exit_code": 0,
+  "scope": "local ASan/UBSan capture lifetime tests; native daemon integration separately tested on cn7"
+}
