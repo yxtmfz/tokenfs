@@ -91,6 +91,7 @@ struct Config {
   std::string request_trace_path;
   bool foreground_read_fill = false;
   bool retain_read_fill = false;
+  bool capture_local_reads = false;
   bool request_read_costs = false;
   uint64_t read_fill_buffer_bytes = 4*1024*1024;
   bool compact_measured_planning = false;
@@ -1416,6 +1417,8 @@ class TokenFS {
   void Init() {
     if(config_.shared_caller_only && !config_.shared_value_placement)
       throw std::runtime_error("caller-only placement requires shared value placement");
+    if(config_.capture_local_reads && !config_.retain_read_fill)
+      throw std::runtime_error("local capture requires canonical-validated retained memory");
     if(config_.retain_read_fill && !config_.coalesce_pending_reads)
       throw std::runtime_error("retained capture requires bounded immutable read sharing");
     if(config_.coalesce_pending_reads && (!config_.foreground_read_fill || !config_.request_read_costs))
@@ -1803,8 +1806,10 @@ class TokenFS {
     handle.writable = writable;
     handle.state = meta.state;
     if(config_.request_read_costs && !writable)handle.read_cost=std::make_shared<RequestReadCost>(meta.size_bytes);
-    if(config_.foreground_read_fill && !writable && meta.tier=="remote") {
-      handle.read_fill=fills_.Acquire(path,fd,meta.size_bytes);
+    if(config_.foreground_read_fill && !writable &&
+       (meta.tier=="remote" || (config_.capture_local_reads && meta.tier=="local" && meta.has_remote_copy))) {
+      handle.read_fill=fills_.Acquire(path,fd,meta.size_bytes,config_.capture_local_reads?RemotePath(*gpu,rel).string():"");
+      if(meta.tier=="local")AddBufferedMetric(handle.read_fill?"local_capture_started":"local_capture_unavailable",1);
       AddBufferedMetric(handle.read_fill?"read_fill_capture_started":"read_fill_capture_unavailable",1);
       SetBufferedMetricMax("read_fill_buffer_peak_bytes",fills_.PeakBytes());
     }
@@ -1901,7 +1906,7 @@ class TokenFS {
         fills_.Retain(handle->read_fill);
         AddBufferedMetric("read_fill_capture_complete",1);
         AddBufferedMetric("read_fill_capture_bytes",handle->read_fill->Data().size());
-        if(auto meta=metadata_.Get(handle->logical_path))
+        if(handle->tier=="remote")if(auto meta=metadata_.Get(handle->logical_path))
           ScheduleSharedPlacement(*meta,handle->caller_gpu_id,handle->read_fill);
       }
     }
@@ -2451,7 +2456,7 @@ class TokenFS {
     return {static_cast<size_t>(config_.measured_window),config_.measured_aging,
             config_.measured_admission,config_.measured_cost,
             config_.measured_value_victim,config_.measured_size_aware,config_.measured_frequency_admission,config_.measured_shift_reset,static_cast<size_t>(config_.measured_shift_window),
-            config_.measured_track_affinity,config_.measured_affinity_gate,config_.measured_joint_admission,static_cast<size_t>(config_.measured_affinity_window),config_.measured_affinity_recent_demand,config_.measured_affinity_handover_epoch,config_.shared_value_placement,config_.measured_causal_window,config_.measured_burst_reuse,config_.adaptive_reuse_control,config_.efficient_measured_planning,config_.burst_interval_survival,config_.reuse_scaled_exploration,config_.persistent_run_reuse,config_.persistent_reuse_immediate_decay,config_.measured_static_reuse_value,config_.novel_reuse_decay,config_.retain_read_fill};
+            config_.measured_track_affinity,config_.measured_affinity_gate,config_.measured_joint_admission,static_cast<size_t>(config_.measured_affinity_window),config_.measured_affinity_recent_demand,config_.measured_affinity_handover_epoch,config_.shared_value_placement,config_.measured_causal_window,config_.measured_burst_reuse,config_.adaptive_reuse_control,config_.efficient_measured_planning,config_.burst_interval_survival,config_.reuse_scaled_exploration,config_.persistent_run_reuse,config_.persistent_reuse_immediate_decay,config_.measured_static_reuse_value,config_.novel_reuse_decay,config_.retain_read_fill && config_.capture_local_reads};
   }
 
   double MarginalCoverage(const FileMeta& meta, int location) {
@@ -4088,6 +4093,7 @@ Config LoadConfig(const fs::path& path) {
   if(root["policy"] && root["policy"]["profile_control_path"]) config.profile_control_path=root["policy"]["profile_control_path"].as<bool>();
   if(root["policy"] && root["policy"]["batch_background_metrics"]) config.batch_background_metrics=root["policy"]["batch_background_metrics"].as<bool>();
   if(root["policy"] && root["policy"]["request_trace_path"]) config.request_trace_path=root["policy"]["request_trace_path"].as<std::string>();
+  if(root["policy"] && root["policy"]["capture_local_reads"]) config.capture_local_reads=root["policy"]["capture_local_reads"].as<bool>();
   if(root["policy"] && root["policy"]["retain_read_fill"]) config.retain_read_fill=root["policy"]["retain_read_fill"].as<bool>();
   if(root["policy"] && root["policy"]["foreground_read_fill"]) config.foreground_read_fill=root["policy"]["foreground_read_fill"].as<bool>();
   if(root["policy"] && root["policy"]["request_read_costs"]) config.request_read_costs=root["policy"]["request_read_costs"].as<bool>();

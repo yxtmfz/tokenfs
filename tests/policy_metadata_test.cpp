@@ -31,7 +31,7 @@ struct TokenFSTestAccess {
   }
   static void inflight_reads(const fs::path& root,bool enabled,bool retained=false) {
     Config cfg;cfg.mount_point=root/"mnt";cfg.metadata_db=root/"state.db";
-    cfg.foreground_read_fill=true;cfg.request_read_costs=true;cfg.coalesce_pending_reads=enabled;cfg.retain_read_fill=retained;cfg.batch_background_metrics=true;
+    cfg.foreground_read_fill=true;cfg.request_read_costs=true;cfg.coalesce_pending_reads=enabled;cfg.retain_read_fill=retained;cfg.capture_local_reads=retained;cfg.read_fill_buffer_bytes=4096;cfg.batch_background_metrics=true;
     cfg.readonly_canonical=true;cfg.peer_cache_reads=true;cfg.shared_pool_cache=true;cfg.checksum="fnv1a64";
     cfg.backend_direct_io=true;cfg.affinity_placement=false;cfg.lean_read_accounting=true;
     cfg.read_through_cache=true;cfg.read_through_min_reads=1;cfg.local_eviction_policy="sieve";
@@ -73,6 +73,19 @@ struct TokenFSTestAccess {
     assert(m["read_bytes"]==12288 && m["read_local_bytes"]==(retained?0:4096));
     assert(m["read_remote_bytes"]==(enabled?4096:8192) && m["read_inflight_bytes"]==(enabled?(retained?8192:4096):0));
     assert(m["request_cost_inflight_samples"]==(enabled?(retained?2:1):0));
+    if(retained) {
+      std::ofstream(root/"remote/gpu0/pressure")<<std::string(4096,'p');
+      int pressure=open((root/"remote/gpu0/pressure").c_str(),O_RDONLY);
+      auto pin=filesystem.fills_.Acquire("pressure",pressure,4096);assert(pin);pin.reset();close(pressure);
+      fuse_file_info local{},ram{};local.flags=ram.flags=O_RDONLY;
+      assert(filesystem.Open("/gpu0/k",&local)==0 && filesystem.FindHandle(&local)->tier=="local");
+      assert(filesystem.Read("/gpu0/k",bytes,4096,0,&local)==4096);
+      assert(filesystem.Release("/gpu0/k",&local)==0);
+      assert(filesystem.Open("/gpu0/k",&ram)==0 && filesystem.FindHandle(&ram)->tier=="inflight");
+      assert(filesystem.Read("/gpu0/k",bytes,4096,0,&ram)==4096 && std::string(bytes,4096)==std::string(4096,'z'));
+      assert(filesystem.Release("/gpu0/k",&ram)==0);
+      assert(filesystem.shared_placement_inflight_.empty());
+    }
     auto invalid=cfg;invalid.shared_caller_only=true;bool rejected=false;
     try{TokenFS bad(invalid);bad.Init();}catch(const std::runtime_error&){rejected=true;}assert(rejected);
     invalid=cfg;invalid.foreground_read_fill=false;invalid.coalesce_pending_reads=true;rejected=false;

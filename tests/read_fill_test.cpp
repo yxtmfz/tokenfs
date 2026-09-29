@@ -53,5 +53,18 @@ int main(){
     assert(retained.UsedBytes()==8); // invalid retained bytes can be reclaimed
   }
   assert(lifetime.expired()); // no Buffer -> Budget -> Buffer ownership cycle
-  close(fd);std::filesystem::remove_all(root);
+  close(fd);
+  std::ofstream(root/"canonical")<<"abcdefgh";std::ofstream(root/"replica")<<"abcdefgh";
+  fd=open((root/"replica").c_str(),O_RDONLY);int canonical=open((root/"canonical").c_str(),O_RDONLY);
+  {
+    ReadFillPool anchored(8,true);auto x=anchored.Acquire("k",fd,8,(root/"canonical").string());assert(x);
+    assert(x->Append(0,"abcdefgh",8,fd));anchored.Retain(x);
+    std::filesystem::remove(root/"replica"); // evicting the disk copy cannot revoke valid immutable bytes
+    assert(x->ReadCaptured(canonical,bytes,8,0)==8 && std::string(bytes,8)=="abcdefgh");
+    assert(x->Matches((root/"canonical").string(),8));
+    std::ofstream(root/"canonical2")<<"ijklmnop";std::filesystem::rename(root/"canonical2",root/"canonical");
+    assert(!anchored.FindComplete("k",(root/"canonical").string(),8));
+    int changed=open((root/"canonical").c_str(),O_RDONLY);assert(x->ReadCaptured(changed,bytes,8,0)==-ESTALE);close(changed);
+  }
+  close(fd);close(canonical);std::filesystem::remove_all(root);
 }
