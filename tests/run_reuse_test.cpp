@@ -28,12 +28,16 @@ int main() {
   Options old=o;old.persistent_run_reuse=false;
   auto loss=[&](const Options& x){return p.Plan(0,{"new",100,0},{{"hot",100,0}},100,100,x).displaced_us;};
   assert(loss(old)==0 && loss(o)>0);
+  Options no_h=o;no_h.static_reuse_value=true;
+  assert(loss(no_h)==0); // Static recent frequency forgets expired requests.
   const auto symmetric=p.Plan(0,{"hot",100,0},{{"hot",100,0}},100,100,o);
   assert(symmetric.incoming_us==symmetric.displaced_us && symmetric.persistent_reuse_adjusted_items==2);
   Options faster=o;faster.persistent_reuse_immediate_decay=true;
   assert(loss(faster)>0 && loss(faster)<loss(o));
   const auto before=loss(o);obs("moving",128);assert(loss(o)<before);
   assert(p.Plan(0,{"moving",100,0},{{"hot",100,0}},100,100,o).allowed);
+  const auto static_plan=p.Plan(0,{"moving",100,0},{{"hot",100,0}},100,100,no_h);
+  assert(static_plan.allowed && static_plan.incoming_us==127*80 && static_plan.displaced_us==0);
   assert(!p.Plan(0,{"oversize",101,0},{},0,100,o).allowed);
   assert(!p.Plan(0,{"moving",100,0},{},100,100,o).allowed); // no evictable capacity
   std::cout<<"persistent recurrence, censored runs, decay, bounds and symmetric value passed\n";

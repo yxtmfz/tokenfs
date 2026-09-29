@@ -84,6 +84,7 @@ struct Config {
   bool reuse_scaled_exploration = false;
   bool persistent_run_reuse = false;
   bool persistent_reuse_immediate_decay = false;
+  bool measured_static_reuse_value = false;
   bool profile_control_path = false;
   std::string request_trace_path;
   bool foreground_read_fill = false;
@@ -2424,7 +2425,7 @@ class TokenFS {
     return {static_cast<size_t>(config_.measured_window),config_.measured_aging,
             config_.measured_admission,config_.measured_cost,
             config_.measured_value_victim,config_.measured_size_aware,config_.measured_frequency_admission,config_.measured_shift_reset,static_cast<size_t>(config_.measured_shift_window),
-            config_.measured_track_affinity,config_.measured_affinity_gate,config_.measured_joint_admission,static_cast<size_t>(config_.measured_affinity_window),config_.measured_affinity_recent_demand,config_.measured_affinity_handover_epoch,config_.shared_value_placement,config_.measured_causal_window,config_.measured_burst_reuse,config_.adaptive_reuse_control,config_.efficient_measured_planning,config_.burst_interval_survival,config_.reuse_scaled_exploration,config_.persistent_run_reuse,config_.persistent_reuse_immediate_decay};
+            config_.measured_track_affinity,config_.measured_affinity_gate,config_.measured_joint_admission,static_cast<size_t>(config_.measured_affinity_window),config_.measured_affinity_recent_demand,config_.measured_affinity_handover_epoch,config_.shared_value_placement,config_.measured_causal_window,config_.measured_burst_reuse,config_.adaptive_reuse_control,config_.efficient_measured_planning,config_.burst_interval_survival,config_.reuse_scaled_exploration,config_.persistent_run_reuse,config_.persistent_reuse_immediate_decay,config_.measured_static_reuse_value};
   }
 
   double MarginalCoverage(const FileMeta& meta, int location) {
@@ -4047,6 +4048,7 @@ Config LoadConfig(const fs::path& path) {
   if(root["policy"] && root["policy"]["reuse_scaled_exploration"]) config.reuse_scaled_exploration=root["policy"]["reuse_scaled_exploration"].as<bool>();
   if(root["policy"] && root["policy"]["persistent_run_reuse"]) config.persistent_run_reuse=root["policy"]["persistent_run_reuse"].as<bool>();
   if(root["policy"] && root["policy"]["persistent_reuse_immediate_decay"]) config.persistent_reuse_immediate_decay=root["policy"]["persistent_reuse_immediate_decay"].as<bool>();
+  if(root["policy"] && root["policy"]["measured_static_reuse_value"]) config.measured_static_reuse_value=root["policy"]["measured_static_reuse_value"].as<bool>();
   if(root["policy"] && root["policy"]["adaptive_reuse_control"]) config.adaptive_reuse_control=root["policy"]["adaptive_reuse_control"].as<bool>();
   if(root["policy"] && root["policy"]["profile_control_path"]) config.profile_control_path=root["policy"]["profile_control_path"].as<bool>();
   if(root["policy"] && root["policy"]["request_trace_path"]) config.request_trace_path=root["policy"]["request_trace_path"].as<std::string>();

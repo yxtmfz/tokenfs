@@ -40,6 +40,7 @@ struct Options {
   bool reuse_scaled_exploration=false;
   bool persistent_run_reuse=false;
   bool persistent_reuse_immediate_decay=false;
+  bool static_reuse_value=false;
 };
 struct Decision {
   bool allowed=false;
@@ -229,10 +230,12 @@ class MeasuredPolicy {
     result.affinity_adjusted_items=result.affinity_incoming_count!=frequency;
     for(const auto& resident:residents)
       result.affinity_adjusted_items+=EffectiveCount(gpu,resident.key,o,false)!=Count(gpu,resident.key);
-    result.survival_adjusted_items=Survival(gpu,incoming.key,o)<1.0;
-    for(const auto& resident:residents)
-      result.survival_adjusted_items+=Survival(gpu,resident.key,o)<1.0;
-    if(o.persistent_run_reuse) {
+    if(!o.static_reuse_value) {
+      result.survival_adjusted_items=Survival(gpu,incoming.key,o)<1.0;
+      for(const auto& resident:residents)
+        result.survival_adjusted_items+=Survival(gpu,resident.key,o)<1.0;
+    }
+    if(o.persistent_run_reuse && !o.static_reuse_value) {
       result.persistent_reuse_adjusted_items=PersistentEstimate(incoming.key,o)>RecentValue(gpu,incoming.key,o,true);
       for(const auto& resident:residents)
         result.persistent_reuse_adjusted_items+=PersistentEstimate(resident.key,o)>RecentValue(gpu,resident.key,o,false);
@@ -406,6 +409,11 @@ class MeasuredPolicy {
     return repeats*Survival(gpu,key,o);
   }
   double Value(int gpu,const Item& item,const Options& o,bool incoming) const {
+    if(o.static_reuse_value) {
+      double repeats=double(EffectiveCount(gpu,item.key,o,incoming));
+      if(!o.frequency_admission)repeats=std::max(0.0,repeats-1.0);
+      return repeats*(o.cost?SavingRate()*item.bytes:1.0)*item.coverage;
+    }
     const double past=std::max(RecentValue(gpu,item.key,o,incoming),PersistentEstimate(item.key,o));
     // These are overlapping estimates, not independent demand to add together.
     // Use the same value for incoming and resident copies of the current key.
