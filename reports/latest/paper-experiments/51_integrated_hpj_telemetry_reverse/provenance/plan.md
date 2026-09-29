@@ -1,0 +1,3 @@
+# Whole reverse-order replication
+
+First telemetry matrix is complete: moving gains4.58/6.96/7.32% versus NoH/NoP/NoJ and2.03% over SIEVE, but stationary/SIEVE is-0.96% and uniform/NoP p99+2.03%. Preserve them all. Freeze the SAME5351b1b3e2f52694d0184b71ea91348aab468b54f0874a9bc35afa8a8d19f3da binary and first79 source hashes; reverse every arm within each of the SAME three blocks, no input changes.15runs. This is replication on known development inputs, not independent holdout or significance. No per-comparison selection or pooling away regressions. Run480 separate SHA-verified requests after speed.
