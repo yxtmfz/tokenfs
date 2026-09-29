@@ -44,6 +44,7 @@ struct Options {
   bool novel_reuse_decay=false;
   bool retained_capture=false;
   bool bounded_cost_warmup=false;
+  bool cohort_reuse_prior=false;
 };
 struct Decision {
   bool allowed=false;
@@ -54,6 +55,7 @@ struct Decision {
   double uncertainty_us=0;
   bool explore_headroom=false;
   double exploration_reads=1;
+  double cohort_disk_reuse=0;
   uint64_t incoming_count=0;
   uint64_t affinity_incoming_count=0;
   uint64_t affinity_adjusted_items=0;
@@ -245,6 +247,7 @@ class MeasuredPolicy {
     }
     result.costs_calibrated=remote_.n && local_.n && copy_.n;
     result.burst_remaining=BurstRemaining(incoming.key,o);
+    result.cohort_disk_reuse=CohortDiskReuse(gpu,incoming.key,o);
     // Exploration is quota bounded, never displacing a resident. Completed
     // runs may justify more than one remote read of exploration cost; the
     // current unfinished run is censored and cannot inflate this budget.
@@ -256,7 +259,7 @@ class MeasuredPolicy {
       result.copy_us=incoming.bytes*(copy_.n?copy_.mean:(remote_.n?remote_.mean:0.01));
       return result;
     }
-    if(o.admission && result.affinity_incoming_count<2 && result.burst_remaining<=0 && PersistentEstimate(incoming.key,o)<=0){result.reason="no_reuse";return result;}
+    if(o.admission && result.affinity_incoming_count<2 && result.burst_remaining<=0 && PersistentEstimate(incoming.key,o)<=0 && result.cohort_disk_reuse<=0){result.reason="no_reuse";return result;}
     if(o.admission && o.affinity_gate && !o.affinity_recent_demand) {
       const auto found=affinity_counts_.find(incoming.key);
       uint64_t own=0,peak=0;
@@ -424,6 +427,13 @@ class MeasuredPolicy {
     if(!o.frequency_admission)repeats=std::max(0.0,repeats-1.0);
     return repeats*Survival(gpu,key,o);
   }
+  double CohortDiskReuse(int gpu,const std::string& key,const Options& o) const {
+    if(!o.cohort_reuse_prior || o.static_reuse_value || !o.retained_capture ||
+       !o.persistent_run_reuse || !o.causal_window || !o.shared_value ||
+       !o.burst_reuse || !o.adaptive_control)return 0;
+    return temporal_strength_*run_reuse_.NewcomerDiskPrior(key)*Survival(gpu,key,o)*
+      (o.novel_reuse_decay?run_reuse_.CompetitionSurvival(key):1.0);
+  }
   double Value(int gpu,const Item& item,const Options& o,bool incoming) const {
     if(o.static_reuse_value) {
       double repeats=double(EffectiveCount(gpu,item.key,o,incoming));
@@ -438,7 +448,7 @@ class MeasuredPolicy {
       past*=1.0-(o.adaptive_control?temporal_strength_:1.0)*(1.0-run_reuse_.CompetitionSurvival(item.key));
     // These are overlapping estimates, not independent demand to add together.
     // Use the same value for incoming and resident copies of the current key.
-    return std::max(past*DiskReuseScale(o),BurstRemaining(item.key,o))*(o.cost?SavingRate()*item.bytes:1.0)*item.coverage;
+    return std::max({past*DiskReuseScale(o),BurstRemaining(item.key,o),CohortDiskReuse(gpu,item.key,o)})*(o.cost?SavingRate()*item.bytes:1.0)*item.coverage;
   }
   void Sort(int gpu,std::vector<Item>& items,const Options& o) const {
     if(o.efficient_planning && o.value_victim) {

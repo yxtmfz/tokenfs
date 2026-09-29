@@ -94,6 +94,7 @@ struct Config {
   bool retain_read_fill = false;
   bool capture_local_reads = false;
   bool bounded_cost_warmup = false;
+  bool cohort_reuse_prior = false;
   bool request_read_costs = false;
   uint64_t read_fill_buffer_bytes = 4*1024*1024;
   bool compact_measured_planning = false;
@@ -242,7 +243,7 @@ class MetadataStore {
   explicit MetadataStore(const fs::path& db_path) : db_path_(db_path) {}
 
   ~MetadataStore() {
-    for(const auto& [sql,stmt]:read_statements_){(void)sql;sqlite3_finalize(stmt);}
+    for(const auto& [sql,stmt]:cached_statements_){(void)sql;sqlite3_finalize(stmt);}
     if (db_ != nullptr) {
       sqlite3_close(db_);
     }
@@ -392,7 +393,7 @@ class MetadataStore {
         "COALESCE(target_local_replica_count,0),"
         "COALESCE(affinity_state,'UNKNOWN'),COALESCE(affinity_updated_at,0) "
         "FROM files WHERE logical_path=?;";
-    auto lease=ReadStatement(sql);
+    auto lease=CachedStatement(sql);
     auto* stmt=lease.get();
     sqlite3_bind_text(stmt, 1, logical_path.c_str(), -1, SQLITE_TRANSIENT);
     int rc = sqlite3_step(stmt);
@@ -579,76 +580,46 @@ class MetadataStore {
     const auto event_now = UnixNowMillis();
     Exec("BEGIN IMMEDIATE;");
     try {
-    sqlite3_stmt* stmt = nullptr;
-    Prepare("UPDATE files SET read_count=COALESCE(read_count,0)+1,"
-            "last_access_at=? WHERE logical_path=?;",
-            &stmt);
-    sqlite3_bind_int64(stmt, 1, now);
-    sqlite3_bind_text(stmt, 2, logical_path.c_str(), -1, SQLITE_TRANSIENT);
-    StepDone(stmt);
-
-    Prepare("INSERT INTO gpu_access(logical_path,gpu_id,read_count,last_access_at,access_order) "
-            "VALUES(?,?,1,?,?) "
-            "ON CONFLICT(logical_path,gpu_id) DO UPDATE SET "
-            "read_count=read_count+1,last_access_at=excluded.last_access_at,access_order=excluded.access_order;",
-            &stmt);
-    sqlite3_bind_text(stmt, 1, logical_path.c_str(), -1, SQLITE_TRANSIENT);
-    sqlite3_bind_int(stmt, 2, gpu_id);
-    sqlite3_bind_int64(stmt, 3, now);
-    sqlite3_bind_int64(stmt, 4, ++access_sequence_);
-    StepDone(stmt);
-
-    if(replica_gpu>=0) {
-      Prepare("UPDATE local_replicas SET last_access_at=? WHERE logical_path=? AND gpu_id=?;",&stmt);
-      sqlite3_bind_int64(stmt,1,now);
-      sqlite3_bind_text(stmt,2,logical_path.c_str(),-1,SQLITE_TRANSIENT);
-      sqlite3_bind_int(stmt,3,replica_gpu);StepDone(stmt);
-    }
-    if(legacy_affinity) {
-    Prepare("INSERT INTO gpu_access_events(logical_path,gpu_id,access_at) "
-            "VALUES(?,?,?);",
-            &stmt);
-    sqlite3_bind_text(stmt, 1, logical_path.c_str(), -1, SQLITE_TRANSIENT);
-    sqlite3_bind_int(stmt, 2, gpu_id);
-    sqlite3_bind_int64(stmt, 3, event_now);
-    StepDone(stmt);
-
-    Prepare("DELETE FROM gpu_access_events WHERE logical_path=? AND access_at<?;",
-            &stmt);
-    sqlite3_bind_text(stmt, 1, logical_path.c_str(), -1, SQLITE_TRANSIENT);
-    sqlite3_bind_int64(
-        stmt, 2,
-        event_now - 1000 * static_cast<sqlite3_int64>(std::max<uint64_t>(long_window_sec, short_window_sec)));
-    StepDone(stmt);
-
-    }
-    Prepare("UPDATE files SET share_count=("
-            "SELECT COUNT(*) FROM gpu_access WHERE logical_path=?) "
-            "WHERE logical_path=?;",
-            &stmt);
-    sqlite3_bind_text(stmt, 1, logical_path.c_str(), -1, SQLITE_TRANSIENT);
-    sqlite3_bind_text(stmt, 2, logical_path.c_str(), -1, SQLITE_TRANSIENT);
-    StepDone(stmt);
-
-    if(legacy_affinity)UpdateAffinityLocked(logical_path, dominant_threshold_x100,
-                         shared_threshold_x100, short_window_sec,
-                         long_window_sec, trend_min_reads,
-                         hot_read_threshold, warm_read_threshold,
-                         max_local_replicas);
-
-    Prepare("SELECT COALESCE(read_count,0) FROM files WHERE logical_path=?;", &stmt);
-    sqlite3_bind_text(stmt, 1, logical_path.c_str(), -1, SQLITE_TRANSIENT);
-    int rc = sqlite3_step(stmt);
-    if (rc != SQLITE_ROW) {
-      std::string err = rc == SQLITE_DONE ? "missing file metadata" : sqlite3_errmsg(db_);
-      sqlite3_finalize(stmt);
-      throw std::runtime_error(err);
-    }
-    uint64_t count = static_cast<uint64_t>(sqlite3_column_int64(stmt, 0));
-    sqlite3_finalize(stmt);
-    Exec("COMMIT;");
-    return count;
-    } catch (...) { Exec("ROLLBACK;"); throw; }
+      auto execute=[&](const char* sql,auto bind) {
+        auto lease=CachedStatement(sql);auto* stmt=lease.get();bind(stmt);
+        if(sqlite3_step(stmt)!=SQLITE_DONE)throw std::runtime_error(sqlite3_errmsg(db_));
+      };
+      execute("UPDATE files SET read_count=COALESCE(read_count,0)+1,last_access_at=? WHERE logical_path=?;",[&](auto* stmt){
+        sqlite3_bind_int64(stmt,1,now);sqlite3_bind_text(stmt,2,logical_path.c_str(),-1,SQLITE_TRANSIENT);
+      });
+      execute("INSERT INTO gpu_access(logical_path,gpu_id,read_count,last_access_at,access_order) "
+              "VALUES(?,?,1,?,?) ON CONFLICT(logical_path,gpu_id) DO UPDATE SET "
+              "read_count=read_count+1,last_access_at=excluded.last_access_at,access_order=excluded.access_order;",[&](auto* stmt){
+        sqlite3_bind_text(stmt,1,logical_path.c_str(),-1,SQLITE_TRANSIENT);sqlite3_bind_int(stmt,2,gpu_id);
+        sqlite3_bind_int64(stmt,3,now);sqlite3_bind_int64(stmt,4,++access_sequence_);
+      });
+      if(replica_gpu>=0)execute("UPDATE local_replicas SET last_access_at=? WHERE logical_path=? AND gpu_id=?;",[&](auto* stmt){
+        sqlite3_bind_int64(stmt,1,now);sqlite3_bind_text(stmt,2,logical_path.c_str(),-1,SQLITE_TRANSIENT);sqlite3_bind_int(stmt,3,replica_gpu);
+      });
+      if(legacy_affinity) {
+        execute("INSERT INTO gpu_access_events(logical_path,gpu_id,access_at) VALUES(?,?,?);",[&](auto* stmt){
+          sqlite3_bind_text(stmt,1,logical_path.c_str(),-1,SQLITE_TRANSIENT);sqlite3_bind_int(stmt,2,gpu_id);sqlite3_bind_int64(stmt,3,event_now);
+        });
+        execute("DELETE FROM gpu_access_events WHERE logical_path=? AND access_at<?;",[&](auto* stmt){
+          sqlite3_bind_text(stmt,1,logical_path.c_str(),-1,SQLITE_TRANSIENT);
+          sqlite3_bind_int64(stmt,2,event_now-1000*static_cast<sqlite3_int64>(std::max<uint64_t>(long_window_sec,short_window_sec)));
+        });
+      }
+      execute("UPDATE files SET share_count=(SELECT COUNT(*) FROM gpu_access WHERE logical_path=?) WHERE logical_path=?;",[&](auto* stmt){
+        sqlite3_bind_text(stmt,1,logical_path.c_str(),-1,SQLITE_TRANSIENT);sqlite3_bind_text(stmt,2,logical_path.c_str(),-1,SQLITE_TRANSIENT);
+      });
+      if(legacy_affinity)UpdateAffinityLocked(logical_path,dominant_threshold_x100,shared_threshold_x100,
+        short_window_sec,long_window_sec,trend_min_reads,hot_read_threshold,warm_read_threshold,max_local_replicas);
+      uint64_t count=0;
+      {
+        auto lease=CachedStatement("SELECT COALESCE(read_count,0) FROM files WHERE logical_path=?;");auto* stmt=lease.get();
+        sqlite3_bind_text(stmt,1,logical_path.c_str(),-1,SQLITE_TRANSIENT);
+        const int rc=sqlite3_step(stmt);
+        if(rc!=SQLITE_ROW)throw std::runtime_error(rc==SQLITE_DONE?"missing file metadata":sqlite3_errmsg(db_));
+        count=static_cast<uint64_t>(sqlite3_column_int64(stmt,0));
+      }
+      Exec("COMMIT;");return count;
+    } catch (...) {Exec("ROLLBACK;");throw;}
   }
 
   void Remove(const std::string& logical_path) {
@@ -704,8 +675,7 @@ class MetadataStore {
       // and delta-before-maximum semantics, including rollback on any failure.
       auto apply=[&](const auto& values,const char* sql) {
         if(values.empty())return;
-        sqlite3_stmt* raw=nullptr;Prepare(sql,&raw);
-        std::unique_ptr<sqlite3_stmt,decltype(&sqlite3_finalize)> stmt(raw,sqlite3_finalize);
+        auto stmt=CachedStatement(sql);auto* raw=stmt.get();
         for(const auto& [name,value]:values) {
           sqlite3_bind_text(raw,1,name.c_str(),-1,SQLITE_TRANSIENT);
           sqlite3_bind_int64(raw,2,static_cast<sqlite3_int64>(value));
@@ -717,9 +687,8 @@ class MetadataStore {
       apply(deltas,"INSERT INTO metrics(name,value) VALUES(?,?) ON CONFLICT(name) DO UPDATE SET value=value+excluded.value;");
       apply(maxima,"INSERT INTO metrics(name,value) VALUES(?,?) ON CONFLICT(name) DO UPDATE SET value=MAX(value,excluded.value);");
       if(!events.empty()) {
-        sqlite3_stmt* raw=nullptr;
-        Prepare("INSERT INTO policy_events(action,logical_path,gpu_id,bytes,reason,score) VALUES(?,?,?,?,?,?);",&raw);
-        std::unique_ptr<sqlite3_stmt,decltype(&sqlite3_finalize)> stmt(raw,sqlite3_finalize);
+        auto stmt=CachedStatement("INSERT INTO policy_events(action,logical_path,gpu_id,bytes,reason,score) VALUES(?,?,?,?,?,?);");
+        auto* raw=stmt.get();
         for(const auto& e:events) {
           sqlite3_bind_text(raw,1,e.action.c_str(),-1,SQLITE_TRANSIENT);
           sqlite3_bind_text(raw,2,e.path.c_str(),-1,SQLITE_TRANSIENT);
@@ -774,7 +743,7 @@ class MetadataStore {
   std::optional<LocalReplica> GetLocalReplica(const std::string& logical_path,
                                                int gpu_id) {
     std::lock_guard<std::mutex> lock(mu_);
-    auto lease=ReadStatement("SELECT logical_path,gpu_id,physical_path,size_bytes,"
+    auto lease=CachedStatement("SELECT logical_path,gpu_id,physical_path,size_bytes,"
             "cache_generation,created_at,last_access_at,state "
             "FROM local_replicas WHERE logical_path=? AND gpu_id=?;");
     auto* stmt=lease.get();
@@ -804,7 +773,7 @@ class MetadataStore {
 
   std::vector<LocalReplica> LocalReplicas(const std::string& logical_path) {
     std::lock_guard<std::mutex> lock(mu_);
-    auto lease=ReadStatement("SELECT logical_path,gpu_id,physical_path,size_bytes,"
+    auto lease=CachedStatement("SELECT logical_path,gpu_id,physical_path,size_bytes,"
             "cache_generation,created_at,last_access_at,state "
             "FROM local_replicas WHERE logical_path=? "
             "ORDER BY last_access_at ASC,created_at ASC;");
@@ -1428,17 +1397,17 @@ class MetadataStore {
     sqlite3_finalize(stmt);
   }
 
-  // The three hot read queries are serialized by mu_. Reuse their compiled
-  // programs, never their results; reset ends each snapshot before writes.
-  struct ResetReadStatement {
+  // A fixed set of hot queries and accounting writes is serialized by mu_.
+  // Reuse programs, never results; scoped reset ends every active statement.
+  struct ResetCachedStatement {
     void operator()(sqlite3_stmt* stmt) const {sqlite3_reset(stmt);sqlite3_clear_bindings(stmt);}
   };
-  std::unique_ptr<sqlite3_stmt,ResetReadStatement> ReadStatement(const char* sql) {
-    auto& stmt=read_statements_[sql];
+  std::unique_ptr<sqlite3_stmt,ResetCachedStatement> CachedStatement(const char* sql) {
+    auto& stmt=cached_statements_[sql];
     if(!stmt)Prepare(sql,&stmt);
-    return std::unique_ptr<sqlite3_stmt,ResetReadStatement>(stmt);
+    return std::unique_ptr<sqlite3_stmt,ResetCachedStatement>(stmt);
   }
-  std::unordered_map<std::string,sqlite3_stmt*> read_statements_;
+  std::unordered_map<std::string,sqlite3_stmt*> cached_statements_;
   uint64_t access_sequence_ = 0;
   fs::path db_path_;
   sqlite3* db_ = nullptr;
@@ -2499,7 +2468,7 @@ class TokenFS {
     return {static_cast<size_t>(config_.measured_window),config_.measured_aging,
             config_.measured_admission,config_.measured_cost,
             config_.measured_value_victim,config_.measured_size_aware,config_.measured_frequency_admission,config_.measured_shift_reset,static_cast<size_t>(config_.measured_shift_window),
-            config_.measured_track_affinity,config_.measured_affinity_gate,config_.measured_joint_admission,static_cast<size_t>(config_.measured_affinity_window),config_.measured_affinity_recent_demand,config_.measured_affinity_handover_epoch,config_.shared_value_placement,config_.measured_causal_window,config_.measured_burst_reuse,config_.adaptive_reuse_control,config_.efficient_measured_planning,config_.burst_interval_survival,config_.reuse_scaled_exploration,config_.persistent_run_reuse,config_.persistent_reuse_immediate_decay,config_.measured_static_reuse_value,config_.novel_reuse_decay,config_.retain_read_fill && config_.capture_local_reads,config_.bounded_cost_warmup};
+            config_.measured_track_affinity,config_.measured_affinity_gate,config_.measured_joint_admission,static_cast<size_t>(config_.measured_affinity_window),config_.measured_affinity_recent_demand,config_.measured_affinity_handover_epoch,config_.shared_value_placement,config_.measured_causal_window,config_.measured_burst_reuse,config_.adaptive_reuse_control,config_.efficient_measured_planning,config_.burst_interval_survival,config_.reuse_scaled_exploration,config_.persistent_run_reuse,config_.persistent_reuse_immediate_decay,config_.measured_static_reuse_value,config_.novel_reuse_decay,config_.retain_read_fill && config_.capture_local_reads,config_.bounded_cost_warmup,config_.cohort_reuse_prior};
   }
 
   double MarginalCoverage(const FileMeta& meta, int location) {
@@ -2551,6 +2520,7 @@ class TokenFS {
     }
     const auto plan=measured_.Plan(gpu.gpu_id,{incoming.logical_path,incoming.size_bytes,0},
         std::move(residents),known_used?*known_used:DirectoryBytes(gpu.local_root),gpu.local_quota_bytes,MeasuredOptions());
+    if(plan.cohort_disk_reuse>0)AddBufferedMetric("measured_cohort_prior_plans",1);
     if(plan.uncertainty_us>0)AddBufferedMetric("measured_uncertainty_plans",1);
     if(plan.burst_remaining>0)AddBufferedMetric("measured_burst_forecast_plans",1);
     if(plan.survival_adjusted_items) {
@@ -2609,7 +2579,7 @@ class TokenFS {
              << ";affinity_count=" << plan.affinity_incoming_count
              << ";affinity_adjusted_items=" << plan.affinity_adjusted_items
              << ";burst_remaining=" << plan.burst_remaining << ";uncertainty=" << plan.uncertainty_us
-             << ";explore=" << plan.explore_headroom;
+             << ";explore=" << plan.explore_headroom << ";cohort_disk_reuse=" << plan.cohort_disk_reuse;
       RecordPolicyEvent("ADMIT",protected_logical_path,gpu.gpu_id,required_size,
           detail.str(),plan.incoming_us-plan.displaced_us-plan.uncertainty_us-plan.copy_us);
     }
@@ -2905,7 +2875,7 @@ class TokenFS {
         }
         if(!destination){AddBufferedMetric("shared_placement_no_gain",1);return;}
         std::ostringstream detail;detail<<"caller="<<caller<<";incoming="<<chosen.incoming_us
-          <<";victim_loss="<<chosen.displaced_us<<";copy="<<chosen.copy_us<<";burst_remaining="<<chosen.burst_remaining<<";uncertainty="<<chosen.uncertainty_us<<";explore="<<chosen.explore_headroom<<";exploration_reads="<<chosen.exploration_reads;
+          <<";victim_loss="<<chosen.displaced_us<<";copy="<<chosen.copy_us<<";burst_remaining="<<chosen.burst_remaining<<";uncertainty="<<chosen.uncertainty_us<<";explore="<<chosen.explore_headroom<<";exploration_reads="<<chosen.exploration_reads<<";cohort_disk_reuse="<<chosen.cohort_disk_reuse;
         RecordPolicyEvent("SHARED_PLACE",path,destination->gpu_id,incoming.size_bytes,detail.str(),best);
         AddBufferedMetric("shared_placement_selected",1);
         if(chosen.explore_headroom)AddBufferedMetric("shared_free_exploration_selected",1);
@@ -4170,6 +4140,7 @@ Config LoadConfig(const fs::path& path) {
   if(root["policy"] && root["policy"]["batch_background_metrics"]) config.batch_background_metrics=root["policy"]["batch_background_metrics"].as<bool>();
   if(root["policy"] && root["policy"]["batch_policy_events"]) config.batch_policy_events=root["policy"]["batch_policy_events"].as<bool>();
   if(root["policy"] && root["policy"]["request_trace_path"]) config.request_trace_path=root["policy"]["request_trace_path"].as<std::string>();
+  if(root["policy"] && root["policy"]["cohort_reuse_prior"]) config.cohort_reuse_prior=root["policy"]["cohort_reuse_prior"].as<bool>();
   if(root["policy"] && root["policy"]["bounded_cost_warmup"]) config.bounded_cost_warmup=root["policy"]["bounded_cost_warmup"].as<bool>();
   if(root["policy"] && root["policy"]["capture_local_reads"]) config.capture_local_reads=root["policy"]["capture_local_reads"].as<bool>();
   if(root["policy"] && root["policy"]["retain_read_fill"]) config.retain_read_fill=root["policy"]["retain_read_fill"].as<bool>();

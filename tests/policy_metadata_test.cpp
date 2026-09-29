@@ -560,10 +560,30 @@ void ReusedQueriesAndAtomicReplica(const fs::path& path) {
   assert(rejected && store.LocalReplicas(f.logical_path).empty());sqlite3_close(db);
 }
 
+void CachedAccountingRollback(const fs::path& path) {
+  {
+    MetadataStore store(path);store.Open();FileMeta f;f.logical_path="/gpu0/k";f.gpu_id=0;f.state="COMMITTED";store.Upsert(f);
+    auto record=[&](int gpu){return store.IncrementReadCount(f.logical_path,gpu,70,55,2,10,3,4,2,3,false,1);};
+    assert(record(0)==1);
+    sqlite3* db=nullptr;assert(sqlite3_open(path.c_str(),&db)==SQLITE_OK);
+    assert(sqlite3_exec(db,"CREATE TRIGGER reject_access BEFORE INSERT ON gpu_access BEGIN SELECT RAISE(ABORT,'injected'); END;",nullptr,nullptr,nullptr)==SQLITE_OK);
+    bool failed=false;try{record(1);}catch(const std::runtime_error&){failed=true;}
+    assert(failed && store.Get(f.logical_path)->read_count==1);
+    assert(sqlite3_exec(db,"DROP TRIGGER reject_access;",nullptr,nullptr,nullptr)==SQLITE_OK);
+    assert(record(1)==2);sqlite3_close(db);
+    std::vector<std::future<void>> workers;
+    for(int i=0;i<4;++i)workers.push_back(std::async(std::launch::async,[&,i]{for(int j=0;j<50;++j)record(i%3);}));
+    for(auto& worker:workers)worker.get();
+    assert(store.Get(f.logical_path)->read_count==202 && store.Get(f.logical_path)->share_count==3);
+  }
+  MetadataStore reopened(path);reopened.Open();assert(reopened.Get("/gpu0/k")->read_count==202);
+}
+
 int main() {
   const fs::path root = fs::temp_directory_path() / ("tokenfs-policy-test-" + std::to_string(getpid()));
   fs::create_directory(root);
   MetricBatchTransactions(root/"metric-batches.db");
+  CachedAccountingRollback(root/"cached-accounting.db");
   ReusedQueriesAndAtomicReplica(root/"query-reuse.db");
   TokenFSTestAccess::telemetry_retry_and_release_lock(root/"telemetry-retry");
   TokenFSTestAccess::background_metric_fence(root/"metric-fence-on",true);

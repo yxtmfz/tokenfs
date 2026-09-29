@@ -54,6 +54,14 @@ class RunReuse {
     const auto it=entries_.find(key);
     return it==entries_.end()?1.0:std::exp2(-double(novelty_-it->second.novelty_seen));
   }
+  double NewcomerDiskPrior(const std::string& key) const {
+    const auto it=entries_.find(key);
+    if(it==entries_.end() || it->second.gap.n || recent_.size()<=entries_.size())return 0;
+    // Transfer bounded evidence from observed returns, not the current run's
+    // eventual length. One pseudo-object shrinks sparse histories; at most one
+    // future disk read is credited to a not-yet-recurring object.
+    return std::min(1.0,double(recent_.size()-entries_.size())/(entries_.size()+1.0));
+  }
   size_t Entries() const {return entries_.size();}
   size_t Runs() const {return recent_.size();}
  private:

@@ -53,6 +53,28 @@ int main() {
     auto symmetric=p.Plan(0,{"a",100,0},{{"a",100,0}},100,100,memory);
     assert(symmetric.incoming_us==symmetric.displaced_us);
   }
+  {
+    Options o;o.causal_window=true;o.shared_value=true;o.burst_reuse=true;o.shift_reset=true;
+    o.persistent_run_reuse=true;o.adaptive_control=true;o.retained_capture=true;o.cohort_reuse_prior=true;
+    MeasuredPolicy p;p.ReadSample(false,100,100);p.ReadSample(true,100,20);p.CopySample(100,10);
+    p.Observe(0,"first",o);assert(p.Plan(0,{"first",100,0},{},0,100,o).cohort_disk_reuse==0);
+    for(int i=0;i<64;++i)p.Observe(0,(i/4)%2?"a":"b",o);
+    p.Observe(0,"new",o);
+    const auto prior=p.Plan(0,{"new",100,0},{{"old",100,0}},100,100,o);
+    assert(prior.allowed && prior.cohort_disk_reuse>0 && prior.cohort_disk_reuse<=1);
+    auto no_h=o;no_h.static_reuse_value=true;
+    assert(!p.Plan(0,{"new",100,0},{{"old",100,0}},100,100,no_h).allowed);
+    auto same=p.Plan(0,{"new",100,0},{{"new",100,0}},100,100,o);
+    assert(same.incoming_us==same.displaced_us && !same.allowed);
+    p.CopySample(100,10000);
+    assert(!p.Plan(0,{"new",100,0},{{"old",100,0}},100,100,o).allowed);
+    MeasuredPolicy iid;
+    for(int i=0;i<128;++i)iid.Observe(0,i%2?"a":"b",o);
+    iid.Observe(0,"new",o);
+    assert(iid.Plan(0,{"new",100,0},{},0,100,o).cohort_disk_reuse==0);
+    RunReuse r;for(int i=0;i<40;++i)r.Observe("scan"+std::to_string(i),i+1,128);
+    assert(r.NewcomerDiskPrior("scan39")==0);
+  }
   RunReuse r;uint64_t t=0;
   auto run=[&](const std::string& k,int n){for(int i=0;i<n;++i)r.Observe(k,++t,128);};
   run("hot",4);run("a",28);run("hot",4);run("b",28);run("hot",4);
