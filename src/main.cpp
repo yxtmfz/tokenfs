@@ -3128,11 +3128,16 @@ class TokenFS {
     }
     if (config_.checksum != "none") {
       const auto verify_start=diagnostic.Enabled()?RequestTrace::Now():0;
-      auto source_hash = reused?std::optional<std::string>(fill->Checksum()):ChecksumFile(source);
-      auto copy_hash = ChecksumFile(tmp);
+      bool verified=false;
+      if(reused) {
+        verified=fill->VerifyFileBytes(tmp.string()) && fill->Matches(source.string(),size);
+        if(verified)AddBufferedMetric("read_fill_exact_verify_count",1);
+      } else {
+        const auto source_hash=ChecksumFile(source),copy_hash=ChecksumFile(tmp);
+        verified=source_hash && copy_hash && *source_hash==*copy_hash;
+      }
       if(diagnostic.Enabled())diagnostic.e.verify_ns=RequestTrace::Now()-verify_start;
-      if (!source_hash || !copy_hash || *source_hash != *copy_hash ||
-          (reused && !fill->Matches(source.string(),size))) {
+      if (!verified) {
         fs::remove(tmp, ec);
         AddBackgroundMetric("copy_checksum_error_count", 1);
         return;
@@ -3265,11 +3270,16 @@ class TokenFS {
 
     if (config_.checksum != "none") {
       const auto verify_start=diagnostic.Enabled()?RequestTrace::Now():0;
-      auto source_hash = reused?std::optional<std::string>(fill->Checksum()):ChecksumFile(source);
-      auto copy_hash = ChecksumFile(tmp);
+      bool verified=false;
+      if(reused) {
+        verified=fill->VerifyFileBytes(tmp.string()) && fill->Matches(source.string(),size);
+        if(verified)AddBufferedMetric("read_fill_exact_verify_count",1);
+      } else {
+        const auto source_hash=ChecksumFile(source),copy_hash=ChecksumFile(tmp);
+        verified=source_hash && copy_hash && *source_hash==*copy_hash;
+      }
       if(diagnostic.Enabled())diagnostic.e.verify_ns=RequestTrace::Now()-verify_start;
-      if (!source_hash || !copy_hash || *source_hash != *copy_hash ||
-          (reused && !fill->Matches(source.string(),size))) {
+      if (!verified) {
         fs::remove(tmp, ec);
         AddBackgroundMetric("copy_checksum_error_count", 1);
         return -EIO;

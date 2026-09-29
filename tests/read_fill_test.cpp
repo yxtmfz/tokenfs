@@ -11,10 +11,18 @@ int main(){
   assert(!pool.Acquire("b",fd,8) && !pool.Acquire("a",fd,8));
   assert(!b->Append(0,"abcd",4,fd) && !b->Dispatched());
   assert(!pool.FindComplete("a",path.string(),8));
+  assert(!b->VerifyFileBytes(path.string()));
   assert(b->Append(4,"efgh",4,fd) && b->Matches(path.string(),8));
   assert(!b->Append(8,"",0,fd));
   assert(std::string(b->Data().begin(),b->Data().end())=="abcdefgh");
   assert(b->Checksum()=="fnv1a64:25da8c1836a8d66d");
+  auto candidate=root/"candidate";
+  assert(!b->VerifyFileBytes(candidate.string()));
+  std::ofstream(candidate)<<"abcdefgh";assert(b->VerifyFileBytes(candidate.string()));
+  std::ofstream(candidate)<<"abcdEfgh";assert(!b->VerifyFileBytes(candidate.string()));
+  std::ofstream(candidate)<<"abcdefg";assert(!b->VerifyFileBytes(candidate.string()));
+  std::ofstream(candidate)<<"abcdefghx";assert(!b->VerifyFileBytes(candidate.string()));
+  assert(!b->VerifyFileBytes(root.string()));
   auto borrowed=pool.FindComplete("a",path.string(),8);assert(borrowed==b);
   char bytes[12]{};assert(borrowed->ReadCaptured(fd,bytes,12,0)==8 && std::string(bytes,8)=="abcdefgh");
   assert(borrowed->ReadCaptured(fd,bytes,3,2)==3 && std::string(bytes,3)=="cde");
@@ -35,6 +43,18 @@ int main(){
   assert(b->ReadCaptured(replaced,bytes,8,0)==-ESTALE);close(replaced);b.reset();
   assert(!pool.Acquire("large",fd,9));
   close(fd);fd=open(path.c_str(),O_RDONLY);assert(fd>=0);
+  {
+    const auto large_path=root/"multi-chunk";std::string payload(150003,'\0');
+    for(size_t i=0;i<payload.size();++i)payload[i]=char((i*37)%256);
+    std::ofstream(large_path,std::ios::binary).write(payload.data(),payload.size());
+    int large_fd=open(large_path.c_str(),O_RDONLY);assert(large_fd>=0);
+    ReadFillPool large_pool(payload.size());auto large=large_pool.Acquire("large",large_fd,payload.size());
+    assert(large && large->Append(0,payload.data(),payload.size(),large_fd));
+    assert(large->VerifyFileBytes(large_path.string()));
+    payload[65536]^=1;
+    std::ofstream(candidate,std::ios::binary).write(payload.data(),payload.size());
+    assert(!large->VerifyFileBytes(candidate.string()));close(large_fd);
+  }
   std::weak_ptr<ReadFillPool::Buffer> lifetime;
   {
     ReadFillPool retained(16,true);

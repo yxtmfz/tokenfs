@@ -12,6 +12,7 @@
 #include <string>
 #include <vector>
 #include <sys/stat.h>
+#include <fcntl.h>
 #include <unistd.h>
 
 // Bounded immutable captures. Optional LRU retention shares the SAME byte budget
@@ -88,6 +89,30 @@ class ReadFillPool {
       for(unsigned char c:data_){hash^=c;hash*=1099511628211ULL;}
       std::ostringstream out;out<<"fnv1a64:"<<std::hex<<std::setw(16)<<std::setfill('0')<<hash;
       return out.str();
+    }
+    // Re-read the entire candidate and compare with the immutable capture.
+    // This avoids two serial hashes without accepting a hash collision. The
+    // caller must still revalidate the canonical source before publication.
+    bool VerifyFileBytes(const std::string& path) const {
+      {
+        std::lock_guard<std::mutex> lock(mu_);
+        if(!dispatched_ || invalid_)return false;
+      }
+      const int fd=open(path.c_str(),O_RDONLY);
+      if(fd<0)return false;
+      struct Close {int fd;~Close(){close(fd);}} close_file{fd};
+      struct stat before{},after{},named{};
+      if(fstat(fd,&before)!=0 || !S_ISREG(before.st_mode) ||
+         before.st_size<0 || uint64_t(before.st_size)!=data_.size())return false;
+      char bytes[64*1024];size_t offset=0;
+      while(offset<data_.size()) {
+        const auto n=read(fd,bytes,std::min(sizeof(bytes),data_.size()-offset));
+        if(n<0 && errno==EINTR)continue;
+        if(n<=0 || std::memcmp(bytes,data_.data()+offset,size_t(n))!=0)return false;
+        offset+=size_t(n);
+      }
+      return fstat(fd,&after)==0 && SameIdentity(after,before) &&
+        stat(path.c_str(),&named)==0 && SameIdentity(named,before);
     }
    private:
     static bool SameIdentity(const struct stat& s,const struct stat& original) {

@@ -1,0 +1,7 @@
+# Exact captured-copy verification: bounded moving screen
+
+Five readpath-binary instrumented arms show copy verification averaging16.9–17.2ms out of20.5–21.2ms pipelines. The complete immutable capture already exists. Re-read all candidate bytes and compare directly, require exact size and stable candidate identity, then retain canonical source identity validation. Uncaptured copies retain their existing checksum verification. Both local promotion and peer replica paths use this; all five arms benefit. No durability/capacity/QoS/policy-value changes. This is an execution optimization, not a fourth research contribution.
+
+Predeclare ten uninstrumented speed runs: same moving3293 input,576x2MiB,24MiB disk,4MiB capture, all5arms in SIEVE/NoJ/NoP/NoH/Full then full reverse. One binary. No selective reruns, no new seed search. Each H/P/J ablation remains one flag, and the same Full run serves all comparisons. Native correctness and a separate480-request SHA256 check are required. This focused screen cannot establish stationary/uniform behavior of the new binary; prior results remain version-labelled.
+
+Fixed-hotspot is a control for overhead, moving-hotspot is primary component evidence, uniform is an unpredictability boundary. Preserve existing negative data and p99/drained/mechanism flags; don't reinterpret an inactive component as validated. No physical GPU or significant-generalization claim.
