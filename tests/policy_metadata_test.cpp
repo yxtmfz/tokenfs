@@ -46,10 +46,11 @@ struct TokenFSTestAccess {
     filesystem.AddBufferedMetric("retry_delta",7);filesystem.SetBufferedMetricMax("retry_peak",9);
     filesystem.RecordPolicyEvent("first","/gpu0/k",0,4096,"test",-3.5);
     filesystem.RecordPolicyEvent("reject","/gpu0/k",0,4096,"test");
-    bool failed=false;try{filesystem.FlushBufferedMetrics();}catch(const std::runtime_error&){failed=true;}
+    bool failed=false;try{filesystem.FlushBufferedMetrics(1);}catch(const std::runtime_error&){failed=true;}
     assert(failed && events().empty());
     assert(filesystem.buffered_metrics_.at("retry_delta")==7);
     assert(filesystem.buffered_metric_max_.at("retry_peak")==9);
+    assert(filesystem.buffered_metrics_["background_completed"]==0);
     filesystem.RecordPolicyEvent("newer","/gpu0/k",0,4096,"test");
     exec("DROP TRIGGER reject_event;");filesystem.FlushBufferedMetrics();filesystem.FlushBufferedMetrics();
     assert((events()==std::vector<std::string>{"first","reject","newer"}));

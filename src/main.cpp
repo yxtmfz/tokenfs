@@ -1490,16 +1490,20 @@ class TokenFS {
           task = std::move(background_tasks_.front());
           background_tasks_.pop_front();
         }
+        bool completion_durable=false;
         try {
           task();
           // Completion is published only after auxiliary statistics are durable.
-          if(config_.batch_background_metrics)FlushBufferedMetrics();
+          if(config_.batch_background_metrics) {
+            FlushBufferedMetrics(1);
+            completion_durable=true;
+          }
         }
         catch (const std::exception& e) {
           std::cerr << "background task failed: " << e.what() << std::endl;
           metadata_.AddMetric("background_error_count", 1);
         }
-        metadata_.AddMetric("background_completed", 1);
+        if(!completion_durable)metadata_.AddMetric("background_completed", 1);
       }
     });
   }
@@ -3906,7 +3910,7 @@ class TokenFS {
     }
   }
 
-  void FlushBufferedMetrics() {
+  void FlushBufferedMetrics(uint64_t completed_tasks=0) {
     // A concurrent flush must finish before background_completed can advance.
     std::lock_guard<std::mutex> flush_lock(flush_metrics_mu_);
     std::unordered_map<std::string, uint64_t> pending;
@@ -3914,18 +3918,23 @@ class TokenFS {
     std::vector<PolicyEvent> events;
     {
       std::lock_guard<std::mutex> lock(buffered_metrics_mu_);
-      if (buffered_metrics_.empty() && buffered_metric_max_.empty() && buffered_policy_events_.empty()) {
+      if (!completed_tasks && buffered_metrics_.empty() && buffered_metric_max_.empty() && buffered_policy_events_.empty()) {
         return;
       }
       pending.swap(buffered_metrics_);
       pending_max.swap(buffered_metric_max_);
       events.swap(buffered_policy_events_);
     }
+    // A successful task and its telemetry share one durable commit. The
+    // completion delta is local to this flush, never visible in the buffer to
+    // an earlier foreground flush or retried after the worker's error path.
+    if(completed_tasks)pending["background_completed"]+=completed_tasks;
     try {metadata_.ApplyMetricBatch(pending, pending_max, events);}
     catch (...) {
       // The transaction rolled back. Retain observations for retry, ahead of
       // newer events, without duplicating already durable data.
       std::lock_guard<std::mutex> lock(buffered_metrics_mu_);
+      if(completed_tasks)pending["background_completed"]-=completed_tasks;
       for(const auto& [key,value]:pending)buffered_metrics_[key]+=value;
       for(const auto& [key,value]:pending_max)buffered_metric_max_[key]=std::max(buffered_metric_max_[key],value);
       events.insert(events.end(),buffered_policy_events_.begin(),buffered_policy_events_.end());
