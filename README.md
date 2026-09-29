@@ -1,3 +1,5 @@
+> 固定热点稳定性复测：[同程序、同输入、均衡顺序18次结果](reports/latest/paper-experiments/34_stationary_stability/README.md)。Full对SIEVE两个输入的配对平均增益为−1.14%/−1.75%，各只赢1/3次，未确认稳定领先。六次Full运行均重复出现4或8次热点淘汰，SIEVE均为0；上一轮两次正增益未被稳定复现。没有修改策略或事后补跑，完整负结果与审计保留。
+
 > 固定热点专项：[两处候选修复、18组测速及2组阶段诊断](reports/latest/paper-experiments/33_headroom_exploration/README.md)。最后两条固定热点输入相对同批SIEVE为+2.23%/+0.53%，p99均降低；但第一次12组的固定热点仍全部落后，第二开关没有改变最后两条输入的复制/淘汰序列，稳定提速与组件归因尚未成立。候选默认关闭，全部负结果保留，未扩至大规模。
 
 > 最新回归：[取消5%门槛后的12组完整结果](reports/latest/paper-experiments/31_planning_efficiency/README.md)。已实现决策等价的规划计算优化；按正吞吐、p99及排空后吞吐不退化的新标准，9项中6项通过。固定热点相对SIEVE仍慢9.01%，另有两项约0.10/0.08ms的p99小幅增加。未宣称全部达标，历史门槛与原始负结果保留。
