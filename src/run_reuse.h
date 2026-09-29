@@ -1,0 +1,64 @@
+#pragma once
+#include <algorithm>
+#include <cmath>
+#include <cstdint>
+#include <cstddef>
+#include <utility>
+#include <deque>
+#include <string>
+#include <unordered_map>
+
+namespace tokenfs_policy {
+// Bounded summary of observed runs, independent of the short request window.
+// Access is serialized by MeasuredPolicy::mu_. No cache-state or trace labels.
+class RunReuse {
+ public:
+  void Observe(const std::string& key,uint64_t at,size_t limit) {
+    limit=std::max<size_t>(2,limit);
+    if(active_length_ && key==active_) {
+      ++active_length_;entries_.at(key).last_seen=at;
+    } else {
+      if(active_length_)entries_.at(active_).length.Add(active_length_,limit);
+      auto& entry=entries_[key];
+      if(entry.last_start)entry.gap.Add(at-entry.last_start,limit);
+      entry.last_start=entry.last_seen=at;entry.generation=++generation_;
+      recent_.emplace_back(key,generation_);
+      active_=key;active_length_=1;
+    }
+    while(recent_.size()>limit) {
+      const auto old=recent_.front();recent_.pop_front();
+      auto it=entries_.find(old.first);
+      if(it!=entries_.end() && it->second.generation==old.second)entries_.erase(it);
+    }
+  }
+  double Estimate(const std::string& key,uint64_t at,size_t horizon) const {
+    auto it=entries_.find(key);if(it==entries_.end())return 0;
+    const auto& e=it->second;
+    if(!e.gap.n || !e.length.n)return 0; // A single burst is not recurrence.
+    const double interval=std::max(4.0,e.gap.mean);
+    // One observed standard deviation is a heuristic grace for irregular
+    // arrivals, not a statistical confidence bound. Stale keys still decay.
+    const double grace=interval+std::sqrt(std::max(0.0,e.gap.variance));
+    const double overdue=std::max(0.0,double(at-e.last_seen)-grace);
+    const double confidence=double(e.gap.n)/(e.gap.n+1.0);
+    return std::max<size_t>(2,horizon)/interval*e.length.mean*confidence*
+           std::exp2(-overdue/interval);
+  }
+  size_t Entries() const {return entries_.size();}
+  size_t Runs() const {return recent_.size();}
+ private:
+  struct Moment {
+    uint64_t n=0;double mean=0,variance=0;
+    void Add(double value,size_t limit) {
+      n=std::min<uint64_t>(n+1,limit);
+      const double alpha=1.0/n,delta=value-mean;
+      mean+=alpha*delta;variance=(1-alpha)*(variance+alpha*delta*delta);
+    }
+  };
+  struct Entry {Moment gap,length;uint64_t last_start=0,last_seen=0,generation=0;};
+  std::unordered_map<std::string,Entry> entries_;
+  std::deque<std::pair<std::string,uint64_t>> recent_;
+  std::string active_;
+  uint64_t active_length_=0,generation_=0;
+};
+}

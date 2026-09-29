@@ -33,6 +33,9 @@ target_link_libraries(tokenfs PRIVATE
 
 include(CTest)
 if(BUILD_TESTING)
+  add_executable(run_reuse_test tests/run_reuse_test.cpp)
+  target_compile_options(run_reuse_test PRIVATE -UNDEBUG)
+  add_test(NAME run_reuse COMMAND run_reuse_test)
   add_executable(burst_interval_test tests/burst_interval_test.cpp)
   target_compile_options(burst_interval_test PRIVATE -UNDEBUG)
   add_test(NAME burst_interval COMMAND burst_interval_test)
