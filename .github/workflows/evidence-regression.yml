@@ -65,3 +65,5 @@ jobs:
         run: python3 -m unittest tests.burst_interval_study_test tests.headroom_exploration_test
       - name: Test balanced stationary repeats and stability summaries
         run: python3 -m unittest tests.stationary_stability_test
+      - name: Test gated recurrence integrated controls
+        run: python3 -m unittest tests.integrated_hpj_guarded_study_test

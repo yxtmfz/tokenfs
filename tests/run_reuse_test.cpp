@@ -18,7 +18,7 @@ int main() {
 
   {
     Options o;o.causal_window=true;o.shared_value=true;o.burst_reuse=true;
-    o.persistent_run_reuse=true;o.persistent_reuse_immediate_decay=true;o.admission=false;
+    o.persistent_run_reuse=true;o.persistent_reuse_immediate_decay=true;o.admission=false;o.adaptive_control=true;
     MeasuredPolicy p;p.ReadSample(false,100,100);p.ReadSample(true,100,20);p.CopySample(100,20);
     auto run=[&](const std::string& k){for(int i=0;i<4;++i)p.Observe(0,k,o);};
     run("old");run("separator0");run("old");run("new");run("separator1");run("new");
@@ -27,6 +27,18 @@ int main() {
     assert(loss(novel)==.5*loss(o) && loss(o)>0);
     auto same=p.Plan(0,{"new",100,0},{{"new",100,0}},100,100,novel);
     assert(same.incoming_us==same.displaced_us);
+  }
+  {
+    Options o;o.causal_window=true;o.shared_value=true;o.burst_reuse=true;
+    o.persistent_run_reuse=true;o.adaptive_control=true;o.admission=false;
+    MeasuredPolicy p;p.ReadSample(false,100,100);p.ReadSample(true,100,20);p.CopySample(100,20);
+    // Repeated but interleaved keys have no adjacent clustering. New recurrence
+    // must not erase established resident evidence just because it is new.
+    for(int i=0;i<20;++i)p.Observe(0,i%2?"old":"separator",o);
+    p.Observe(0,"new",o);p.Observe(0,"separator",o);p.Observe(0,"new",o);
+    auto loss=[&](Options x){return p.Plan(0,{"new",100,0},{{"old",100,0}},100,100,x).displaced_us;};
+    auto novel=o;novel.novel_reuse_decay=true;
+    assert(loss(o)>0 && loss(novel)==loss(o));
   }
   RunReuse r;uint64_t t=0;
   auto run=[&](const std::string& k,int n){for(int i=0;i<n;++i)r.Observe(k,++t,128);};

@@ -417,7 +417,10 @@ class MeasuredPolicy {
     }
     double past=std::max(RecentValue(gpu,item.key,o,incoming),PersistentEstimate(item.key,o));
     if(o.novel_reuse_decay && o.persistent_run_reuse && o.causal_window && o.shared_value && o.burst_reuse)
-      past*=run_reuse_.CompetitionSurvival(item.key);
+      // Recurrence alone also occurs in IID traffic. Apply the novelty
+      // discount only in proportion to observed temporal clustering, using
+      // the same continuous signal as survival and joint uncertainty.
+      past*=1.0-(o.adaptive_control?temporal_strength_:1.0)*(1.0-run_reuse_.CompetitionSurvival(item.key));
     // These are overlapping estimates, not independent demand to add together.
     // Use the same value for incoming and resident copies of the current key.
     return std::max(past,BurstRemaining(item.key,o))*(o.cost?SavingRate()*item.bytes:1.0)*item.coverage;
