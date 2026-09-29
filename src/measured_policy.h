@@ -36,6 +36,7 @@ struct Options {
   bool adaptive_control=false;
   bool efficient_planning=false;
   bool burst_interval_survival=false;
+  bool reuse_scaled_exploration=false;
 };
 struct Decision {
   bool allowed=false;
@@ -45,6 +46,7 @@ struct Decision {
   double burst_remaining=0;
   double uncertainty_us=0;
   bool explore_headroom=false;
+  double exploration_reads=1;
   uint64_t incoming_count=0;
   uint64_t affinity_incoming_count=0;
   uint64_t affinity_adjusted_items=0;
@@ -226,9 +228,12 @@ class MeasuredPolicy {
       result.survival_adjusted_items+=Survival(gpu,resident.key,o)<1.0;
     result.costs_calibrated=remote_.n && local_.n && copy_.n;
     result.burst_remaining=BurstRemaining(incoming.key,o);
-    // Bounded exploration uses only existing free headroom, never a victim.
-    // Stop exploring if a measured verified copy costs more than one remote read.
-    if(o.adaptive_control && !needed && (!copy_.n || copy_.mean<=(remote_.n?remote_.mean:0.01))) {
+    // Exploration is quota bounded, never displacing a resident. Completed
+    // runs may justify more than one remote read of exploration cost; the
+    // current unfinished run is censored and cannot inflate this budget.
+    if(o.reuse_scaled_exploration && o.burst_reuse && !completed_bursts_.empty())
+      result.exploration_reads=std::max(1.0,double(completed_burst_reads_)/completed_bursts_.size());
+    if(o.adaptive_control && !needed && (!copy_.n || copy_.mean<=result.exploration_reads*(remote_.n?remote_.mean:0.01))) {
       result.allowed=true;result.explore_headroom=true;result.reason="free_headroom_exploration";
       result.incoming_us=Value(gpu,incoming,o,true);
       result.copy_us=incoming.bytes*(copy_.n?copy_.mean:(remote_.n?remote_.mean:0.01));

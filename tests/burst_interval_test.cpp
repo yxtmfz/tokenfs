@@ -3,6 +3,28 @@
 #include <iostream>
 using namespace tokenfs_policy;
 int main() {
+  {
+    Options o;o.causal_window=true;o.shared_value=true;o.burst_reuse=true;
+    o.adaptive_control=true;o.reuse_scaled_exploration=true;
+    MeasuredPolicy p;p.ReadSample(false,100,100);p.ReadSample(true,100,20);p.CopySample(100,250);
+    for(int i=0;i<4;++i)p.Observe(0,"completed",o);
+    // An unfinished run cannot justify a larger exploration allowance.
+    assert(!p.Plan(0,{"new",100,0},{},0,100,o).allowed);
+    p.Observe(0,"new",o);
+    const auto headroom=p.Plan(0,{"new",100,0},{},0,100,o);
+    assert(headroom.allowed && headroom.explore_headroom && headroom.exploration_reads==4);
+    Options reference=o;reference.reuse_scaled_exploration=false;
+    assert(!p.Plan(0,{"new",100,0},{},0,100,reference).allowed);
+    assert(!p.Plan(0,{"new",100,0},{{"resident",100,0}},100,100,o).allowed);
+    assert(!p.Plan(0,{"new",101,0},{},0,100,o).allowed);
+    MeasuredPolicy singles;singles.ReadSample(false,100,100);singles.CopySample(100,250);
+    for(int i=0;i<20;++i)singles.Observe(0,"scan"+std::to_string(i),o);
+    assert(!singles.Plan(0,{"next",100,0},{},0,100,o).allowed);
+    MeasuredPolicy costly;costly.ReadSample(false,100,100);costly.CopySample(100,1000);
+    for(int i=0;i<4;++i)costly.Observe(0,"a",o);
+    costly.Observe(0,"b",o);
+    assert(!costly.Plan(0,{"b",100,0},{},0,100,o).allowed);
+  }
   Options old;old.causal_window=true;old.shared_value=true;old.burst_reuse=true;
   old.shift_reset=true;old.window=128;old.admission=false;
   Options fixed=old;fixed.burst_interval_survival=true;

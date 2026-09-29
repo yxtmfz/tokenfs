@@ -62,4 +62,4 @@ jobs:
       - name: Test positive-gain acceptance and planning efficiency controls
         run: python3 -m unittest tests.planning_efficiency_test
       - name: Test burst recurrence comparison controls
-        run: python3 -m unittest tests.burst_interval_study_test
+        run: python3 -m unittest tests.burst_interval_study_test tests.headroom_exploration_test
