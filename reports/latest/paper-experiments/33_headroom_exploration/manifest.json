@@ -1,0 +1,100 @@
+{
+  "spec": {
+    "stage": "development",
+    "blocks": [
+      {
+        "id": "stationary_shared-3271",
+        "scenario": "stationary_shared",
+        "seed": 3271,
+        "variants": [
+          "Full",
+          "BurstFull",
+          "PoolSIEVE1"
+        ],
+        "quota_mib": 24,
+        "shard_mib": 2,
+        "requests": 576
+      },
+      {
+        "id": "stationary_shared-3291",
+        "scenario": "stationary_shared",
+        "seed": 3291,
+        "variants": [
+          "Full",
+          "BurstFull",
+          "PoolSIEVE1"
+        ],
+        "quota_mib": 24,
+        "shard_mib": 2,
+        "requests": 576
+      }
+    ]
+  },
+  "spec_sha256": "c794b7b3ca24a699965a691512addc0da246df0294dfcf958832c5e9478f4a19",
+  "source_hashes": {
+    "src/main.cpp": "b188a51bd0d5c2d860afc68f454eb7756dd75b4df4aa4c673d3e877e6e73f00a",
+    "src/measured_policy.h": "72baea6036bd4ac6a683e918752a98a2a6621b9f80e14591f95f28897ca2d7f8",
+    "src/sieve_policy.h": "78c0fd1c0372a252ed1d29bffa84c42d9db39528a03b3204f1c6661381294c90",
+    "scripts/adaptive_control_study.py": "a9fd4eda6a03bf8dbb564fb6c2cc9afef05589afa51f5fcf60837faa65eb3966",
+    "scripts/burst_reuse_study.py": "62dd8f843c01dd7de6409f6818e60d3ce9a20a194ff71218bfea891162465754",
+    "scripts/compact_planning_study.py": "479d865ad4c37496dc448cd9faecfa2953b7380497a8ae23e3196e7856db226f",
+    "scripts/affinity_joint_study.py": "43eb9c6c523890d8bd7441586f4a98e115952a3e9fd5501a2e857d9a942cb6f7",
+    "scripts/paper_minimal_study.py": "f0158c8db97534daa7b7fc060e018ee160e756699a91da9734597b28ec0c26e9",
+    "scripts/evidence_benchmark.py": "68cb2ac9feb2d76a536c5b367b53317bb795b80b14e95549dc00db70d4474ad6",
+    "scripts/evidence_report.py": "2ff27f63d198f9e2a6c1657f653759734b060ff4b08b9e4c350e7935bb6e3475",
+    "scripts/measured_study.py": "3ee5c676f63a5216862d7a1e1e0304003cc24929e454a4cc1909baa1a70df0ad",
+    "tests/measured_policy_test.cpp": "26bec70459bf8968b19ee1d0d2f61442daf2d3c0632d6cd296f2fa84023eb708",
+    "tests/policy_metadata_test.cpp": "15429694e33a3d3aceece2fa2f93912664a4ee5f88d9e227b91ec9ff98e9282b",
+    "tests/adaptive_control_test.py": "971513976fd1b1902a6e847b3cf065773ae7eef95c779920dd8f74245fe13d6e",
+    "docs/adaptive-control-sieve-plan.md": "112e42c28698067bd2ccd57a262540cc5998031e1296f0f66d04e98954982262",
+    "CMakeLists.txt": "bae871ec237a086c79c5a374e1f5c0f4d6ff29b571bf08e616db7548691b3b63",
+    "src/request_trace.h": "e46de57ae853996d593f6dc55a12b55f5d9ef76a5a3e1f0d4be2b7f7e99b5468",
+    "src/read_fill.h": "a849e1d561408e165a3e1f679db2223fe34492ea03618f8ceb591d0526f47740",
+    "scripts/read_fill_study.py": "c7b923b61d83c7f4e14ba184f558d357eea0a1ac8c82a82f86685c2bcb0a71ff",
+    "tests/read_fill_test.cpp": "2cb274a892aaa6a9e5c32a7feeddfdda0c1df9d61cfbc286e630ee926478b28c",
+    "tests/read_fill_study_test.py": "c51744c26b8a78ed21db80cd064c1b20f9ce7468f26e18ea680229f5d0477385",
+    "docs/read-fill-pilot-plan.md": "488cb85ec5981a4fbbc323b6bdf7157c5d55d3eac7c7cc2d59a353647a55fa2e",
+    "src/request_read_cost.h": "e8c6629e9d96e21d2a5b400d292fd710d320ba0bb5bc1c97fc7020541fe2b92b",
+    "scripts/request_cost_study.py": "261273af88858c181c48a50fd6b9676591e64dd8c89b627e000f1812257cdf08",
+    "tests/request_read_cost_test.cpp": "50adaff2ef86db455bc19bba07f7c68effbae2144936ae2408ef87efde067a61",
+    "tests/request_cost_study_test.py": "96cf42e33084168d47e3ba7ef8cc38d4b5529b65f93cfa7a4bff41a37ce07e1d",
+    "tests/final_metrics_test.py": "777bb9574c51b29318d26244022cd8833b4c1d8503db1e56cc21d511ca6bc1b5",
+    "docs/request-cost-repair-plan.md": "5dc7ea8c9ce69e7bbfb808ba8c43dece3b286919861f62c203a2be7038490850",
+    "src/copy_cost.h": "bb3da4b251713aa30348ac678cd99534674d1f7d3684b4117d902fcaa836baed",
+    "scripts/inflight_shared_study.py": "3af142f14970a8232246afc13cd2f68e22c1bc3ec4646794fe8b9b25e9daa283",
+    "scripts/component_ablation_study.py": "f45c2777dc2b12a9ef61170ce4a1a0594c2b2c0719efd2084d633457c3eebb8b",
+    "scripts/tail_diagnostic_analysis.py": "41972dfcaf7d8e9d1be9e25df5ced0729488540b1c380916193ec59023fa27cf",
+    "tests/component_ablation_test.py": "aa15c3f76c1d84bf9e55b4c1b8c5a335188e95cc010f5fcb5602042b3864bc3d",
+    "docs/component-ablation-plan.md": "dba41f5c1bfe9eeb6129c18a7ccd1b323c6bc2fe5b911b606765c339e4cd1352",
+    "scripts/planning_efficiency_study.py": "99cb144b7e782c1dd538efb357fc187d188f9f577f70e328aab94c50936838fd",
+    "scripts/acceptance_v2.py": "6345cc5acdd201681468481f60fe8d4dd4a00af734844cb313acc01098233e19",
+    "tests/planning_efficiency_test.py": "4b14d86ebdbb0c921d9ab0ae6232f747c3fd27409ef5951df1d082a4fa22c4c8",
+    "tests/planning_equivalence_test.cpp": "ee33345f555c6012377a4a9ce1d10004eb0808c94e65e895c7dd41880bff82af",
+    "docs/planning-efficiency-plan.md": "779a129f6fbf0bba820c9109e7a1ce0b487c3b31dda7d66bc200caeee2f00b76",
+    "scripts/burst_interval_study.py": "44a3b9cfacd67fc6fe25a72b4123fb6344f68a27e40481c0af479ff00fa9a94c",
+    "tests/burst_interval_test.cpp": "738b78524424ebf6e000b9c365d0e924382b45381436c6741a542b716144bc10",
+    "tests/burst_interval_study_test.py": "0c2fc2bee3cce9b33a6aab5701bbedebfeaa48564104d36fb2410cf5ba112cb6",
+    "docs/burst-interval-plan.md": "20ee80547d89fa57e1d1d8b0e692cc6fdb2d3047971d9021f92443d784e593df",
+    "scripts/headroom_exploration_study.py": "0b79d4ae8f64372b2f6f19bd952fa1cb1a4dc04ccb7c7fcb1389d5f3ba728eee",
+    "tests/headroom_exploration_test.py": "aeda2aad893ef99b734db1b30d415e135b3fdb13b4cf95b9d9701c1945f5dd34",
+    "docs/headroom-exploration-plan.md": "646ccc0af5615f5b4ecbc41de43163a52974b13e1e386d540f71bfb61385ba21"
+  },
+  "binary_sha256": "2757459e304a99751ed9f9c69b3a549c56243dbeb3b779f29cb68ce9164a591c",
+  "output": "/home/wjxt/tokenfs-headroom-exploration-evidence/development",
+  "remote_data": "/srv/tokenfs/remote-cn7/headroom-exploration-20260929/aj-development",
+  "verify": false,
+  "backend_direct": true,
+  "topology": "three logical cache partitions on one shared host disk; access policy varied explicitly; serialized callers; no physical GPUs",
+  "created_utc": "2026-09-29T00:14:09Z",
+  "mount": {
+    "target": "/srv/tokenfs/remote-cn7",
+    "source": "/dev/nvme1n1",
+    "fstype": "ext4",
+    "options": "rw,nosuid,nodev,relatime"
+  },
+  "nvme_identity": {
+    "transport": "tcp",
+    "address": "traddr=28.10.10.13,trsvcid=4420,src_addr=28.10.10.7",
+    "subsysnqn": "nqn.2026-09.local.aura-kv:remote-cn7"
+  }
+}

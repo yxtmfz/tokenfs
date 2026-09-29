@@ -1,0 +1,98 @@
+{
+  "passed": true,
+  "runs": 2,
+  "requests": 1152,
+  "results": [
+    {
+      "strategy": "Full",
+      "diagnostic_only": true,
+      "means": {
+        "response_ms": 14.017600730902778,
+        "client_ms": 13.778978329861111,
+        "ipc_scheduling_ms": 0.23862240104166663,
+        "client_open_ms": 2.7887001510416667,
+        "client_read_ms": 10.980868875,
+        "client_close_ms": 0.009409303819444444,
+        "daemon_open_ms": 2.1179438350694446,
+        "layout_wait_ms": 0.2620258072916667,
+        "pread_ms": 9.291408510416666,
+        "pread_max_ms": 4.711173890625,
+        "daemon_read_ms": 9.953510881944444,
+        "release_ms": 1.1242645364583332,
+        "metric_flush_ms": 1.113849217013889,
+        "release_wait_ms": 0.00044004166666666665,
+        "copy_overlap_ms": 0.8949273229166667,
+        "release_after_close_ms": 1.1379680989583334,
+        "client_unattributed_ms": 1.7075236128472222
+      },
+      "tiers": [
+        {
+          "tier": "local",
+          "opens": 397,
+          "mib": 794.0,
+          "mean_response_ms": 11.623107896725442
+        },
+        {
+          "tier": "remote",
+          "opens": 108,
+          "mib": 216.0,
+          "mean_response_ms": 27.999637888888888
+        },
+        {
+          "tier": "inflight",
+          "opens": 71,
+          "mib": 142.0,
+          "mean_response_ms": 6.138074563380282
+        }
+      ],
+      "copy_count": 30,
+      "diagnostic_mib_s": 142.5944618962365
+    },
+    {
+      "strategy": "PoolSIEVE1",
+      "diagnostic_only": true,
+      "means": {
+        "response_ms": 11.648959303819444,
+        "client_ms": 11.415779605902777,
+        "ipc_scheduling_ms": 0.23317969791666665,
+        "client_open_ms": 2.781054961805556,
+        "client_read_ms": 8.625732145833334,
+        "client_close_ms": 0.00899249826388889,
+        "daemon_open_ms": 2.0729173107638887,
+        "layout_wait_ms": 0.06181346527777778,
+        "pread_ms": 7.0356641614583335,
+        "pread_max_ms": 3.5643249079861112,
+        "daemon_read_ms": 7.5303577864583335,
+        "release_ms": 1.147325984375,
+        "metric_flush_ms": 1.137800048611111,
+        "release_wait_ms": 0.0004922291666666666,
+        "copy_overlap_ms": 0.7740698576388889,
+        "release_after_close_ms": 1.162431451388889,
+        "client_unattributed_ms": 1.8125045086805556
+      },
+      "tiers": [
+        {
+          "tier": "local",
+          "opens": 457,
+          "mib": 914.0,
+          "mean_response_ms": 11.450476468271335
+        },
+        {
+          "tier": "remote",
+          "opens": 33,
+          "mib": 66.0,
+          "mean_response_ms": 27.40900875757576
+        },
+        {
+          "tier": "inflight",
+          "opens": 86,
+          "mib": 172.0,
+          "mean_response_ms": 6.656227023255814
+        }
+      ],
+      "copy_count": 30,
+      "diagnostic_mib_s": 171.56845123792775
+    }
+  ],
+  "note": "Original analyzer strata omitted inflight, but all_means included it. This review explicitly validates and includes all three tiers; no original data overwritten."
+}
