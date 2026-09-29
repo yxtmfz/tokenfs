@@ -22,6 +22,8 @@
 
 # AURA-KV / TokenFS
 
+热点估值后续诊断：[报告68：磁盘需求回放筛选](reports/latest/paper-experiments/68_hotspot_residual_screen/README.md)。三种原型已做本地机制回放和不变量测试，均未采纳；没有新增服务器测速、吞吐或p99数据。NoHotspot对照保留基础频率估值，现有消融检验的是动态估值增强的边际收益。
+
 > 最新缺口优化：[18组实测速率、p99与逐种子边界](reports/latest/paper-experiments/22_adaptive_control/README.md)。热点场景对共享SIEVE-2hit/1hit分别 **+5.50%/+0.81%**，随机场景 **+2.53%/+2.73%**；但部分种子仍略慢，尾延迟未全面通过，三个严格闭合目标仍未达成。源码、负结果、分段计量和完整证据一并保留。
 
 > 最新SIEVE对照：[18次真实测速与完整证据](reports/latest/paper-experiments/21_burst_reuse_sieve/README.md)。热点变化场景中新版相对原共享SIEVE-2hit **+5.12%（3/3更快）**，相对同期旧完整版+5.44%；对SIEVE-1hit仍−0.28%，随机访问对两种SIEVE仍约−4.8%。新增短期复用预测、7组内容校验与完整审计；仅原SIEVE-2hit先导门槛通过，未证明全面优于SIEVE。
