@@ -25,12 +25,14 @@ class RunReuse {
         // Adjacent repeats and one-off scans never advance this clock.
         if(!entry.gap.n)++novelty_;
         entry.gap.Add(at-entry.last_start,limit);
+        return_gaps_.push_back(at-entry.last_start);return_gap_sum_+=at-entry.last_start;
       }
       entry.novelty_seen=novelty_;
       entry.last_start=entry.last_seen=at;entry.generation=++generation_;
       recent_.emplace_back(key,generation_);
       active_=key;active_length_=1;
     }
+    while(return_gaps_.size()>limit){return_gap_sum_-=return_gaps_.front();return_gaps_.pop_front();}
     while(recent_.size()>limit) {
       const auto old=recent_.front();recent_.pop_front();
       auto it=entries_.find(old.first);
@@ -62,8 +64,17 @@ class RunReuse {
     // future disk read is credited to a not-yet-recurring object.
     return std::min(1.0,double(recent_.size()-entries_.size())/(entries_.size()+1.0));
   }
+  // New objects borrow a between-run interval, not the adjacent-read gap
+  // within their first burst. Observed return gaps are bounded by the same
+  // run-history budget; an unfinished burst contributes no new interval.
+  double NewcomerSurvival(const std::string& key,uint64_t at) const {
+    const auto it=entries_.find(key);
+    if(it==entries_.end() || return_gaps_.empty())return 0;
+    return std::exp2(-double(at-it->second.last_seen)/std::max(4.0,double(return_gap_sum_)/return_gaps_.size()));
+  }
   size_t Entries() const {return entries_.size();}
   size_t Runs() const {return recent_.size();}
+  size_t ReturnIntervals() const {return return_gaps_.size();}
  private:
   struct Moment {
     uint64_t n=0;double mean=0,variance=0;
@@ -76,6 +87,7 @@ class RunReuse {
   struct Entry {Moment gap,length;uint64_t last_start=0,last_seen=0,generation=0,novelty_seen=0;};
   std::unordered_map<std::string,Entry> entries_;
   std::deque<std::pair<std::string,uint64_t>> recent_;
+  std::deque<uint64_t> return_gaps_;uint64_t return_gap_sum_=0;
   std::string active_;
   uint64_t active_length_=0,generation_=0,novelty_=0;
 };

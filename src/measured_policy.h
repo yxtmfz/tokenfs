@@ -45,6 +45,7 @@ struct Options {
   bool retained_capture=false;
   bool bounded_cost_warmup=false;
   bool cohort_reuse_prior=false;
+  bool recent_value_floor=false;
 };
 struct Decision {
   bool allowed=false;
@@ -431,8 +432,7 @@ class MeasuredPolicy {
     if(!o.cohort_reuse_prior || o.static_reuse_value || !o.retained_capture ||
        !o.persistent_run_reuse || !o.causal_window || !o.shared_value ||
        !o.burst_reuse || !o.adaptive_control)return 0;
-    return temporal_strength_*run_reuse_.NewcomerDiskPrior(key)*Survival(gpu,key,o)*
-      (o.novel_reuse_decay?run_reuse_.CompetitionSurvival(key):1.0);
+    (void)gpu;return temporal_strength_*run_reuse_.NewcomerDiskPrior(key)*run_reuse_.NewcomerSurvival(key,observations_);
   }
   double Value(int gpu,const Item& item,const Options& o,bool incoming) const {
     if(o.static_reuse_value) {
@@ -440,12 +440,15 @@ class MeasuredPolicy {
       if(!o.frequency_admission)repeats=std::max(0.0,repeats-1.0);
       return repeats*DiskReuseScale(o)*(o.cost?SavingRate()*item.bytes:1.0)*item.coverage;
     }
-    double past=std::max(RecentValue(gpu,item.key,o,incoming),PersistentEstimate(item.key,o));
-    if(o.novel_reuse_decay && o.persistent_run_reuse && o.causal_window && o.shared_value && o.burst_reuse)
-      // Recurrence alone also occurs in IID traffic. Apply the novelty
-      // discount only in proportion to observed temporal clustering, using
-      // the same continuous signal as survival and joint uncertainty.
-      past*=1.0-(o.adaptive_control?temporal_strength_:1.0)*(1.0-run_reuse_.CompetitionSurvival(item.key));
+    const double recent=RecentValue(gpu,item.key,o,incoming);
+    const double persistent=PersistentEstimate(item.key,o);
+    double past=std::max(recent,persistent);
+    if(o.novel_reuse_decay && o.persistent_run_reuse && o.causal_window && o.shared_value && o.burst_reuse) {
+      const double competition=1.0-(o.adaptive_control?temporal_strength_:1.0)*(1.0-run_reuse_.CompetitionSurvival(item.key));
+      // Competition can discount extrapolated long-history demand, but must
+      // not erase already age-discounted observations in the recent window.
+      past=o.recent_value_floor?std::max(recent,persistent*competition):past*competition;
+    }
     // These are overlapping estimates, not independent demand to add together.
     // Use the same value for incoming and resident copies of the current key.
     return std::max({past*DiskReuseScale(o),BurstRemaining(item.key,o),CohortDiskReuse(gpu,item.key,o)})*(o.cost?SavingRate()*item.bytes:1.0)*item.coverage;

@@ -25,6 +25,12 @@ int main() {
     auto loss=[&](Options x){return p.Plan(0,{"new",100,0},{{"old",100,0}},100,100,x).displaced_us;};
     auto novel=o;novel.novel_reuse_decay=true;
     assert(loss(novel)==.5*loss(o) && loss(o)>0);
+    auto floor=novel;floor.recent_value_floor=true;
+    auto observed=o;observed.persistent_run_reuse=false;
+    assert(loss(floor)>=loss(observed) && loss(floor)>loss(novel));
+    auto symmetric_floor=p.Plan(0,{"new",100,0},{{"new",100,0}},100,100,floor);
+    assert(symmetric_floor.incoming_us==symmetric_floor.displaced_us);
+
     auto same=p.Plan(0,{"new",100,0},{{"new",100,0}},100,100,novel);
     assert(same.incoming_us==same.displaced_us);
   }
@@ -75,6 +81,20 @@ int main() {
     RunReuse r;for(int i=0;i<40;++i)r.Observe("scan"+std::to_string(i),i+1,128);
     assert(r.NewcomerDiskPrior("scan39")==0);
   }
+  {
+    RunReuse r;uint64_t at=0;
+    auto observe=[&](const std::string& k,int n){for(int i=0;i<n;++i)r.Observe(k,++at,128);};
+    observe("a",4);observe("b",28);observe("a",4);observe("b",28);observe("new",4);
+    assert(r.NewcomerDiskPrior("new")>0 && r.NewcomerSurvival("new",at)==1);
+    observe("scan",12);
+    // A 32-request return interval gives more than half the prior after12
+    // intervening requests; a within-burst four-request half-life gives1/8.
+    assert(r.NewcomerSurvival("new",at)>.5);
+    const auto before=r.NewcomerSurvival("new",at);observe("scan",128);
+    assert(r.NewcomerSurvival("new",at)<before);
+    assert(r.NewcomerSurvival("missing",at)==0);
+    observe("new",4);assert(r.NewcomerDiskPrior("new")==0); // own evidence takes over
+  }
   RunReuse r;uint64_t t=0;
   auto run=[&](const std::string& k,int n){for(int i=0;i<n;++i)r.Observe(k,++t,128);};
   run("hot",4);run("a",28);run("hot",4);run("b",28);run("hot",4);
@@ -89,7 +109,7 @@ int main() {
   run("c",140);assert(r.Estimate("hot",t,128)<aged);
   for(int i=0;i<200;++i)run("scan"+std::to_string(i),1);
   assert(r.Entries()<=128 && r.Runs()<=128 && r.Estimate("hot",t,128)==0);
-  r.Observe("last",++t,2);assert(r.Entries()<=2 && r.Runs()<=2);
+  r.Observe("last",++t,2);assert(r.Entries()<=2 && r.Runs()<=2 && r.ReturnIntervals()<=2);
 
   Options o;o.causal_window=true;o.shared_value=true;o.burst_reuse=true;
   o.burst_interval_survival=true;o.persistent_run_reuse=true;o.admission=false;

@@ -1,0 +1,7 @@
+# Match newcomer lifetime to observed return intervals
+
+The bounded newcomer prior reduced moving remote reads from122MiB to106MiB, but copied53 objects versus SIEVE52; independent repeated runs still did not establish all-positive throughput. A causal replay reproduced the miss/copy counts. Offline future-access inspection (diagnosis only, never fed to policy) found new hot objects discarded for one-off arrivals before their next return.
+
+Fix the time scale: a new object without its own recurrence borrows a bounded mean of already observed BETWEEN-RUN return intervals. Its at-most-one-read prior decays on that scale, not the four-request minimum inherited from adjacent reads in its first burst. Do not apply both that new prior and within-burst/novelty decay. Once its own recurrence exists, prior becomes zero and original per-key model takes over. The observed gap queue is bounded by the existing run-history limit; no future event, workload label, key ranges or selected seed enters the controller. Native tests check censored runs, own-evidence takeover, decline with age, and symmetry.
+
+Keep exact-copy verification and compiled accounting. NoHotspot's static-value flag still bypasses all temporal priors while observing the same accesses. Same frozen ten moving3293 runs,576 requests,24MiB disk and4MiB RAM, five arms in two reversed orders. All intermediate candidates are archived; a throughput pass requires all eight gains positive. Tail/drain/mechanism checks are reported without hiding regressions. No new large sweep.

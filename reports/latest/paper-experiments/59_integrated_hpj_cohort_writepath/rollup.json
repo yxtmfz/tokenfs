@@ -1,0 +1,160 @@
+{
+  "passed": true,
+  "speed_runs": 10,
+  "requests": 5760,
+  "binary_sha256": "e62c233f8d8efbe9ef197bb1bbcf6ed4a2e6b5c969ce87cb7e96e020ddd6f7ee",
+  "comparisons": [
+    {
+      "baseline": "NoHotspot",
+      "full_mib_s": 297.4571684173968,
+      "baseline_mib_s": 294.3366849380959,
+      "gain_pct": 1.0601748402368605,
+      "per_run_gain_pct": [
+        -2.0871796840241097,
+        4.178561036108253
+      ],
+      "per_run_p99_change_pct": [
+        -0.02445612767326688,
+        -1.5337590861124184
+      ],
+      "mechanism_active_both": true,
+      "passes_both": false
+    },
+    {
+      "baseline": "NoAffinity",
+      "full_mib_s": 297.4571684173968,
+      "baseline_mib_s": 270.0715166677593,
+      "gain_pct": 10.140148093931444,
+      "per_run_gain_pct": [
+        14.271377276291929,
+        6.046942846493075
+      ],
+      "per_run_p99_change_pct": [
+        -4.034758170841712,
+        -0.3218490768776672
+      ],
+      "mechanism_active_both": true,
+      "passes_both": true
+    },
+    {
+      "baseline": "NoJoint",
+      "full_mib_s": 297.4571684173968,
+      "baseline_mib_s": 277.4593773197863,
+      "gain_pct": 7.207466293187137,
+      "per_run_gain_pct": [
+        9.64129441408128,
+        4.796039186130674
+      ],
+      "per_run_p99_change_pct": [
+        -3.333586249214038,
+        1.0135115514461779
+      ],
+      "mechanism_active_both": true,
+      "passes_both": false
+    },
+    {
+      "baseline": "PoolSIEVE1",
+      "full_mib_s": 297.4571684173968,
+      "baseline_mib_s": 291.6207719985895,
+      "gain_pct": 2.001365121835552,
+      "per_run_gain_pct": [
+        4.359894180874435,
+        -0.33545597778152914
+      ],
+      "per_run_p99_change_pct": [
+        -4.140193315235363,
+        -1.4334237889915502
+      ],
+      "mechanism_active_both": true,
+      "passes_both": false
+    }
+  ],
+  "mechanism_counts": [
+    {
+      "round": 1,
+      "strategy": "Full",
+      "remote_mib": 106.0,
+      "copies": 53,
+      "evictions": 41,
+      "prior_plans": 161
+    },
+    {
+      "round": 1,
+      "strategy": "NoHotspot",
+      "remote_mib": 122.0,
+      "copies": 26,
+      "evictions": 14,
+      "prior_plans": 0
+    },
+    {
+      "round": 1,
+      "strategy": "NoAffinity",
+      "remote_mib": 150.0,
+      "copies": 46,
+      "evictions": 35,
+      "prior_plans": 57
+    },
+    {
+      "round": 1,
+      "strategy": "NoJoint",
+      "remote_mib": 128.0,
+      "copies": 64,
+      "evictions": 53,
+      "prior_plans": 85
+    },
+    {
+      "round": 1,
+      "strategy": "PoolSIEVE1",
+      "remote_mib": 104.0,
+      "copies": 52,
+      "evictions": 40,
+      "prior_plans": 0
+    },
+    {
+      "round": 2,
+      "strategy": "Full",
+      "remote_mib": 106.0,
+      "copies": 53,
+      "evictions": 41,
+      "prior_plans": 161
+    },
+    {
+      "round": 2,
+      "strategy": "NoHotspot",
+      "remote_mib": 122.0,
+      "copies": 26,
+      "evictions": 14,
+      "prior_plans": 0
+    },
+    {
+      "round": 2,
+      "strategy": "NoAffinity",
+      "remote_mib": 150.0,
+      "copies": 45,
+      "evictions": 34,
+      "prior_plans": 57
+    },
+    {
+      "round": 2,
+      "strategy": "NoJoint",
+      "remote_mib": 128.0,
+      "copies": 64,
+      "evictions": 53,
+      "prior_plans": 85
+    },
+    {
+      "round": 2,
+      "strategy": "PoolSIEVE1",
+      "remote_mib": 104.0,
+      "copies": 52,
+      "evictions": 40,
+      "prior_plans": 0
+    }
+  ],
+  "two_orders_four_throughput_gains": false,
+  "all_gates_both_orders": false,
+  "scenarios_tested": [
+    "moving_shared"
+  ],
+  "limits": "Two execution orders of one known input; no statistical confirmation or physical GPU evidence."
+}
