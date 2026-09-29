@@ -1,0 +1,29 @@
+{
+  "passed": true,
+  "source_sha256": "48a2db1a13d3bc05e6330140c64f604ba366df20d3c9e128b5c35a01c1fa5f71",
+  "prior_trace_files_verified": 135,
+  "windows": [
+    {
+      "first": 7000,
+      "last": 7074,
+      "requests": 1152,
+      "unique_objects": 752,
+      "passed": true
+    },
+    {
+      "first": 14000,
+      "last": 14070,
+      "requests": 1152,
+      "unique_objects": 758,
+      "passed": true
+    },
+    {
+      "first": 22150,
+      "last": 22217,
+      "requests": 1152,
+      "unique_objects": 816,
+      "passed": true
+    }
+  ],
+  "scope": "source request rows disjoint from enumerated local historical traces and frozen public-window manifests; repeated objects across windows remain possible"
+}
