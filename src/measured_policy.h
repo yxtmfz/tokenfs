@@ -35,6 +35,7 @@ struct Options {
   bool burst_reuse=false;
   bool adaptive_control=false;
   bool efficient_planning=false;
+  bool burst_interval_survival=false;
 };
 struct Decision {
   bool allowed=false;
@@ -350,7 +351,19 @@ class MeasuredPolicy {
     // Past inter-arrival spacing sets the half-life. An unrequested resident
     // loses value as its next reuse becomes overdue. Arrivals and residents use
     // exactly the same forecast; there is no phase label or cache-state oracle.
-    const double gap=double(positions->back()-positions->front())/(positions->size()-1);
+    double gap=double(positions->back()-positions->front())/(positions->size()-1);
+    if(o.burst_interval_survival && o.burst_reuse) {
+      // Consecutive reads within a run do not measure how soon that run will
+      // recur. Use completed between-run gaps when recurrence was observed.
+      // One-off bursts retain the original short half-life. No future run,
+      // workload label or permanent hot-key exemption is used.
+      uint64_t elapsed=0,intervals=0;
+      for(size_t i=1;i<positions->size();++i) {
+        const auto distance=(*positions)[i]-(*positions)[i-1];
+        if(distance>1){elapsed+=distance;++intervals;}
+      }
+      if(intervals)gap=double(elapsed)/intervals;
+    }
     return std::exp2(-(o.adaptive_control?temporal_strength_:1.0)*double(observations_-positions->back())/std::max(4.0,gap));
   }
   double BurstRemaining(const std::string& key,const Options& o) const {
