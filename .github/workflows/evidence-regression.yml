@@ -77,3 +77,5 @@ jobs:
         run: python3 -m unittest tests.integrated_hpj_symmetric_reverse_test
       - name: Test bounded cost calibration ablations
         run: python3 -m unittest tests.integrated_hpj_calibrated_test
+      - name: Test calibrated capture reverse-order invariants
+        run: python3 -m unittest tests.integrated_hpj_calibrated_reverse_test
