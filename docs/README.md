@@ -1,3 +1,9 @@
+> 当前实验入口：[第74轮同批四表与未通过项](../reports/latest/paper-experiments/74_disk_opportunity/README.md)。24次测速、576次内容校验完成，严格9/16通过；创新1仅1/4通过，候选默认关闭，不能宣布三个创新点全部闭环。
+>
+> 原冻结确认：[报告70](../reports/latest/paper-experiments/70_final_confirmation/README.md)；定位依据：[报告73逐副本诊断](../reports/latest/paper-experiments/73_hotspot_lifetime_diagnostic/README.md)。各批次独立保留，不能拼接正项。
+
+以下是历史进展记录，其中“最新”均指当时，当前结果以以上入口为准。
+
 > 最新回归：[取消5%门槛后的12组完整结果](../reports/latest/paper-experiments/31_planning_efficiency/README.md)。已实现决策等价的规划计算优化；按正吞吐、p99及排空后吞吐不退化的新标准，9项中6项通过。固定热点相对SIEVE仍慢9.01%，另有两项约0.10/0.08ms的p99小幅增加。未宣称全部达标，历史门槛与原始负结果保留。
 
 > 最新结果：[共享放置与联合准入12组实测](../reports/latest/paper-experiments/30_component_ablation/README.md)。跨域放置三条件吞吐均提高，但固定热点未达5%门槛；联合决策固定热点/随机提高10.49%/13.95%，迁移热点降低4.01%。完整版对SIEVE-1hit两个热点分别降低1.43%/2.99%、随机提高21.63%。整体门槛未通过，全部结果和原始证据保留，未扩量。

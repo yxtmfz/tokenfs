@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Observed return support; eighteen-run hotspot-focused development."""
+"""Frozen 24-run disk-opportunity HPJ development with an old-binary control."""
 from __future__ import annotations
 import argparse,json,math,random,shutil,statistics,time
 from pathlib import Path
