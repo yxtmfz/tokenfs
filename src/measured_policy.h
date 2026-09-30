@@ -46,6 +46,7 @@ struct Options {
   bool bounded_cost_warmup=false;
   bool cohort_reuse_prior=false;
   bool recent_value_floor=false;
+  bool empirical_return_support=false;
 };
 struct Decision {
   bool allowed=false;
@@ -410,6 +411,21 @@ class MeasuredPolicy {
     }
     return std::exp2(-(o.adaptive_control?temporal_strength_:1.0)*double(observations_-positions->back())/std::max(4.0,gap));
   }
+  // Empirical support for a still-active reuse episode, not a confidence bound.
+  // Adjacent reads are already captured and do not count as return intervals.
+  // One supporting pseudo-interval keeps sparse evidence from erasing value.
+  double ReturnSupport(int gpu,const std::string& key,const Options& o) const {
+    if(!o.empirical_return_support || !o.retained_capture || !o.persistent_run_reuse ||
+       !o.causal_window || !o.shared_value || !o.burst_reuse)return 1.0;
+    const auto* positions=RecentPositions(gpu,key,o);
+    if(!positions)return 1.0;
+    const auto age=observations_-positions->back();double all=1,live=1;
+    for(size_t i=1;i<positions->size();++i) {
+      const auto gap=(*positions)[i]-(*positions)[i-1];
+      if(gap>1){++all;live+=gap>=age;}
+    }
+    return 1-(o.adaptive_control?temporal_strength_:1.0)*(1-live/all);
+  }
   double DiskReuseScale(const Options& o) const {
     // A completed run contributes one potential disk miss when its retained
     // capture is gone. Adjacent reads are already served by the shared RAM tier.
@@ -463,7 +479,7 @@ class MeasuredPolicy {
     }
     // These are overlapping estimates, not independent demand to add together.
     // Use the same value for incoming and resident copies of the current key.
-    return std::max({past*DiskReuseScale(o),BurstRemaining(item.key,o),CohortDiskReuse(gpu,item.key,o)})*(o.cost?SavingRate()*item.bytes:1.0)*item.coverage;
+    return std::max({past*ReturnSupport(gpu,item.key,o)*DiskReuseScale(o),BurstRemaining(item.key,o),CohortDiskReuse(gpu,item.key,o)})*(o.cost?SavingRate()*item.bytes:1.0)*item.coverage;
   }
   void Sort(int gpu,std::vector<Item>& items,const Options& o) const {
     if(o.efficient_planning && o.value_victim) {

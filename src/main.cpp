@@ -96,6 +96,7 @@ struct Config {
   bool bounded_cost_warmup = false;
   bool cohort_reuse_prior = false;
   bool recent_value_floor = false;
+  bool empirical_return_support = false;
   bool request_read_costs = false;
   uint64_t read_fill_buffer_bytes = 4*1024*1024;
   bool compact_measured_planning = false;
@@ -2500,7 +2501,7 @@ class TokenFS {
     return {static_cast<size_t>(config_.measured_window),config_.measured_aging,
             config_.measured_admission,config_.measured_cost,
             config_.measured_value_victim,config_.measured_size_aware,config_.measured_frequency_admission,config_.measured_shift_reset,static_cast<size_t>(config_.measured_shift_window),
-            config_.measured_track_affinity,config_.measured_affinity_gate,config_.measured_joint_admission,static_cast<size_t>(config_.measured_affinity_window),config_.measured_affinity_recent_demand,config_.measured_affinity_handover_epoch,config_.shared_value_placement,config_.measured_causal_window,config_.measured_burst_reuse,config_.adaptive_reuse_control,config_.efficient_measured_planning,config_.burst_interval_survival,config_.reuse_scaled_exploration,config_.persistent_run_reuse,config_.persistent_reuse_immediate_decay,config_.measured_static_reuse_value,config_.novel_reuse_decay,config_.retain_read_fill && config_.capture_local_reads,config_.bounded_cost_warmup,config_.cohort_reuse_prior,config_.recent_value_floor};
+            config_.measured_track_affinity,config_.measured_affinity_gate,config_.measured_joint_admission,static_cast<size_t>(config_.measured_affinity_window),config_.measured_affinity_recent_demand,config_.measured_affinity_handover_epoch,config_.shared_value_placement,config_.measured_causal_window,config_.measured_burst_reuse,config_.adaptive_reuse_control,config_.efficient_measured_planning,config_.burst_interval_survival,config_.reuse_scaled_exploration,config_.persistent_run_reuse,config_.persistent_reuse_immediate_decay,config_.measured_static_reuse_value,config_.novel_reuse_decay,config_.retain_read_fill && config_.capture_local_reads,config_.bounded_cost_warmup,config_.cohort_reuse_prior,config_.recent_value_floor,config_.empirical_return_support};
   }
 
   double MarginalCoverage(const FileMeta& meta, int location) {
@@ -4194,6 +4195,7 @@ Config LoadConfig(const fs::path& path) {
   if(root["policy"] && root["policy"]["batch_policy_events"]) config.batch_policy_events=root["policy"]["batch_policy_events"].as<bool>();
   if(root["policy"] && root["policy"]["request_trace_path"]) config.request_trace_path=root["policy"]["request_trace_path"].as<std::string>();
   if(root["policy"] && root["policy"]["recent_value_floor"]) config.recent_value_floor=root["policy"]["recent_value_floor"].as<bool>();
+  if(root["policy"] && root["policy"]["empirical_return_support"]) config.empirical_return_support=root["policy"]["empirical_return_support"].as<bool>();
   if(root["policy"] && root["policy"]["cohort_reuse_prior"]) config.cohort_reuse_prior=root["policy"]["cohort_reuse_prior"].as<bool>();
   if(root["policy"] && root["policy"]["bounded_cost_warmup"]) config.bounded_cost_warmup=root["policy"]["bounded_cost_warmup"].as<bool>();
   if(root["policy"] && root["policy"]["capture_local_reads"]) config.capture_local_reads=root["policy"]["capture_local_reads"].as<bool>();

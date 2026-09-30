@@ -4,6 +4,24 @@
 using namespace tokenfs_policy;
 int main() {
   {
+    Options o;o.causal_window=o.shared_value=o.burst_reuse=o.retained_capture=true;
+    o.persistent_run_reuse=true;o.shift_reset=true;o.admission=false;
+    MeasuredPolicy p;
+    auto run=[&](const std::string& k,int n){for(int i=0;i<n;++i)p.Observe(0,k,o);};
+    run("a",4);run("b",4);run("a",4);run("scan",12);
+    auto value=[&](Options x){return p.Plan(0,{"a",100,0},{{"a",100,0}},100,100,x);};
+    auto supported=o;supported.empirical_return_support=true;
+    const auto old=value(o),aged=value(supported);
+    assert(old.incoming_us>0 && aged.incoming_us==old.incoming_us/2);
+    assert(aged.incoming_us==aged.displaced_us); // Same forecast on both sides.
+    auto static_old=o;static_old.static_reuse_value=true;
+    auto static_new=static_old;static_new.empirical_return_support=true;
+    assert(value(static_old).incoming_us==value(static_new).incoming_us);
+    run("a",1);assert(value(o).incoming_us==value(supported).incoming_us);
+    run("scan",140);assert(value(o).incoming_us==value(supported).incoming_us);
+  }
+
+  {
     RunReuse summary;uint64_t at=0;
     auto run=[&](const std::string& k,int n){for(int i=0;i<n;++i)summary.Observe(k,++at,128);};
     run("old",4);run("x",4);run("old",4);
