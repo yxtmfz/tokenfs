@@ -1,0 +1,26 @@
+.............................................................E................{"strategy": "Full", "verified_requests": 96, "passed": true}
+{"strategy": "NoHotspot", "verified_requests": 96, "passed": true}
+{"strategy": "OldFull", "verified_requests": 96, "passed": true}
+........................................................................
+======================================================================
+ERROR: test_prepare_has_no_results_and_never_overwrites (component_ablation_test.ComponentAblationTest)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/mafuze/Documents/Codex/2026-09-18/new-chat/work/hotspot-lifetime-diagnostic/tmpfkhvfr70/tests/component_ablation_test.py", line 47, in test_prepare_has_no_results_and_never_overwrites
+    p=Path(d)/'plan';s.prepare(p)
+  File "/Users/mafuze/Documents/Codex/2026-09-18/new-chat/work/hotspot-lifetime-diagnostic/tmpfkhvfr70/scripts/component_ablation_study.py", line 57, in prepare
+    binary_frozen=False,source_hashes={p:sha(Path(__file__).resolve().parents[1]/p) for p in SOURCES},blocks=[])
+  File "/Users/mafuze/Documents/Codex/2026-09-18/new-chat/work/hotspot-lifetime-diagnostic/tmpfkhvfr70/scripts/component_ablation_study.py", line 57, in <dictcomp>
+    binary_frozen=False,source_hashes={p:sha(Path(__file__).resolve().parents[1]/p) for p in SOURCES},blocks=[])
+  File "/Users/mafuze/Documents/Codex/2026-09-18/new-chat/work/hotspot-lifetime-diagnostic/tmpfkhvfr70/scripts/evidence_benchmark.py", line 60, in sha
+    with Path(path).open("rb") as f:
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pathlib.py", line 1242, in open
+    return io.open(self, mode, buffering, encoding, errors, newline,
+  File "/Applications/Xcode.app/Contents/Developer/Library/Frameworks/Python3.framework/Versions/3.9/lib/python3.9/pathlib.py", line 1110, in _opener
+    return self._accessor.open(self, flags, mode)
+FileNotFoundError: [Errno 2] No such file or directory: '/Users/mafuze/Documents/Codex/2026-09-18/new-chat/work/hotspot-lifetime-diagnostic/tmpfkhvfr70/docs/adaptive-control-sieve-plan.md'
+
+----------------------------------------------------------------------
+Ran 150 tests in 0.818s
+
+FAILED (errors=1)
