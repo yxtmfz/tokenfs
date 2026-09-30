@@ -2534,7 +2534,7 @@ class TokenFS {
       const PlanningSnapshot* snapshot=nullptr,std::optional<uint64_t> known_used=std::nullopt) {
     // If even an empty cache cannot repay copying, no resident scan can make
     // the net gain positive. Keep the same execution-time capacity recheck.
-    if(config_.measured_causal_window) {
+    if(config_.measured_causal_window && !config_.adaptive_reuse_control) {
       const auto lower=measured_.Plan(gpu.gpu_id,{incoming.logical_path,incoming.size_bytes,0},
           {},0,gpu.local_quota_bytes,MeasuredOptions());
       if(!lower.allowed)return lower;
@@ -2885,13 +2885,29 @@ class TokenFS {
         if(config_.shared_caller_only)
           std::erase_if(locations,[caller](const auto& gpu){return gpu.gpu_id!=caller;});
         std::stable_sort(locations.begin(),locations.end(),[caller](const auto& a,const auto& b){return (a.gpu_id==caller)>(b.gpu_id==caller);});
-        std::optional<PlanningSnapshot> snapshot;
-        if(config_.compact_measured_planning)snapshot=SnapshotMeasuredResidents(path);
         std::unordered_map<int,uint64_t> usage;
         if(config_.adaptive_reuse_control) {
           for(const auto& gpu:locations)usage[gpu.gpu_id]=DirectoryBytes(gpu.local_root);
-          // This is an advisory snapshot only. Final admission rechecks live
-          // quota, pins and values under the layout lock before any eviction.
+          if(config_.measured_causal_window) {
+            const auto options=MeasuredOptions();
+            std::erase_if(locations,[&](const auto& gpu) {
+              const bool possible=measured_.PotentiallyProfitable(gpu.gpu_id,
+                  {incoming.logical_path,incoming.size_bytes,0},usage.at(gpu.gpu_id),
+                  gpu.local_quota_bytes,options);
+              if(!possible)AddBufferedMetric("shared_optimistic_rejects",1);
+              return !possible;
+            });
+            if(locations.empty()) {
+              AddBufferedMetric("shared_snapshot_avoided",1);
+              AddBufferedMetric("shared_placement_no_gain",1);return;
+            }
+          }
+        }
+        std::optional<PlanningSnapshot> snapshot;
+        if(config_.compact_measured_planning)snapshot=SnapshotMeasuredResidents(path);
+        if(config_.adaptive_reuse_control) {
+          // Advisory rejection and snapshot only. Final admission still
+          // rechecks live capacity, pins, demand and costs before any eviction.
           lock.unlock();
         }
         for(const auto& gpu:locations) {

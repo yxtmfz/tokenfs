@@ -227,6 +227,18 @@ class MeasuredPolicy {
   }
   Decision Plan(int gpu,const Item& incoming,std::vector<Item> residents,
                 uint64_t used,uint64_t quota,const Options& o) const {
+    return PlanImpl(gpu,incoming,std::move(residents),used,quota,o,false);
+  }
+  // An optimistic rejection test only: omits resident loss and resident noise,
+  // but preserves real headroom, admission, incoming noise and copy costs.
+  // Never use its victim-free result to execute a migration.
+  bool PotentiallyProfitable(int gpu,const Item& incoming,uint64_t used,
+                             uint64_t quota,const Options& o) const {
+    return PlanImpl(gpu,incoming,{},used,quota,o,true).allowed;
+  }
+ private:
+  Decision PlanImpl(int gpu,const Item& incoming,std::vector<Item> residents,
+                    uint64_t used,uint64_t quota,const Options& o,bool optimistic) const {
     std::lock_guard<std::mutex> lock(mu_);Decision result;
     if(incoming.bytes>quota){result.reason="oversize";return result;}
     const uint64_t needed=used>quota ? used-quota+incoming.bytes : (incoming.bytes>quota-used ? incoming.bytes-(quota-used) : 0);
@@ -279,13 +291,13 @@ class MeasuredPolicy {
       result.displaced_us+=Value(gpu,victim,o,false);
       victim_uncertainty+=std::sqrt(double(EffectiveCount(gpu,victim.key,o,false)))*victim.bytes*victim.coverage;
     }
-    if(freed<needed){result.reason="pinned_capacity";return result;}
+    if(!optimistic && freed<needed){result.reason="pinned_capacity";return result;}
     result.incoming_us=Value(gpu,incoming,o,true);
     // Cold start: before samples exist, assume one remote read of copy cost and
     // half its service time as potential savings. This prior is recorded, then
     // replaced by online measurements; no synthetic delay is injected.
     result.copy_us=o.cost ? incoming.bytes*(copy_.n?copy_.mean:(remote_.n?remote_.mean:0.01)) : 0;
-    if(o.adaptive_control && !result.victims.empty()) {
+    if(o.adaptive_control && (optimistic?needed>0:!result.victims.empty())) {
       // A heuristic noise margin, not a statistical confidence interval. Only
       // weak temporal evidence is penalized; burst benefit stays responsive.
       result.uncertainty_us=(1-temporal_strength_)*SavingRate()*

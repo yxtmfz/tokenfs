@@ -85,3 +85,5 @@ jobs:
         run: python3 -m unittest tests.integrated_hpj_telemetry_reverse_test tests.integrated_hpj_readpath_test
       - name: Test read-path reverse-order invariants
         run: python3 -m unittest tests.integrated_hpj_readpath_reverse_test
+      - name: Test frozen capacity-aware planning screen controls
+        run: python3 -m unittest tests.integrated_hpj_cohort_caller_lazy_test

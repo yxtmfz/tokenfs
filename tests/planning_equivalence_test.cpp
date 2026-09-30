@@ -10,7 +10,40 @@ void equal(const Decision& a,const Decision& b) {
  assert(a.affinity_adjusted_items==b.affinity_adjusted_items && a.survival_adjusted_items==b.survival_adjusted_items);
  assert(a.costs_calibrated==b.costs_calibrated && a.explore_headroom==b.explore_headroom);
 }
+void optimistic_bound() {
+ std::mt19937 rng(98041);size_t rejected=0,accepted=0;
+ for(bool static_value:{false,true})for(bool joint:{false,true}) {
+  MeasuredPolicy policy;Options o;
+  o.causal_window=o.shared_value=o.burst_reuse=o.adaptive_control=o.shift_reset=true;
+  o.persistent_run_reuse=o.persistent_reuse_immediate_decay=o.novel_reuse_decay=true;
+  o.retained_capture=o.cohort_reuse_prior=o.recent_value_floor=o.bounded_cost_warmup=true;
+  o.static_reuse_value=static_value;o.joint_admission=joint;
+  for(int i=0;i<2000;++i) {
+   auto key="bound"+std::to_string(rng()%19);int gpu=rng()%3;
+   policy.Observe(gpu,key,o);
+   policy.ReadSample(false,100,100+rng()%200,true);
+   policy.ReadSample(true,100,10+rng()%80,true);
+   policy.CopySample(100,10+rng()%500,true);
+   std::vector<Item> residents;uint64_t used=0;
+   for(int j=0;j<8;++j) {
+    const auto bytes=10+rng()%70;used+=bytes;
+    residents.push_back({"bound"+std::to_string(j),bytes,uint64_t(j),j%2?1.0:0.0});
+   }
+   const uint64_t quota=i%3?used:used+100;
+   o.admission=i%17!=0;o.cost=i%23!=0;
+   Item incoming{key,100,0};
+   const bool possible=policy.PotentiallyProfitable(gpu,incoming,used,quota,o);
+   const auto full=policy.Plan(gpu,incoming,residents,used,quota,o);
+   assert(possible || !full.allowed); // No profitable real plan is pruned.
+   assert(policy.Plan(gpu,incoming,residents,used,quota,o).allowed==full.allowed);
+   if(quota-used>=100)assert(possible && full.allowed); // Exploration preserved.
+   rejected+=!possible;accepted+=full.allowed;
+  }
+ }
+ assert(rejected>0 && accepted>0);
+}
 int main(){
+ optimistic_bound();
  std::mt19937 rng(73529);
  for(bool joint:{false,true})for(bool shared:{false,true})for(int window:{2,8,128}) {
   MeasuredPolicy reference,fast;Options a;a.window=window;a.causal_window=true;a.shared_value=shared;
