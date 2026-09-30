@@ -46,6 +46,7 @@ struct Options {
   bool bounded_cost_warmup=false;
   bool cohort_reuse_prior=false;
   bool recent_value_floor=false;
+  bool disk_opportunity_value=false;
 };
 struct Decision {
   bool allowed=false;
@@ -428,7 +429,13 @@ class MeasuredPolicy {
     }
     return remaining/eligible;
   }
+  bool DiskOpportunityEnabled(const Options& o) const {
+    return o.disk_opportunity_value && !o.static_reuse_value && o.retained_capture &&
+      o.persistent_run_reuse && o.causal_window && o.shared_value && o.burst_reuse;
+  }
   double PersistentEstimate(const std::string& key,const Options& o) const {
+    if(DiskOpportunityEnabled(o))
+      return run_reuse_.DiskOpportunity(key,observations_,o.window)/DiskReuseScale(o);
     return o.persistent_run_reuse && o.causal_window && o.shared_value && o.burst_reuse?
       run_reuse_.Estimate(key,observations_,o.window,o.persistent_reuse_immediate_decay):0.0;
   }
@@ -441,6 +448,7 @@ class MeasuredPolicy {
     return repeats*Survival(gpu,key,o);
   }
   double CohortDiskReuse(int gpu,const std::string& key,const Options& o) const {
+    if(DiskOpportunityEnabled(o))return 0;
     if(!o.cohort_reuse_prior || o.static_reuse_value || !o.retained_capture ||
        !o.persistent_run_reuse || !o.causal_window || !o.shared_value ||
        !o.burst_reuse || !o.adaptive_control)return 0;
@@ -451,6 +459,14 @@ class MeasuredPolicy {
       double repeats=double(EffectiveCount(gpu,item.key,o,incoming));
       if(!o.frequency_admission)repeats=std::max(0.0,repeats-1.0);
       return repeats*DiskReuseScale(o)*(o.cost?SavingRate()*item.bytes:1.0)*item.coverage;
+    }
+    if(DiskOpportunityEnabled(o)) {
+      const double recent=RecentValue(gpu,item.key,o,incoming)*DiskReuseScale(o);
+      const double opportunity=run_reuse_.DiskOpportunity(item.key,observations_,o.window);
+      const double competition=o.novel_reuse_decay?1.0-(o.adaptive_control?temporal_strength_:1.0)*(1.0-run_reuse_.CompetitionSurvival(item.key)):1.0;
+      // Recent and long-run forecasts overlap: never add their predictions.
+      const double repeats=std::max(recent,opportunity*competition);
+      return repeats*(o.cost?SavingRate()*item.bytes:1.0)*item.coverage;
     }
     const double recent=RecentValue(gpu,item.key,o,incoming);
     const double persistent=PersistentEstimate(item.key,o);

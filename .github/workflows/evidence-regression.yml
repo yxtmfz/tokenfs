@@ -96,3 +96,6 @@ jobs:
 
       - name: Hotspot lifetime evidence audit
         run: python3 -m unittest tests.hotspot_lifetime_test
+
+      - name: Test disk opportunity ablations and fixed matrix
+        run: python3 -m unittest tests.disk_opportunity_study_test

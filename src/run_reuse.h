@@ -72,6 +72,17 @@ class RunReuse {
     if(it==entries_.end() || return_gaps_.empty())return 0;
     return std::exp2(-double(at-it->second.last_seen)/std::max(4.0,double(return_gap_sum_)/return_gaps_.size()));
   }
+  // Count one possible disk reuse per distinct observed run, not its adjacent
+  // RAM-served requests. Do not expire recurrence before its observed mean gap.
+  // The forecast uses completed gaps only; overdue reuse still loses value.
+  double DiskOpportunity(const std::string& key,uint64_t at,size_t horizon) const {
+    const auto it=entries_.find(key);if(it==entries_.end())return 0;
+    const auto& e=it->second;if(!e.gap.n)return 0;
+    const double gap=std::max(4.0,e.gap.mean);
+    const double age=double(at-e.last_start);
+    const double confidence=double(e.gap.n)/(e.gap.n+1.0);
+    return double(horizon)/gap*confidence*std::exp2(-std::max(0.0,age-gap)/gap);
+  }
   size_t Entries() const {return entries_.size();}
   size_t Runs() const {return recent_.size();}
   size_t ReturnIntervals() const {return return_gaps_.size();}
