@@ -27,8 +27,8 @@ def run(a):
   case=out/v;cfg=study.configuration(v,case,data,24,True)
   assert not cfg['policy']['profile_control_path'] and not cfg['policy'].get('request_trace_path')
   selected=reference if v=='OldFull' else binary
-  dump(case/'execution.json',dict(binary_sha256=sha(selected)))
   r=run_case(selected,case,data,v,events,expected,24,True,True,configuration=cfg)
+  dump(case/'execution.json',dict(binary_sha256=sha(selected)))
   assert r['status']=='ok' and r['verify_every_request']
   rows=json.loads((case/'requests.json').read_text())
   assert len(rows)==96 and all(x['sha256']==expected[str(x['key'])] for x in rows)

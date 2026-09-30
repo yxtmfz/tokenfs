@@ -84,33 +84,16 @@ int main() {
   {
     RunReuse r;uint64_t at=0;
     auto observe=[&](const std::string& k,int n){for(int i=0;i<n;++i)r.Observe(k,++at,128);};
-    observe("a",4);observe("b",28);observe("a",4);observe("b",28);
-    const auto last_return=at-27; // start of the second b run, not its RAM repeats
-    observe("new",4);
-    assert(r.NewcomerDiskPrior("new")>0);
-    assert(std::abs(r.NewcomerSurvival("new",at)-std::exp2(-double(at-last_return)/32.0))<1e-12);
+    observe("a",4);observe("b",28);observe("a",4);observe("b",28);observe("new",4);
+    assert(r.NewcomerDiskPrior("new")>0 && r.NewcomerSurvival("new",at)==1);
     observe("scan",12);
-    // Use observed between-run spacing, but age the borrowed evidence too.
-    // New objects cannot turn an old cohort observation into a fresh forecast.
-    assert(std::abs(r.NewcomerSurvival("new",at)-std::exp2(-double(at-last_return)/32.0))<1e-12);
-    assert(r.NewcomerSurvival("new",at)>std::exp2(-double(at-last_return)/4.0));
+    // A 32-request return interval gives more than half the prior after12
+    // intervening requests; a within-burst four-request half-life gives1/8.
+    assert(r.NewcomerSurvival("new",at)>.5);
     const auto before=r.NewcomerSurvival("new",at);observe("scan",128);
     assert(r.NewcomerSurvival("new",at)<before);
     assert(r.NewcomerSurvival("missing",at)==0);
     observe("new",4);assert(r.NewcomerDiskPrior("new")==0); // own evidence takes over
-  }
-  {
-    RunReuse r;uint64_t at=0;
-    auto run=[&](const std::string& key,int n){for(int i=0;i<n;++i)r.Observe(key,++at,128);};
-    run("hot",4);run("other",4);run("hot",4);run("new0",4);
-    const auto first=r.NewcomerSurvival("new0",at);
-    run("new1",4);const auto scan=r.NewcomerSurvival("new1",at);
-    assert(scan>0 && scan<first); // Fresh key, stale cohort evidence.
-    run("new1",32);const auto adjacent=r.NewcomerSurvival("new1",at);
-    assert(adjacent<scan); // Adjacent repeats cannot assert a distinct return.
-    run("hot",4);run("new2",1);
-    assert(r.NewcomerSurvival("new2",at)>adjacent); // A real return renews evidence.
-    assert(r.NewcomerDiskPrior("hot")==0); // Established keys use their own evidence.
   }
   RunReuse r;uint64_t t=0;
   auto run=[&](const std::string& k,int n){for(int i=0;i<n;++i)r.Observe(k,++t,128);};

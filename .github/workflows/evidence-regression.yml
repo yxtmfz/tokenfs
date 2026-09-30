@@ -89,3 +89,5 @@ jobs:
         run: python3 -m unittest tests.integrated_hpj_cohort_caller_lazy_test
       - name: Test final confirmation matrix and reversed orders
         run: python3 -m unittest tests.integrated_hpj_cohort_caller_final_test
+      - name: Test causal freshness candidate and retained-binary controls
+        run: python3 -m unittest tests.integrated_hpj_cohort_caller_freshness_test tests.hotspot_freshness_correctness_test

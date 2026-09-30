@@ -1,6 +1,6 @@
 # Final paper claim boundaries
 
-The final independent batch is protocol [independent HPJ](integrated-hpj-cohort-caller-independent-plan.md). Its result determines which proposed claims survive; no positive outcome is assumed here.
+The latest retained-version confirmation is [report70](../reports/latest/paper-experiments/70_final_confirmation/README.md). The previous-version independent batch [report66](../reports/latest/paper-experiments/66_independent_final/README.md) remains historical evidence. Their results determine the scoped claims below; development follow-ups must not replace confirmation outcomes.
 
 1. Hotspot contribution: a bounded causal recurrence/lifetime estimator for cache admission and victim valuation. A Full versus NoHotspot comparison estimates its marginal value with placement and joint admission retained. No claim of forecasting all future demand.
 2. Placement contribution: demand-aware placement across logical consumer domains in a shared storage cache. Current three consuming processes run serially on one cn7 host; all cache partitions share a disk. Caller identities in public replay are constructed. Do not call this measured physical GPU affinity, NVLink optimization, multi-GPU parallel KV sharing or inference speedup. A physical-GPU claim needs another environment and is outside this paper evaluation.
@@ -19,3 +19,9 @@ See [report66](../reports/latest/paper-experiments/66_independent_final/README.m
 ## Follow-up hotspot candidate rejected
 
 [Report67](../reports/latest/paper-experiments/67_hotspot_object_prior/README.md) investigates two already inspected report66 inputs, with24 timed runs and480 content checks. A distinct-object newcomer prior reduces copies but fails the throughput/p99 requirements: H strict0/4, all three ablations plus SIEVE4/16. The candidate is not adopted; native production code is retained. Its development outcomes do not replace or extend report66's independent claims. First-reference requests dominate the moving-input tail; lower copying alone does not establish lower p99.
+
+## Final confirmation and freshness follow-up
+
+Report70 completes all20 frozen runs and480 content checks, with10/16 strict pairs passing. Full/SIEVE improves both measured metrics on both inputs in both rounds; moving P/J also repeat positive. H remains unconfirmed, and public P/J have mixed signs. These are small storage-replay observations, not proof of all three innovations.
+
+[Report71](../reports/latest/paper-experiments/71_hotspot_cohort_freshness/README.md) tests a causal cohort-freshness correction on the now-known report70 inputs:12 runs and288 content checks. H throughput changes are−1.833% moving and+2.830% public; aggregated p99 changes are+0.642% and+0.356%, with only1/4 strict pairs passing. New/old Full aggregates improve slightly but do not consistently pass the paired gates; public first-round actions are identical. Candidate rejected, native source restored to report70. All local model alternatives and timed outcomes are archived. A pre-read content-driver failure and its receipt-order-only correction are recorded; no timed run was repeated. No P/J/SIEVE evidence was added or pooled.
