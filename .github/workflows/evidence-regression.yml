@@ -93,3 +93,6 @@ jobs:
         run: python3 -m unittest tests.integrated_hpj_cohort_caller_freshness_test tests.hotspot_freshness_correctness_test
       - name: Test observed-return support matrix and single-switch controls
         run: python3 -m unittest tests.integrated_hpj_cohort_caller_support_test
+
+      - name: Hotspot lifetime evidence audit
+        run: python3 -m unittest tests.hotspot_lifetime_test

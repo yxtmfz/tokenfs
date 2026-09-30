@@ -1855,7 +1855,13 @@ class TokenFS {
     const bool coalesced=bool(handle.borrowed_capture);
     fi->fh = StoreHandle(std::move(handle));
     fi->direct_io = config_.fuse_direct_io;
-    if(diagnostic.Enabled()){diagnostic.e.handle=fi->fh;diagnostic.e.caller=caller_gpu_id;diagnostic.e.tier=meta.tier;}
+    if(diagnostic.Enabled()) {
+      diagnostic.e.handle=fi->fh;diagnostic.e.caller=caller_gpu_id;diagnostic.e.tier=meta.tier;
+      // Record the actual disk location, not the consumer. RAM hits must not
+      // be credited to a disk replica that happened to be present too.
+      diagnostic.e.location=meta.tier=="local"?resident_gpu_id:-1;
+      diagnostic.e.selected_ns=RequestTrace::Now();
+    }
     layout_lock.unlock();
     // Pin the selected source before future placement work; this miss remains a miss.
     if (!writable && (config_.shared_value_placement || config_.shared_pool_cache)) {
@@ -2863,6 +2869,8 @@ class TokenFS {
 
   void PlaceShared(const std::string& path, int caller,std::shared_ptr<ReadFillPool::Buffer> fill={}) {
     const auto plan_start=Clock::now();
+    RequestTrace::Span planning(trace_,"shared_plan");
+    if(planning.Enabled()){planning.e.path=path;planning.e.caller=caller;planning.e.tier="rejected";}
     auto parsed=ParseGpuPath(path);if(!parsed)return;
     const auto [owner,rel]=*parsed;
     std::optional<GpuConfig> destination;
@@ -2931,6 +2939,8 @@ class TokenFS {
         if(destination->gpu_id!=caller)AddBufferedMetric("shared_placement_relocated",1);
       }
     }
+    if(planning.Enabled()){planning.e.location=destination->gpu_id;planning.e.tier="selected";}
+    planning.Finish();
     if(config_.profile_control_path)RecordLatency("shared_plan","background",ElapsedMicros(plan_start));
     // Existing copy/commit path rechecks quota and benefit using current evidence.
     if(destination->gpu_id==owner->gpu_id)PromoteToLocal(*destination,rel,incoming,"promote",true,fill);
@@ -3101,7 +3111,10 @@ class TokenFS {
       AddBackgroundMetric("cross_gpu_replica_skip_missing_source", 1);
       return;
     }
+    RequestTrace::Span attempt(trace_,"copy_attempt");
+    if(attempt.Enabled()){attempt.e.path=meta.logical_path;attempt.e.location=caller_gpu.gpu_id;}
     std::lock_guard<std::mutex> copy_lock(copy_mu_);
+    if(attempt.Enabled())attempt.e.wait_ns=RequestTrace::Now()-attempt.e.start_ns;
     const auto copy_start=Clock::now();
     uint64_t planning_us=0;
     const uint64_t size = FileSizeNoThrow(source);
@@ -3223,7 +3236,10 @@ class TokenFS {
   int PromoteToLocal(const GpuConfig& gpu, const fs::path& rel, FileMeta& meta,
                      const std::string& metric_prefix,
                      bool allow_eviction = true,std::shared_ptr<ReadFillPool::Buffer> fill={}) {
+    RequestTrace::Span attempt(trace_,"copy_attempt");
+    if(attempt.Enabled()){attempt.e.path=meta.logical_path;attempt.e.location=gpu.gpu_id;}
     std::lock_guard<std::mutex> copy_lock(copy_mu_);
+    if(attempt.Enabled())attempt.e.wait_ns=RequestTrace::Now()-attempt.e.start_ns;
     const auto copy_start=Clock::now();
     uint64_t planning_us=0;
     if (auto current = metadata_.Get(meta.logical_path); current && current->tier == "local") return 0;
@@ -3903,6 +3919,13 @@ class TokenFS {
 
   void RecordPolicyEvent(const std::string& action,const std::string& path,int gpu,
                          uint64_t bytes,const std::string& reason,double score=0) {
+    if(trace_.Enabled()) {
+      RequestTrace::Event event;
+      event.op="policy_"+action;event.path=path;event.location=gpu;event.bytes=bytes;
+      event.tier=reason.substr(0,reason.find(';'));
+      event.start_ns=event.end_ns=RequestTrace::Now();
+      trace_.Add(std::move(event));
+    }
     if(!config_.batch_policy_events) {
       metadata_.RecordPolicyEvent(action,path,gpu,bytes,reason,score);return;
     }
