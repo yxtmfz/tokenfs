@@ -1,0 +1,459 @@
+{
+  "speed_runs": 18,
+  "timed_requests": 20736,
+  "comparisons": [
+    {
+      "scenario": "moving_shared",
+      "baseline": "NoHotspot",
+      "full": {
+        "mib_s": 348.9882426721397,
+        "p99_ms": 27.259704499999998,
+        "rates": [
+          354.91661073794234,
+          343.254670432734
+        ],
+        "tails": [
+          27.049640999999998,
+          27.469768
+        ],
+        "remote_mib": 336.0,
+        "copies": 56,
+        "cpu_s": 5.5600000000000005,
+        "snapshots": 112,
+        "optimistic_rejects": 352
+      },
+      "control": {
+        "mib_s": 333.33311443880115,
+        "p99_ms": 27.667867,
+        "rates": [
+          323.96006720910987,
+          343.26469720105047
+        ],
+        "tails": [
+          28.009245,
+          27.326489
+        ],
+        "remote_mib": 336.0,
+        "copies": 56,
+        "cpu_s": 6.199999999999999,
+        "snapshots": 112,
+        "optimistic_rejects": 352
+      },
+      "gain_pct": 4.696541554143363,
+      "p99_change_pct": -1.4752221412659083,
+      "strict_passes": 1,
+      "pairs": [
+        {
+          "block": "moving_shared-74801-r1",
+          "scenario": "moving_shared",
+          "seed": 74801,
+          "treatment": "Full",
+          "baseline": "NoHotspot",
+          "n": 1,
+          "gain_pct": 9.555666473192392,
+          "p99_change_pct": -3.4260259425057615,
+          "drain_gain_pct": 9.553375220102179,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": true,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "hotspot-only development on inspected moving/public/uniform inputs, two reversed-order repeats, retained report70 binary control; not independent confirmation"
+        },
+        {
+          "block": "moving_shared-74801-r2",
+          "scenario": "moving_shared",
+          "seed": 74801,
+          "treatment": "Full",
+          "baseline": "NoHotspot",
+          "n": 1,
+          "gain_pct": -0.00292100189686062,
+          "p99_change_pct": 0.5243227551113394,
+          "drain_gain_pct": -0.0022934256642459516,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": false,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "hotspot-only development on inspected moving/public/uniform inputs, two reversed-order repeats, retained report70 binary control; not independent confirmation"
+        }
+      ]
+    },
+    {
+      "scenario": "moving_shared",
+      "baseline": "OldFull",
+      "full": {
+        "mib_s": 348.9882426721397,
+        "p99_ms": 27.259704499999998,
+        "rates": [
+          354.91661073794234,
+          343.254670432734
+        ],
+        "tails": [
+          27.049640999999998,
+          27.469768
+        ],
+        "remote_mib": 336.0,
+        "copies": 56,
+        "cpu_s": 5.5600000000000005,
+        "snapshots": 112,
+        "optimistic_rejects": 352
+      },
+      "control": {
+        "mib_s": 347.5208414955088,
+        "p99_ms": 27.2822375,
+        "rates": [
+          354.48298190061547,
+          340.82690998867815
+        ],
+        "tails": [
+          26.895266,
+          27.669209
+        ],
+        "remote_mib": 312.0,
+        "copies": 145,
+        "cpu_s": 6.109999999999999,
+        "snapshots": 299,
+        "optimistic_rejects": 14
+      },
+      "gain_pct": 0.4222483953238987,
+      "p99_change_pct": -0.08259219941180174,
+      "strict_passes": 1,
+      "pairs": [
+        {
+          "block": "moving_shared-74801-r1",
+          "scenario": "moving_shared",
+          "seed": 74801,
+          "treatment": "Full",
+          "baseline": "OldFull",
+          "n": 1,
+          "gain_pct": 0.12232712414059765,
+          "p99_change_pct": 0.5739857713249474,
+          "drain_gain_pct": 0.12873151650281134,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": false,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "hotspot-only development on inspected moving/public/uniform inputs, two reversed-order repeats, retained report70 binary control; not independent confirmation"
+        },
+        {
+          "block": "moving_shared-74801-r2",
+          "scenario": "moving_shared",
+          "seed": 74801,
+          "treatment": "Full",
+          "baseline": "OldFull",
+          "n": 1,
+          "gain_pct": 0.7123147770627725,
+          "p99_change_pct": -0.7208048484508622,
+          "drain_gain_pct": 0.7126291125294948,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": true,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "hotspot-only development on inspected moving/public/uniform inputs, two reversed-order repeats, retained report70 binary control; not independent confirmation"
+        }
+      ]
+    },
+    {
+      "scenario": "public_toolagent",
+      "baseline": "NoHotspot",
+      "full": {
+        "mib_s": 86.3002488956056,
+        "p99_ms": 28.9772465,
+        "rates": [
+          86.23953960045002,
+          86.36104372495808
+        ],
+        "tails": [
+          29.139363000000003,
+          28.81513
+        ],
+        "remote_mib": 3868.0,
+        "copies": 66,
+        "cpu_s": 9.75,
+        "snapshots": 206,
+        "optimistic_rejects": 5406
+      },
+      "control": {
+        "mib_s": 85.09129415524357,
+        "p99_ms": 28.5520315,
+        "rates": [
+          84.79458316692387,
+          85.39008892172997
+        ],
+        "tails": [
+          28.363655,
+          28.740408
+        ],
+        "remote_mib": 4008.0,
+        "copies": 50,
+        "cpu_s": 9.46,
+        "snapshots": 192,
+        "optimistic_rejects": 5610
+      },
+      "gain_pct": 1.4207737141197718,
+      "p99_change_pct": 1.4892635573058977,
+      "strict_passes": 0,
+      "pairs": [
+        {
+          "block": "public_toolagent-74802-r1",
+          "scenario": "public_toolagent",
+          "seed": 74802,
+          "treatment": "Full",
+          "baseline": "NoHotspot",
+          "n": 1,
+          "gain_pct": 1.7040669103610684,
+          "p99_change_pct": 2.734866151770632,
+          "drain_gain_pct": 1.7048096618686115,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": false,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "hotspot-only development on inspected moving/public/uniform inputs, two reversed-order repeats, retained report70 binary control; not independent confirmation"
+        },
+        {
+          "block": "public_toolagent-74802-r2",
+          "scenario": "public_toolagent",
+          "seed": 74802,
+          "treatment": "Full",
+          "baseline": "NoHotspot",
+          "n": 1,
+          "gain_pct": 1.1370813820302805,
+          "p99_change_pct": 0.2599893501859851,
+          "drain_gain_pct": 1.1370856235379367,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": false,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "hotspot-only development on inspected moving/public/uniform inputs, two reversed-order repeats, retained report70 binary control; not independent confirmation"
+        }
+      ]
+    },
+    {
+      "scenario": "public_toolagent",
+      "baseline": "OldFull",
+      "full": {
+        "mib_s": 86.3002488956056,
+        "p99_ms": 28.9772465,
+        "rates": [
+          86.23953960045002,
+          86.36104372495808
+        ],
+        "tails": [
+          29.139363000000003,
+          28.81513
+        ],
+        "remote_mib": 3868.0,
+        "copies": 66,
+        "cpu_s": 9.75,
+        "snapshots": 206,
+        "optimistic_rejects": 5406
+      },
+      "control": {
+        "mib_s": 86.82888319726551,
+        "p99_ms": 28.555452000000002,
+        "rates": [
+          87.52459594048054,
+          86.14414335197601
+        ],
+        "tails": [
+          28.460747,
+          28.650157
+        ],
+        "remote_mib": 3898.0,
+        "copies": 66,
+        "cpu_s": 9.34,
+        "snapshots": 213,
+        "optimistic_rejects": 5442
+      },
+      "gain_pct": -0.60882310378092,
+      "p99_change_pct": 1.4771067185348707,
+      "strict_passes": 0,
+      "pairs": [
+        {
+          "block": "public_toolagent-74802-r1",
+          "scenario": "public_toolagent",
+          "seed": 74802,
+          "treatment": "Full",
+          "baseline": "OldFull",
+          "n": 1,
+          "gain_pct": -1.468223104856592,
+          "p99_change_pct": 2.3843927919390273,
+          "drain_gain_pct": -1.4676434067081967,
+          "mechanism_active": false,
+          "executed_actions_changed": false,
+          "pilot_screen": false,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "hotspot-only development on inspected moving/public/uniform inputs, two reversed-order repeats, retained report70 binary control; not independent confirmation"
+        },
+        {
+          "block": "public_toolagent-74802-r2",
+          "scenario": "public_toolagent",
+          "seed": 74802,
+          "treatment": "Full",
+          "baseline": "OldFull",
+          "n": 1,
+          "gain_pct": 0.25178771828495705,
+          "p99_change_pct": 0.5758188340817982,
+          "drain_gain_pct": 0.251831567221239,
+          "mechanism_active": false,
+          "executed_actions_changed": false,
+          "pilot_screen": false,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "hotspot-only development on inspected moving/public/uniform inputs, two reversed-order repeats, retained report70 binary control; not independent confirmation"
+        }
+      ]
+    },
+    {
+      "scenario": "uniform",
+      "baseline": "NoHotspot",
+      "full": {
+        "mib_s": 110.91994978354427,
+        "p99_ms": 28.5591215,
+        "rates": [
+          110.51363365778653,
+          111.32926467083307
+        ],
+        "tails": [
+          28.789592,
+          28.328651
+        ],
+        "remote_mib": 2156.0,
+        "copies": 86,
+        "cpu_s": 10.83,
+        "snapshots": 1114,
+        "optimistic_rejects": 199
+      },
+      "control": {
+        "mib_s": 111.93121171814816,
+        "p99_ms": 28.4475385,
+        "rates": [
+          111.53329055207405,
+          112.3319824046816
+        ],
+        "tails": [
+          28.479162,
+          28.415915
+        ],
+        "remote_mib": 2192.0,
+        "copies": 78,
+        "cpu_s": 10.07,
+        "snapshots": 984,
+        "optimistic_rejects": 604
+      },
+      "gain_pct": -0.9034673341608568,
+      "p99_change_pct": 0.3922413181723927,
+      "strict_passes": 0,
+      "pairs": [
+        {
+          "block": "uniform-73702-r1",
+          "scenario": "uniform",
+          "seed": 73702,
+          "treatment": "Full",
+          "baseline": "NoHotspot",
+          "n": 1,
+          "gain_pct": -0.9142175302462308,
+          "p99_change_pct": 1.0900250505966547,
+          "drain_gain_pct": -0.913664301245154,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": false,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "hotspot-only development on inspected moving/public/uniform inputs, two reversed-order repeats, retained report70 binary control; not independent confirmation"
+        },
+        {
+          "block": "uniform-73702-r2",
+          "scenario": "uniform",
+          "seed": 73702,
+          "treatment": "Full",
+          "baseline": "NoHotspot",
+          "n": 1,
+          "gain_pct": -0.8926377976987809,
+          "p99_change_pct": -0.3070955132009612,
+          "drain_gain_pct": -0.8913164835404053,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": false,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "hotspot-only development on inspected moving/public/uniform inputs, two reversed-order repeats, retained report70 binary control; not independent confirmation"
+        }
+      ]
+    },
+    {
+      "scenario": "uniform",
+      "baseline": "OldFull",
+      "full": {
+        "mib_s": 110.91994978354427,
+        "p99_ms": 28.5591215,
+        "rates": [
+          110.51363365778653,
+          111.32926467083307
+        ],
+        "tails": [
+          28.789592,
+          28.328651
+        ],
+        "remote_mib": 2156.0,
+        "copies": 86,
+        "cpu_s": 10.83,
+        "snapshots": 1114,
+        "optimistic_rejects": 199
+      },
+      "control": {
+        "mib_s": 111.73974779107992,
+        "p99_ms": 28.2701575,
+        "rates": [
+          111.03877352161263,
+          112.4496286171359
+        ],
+        "tails": [
+          28.352327,
+          28.187988
+        ],
+        "remote_mib": 2156.0,
+        "copies": 86,
+        "cpu_s": 10.6,
+        "snapshots": 1113,
+        "optimistic_rejects": 199
+      },
+      "gain_pct": -0.7336673151155049,
+      "p99_change_pct": 1.022152069722293,
+      "strict_passes": 0,
+      "pairs": [
+        {
+          "block": "uniform-73702-r1",
+          "scenario": "uniform",
+          "seed": 73702,
+          "treatment": "Full",
+          "baseline": "OldFull",
+          "n": 1,
+          "gain_pct": -0.47293377544727067,
+          "p99_change_pct": 1.5422543624020735,
+          "drain_gain_pct": -0.47219591229195057,
+          "mechanism_active": false,
+          "executed_actions_changed": false,
+          "pilot_screen": false,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "hotspot-only development on inspected moving/public/uniform inputs, two reversed-order repeats, retained report70 binary control; not independent confirmation"
+        },
+        {
+          "block": "uniform-73702-r2",
+          "scenario": "uniform",
+          "seed": 73702,
+          "treatment": "Full",
+          "baseline": "OldFull",
+          "n": 1,
+          "gain_pct": -0.9963251636138426,
+          "p99_change_pct": 0.4990175247697737,
+          "drain_gain_pct": -0.996342720549126,
+          "mechanism_active": false,
+          "executed_actions_changed": false,
+          "pilot_screen": false,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "hotspot-only development on inspected moving/public/uniform inputs, two reversed-order repeats, retained report70 binary control; not independent confirmation"
+        }
+      ]
+    }
+  ],
+  "strict_hotspot_passes": 1,
+  "strict_retained_binary_passes": 1,
+  "development_inputs": true
+}
