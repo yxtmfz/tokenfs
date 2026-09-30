@@ -1,6 +1,8 @@
 import hashlib,json,sqlite3,sys,tarfile,tempfile
 from pathlib import Path
 root=Path(sys.argv[1]).resolve()
+for p,h in json.loads((root/'archive-manifest.json').read_text()).items():
+ assert hashlib.sha256((root/p).read_bytes()).hexdigest()==h,p
 sys.path.insert(0,str(root/'validation'))
 from hotspot_lifetime_analysis import analyze_case
 summary=json.loads((root/'data/lifetime-summary.json').read_text())
@@ -23,7 +25,7 @@ with tempfile.TemporaryDirectory() as temp:
   assert r['logical_bytes']==sum(x['bytes'] for x in requests)==sum(summary[key]['bytes_by_tier'].values())
   assert abs(r['effective_mib_s']-r['logical_bytes']/1048576/r['job_wall_s'])<1e-9
   assert r['request_p99_s']==sorted(x['response_seconds'] for x in requests)[1140]
-  db=sqlite3.connect(case/'state.db');assert dict(db.execute('SELECT name,value FROM metrics'))==r['metrics']
+  db=sqlite3.connect((case/'state.db').as_uri()+'?immutable=1',uri=True);assert dict(db.execute('SELECT name,value FROM metrics'))==r['metrics']
   db.row_factory=sqlite3.Row
   assert [dict(x) for x in db.execute('SELECT * FROM policy_events ORDER BY seq')]==json.loads((case/'policy-events.json').read_text())
   db.close()
