@@ -21,6 +21,9 @@ class RunReuse {
       if(active_length_)entries_.at(active_).length.Add(active_length_,limit);
       auto& entry=entries_[key];
       if(entry.last_start) {
+        // Only a distinct observed return refreshes transferable reuse evidence.
+        // One-off scans and adjacent RAM-served reads cannot refresh it.
+        last_return_at_=at;
         // A return in a distinct run establishes new recurring demand.
         // Adjacent repeats and one-off scans never advance this clock.
         if(!entry.gap.n)++novelty_;
@@ -70,7 +73,9 @@ class RunReuse {
   double NewcomerSurvival(const std::string& key,uint64_t at) const {
     const auto it=entries_.find(key);
     if(it==entries_.end() || return_gaps_.empty())return 0;
-    return std::exp2(-double(at-it->second.last_seen)/std::max(4.0,double(return_gap_sum_)/return_gaps_.size()));
+    // A newly touched object must not reset the age of the cohort evidence
+    // it borrows. Use the older of the two clocks; do not double-charge age.
+    return std::exp2(-double(std::max(at-it->second.last_seen,at-last_return_at_))/std::max(4.0,double(return_gap_sum_)/return_gaps_.size()));
   }
   size_t Entries() const {return entries_.size();}
   size_t Runs() const {return recent_.size();}
@@ -89,6 +94,6 @@ class RunReuse {
   std::deque<std::pair<std::string,uint64_t>> recent_;
   std::deque<uint64_t> return_gaps_;uint64_t return_gap_sum_=0;
   std::string active_;
-  uint64_t active_length_=0,generation_=0,novelty_=0;
+  uint64_t active_length_=0,generation_=0,novelty_=0,last_return_at_=0;
 };
 }
