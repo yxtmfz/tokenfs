@@ -1,0 +1,612 @@
+{
+  "speed_runs": 20,
+  "timed_requests": 23040,
+  "comparisons": [
+    {
+      "scenario": "moving_shared",
+      "baseline": "NoHotspot",
+      "full": {
+        "mib_s": 351.2669630339219,
+        "p99_ms": 27.170396000000004,
+        "rates": [
+          362.63963503482495,
+          340.5859135599095
+        ],
+        "tails": [
+          26.964846,
+          27.375946000000003
+        ],
+        "remote_mib": 312.0,
+        "copies": 145,
+        "cpu_s": 6.01,
+        "drain_mib_s": 351.15591194002803
+      },
+      "control": {
+        "mib_s": 353.64780088371765,
+        "p99_ms": 27.2854055,
+        "rates": [
+          363.7576326576094,
+          344.0847334486367
+        ],
+        "tails": [
+          26.920196999999998,
+          27.650614
+        ],
+        "remote_mib": 336.0,
+        "copies": 56,
+        "cpu_s": 5.48,
+        "drain_mib_s": 353.53392832661655
+      },
+      "gain_pct": -0.6732228629292569,
+      "p99_change_pct": -0.42150555541494716,
+      "strict_passes": 0,
+      "throughput_passes": 0,
+      "tail_passes": 1,
+      "pairs": [
+        {
+          "block": "moving_shared-74801-r1",
+          "scenario": "moving_shared",
+          "seed": 74801,
+          "treatment": "Full",
+          "baseline": "NoHotspot",
+          "n": 1,
+          "gain_pct": -0.30734684922385513,
+          "p99_change_pct": 0.1658568843311281,
+          "drain_gain_pct": -0.30590344899434907,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": false,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "frozen previously unused inputs with two reversed-order repeats; one input per family; limited confirmation, no statistical significance"
+        },
+        {
+          "block": "moving_shared-74801-r2",
+          "scenario": "moving_shared",
+          "seed": 74801,
+          "treatment": "Full",
+          "baseline": "NoHotspot",
+          "n": 1,
+          "gain_pct": -1.0168483366465586,
+          "p99_change_pct": -0.9933522633529868,
+          "drain_gain_pct": -1.017077904524144,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": false,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "frozen previously unused inputs with two reversed-order repeats; one input per family; limited confirmation, no statistical significance"
+        }
+      ]
+    },
+    {
+      "scenario": "moving_shared",
+      "baseline": "NoAffinity",
+      "full": {
+        "mib_s": 351.2669630339219,
+        "p99_ms": 27.170396000000004,
+        "rates": [
+          362.63963503482495,
+          340.5859135599095
+        ],
+        "tails": [
+          26.964846,
+          27.375946000000003
+        ],
+        "remote_mib": 312.0,
+        "copies": 145,
+        "cpu_s": 6.01,
+        "drain_mib_s": 351.15591194002803
+      },
+      "control": {
+        "mib_s": 328.799817334234,
+        "p99_ms": 27.4546305,
+        "rates": [
+          339.46670504656015,
+          318.782867221844
+        ],
+        "tails": [
+          27.307560000000002,
+          27.601701
+        ],
+        "remote_mib": 420.0,
+        "copies": 97,
+        "cpu_s": 5.779999999999999,
+        "drain_mib_s": 328.7036156981911
+      },
+      "gain_pct": 6.833077305772783,
+      "p99_change_pct": -1.0352880181723645,
+      "strict_passes": 2,
+      "throughput_passes": 2,
+      "tail_passes": 2,
+      "pairs": [
+        {
+          "block": "moving_shared-74801-r1",
+          "scenario": "moving_shared",
+          "seed": 74801,
+          "treatment": "Full",
+          "baseline": "NoAffinity",
+          "n": 1,
+          "gain_pct": 6.826274755012118,
+          "p99_change_pct": -1.2550150947210237,
+          "drain_gain_pct": 6.824296283026943,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": true,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "frozen previously unused inputs with two reversed-order repeats; one input per family; limited confirmation, no statistical significance"
+        },
+        {
+          "block": "moving_shared-74801-r2",
+          "scenario": "moving_shared",
+          "seed": 74801,
+          "treatment": "Full",
+          "baseline": "NoAffinity",
+          "n": 1,
+          "gain_pct": 6.839466163309393,
+          "p99_change_pct": -0.8179024908645971,
+          "drain_gain_pct": 6.836441954958672,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": true,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "frozen previously unused inputs with two reversed-order repeats; one input per family; limited confirmation, no statistical significance"
+        }
+      ]
+    },
+    {
+      "scenario": "moving_shared",
+      "baseline": "NoJoint",
+      "full": {
+        "mib_s": 351.2669630339219,
+        "p99_ms": 27.170396000000004,
+        "rates": [
+          362.63963503482495,
+          340.5859135599095
+        ],
+        "tails": [
+          26.964846,
+          27.375946000000003
+        ],
+        "remote_mib": 312.0,
+        "copies": 145,
+        "cpu_s": 6.01,
+        "drain_mib_s": 351.15591194002803
+      },
+      "control": {
+        "mib_s": 307.56951536907025,
+        "p99_ms": 27.4967145,
+        "rates": [
+          312.42107986222766,
+          302.86632596245136
+        ],
+        "tails": [
+          27.449934,
+          27.543495
+        ],
+        "remote_mib": 480.0,
+        "copies": 240,
+        "cpu_s": 6.76,
+        "drain_mib_s": 307.48346208248944
+      },
+      "gain_pct": 14.207340286119251,
+      "p99_change_pct": -1.1867545120708756,
+      "strict_passes": 2,
+      "throughput_passes": 2,
+      "tail_passes": 2,
+      "pairs": [
+        {
+          "block": "moving_shared-74801-r1",
+          "scenario": "moving_shared",
+          "seed": 74801,
+          "treatment": "Full",
+          "baseline": "NoJoint",
+          "n": 1,
+          "gain_pct": 16.073997053829657,
+          "p99_change_pct": -1.7671736478491962,
+          "drain_gain_pct": 16.069355334528534,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": true,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "frozen previously unused inputs with two reversed-order repeats; one input per family; limited confirmation, no statistical significance"
+        },
+        {
+          "block": "moving_shared-74801-r2",
+          "scenario": "moving_shared",
+          "seed": 74801,
+          "treatment": "Full",
+          "baseline": "NoJoint",
+          "n": 1,
+          "gain_pct": 12.454203179436508,
+          "p99_change_pct": -0.608306970484318,
+          "drain_gain_pct": 12.450502431265242,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": true,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "frozen previously unused inputs with two reversed-order repeats; one input per family; limited confirmation, no statistical significance"
+        }
+      ]
+    },
+    {
+      "scenario": "moving_shared",
+      "baseline": "PoolSIEVE1",
+      "full": {
+        "mib_s": 351.2669630339219,
+        "p99_ms": 27.170396000000004,
+        "rates": [
+          362.63963503482495,
+          340.5859135599095
+        ],
+        "tails": [
+          26.964846,
+          27.375946000000003
+        ],
+        "remote_mib": 312.0,
+        "copies": 145,
+        "cpu_s": 6.01,
+        "drain_mib_s": 351.15591194002803
+      },
+      "control": {
+        "mib_s": 336.3925322585062,
+        "p99_ms": 27.571946,
+        "rates": [
+          336.331466424756,
+          336.4536202710509
+        ],
+        "tails": [
+          27.575894,
+          27.567998
+        ],
+        "remote_mib": 308.0,
+        "copies": 154,
+        "cpu_s": 6.27,
+        "drain_mib_s": 336.29078730199683
+      },
+      "gain_pct": 4.421748210505827,
+      "p99_change_pct": -1.4563716322380627,
+      "strict_passes": 2,
+      "throughput_passes": 2,
+      "tail_passes": 2,
+      "pairs": [
+        {
+          "block": "moving_shared-74801-r1",
+          "scenario": "moving_shared",
+          "seed": 74801,
+          "treatment": "Full",
+          "baseline": "PoolSIEVE1",
+          "n": 1,
+          "gain_pct": 7.822095532638662,
+          "p99_change_pct": -2.2158773891428507,
+          "drain_gain_pct": 7.821122530856006,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": true,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "frozen previously unused inputs with two reversed-order repeats; one input per family; limited confirmation, no statistical significance"
+        },
+        {
+          "block": "moving_shared-74801-r2",
+          "scenario": "moving_shared",
+          "seed": 74801,
+          "treatment": "Full",
+          "baseline": "PoolSIEVE1",
+          "n": 1,
+          "gain_pct": 1.2281910610828284,
+          "p99_change_pct": -0.6966483384103439,
+          "drain_gain_pct": 1.2263230112870005,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": true,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "frozen previously unused inputs with two reversed-order repeats; one input per family; limited confirmation, no statistical significance"
+        }
+      ]
+    },
+    {
+      "scenario": "public_toolagent",
+      "baseline": "NoHotspot",
+      "full": {
+        "mib_s": 85.13093299202302,
+        "p99_ms": 28.906061,
+        "rates": [
+          84.7717162360669,
+          85.49320703637966
+        ],
+        "tails": [
+          28.986516,
+          28.825606
+        ],
+        "remote_mib": 3988.0,
+        "copies": 46,
+        "cpu_s": 9.59,
+        "drain_mib_s": 85.12389760985494
+      },
+      "control": {
+        "mib_s": 85.02624826646161,
+        "p99_ms": 28.686767000000003,
+        "rates": [
+          84.81820264887176,
+          85.23531699949096
+        ],
+        "tails": [
+          28.500310000000002,
+          28.873224
+        ],
+        "remote_mib": 4008.0,
+        "copies": 50,
+        "cpu_s": 9.61,
+        "drain_mib_s": 85.01970088038989
+      },
+      "gain_pct": 0.1231204806700914,
+      "p99_change_pct": 0.7644430618479969,
+      "strict_passes": 1,
+      "throughput_passes": 1,
+      "tail_passes": 1,
+      "pairs": [
+        {
+          "block": "public_toolagent-74802-r1",
+          "scenario": "public_toolagent",
+          "seed": 74802,
+          "treatment": "Full",
+          "baseline": "NoHotspot",
+          "n": 1,
+          "gain_pct": -0.054807118464073046,
+          "p99_change_pct": 1.705967408775555,
+          "drain_gain_pct": -0.05572827170202688,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": false,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "frozen previously unused inputs with two reversed-order repeats; one input per family; limited confirmation, no statistical significance"
+        },
+        {
+          "block": "public_toolagent-74802-r2",
+          "scenario": "public_toolagent",
+          "seed": 74802,
+          "treatment": "Full",
+          "baseline": "NoHotspot",
+          "n": 1,
+          "gain_pct": 0.3025624189210818,
+          "p99_change_pct": -0.16492096622116037,
+          "drain_gain_pct": 0.3023588724524018,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": true,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "frozen previously unused inputs with two reversed-order repeats; one input per family; limited confirmation, no statistical significance"
+        }
+      ]
+    },
+    {
+      "scenario": "public_toolagent",
+      "baseline": "NoAffinity",
+      "full": {
+        "mib_s": 85.13093299202302,
+        "p99_ms": 28.906061,
+        "rates": [
+          84.7717162360669,
+          85.49320703637966
+        ],
+        "tails": [
+          28.986516,
+          28.825606
+        ],
+        "remote_mib": 3988.0,
+        "copies": 46,
+        "cpu_s": 9.59,
+        "drain_mib_s": 85.12389760985494
+      },
+      "control": {
+        "mib_s": 85.3362607036796,
+        "p99_ms": 28.9166055,
+        "rates": [
+          85.44101952037298,
+          85.23175846094905
+        ],
+        "tails": [
+          29.258677,
+          28.574534
+        ],
+        "remote_mib": 4020.0,
+        "copies": 42,
+        "cpu_s": 9.219999999999999,
+        "drain_mib_s": 85.32969707854367
+      },
+      "gain_pct": -0.24061015793691576,
+      "p99_change_pct": -0.03646520681688248,
+      "strict_passes": 0,
+      "throughput_passes": 1,
+      "tail_passes": 1,
+      "pairs": [
+        {
+          "block": "public_toolagent-74802-r1",
+          "scenario": "public_toolagent",
+          "seed": 74802,
+          "treatment": "Full",
+          "baseline": "NoAffinity",
+          "n": 1,
+          "gain_pct": -0.783351238156138,
+          "p99_change_pct": -0.9301890170905547,
+          "drain_gain_pct": -0.7843398835522541,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": false,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "frozen previously unused inputs with two reversed-order repeats; one input per family; limited confirmation, no statistical significance"
+        },
+        {
+          "block": "public_toolagent-74802-r2",
+          "scenario": "public_toolagent",
+          "seed": 74802,
+          "treatment": "Full",
+          "baseline": "NoAffinity",
+          "n": 1,
+          "gain_pct": 0.3067501834429498,
+          "p99_change_pct": 0.8786564988251477,
+          "drain_gain_pct": 0.3066034808747675,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": false,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "frozen previously unused inputs with two reversed-order repeats; one input per family; limited confirmation, no statistical significance"
+        }
+      ]
+    },
+    {
+      "scenario": "public_toolagent",
+      "baseline": "NoJoint",
+      "full": {
+        "mib_s": 85.13093299202302,
+        "p99_ms": 28.906061,
+        "rates": [
+          84.7717162360669,
+          85.49320703637966
+        ],
+        "tails": [
+          28.986516,
+          28.825606
+        ],
+        "remote_mib": 3988.0,
+        "copies": 46,
+        "cpu_s": 9.59,
+        "drain_mib_s": 85.12389760985494
+      },
+      "control": {
+        "mib_s": 84.29758958111297,
+        "p99_ms": 28.873734,
+        "rates": [
+          84.19367308730504,
+          84.4017629109048
+        ],
+        "tails": [
+          28.798383,
+          28.949085
+        ],
+        "remote_mib": 3948.0,
+        "copies": 220,
+        "cpu_s": 10.65,
+        "drain_mib_s": 84.29121449546396
+      },
+      "gain_pct": 0.9885732380380707,
+      "p99_change_pct": 0.11195988714172156,
+      "strict_passes": 1,
+      "throughput_passes": 2,
+      "tail_passes": 1,
+      "pairs": [
+        {
+          "block": "public_toolagent-74802-r1",
+          "scenario": "public_toolagent",
+          "seed": 74802,
+          "treatment": "Full",
+          "baseline": "NoJoint",
+          "n": 1,
+          "gain_pct": 0.6865636425702037,
+          "p99_change_pct": 0.6532762620734545,
+          "drain_gain_pct": 0.6854411077182432,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": false,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "frozen previously unused inputs with two reversed-order repeats; one input per family; limited confirmation, no statistical significance"
+        },
+        {
+          "block": "public_toolagent-74802-r2",
+          "scenario": "public_toolagent",
+          "seed": 74802,
+          "treatment": "Full",
+          "baseline": "NoJoint",
+          "n": 1,
+          "gain_pct": 1.2931532326250217,
+          "p99_change_pct": -0.42653852444731744,
+          "drain_gain_pct": 1.292864262798088,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": true,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "frozen previously unused inputs with two reversed-order repeats; one input per family; limited confirmation, no statistical significance"
+        }
+      ]
+    },
+    {
+      "scenario": "public_toolagent",
+      "baseline": "PoolSIEVE1",
+      "full": {
+        "mib_s": 85.13093299202302,
+        "p99_ms": 28.906061,
+        "rates": [
+          84.7717162360669,
+          85.49320703637966
+        ],
+        "tails": [
+          28.986516,
+          28.825606
+        ],
+        "remote_mib": 3988.0,
+        "copies": 46,
+        "cpu_s": 9.59,
+        "drain_mib_s": 85.12389760985494
+      },
+      "control": {
+        "mib_s": 72.52775618688105,
+        "p99_ms": 33.300213,
+        "rates": [
+          72.78265355839527,
+          72.27463797332538
+        ],
+        "tails": [
+          33.051139,
+          33.549287
+        ],
+        "remote_mib": 4384.0,
+        "copies": 2192,
+        "cpu_s": 23.11,
+        "drain_mib_s": 72.47504129752662
+      },
+      "gain_pct": 17.377039450479593,
+      "p99_change_pct": -13.195567247572859,
+      "strict_passes": 2,
+      "throughput_passes": 2,
+      "tail_passes": 2,
+      "pairs": [
+        {
+          "block": "public_toolagent-74802-r1",
+          "scenario": "public_toolagent",
+          "seed": 74802,
+          "treatment": "Full",
+          "baseline": "PoolSIEVE1",
+          "n": 1,
+          "gain_pct": 16.472417659315642,
+          "p99_change_pct": -12.297981621752886,
+          "drain_gain_pct": 16.547460718987406,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": true,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "frozen previously unused inputs with two reversed-order repeats; one input per family; limited confirmation, no statistical significance"
+        },
+        {
+          "block": "public_toolagent-74802-r2",
+          "scenario": "public_toolagent",
+          "seed": 74802,
+          "treatment": "Full",
+          "baseline": "PoolSIEVE1",
+          "n": 1,
+          "gain_pct": 18.28936046408547,
+          "p99_change_pct": -14.079825302993765,
+          "drain_gain_pct": 18.365663411953093,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": true,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "frozen previously unused inputs with two reversed-order repeats; one input per family; limited confirmation, no statistical significance"
+        }
+      ]
+    }
+  ],
+  "strict_passes": 10,
+  "strict_comparisons": 16,
+  "all_passed": false,
+  "new_inputs": 2,
+  "rounds_per_input": 2,
+  "physical_gpu_evidence": false
+}

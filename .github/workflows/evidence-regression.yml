@@ -87,3 +87,5 @@ jobs:
         run: python3 -m unittest tests.integrated_hpj_readpath_reverse_test
       - name: Test frozen capacity-aware planning screen controls
         run: python3 -m unittest tests.integrated_hpj_cohort_caller_lazy_test
+      - name: Test final confirmation matrix and reversed orders
+        run: python3 -m unittest tests.integrated_hpj_cohort_caller_final_test
