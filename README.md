@@ -1,3 +1,7 @@
+> **最新完整开发批次：[报告78](reports/latest/paper-experiments/78_submission_fence_development/README.md)。** 24次冻结测速与576次内容校验完成，独立数据审计通过；四类主比较严格通过12/16，尚非全部达标的最终四表。新增统计提交合并相对关闭该优化的对照4/4同时提高吞吐、降低p99，但它是公共实现优化；移动热点H的相同I/O工作量不足以证明独立算法收益。所有原始正负结果与SQL空日志旁文件均保留，不替换报告70的独立确认。
+
+> 开发诊断链：[75读取路径](reports/latest/paper-experiments/75_read_path_diagnostic/README.md)、[76公共路径](reports/latest/paper-experiments/76_common_readpath_development/README.md)、[77对象先验](reports/latest/paper-experiments/77_object_cohort_development/README.md)。76发现的SIEVE逻辑命中维护缺陷已在77修复，76不能作为公平的整体比较。以下历次“最新”均是历史记录，不能拼接最佳值作为当前结果。
+
 > **最新热点专项诊断：[报告72](reports/latest/paper-experiments/72_hotspot_return_support/README.md)。** 18次固定测速与288次内容校验完成。H汇总吞吐变化为移动+4.697%、公开+1.421%、均匀−0.903%，但严格门槛仅1/6通过；候选未采用，原生实现恢复报告70，正式四表不变。
 
 > **上一轮热点专项诊断：[报告71](reports/latest/paper-experiments/71_hotspot_cohort_freshness/README.md)。** 12次固定测速及288次内容校验完成；候选H严格通过1/4，移动吞吐仍慢于基础频率对照，候选已撤回，生产实现恢复报告70。公开吞吐改善但尾延迟未稳定改善，不替换下列正式四表。

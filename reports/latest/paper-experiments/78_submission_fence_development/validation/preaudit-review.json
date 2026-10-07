@@ -1,0 +1,107 @@
+{
+  "preexecution_checks_passed": true,
+  "performance_results_reviewed": false,
+  "server_access": false,
+  "source_files": 345,
+  "source_archive_sha256": "c9ba5be4549aae563594a09c110a53d1b95a99bd63d033910b36bfbd4e4eeb76",
+  "binary_sha256_from_build_log": "fa7450237ef5fc4a9291ed79f057f48bb858caed784c7ff56a454e242ae58cfe",
+  "frozen_spec_sha256": "9c4b82d32ee9d2a91774dfbf1fb4f968e9a71dd91d995d0467f0efd1e17dc88a",
+  "orders": {
+    "moving_shared-74801-r1": [
+      "SyncSubmission",
+      "NoAffinity",
+      "PoolSIEVE1",
+      "Full",
+      "NoJoint",
+      "NoHotspot"
+    ],
+    "public_toolagent-74802-r1": [
+      "SyncSubmission",
+      "Full",
+      "NoJoint",
+      "PoolSIEVE1",
+      "NoHotspot",
+      "NoAffinity"
+    ],
+    "moving_shared-74801-r2": [
+      "NoHotspot",
+      "NoJoint",
+      "Full",
+      "PoolSIEVE1",
+      "NoAffinity",
+      "SyncSubmission"
+    ],
+    "public_toolagent-74802-r2": [
+      "NoAffinity",
+      "NoHotspot",
+      "PoolSIEVE1",
+      "NoJoint",
+      "Full",
+      "SyncSubmission"
+    ]
+  },
+  "policy_differences": {
+    "Full": [],
+    "NoHotspot": [
+      "measured_static_reuse_value"
+    ],
+    "NoAffinity": [
+      "shared_caller_only"
+    ],
+    "NoJoint": [
+      "measured_joint_admission"
+    ],
+    "PoolSIEVE1": [
+      "local_eviction_policy",
+      "read_through_cache",
+      "read_through_min_reads",
+      "measured_shift_reset",
+      "measured_policy",
+      "measured_admission",
+      "measured_cost",
+      "measured_value_victim",
+      "measured_size_aware",
+      "measured_frequency_admission",
+      "measured_causal_window",
+      "compact_measured_planning",
+      "shared_value_placement",
+      "shared_pool_cache",
+      "measured_burst_reuse",
+      "adaptive_reuse_control",
+      "efficient_measured_planning",
+      "burst_interval_survival",
+      "reuse_scaled_exploration",
+      "persistent_run_reuse",
+      "persistent_reuse_immediate_decay",
+      "novel_reuse_decay",
+      "cohort_reuse_prior",
+      "recent_value_floor"
+    ],
+    "SyncSubmission": [
+      "defer_background_submission_metrics"
+    ]
+  },
+  "all_arms_require_read_release_fence": true,
+  "release_count_after_fallback_submission": true,
+  "drain_requires_same_snapshot_release_count_and_submitted_completed": true,
+  "shutdown_io_counts_must_remain_unchanged": true,
+  "control_test": {
+    "aggregate_metrics_improved": true,
+    "individual_primary_pass_count": 8,
+    "total_primary": 16,
+    "aggregate_cannot_override_failed_round": true,
+    "sync_control_pass_count": 2,
+    "sync_control_total": 4,
+    "sync_does_not_require_changed_actions": true
+  },
+  "release_fence_python_tests": 4,
+  "collection_rejects_sqlite_sidecars": true,
+  "source_unchanged": true,
+  "tools": {
+    "verify78.py": "fa4cc6909dc20339a4dbaad49325fd275a746c7ca8fe39097e94fee3b2aa35b4",
+    "collect.sh": "219f8b5271c508d8a9cc12fdea9eb808db90455a10fdfcdd2eb8099b78a3ee27",
+    "launch.sh": "1bd967b9cb2ae45a63efe3d6c6454bc3891f7a6a287c637eb289afadc51012b9",
+    "package.py": "0ffb1512d63b9ccbcc051bfd2d2c96ba8c135fb6754f9098350a82ed182d112c",
+    "preaudit78.py": "87945b94da2523c83b227ccb5a415672862b52e7cacc5c22b008b388376650ec"
+  }
+}

@@ -1,0 +1,1866 @@
+{
+  "diagnosis_only": true,
+  "acceptance_unchanged": true,
+  "requests_not_independent_replicates": true,
+  "warning": "Matching aggregate I/O counts is not equality of every timestamp, routing sequence or external condition. Counters omit Read postprocessing; cumulative spans/counters are not causal wall-time savings. Two rounds do not establish significance.",
+  "runs": [
+    {
+      "block": "moving_shared-74801-r1",
+      "strategy": "Full",
+      "service_requests": {
+        "remote": 84,
+        "local": 148,
+        "inflight": 920
+      },
+      "read_release_count": 1152,
+      "background_submitted": 84,
+      "background_completed": 84,
+      "wall_s": 6.079589726,
+      "drain_s": 0.0024668434634804726,
+      "completed_with_background_s": 6.0820565694634805,
+      "daemon_cpu_s": 2.39,
+      "copies": 28,
+      "physical_pread_ops": 696,
+      "physical_pread_bytes": 486539264,
+      "action_sha256": "543f24a387a12f551ab045ceebe85845ca136ef14d6672fb386f45bc3197e361",
+      "read_latency_total_s": 3.265175,
+      "first_count": 67,
+      "reused_count": 1085,
+      "first_response_mean_ms": 24.291160656716418,
+      "reused_response_mean_ms": 4.095975776958525,
+      "p99_neighbors": [
+        {
+          "rank_from_slowest": 11,
+          "index": 720,
+          "key": 244,
+          "response_ms": 25.734173
+        },
+        {
+          "rank_from_slowest": 12,
+          "index": 884,
+          "key": 22,
+          "response_ms": 25.608316
+        },
+        {
+          "rank_from_slowest": 13,
+          "index": 864,
+          "key": 280,
+          "response_ms": 25.428614
+        }
+      ],
+      "slowest": {
+        "index": 0,
+        "response_ms": 29.262439
+      }
+    },
+    {
+      "block": "moving_shared-74801-r1",
+      "strategy": "NoHotspot",
+      "service_requests": {
+        "remote": 84,
+        "local": 148,
+        "inflight": 920
+      },
+      "read_release_count": 1152,
+      "background_submitted": 84,
+      "background_completed": 84,
+      "wall_s": 6.597613686,
+      "drain_s": 0.002098985016345978,
+      "completed_with_background_s": 6.599712671016346,
+      "daemon_cpu_s": 2.89,
+      "copies": 28,
+      "physical_pread_ops": 696,
+      "physical_pread_bytes": 486539264,
+      "action_sha256": "f8c80aa38fc4710581fd2e15170354a77add37a8651b3dd8f67870d4b4b3d717",
+      "read_latency_total_s": 3.35797,
+      "first_count": 67,
+      "reused_count": 1085,
+      "first_response_mean_ms": 25.397588179104478,
+      "reused_response_mean_ms": 4.505700626728111,
+      "p99_neighbors": [
+        {
+          "rank_from_slowest": 11,
+          "index": 748,
+          "key": 251,
+          "response_ms": 26.842433
+        },
+        {
+          "rank_from_slowest": 12,
+          "index": 976,
+          "key": 308,
+          "response_ms": 26.705306
+        },
+        {
+          "rank_from_slowest": 13,
+          "index": 692,
+          "key": 237,
+          "response_ms": 26.634214999999998
+        }
+      ],
+      "slowest": {
+        "index": 12,
+        "response_ms": 29.194603999999998
+      }
+    },
+    {
+      "block": "moving_shared-74801-r1",
+      "strategy": "NoAffinity",
+      "service_requests": {
+        "remote": 107,
+        "local": 125,
+        "inflight": 920
+      },
+      "read_release_count": 1152,
+      "background_submitted": 107,
+      "background_completed": 107,
+      "wall_s": 7.055590722,
+      "drain_s": 0.002151777036488056,
+      "completed_with_background_s": 7.057742499036488,
+      "daemon_cpu_s": 3.02,
+      "copies": 36,
+      "physical_pread_ops": 696,
+      "physical_pread_bytes": 486539264,
+      "action_sha256": "6b8183882b1f24c2393fa248f358e6e462f5f6ef0070698026b46d9cb04ba717",
+      "read_latency_total_s": 3.763616,
+      "first_count": 67,
+      "reused_count": 1085,
+      "first_response_mean_ms": 25.450943970149254,
+      "reused_response_mean_ms": 4.925257405529954,
+      "p99_neighbors": [
+        {
+          "rank_from_slowest": 11,
+          "index": 992,
+          "key": 312,
+          "response_ms": 26.884407
+        },
+        {
+          "rank_from_slowest": 12,
+          "index": 736,
+          "key": 248,
+          "response_ms": 26.840014
+        },
+        {
+          "rank_from_slowest": 13,
+          "index": 392,
+          "key": 8,
+          "response_ms": 26.796947000000003
+        }
+      ],
+      "slowest": {
+        "index": 0,
+        "response_ms": 29.41622
+      }
+    },
+    {
+      "block": "moving_shared-74801-r1",
+      "strategy": "NoJoint",
+      "service_requests": {
+        "remote": 110,
+        "local": 122,
+        "inflight": 920
+      },
+      "read_release_count": 1152,
+      "background_submitted": 110,
+      "background_completed": 110,
+      "wall_s": 7.068231697,
+      "drain_s": 0.0020352108404040337,
+      "completed_with_background_s": 7.070266907840404,
+      "daemon_cpu_s": 3.07,
+      "copies": 54,
+      "physical_pread_ops": 696,
+      "physical_pread_bytes": 486539264,
+      "action_sha256": "abb7ff1cd30e7bc8462168ef0abb0fc53edad964ba4ead5a863131cff4291a0e",
+      "read_latency_total_s": 3.775134,
+      "first_count": 67,
+      "reused_count": 1085,
+      "first_response_mean_ms": 25.329837686567164,
+      "reused_response_mean_ms": 4.943277108755761,
+      "p99_neighbors": [
+        {
+          "rank_from_slowest": 11,
+          "index": 20,
+          "key": 7,
+          "response_ms": 26.718177999999998
+        },
+        {
+          "rank_from_slowest": 12,
+          "index": 40,
+          "key": 0,
+          "response_ms": 26.649963
+        },
+        {
+          "rank_from_slowest": 13,
+          "index": 44,
+          "key": 75,
+          "response_ms": 26.564681
+        }
+      ],
+      "slowest": {
+        "index": 0,
+        "response_ms": 30.140891999999997
+      }
+    },
+    {
+      "block": "moving_shared-74801-r1",
+      "strategy": "PoolSIEVE1",
+      "service_requests": {
+        "remote": 77,
+        "local": 155,
+        "inflight": 920
+      },
+      "read_release_count": 1152,
+      "background_submitted": 77,
+      "background_completed": 77,
+      "wall_s": 6.744307732,
+      "drain_s": 0.002055206336081028,
+      "completed_with_background_s": 6.746362938336081,
+      "daemon_cpu_s": 3.22,
+      "copies": 77,
+      "physical_pread_ops": 696,
+      "physical_pread_bytes": 486539264,
+      "action_sha256": "80f1f51fb575f0a574bdec991af20281f003f7768a78c7b8d041125e541b8008",
+      "read_latency_total_s": 3.423342,
+      "first_count": 67,
+      "reused_count": 1085,
+      "first_response_mean_ms": 25.269708776119405,
+      "reused_response_mean_ms": 4.648444070967742,
+      "p99_neighbors": [
+        {
+          "rank_from_slowest": 11,
+          "index": 776,
+          "key": 19,
+          "response_ms": 26.607038
+        },
+        {
+          "rank_from_slowest": 12,
+          "index": 864,
+          "key": 280,
+          "response_ms": 26.594205
+        },
+        {
+          "rank_from_slowest": 13,
+          "index": 380,
+          "key": 159,
+          "response_ms": 26.55999
+        }
+      ],
+      "slowest": {
+        "index": 0,
+        "response_ms": 28.802385
+      }
+    },
+    {
+      "block": "moving_shared-74801-r1",
+      "strategy": "SyncSubmission",
+      "service_requests": {
+        "remote": 84,
+        "local": 148,
+        "inflight": 920
+      },
+      "read_release_count": 1152,
+      "background_submitted": 84,
+      "background_completed": 84,
+      "wall_s": 6.712782919,
+      "drain_s": 0.0023809103295207024,
+      "completed_with_background_s": 6.715163829329521,
+      "daemon_cpu_s": 2.9,
+      "copies": 28,
+      "physical_pread_ops": 696,
+      "physical_pread_bytes": 486539264,
+      "action_sha256": "543f24a387a12f551ab045ceebe85845ca136ef14d6672fb386f45bc3197e361",
+      "read_latency_total_s": 3.448707,
+      "first_count": 67,
+      "reused_count": 1085,
+      "first_response_mean_ms": 25.914098328358207,
+      "reused_response_mean_ms": 4.5797498940092165,
+      "p99_neighbors": [
+        {
+          "rank_from_slowest": 11,
+          "index": 620,
+          "key": 219,
+          "response_ms": 26.378836999999997
+        },
+        {
+          "rank_from_slowest": 12,
+          "index": 1036,
+          "key": 323,
+          "response_ms": 26.301931
+        },
+        {
+          "rank_from_slowest": 13,
+          "index": 12,
+          "key": 0,
+          "response_ms": 26.26914
+        }
+      ],
+      "slowest": {
+        "index": 948,
+        "response_ms": 83.54394099999999
+      }
+    },
+    {
+      "block": "moving_shared-74801-r2",
+      "strategy": "Full",
+      "service_requests": {
+        "remote": 84,
+        "local": 148,
+        "inflight": 920
+      },
+      "read_release_count": 1152,
+      "background_submitted": 84,
+      "background_completed": 84,
+      "wall_s": 6.594820276,
+      "drain_s": 0.002088329754769802,
+      "completed_with_background_s": 6.59690860575477,
+      "daemon_cpu_s": 2.88,
+      "copies": 28,
+      "physical_pread_ops": 696,
+      "physical_pread_bytes": 486539264,
+      "action_sha256": "543f24a387a12f551ab045ceebe85845ca136ef14d6672fb386f45bc3197e361",
+      "read_latency_total_s": 3.389692,
+      "first_count": 67,
+      "reused_count": 1085,
+      "first_response_mean_ms": 25.383501701492538,
+      "reused_response_mean_ms": 4.50361526359447,
+      "p99_neighbors": [
+        {
+          "rank_from_slowest": 11,
+          "index": 976,
+          "key": 308,
+          "response_ms": 26.818152
+        },
+        {
+          "rank_from_slowest": 12,
+          "index": 984,
+          "key": 310,
+          "response_ms": 26.809744
+        },
+        {
+          "rank_from_slowest": 13,
+          "index": 692,
+          "key": 237,
+          "response_ms": 26.614158
+        }
+      ],
+      "slowest": {
+        "index": 0,
+        "response_ms": 29.283995
+      }
+    },
+    {
+      "block": "moving_shared-74801-r2",
+      "strategy": "NoHotspot",
+      "service_requests": {
+        "remote": 84,
+        "local": 148,
+        "inflight": 920
+      },
+      "read_release_count": 1152,
+      "background_submitted": 84,
+      "background_completed": 84,
+      "wall_s": 6.636348528,
+      "drain_s": 0.0021039843559265137,
+      "completed_with_background_s": 6.638452512355927,
+      "daemon_cpu_s": 2.93,
+      "copies": 28,
+      "physical_pread_ops": 696,
+      "physical_pread_bytes": 486539264,
+      "action_sha256": "f8c80aa38fc4710581fd2e15170354a77add37a8651b3dd8f67870d4b4b3d717",
+      "read_latency_total_s": 3.389079,
+      "first_count": 67,
+      "reused_count": 1085,
+      "first_response_mean_ms": 25.555553164179106,
+      "reused_response_mean_ms": 4.5313169917050695,
+      "p99_neighbors": [
+        {
+          "rank_from_slowest": 11,
+          "index": 392,
+          "key": 8,
+          "response_ms": 26.826351
+        },
+        {
+          "rank_from_slowest": 12,
+          "index": 4,
+          "key": 2,
+          "response_ms": 26.814688999999998
+        },
+        {
+          "rank_from_slowest": 13,
+          "index": 20,
+          "key": 7,
+          "response_ms": 26.708907
+        }
+      ],
+      "slowest": {
+        "index": 12,
+        "response_ms": 29.408078
+      }
+    },
+    {
+      "block": "moving_shared-74801-r2",
+      "strategy": "NoAffinity",
+      "service_requests": {
+        "remote": 107,
+        "local": 125,
+        "inflight": 920
+      },
+      "read_release_count": 1152,
+      "background_submitted": 107,
+      "background_completed": 107,
+      "wall_s": 7.017821621,
+      "drain_s": 0.0021073799580335617,
+      "completed_with_background_s": 7.019929000958034,
+      "daemon_cpu_s": 2.98,
+      "copies": 36,
+      "physical_pread_ops": 696,
+      "physical_pread_bytes": 486539264,
+      "action_sha256": "6b8183882b1f24c2393fa248f358e6e462f5f6ef0070698026b46d9cb04ba717",
+      "read_latency_total_s": 3.743569,
+      "first_count": 67,
+      "reused_count": 1085,
+      "first_response_mean_ms": 25.296212402985073,
+      "reused_response_mean_ms": 4.898831221198156,
+      "p99_neighbors": [
+        {
+          "rank_from_slowest": 11,
+          "index": 976,
+          "key": 308,
+          "response_ms": 26.688289
+        },
+        {
+          "rank_from_slowest": 12,
+          "index": 720,
+          "key": 244,
+          "response_ms": 26.656087
+        },
+        {
+          "rank_from_slowest": 13,
+          "index": 736,
+          "key": 248,
+          "response_ms": 26.639111
+        }
+      ],
+      "slowest": {
+        "index": 0,
+        "response_ms": 29.428697
+      }
+    },
+    {
+      "block": "moving_shared-74801-r2",
+      "strategy": "NoJoint",
+      "service_requests": {
+        "remote": 110,
+        "local": 122,
+        "inflight": 920
+      },
+      "read_release_count": 1152,
+      "background_submitted": 110,
+      "background_completed": 110,
+      "wall_s": 7.155694851,
+      "drain_s": 0.002074655145406723,
+      "completed_with_background_s": 7.1577695061454065,
+      "daemon_cpu_s": 3.12,
+      "copies": 54,
+      "physical_pread_ops": 696,
+      "physical_pread_bytes": 486539264,
+      "action_sha256": "abb7ff1cd30e7bc8462168ef0abb0fc53edad964ba4ead5a863131cff4291a0e",
+      "read_latency_total_s": 3.778196,
+      "first_count": 67,
+      "reused_count": 1085,
+      "first_response_mean_ms": 25.361560179104476,
+      "reused_response_mean_ms": 5.021776702304147,
+      "p99_neighbors": [
+        {
+          "rank_from_slowest": 11,
+          "index": 4,
+          "key": 2,
+          "response_ms": 26.52458
+        },
+        {
+          "rank_from_slowest": 12,
+          "index": 204,
+          "key": 115,
+          "response_ms": 26.472441999999997
+        },
+        {
+          "rank_from_slowest": 13,
+          "index": 480,
+          "key": 184,
+          "response_ms": 26.458578
+        }
+      ],
+      "slowest": {
+        "index": 0,
+        "response_ms": 29.148182000000002
+      }
+    },
+    {
+      "block": "moving_shared-74801-r2",
+      "strategy": "PoolSIEVE1",
+      "service_requests": {
+        "remote": 77,
+        "local": 155,
+        "inflight": 920
+      },
+      "read_release_count": 1152,
+      "background_submitted": 77,
+      "background_completed": 77,
+      "wall_s": 6.7411262,
+      "drain_s": 0.0020092613995075226,
+      "completed_with_background_s": 6.743135461399508,
+      "daemon_cpu_s": 3.18,
+      "copies": 77,
+      "physical_pread_ops": 696,
+      "physical_pread_bytes": 486539264,
+      "action_sha256": "80f1f51fb575f0a574bdec991af20281f003f7768a78c7b8d041125e541b8008",
+      "read_latency_total_s": 3.29846,
+      "first_count": 67,
+      "reused_count": 1085,
+      "first_response_mean_ms": 25.285266910447763,
+      "reused_response_mean_ms": 4.644535475576037,
+      "p99_neighbors": [
+        {
+          "rank_from_slowest": 11,
+          "index": 20,
+          "key": 7,
+          "response_ms": 26.616579
+        },
+        {
+          "rank_from_slowest": 12,
+          "index": 776,
+          "key": 19,
+          "response_ms": 26.595823
+        },
+        {
+          "rank_from_slowest": 13,
+          "index": 428,
+          "key": 171,
+          "response_ms": 26.573308
+        }
+      ],
+      "slowest": {
+        "index": 0,
+        "response_ms": 29.701221999999998
+      }
+    },
+    {
+      "block": "moving_shared-74801-r2",
+      "strategy": "SyncSubmission",
+      "service_requests": {
+        "remote": 84,
+        "local": 148,
+        "inflight": 920
+      },
+      "read_release_count": 1152,
+      "background_submitted": 84,
+      "background_completed": 84,
+      "wall_s": 6.650841927,
+      "drain_s": 0.002113654278218746,
+      "completed_with_background_s": 6.652955581278219,
+      "daemon_cpu_s": 2.92,
+      "copies": 28,
+      "physical_pread_ops": 696,
+      "physical_pread_bytes": 486539264,
+      "action_sha256": "543f24a387a12f551ab045ceebe85845ca136ef14d6672fb386f45bc3197e361",
+      "read_latency_total_s": 3.392788,
+      "first_count": 67,
+      "reused_count": 1085,
+      "first_response_mean_ms": 26.007690253731344,
+      "reused_response_mean_ms": 4.516738339170507,
+      "p99_neighbors": [
+        {
+          "rank_from_slowest": 11,
+          "index": 984,
+          "key": 310,
+          "response_ms": 27.506703
+        },
+        {
+          "rank_from_slowest": 12,
+          "index": 748,
+          "key": 251,
+          "response_ms": 27.403718
+        },
+        {
+          "rank_from_slowest": 13,
+          "index": 812,
+          "key": 267,
+          "response_ms": 27.385636
+        }
+      ],
+      "slowest": {
+        "index": 0,
+        "response_ms": 30.384824000000002
+      }
+    },
+    {
+      "block": "public_toolagent-74802-r1",
+      "strategy": "Full",
+      "service_requests": {
+        "remote": 967,
+        "local": 183,
+        "inflight": 2
+      },
+      "read_release_count": 1152,
+      "background_submitted": 967,
+      "background_completed": 967,
+      "wall_s": 25.543218496,
+      "drain_s": 0.002107403241097927,
+      "completed_with_background_s": 25.5453258992411,
+      "daemon_cpu_s": 4.59,
+      "copies": 33,
+      "physical_pread_ops": 3450,
+      "physical_pread_bytes": 2411724800,
+      "action_sha256": "3dddb155b95a61faf8ac2b16c060a0855454a9db61e9c3d68edfdcecad74341e",
+      "read_latency_total_s": 21.035072,
+      "first_count": 864,
+      "reused_count": 288,
+      "first_response_mean_ms": 24.220844854166668,
+      "reused_response_mean_ms": 15.999463538194446,
+      "p99_neighbors": [
+        {
+          "rank_from_slowest": 11,
+          "index": 0,
+          "key": 0,
+          "response_ms": 28.332999
+        },
+        {
+          "rank_from_slowest": 12,
+          "index": 605,
+          "key": 390,
+          "response_ms": 28.275146
+        },
+        {
+          "rank_from_slowest": 13,
+          "index": 90,
+          "key": 71,
+          "response_ms": 28.240662999999998
+        }
+      ],
+      "slowest": {
+        "index": 342,
+        "response_ms": 29.034295
+      }
+    },
+    {
+      "block": "public_toolagent-74802-r1",
+      "strategy": "NoHotspot",
+      "service_requests": {
+        "remote": 1002,
+        "local": 148,
+        "inflight": 2
+      },
+      "read_release_count": 1152,
+      "background_submitted": 1002,
+      "background_completed": 1002,
+      "wall_s": 26.448943124,
+      "drain_s": 0.002077501267194748,
+      "completed_with_background_s": 26.451020625267194,
+      "daemon_cpu_s": 4.96,
+      "copies": 25,
+      "physical_pread_ops": 3450,
+      "physical_pread_bytes": 2411724800,
+      "action_sha256": "44afc9da4d331dbf828ff58d2ad2d61c561e60eea9a1d3c306f5b36de50a6bf8",
+      "read_latency_total_s": 21.738293,
+      "first_count": 864,
+      "reused_count": 288,
+      "first_response_mean_ms": 24.655413711805558,
+      "reused_response_mean_ms": 17.841082989583334,
+      "p99_neighbors": [
+        {
+          "rank_from_slowest": 11,
+          "index": 487,
+          "key": 336,
+          "response_ms": 28.565101
+        },
+        {
+          "rank_from_slowest": 12,
+          "index": 42,
+          "key": 41,
+          "response_ms": 28.541014999999998
+        },
+        {
+          "rank_from_slowest": 13,
+          "index": 31,
+          "key": 31,
+          "response_ms": 28.512181
+        }
+      ],
+      "slowest": {
+        "index": 0,
+        "response_ms": 30.207911
+      }
+    },
+    {
+      "block": "public_toolagent-74802-r1",
+      "strategy": "NoAffinity",
+      "service_requests": {
+        "remote": 995,
+        "local": 155,
+        "inflight": 2
+      },
+      "read_release_count": 1152,
+      "background_submitted": 995,
+      "background_completed": 995,
+      "wall_s": 26.136364337,
+      "drain_s": 0.0020503727719187737,
+      "completed_with_background_s": 26.13841470977192,
+      "daemon_cpu_s": 4.62,
+      "copies": 21,
+      "physical_pread_ops": 3450,
+      "physical_pread_bytes": 2411724800,
+      "action_sha256": "a3180dd34d723f6ab73ef33bf3905d903671822593631d8fa806d772bfbfe58f",
+      "read_latency_total_s": 21.499888,
+      "first_count": 864,
+      "reused_count": 288,
+      "first_response_mean_ms": 24.492991086805553,
+      "reused_response_mean_ms": 17.242807663194448,
+      "p99_neighbors": [
+        {
+          "rank_from_slowest": 11,
+          "index": 26,
+          "key": 26,
+          "response_ms": 28.383153
+        },
+        {
+          "rank_from_slowest": 12,
+          "index": 437,
+          "key": 54,
+          "response_ms": 28.365254999999998
+        },
+        {
+          "rank_from_slowest": 13,
+          "index": 703,
+          "key": 460,
+          "response_ms": 28.345499999999998
+        }
+      ],
+      "slowest": {
+        "index": 242,
+        "response_ms": 48.583132
+      }
+    },
+    {
+      "block": "public_toolagent-74802-r1",
+      "strategy": "NoJoint",
+      "service_requests": {
+        "remote": 987,
+        "local": 163,
+        "inflight": 2
+      },
+      "read_release_count": 1152,
+      "background_submitted": 987,
+      "background_completed": 987,
+      "wall_s": 25.821226898,
+      "drain_s": 0.002102835103869438,
+      "completed_with_background_s": 25.82332973310387,
+      "daemon_cpu_s": 4.69,
+      "copies": 113,
+      "physical_pread_ops": 3450,
+      "physical_pread_bytes": 2411724800,
+      "action_sha256": "14cc1030582012b63478f0e512122b51aa60e57617515ec17d465d620f87e574",
+      "read_latency_total_s": 21.698688,
+      "first_count": 864,
+      "reused_count": 288,
+      "first_response_mean_ms": 23.92212659837963,
+      "reused_response_mean_ms": 17.861837329861114,
+      "p99_neighbors": [
+        {
+          "rank_from_slowest": 11,
+          "index": 107,
+          "key": 88,
+          "response_ms": 28.415551
+        },
+        {
+          "rank_from_slowest": 12,
+          "index": 27,
+          "key": 27,
+          "response_ms": 28.306272
+        },
+        {
+          "rank_from_slowest": 13,
+          "index": 30,
+          "key": 30,
+          "response_ms": 28.230276
+        }
+      ],
+      "slowest": {
+        "index": 0,
+        "response_ms": 29.719373
+      }
+    },
+    {
+      "block": "public_toolagent-74802-r1",
+      "strategy": "PoolSIEVE1",
+      "service_requests": {
+        "remote": 1096,
+        "local": 54,
+        "inflight": 2
+      },
+      "read_release_count": 1152,
+      "background_submitted": 1096,
+      "background_completed": 1096,
+      "wall_s": 30.289262175,
+      "drain_s": 0.02307679783552885,
+      "completed_with_background_s": 30.31233897283553,
+      "daemon_cpu_s": 10.87,
+      "copies": 1096,
+      "physical_pread_ops": 3450,
+      "physical_pread_bytes": 2411724800,
+      "action_sha256": "51c26144eaf29be9ffd6acff5fe504070deafcaf3e439cf1f2f0f4b307ac5cf6",
+      "read_latency_total_s": 22.693537,
+      "first_count": 864,
+      "reused_count": 288,
+      "first_response_mean_ms": 27.018791836805555,
+      "reused_response_mean_ms": 24.07896092013889,
+      "p99_neighbors": [
+        {
+          "rank_from_slowest": 11,
+          "index": 25,
+          "key": 25,
+          "response_ms": 32.125122999999995
+        },
+        {
+          "rank_from_slowest": 12,
+          "index": 72,
+          "key": 59,
+          "response_ms": 32.115734
+        },
+        {
+          "rank_from_slowest": 13,
+          "index": 35,
+          "key": 34,
+          "response_ms": 32.109981000000005
+        }
+      ],
+      "slowest": {
+        "index": 84,
+        "response_ms": 32.475814
+      }
+    },
+    {
+      "block": "public_toolagent-74802-r1",
+      "strategy": "SyncSubmission",
+      "service_requests": {
+        "remote": 997,
+        "local": 153,
+        "inflight": 2
+      },
+      "read_release_count": 1152,
+      "background_submitted": 997,
+      "background_completed": 997,
+      "wall_s": 26.613280802,
+      "drain_s": 0.002284970134496689,
+      "completed_with_background_s": 26.615565772134495,
+      "daemon_cpu_s": 4.86,
+      "copies": 23,
+      "physical_pread_ops": 3450,
+      "physical_pread_bytes": 2411724800,
+      "action_sha256": "12e7cf5062fc82c86b99f56fa53df0ad12fb98ad34f3739bf79d83b3df898a3c",
+      "read_latency_total_s": 21.553182,
+      "first_count": 864,
+      "reused_count": 288,
+      "first_response_mean_ms": 24.921619890046298,
+      "reused_response_mean_ms": 17.61281009027778,
+      "p99_neighbors": [
+        {
+          "rank_from_slowest": 11,
+          "index": 694,
+          "key": 453,
+          "response_ms": 28.518418999999998
+        },
+        {
+          "rank_from_slowest": 12,
+          "index": 221,
+          "key": 181,
+          "response_ms": 28.486767999999998
+        },
+        {
+          "rank_from_slowest": 13,
+          "index": 223,
+          "key": 183,
+          "response_ms": 28.436348
+        }
+      ],
+      "slowest": {
+        "index": 222,
+        "response_ms": 50.702130999999994
+      }
+    },
+    {
+      "block": "public_toolagent-74802-r2",
+      "strategy": "Full",
+      "service_requests": {
+        "remote": 997,
+        "local": 153,
+        "inflight": 2
+      },
+      "read_release_count": 1152,
+      "background_submitted": 997,
+      "background_completed": 997,
+      "wall_s": 25.867935156,
+      "drain_s": 0.002109946683049202,
+      "completed_with_background_s": 25.87004510268305,
+      "daemon_cpu_s": 4.45,
+      "copies": 25,
+      "physical_pread_ops": 3450,
+      "physical_pread_bytes": 2411724800,
+      "action_sha256": "d8247415653904c5ed141b8bbc35b3eedb3d0a7328fcea77ffaab77e00d96490",
+      "read_latency_total_s": 21.437959,
+      "first_count": 864,
+      "reused_count": 288,
+      "first_response_mean_ms": 24.151803471064817,
+      "reused_response_mean_ms": 17.333846118055554,
+      "p99_neighbors": [
+        {
+          "rank_from_slowest": 11,
+          "index": 3,
+          "key": 3,
+          "response_ms": 27.479062
+        },
+        {
+          "rank_from_slowest": 12,
+          "index": 2,
+          "key": 2,
+          "response_ms": 27.334891
+        },
+        {
+          "rank_from_slowest": 13,
+          "index": 73,
+          "key": 60,
+          "response_ms": 27.287141000000002
+        }
+      ],
+      "slowest": {
+        "index": 283,
+        "response_ms": 56.824945
+      }
+    },
+    {
+      "block": "public_toolagent-74802-r2",
+      "strategy": "NoHotspot",
+      "service_requests": {
+        "remote": 1002,
+        "local": 148,
+        "inflight": 2
+      },
+      "read_release_count": 1152,
+      "background_submitted": 1002,
+      "background_completed": 1002,
+      "wall_s": 25.632935764,
+      "drain_s": 0.002168244682252407,
+      "completed_with_background_s": 25.63510400868225,
+      "daemon_cpu_s": 4.11,
+      "copies": 25,
+      "physical_pread_ops": 3450,
+      "physical_pread_bytes": 2411724800,
+      "action_sha256": "44afc9da4d331dbf828ff58d2ad2d61c561e60eea9a1d3c306f5b36de50a6bf8",
+      "read_latency_total_s": 21.526503,
+      "first_count": 864,
+      "reused_count": 288,
+      "first_response_mean_ms": 23.879976552083335,
+      "reused_response_mean_ms": 17.33482424652778,
+      "p99_neighbors": [
+        {
+          "rank_from_slowest": 11,
+          "index": 32,
+          "key": 32,
+          "response_ms": 28.191979999999997
+        },
+        {
+          "rank_from_slowest": 12,
+          "index": 72,
+          "key": 59,
+          "response_ms": 28.081187
+        },
+        {
+          "rank_from_slowest": 13,
+          "index": 31,
+          "key": 31,
+          "response_ms": 28.014747
+        }
+      ],
+      "slowest": {
+        "index": 0,
+        "response_ms": 28.965398999999998
+      }
+    },
+    {
+      "block": "public_toolagent-74802-r2",
+      "strategy": "NoAffinity",
+      "service_requests": {
+        "remote": 1010,
+        "local": 140,
+        "inflight": 2
+      },
+      "read_release_count": 1152,
+      "background_submitted": 1010,
+      "background_completed": 1010,
+      "wall_s": 26.077037105,
+      "drain_s": 0.0020759571343660355,
+      "completed_with_background_s": 26.079113062134365,
+      "daemon_cpu_s": 4.31,
+      "copies": 21,
+      "physical_pread_ops": 3450,
+      "physical_pread_bytes": 2411724800,
+      "action_sha256": "a3180dd34d723f6ab73ef33bf3905d903671822593631d8fa806d772bfbfe58f",
+      "read_latency_total_s": 21.73716,
+      "first_count": 864,
+      "reused_count": 288,
+      "first_response_mean_ms": 24.26513963310185,
+      "reused_response_mean_ms": 17.70373404861111,
+      "p99_neighbors": [
+        {
+          "rank_from_slowest": 11,
+          "index": 24,
+          "key": 24,
+          "response_ms": 28.399653
+        },
+        {
+          "rank_from_slowest": 12,
+          "index": 543,
+          "key": 344,
+          "response_ms": 28.396433
+        },
+        {
+          "rank_from_slowest": 13,
+          "index": 33,
+          "key": 33,
+          "response_ms": 28.354348
+        }
+      ],
+      "slowest": {
+        "index": 236,
+        "response_ms": 97.835495
+      }
+    },
+    {
+      "block": "public_toolagent-74802-r2",
+      "strategy": "NoJoint",
+      "service_requests": {
+        "remote": 988,
+        "local": 162,
+        "inflight": 2
+      },
+      "read_release_count": 1152,
+      "background_submitted": 988,
+      "background_completed": 988,
+      "wall_s": 26.436655981,
+      "drain_s": 0.0021276408806443214,
+      "completed_with_background_s": 26.438783621880646,
+      "daemon_cpu_s": 5.16,
+      "copies": 114,
+      "physical_pread_ops": 3450,
+      "physical_pread_bytes": 2411724800,
+      "action_sha256": "a822919a77166de8c189cea4280816dc30bd994dea6cfa6d82f7d905921f85a7",
+      "read_latency_total_s": 21.754511,
+      "first_count": 864,
+      "reused_count": 288,
+      "first_response_mean_ms": 24.434427991898147,
+      "reused_response_mean_ms": 18.461877263888887,
+      "p99_neighbors": [
+        {
+          "rank_from_slowest": 11,
+          "index": 36,
+          "key": 35,
+          "response_ms": 28.278857000000002
+        },
+        {
+          "rank_from_slowest": 12,
+          "index": 813,
+          "key": 548,
+          "response_ms": 28.244131
+        },
+        {
+          "rank_from_slowest": 13,
+          "index": 606,
+          "key": 391,
+          "response_ms": 28.239124
+        }
+      ],
+      "slowest": {
+        "index": 29,
+        "response_ms": 100.057984
+      }
+    },
+    {
+      "block": "public_toolagent-74802-r2",
+      "strategy": "PoolSIEVE1",
+      "service_requests": {
+        "remote": 1096,
+        "local": 54,
+        "inflight": 2
+      },
+      "read_release_count": 1152,
+      "background_submitted": 1096,
+      "background_completed": 1096,
+      "wall_s": 30.343447243,
+      "drain_s": 0.023044527508318424,
+      "completed_with_background_s": 30.36649177050832,
+      "daemon_cpu_s": 10.97,
+      "copies": 1096,
+      "physical_pread_ops": 3450,
+      "physical_pread_bytes": 2411724800,
+      "action_sha256": "51c26144eaf29be9ffd6acff5fe504070deafcaf3e439cf1f2f0f4b307ac5cf6",
+      "read_latency_total_s": 22.673932,
+      "first_count": 864,
+      "reused_count": 288,
+      "first_response_mean_ms": 27.044282847222224,
+      "reused_response_mean_ms": 24.194390156249998,
+      "p99_neighbors": [
+        {
+          "rank_from_slowest": 11,
+          "index": 50,
+          "key": 49,
+          "response_ms": 32.043832
+        },
+        {
+          "rank_from_slowest": 12,
+          "index": 31,
+          "key": 31,
+          "response_ms": 32.028868
+        },
+        {
+          "rank_from_slowest": 13,
+          "index": 56,
+          "key": 55,
+          "response_ms": 31.980729
+        }
+      ],
+      "slowest": {
+        "index": 27,
+        "response_ms": 32.335389
+      }
+    },
+    {
+      "block": "public_toolagent-74802-r2",
+      "strategy": "SyncSubmission",
+      "service_requests": {
+        "remote": 967,
+        "local": 183,
+        "inflight": 2
+      },
+      "read_release_count": 1152,
+      "background_submitted": 967,
+      "background_completed": 967,
+      "wall_s": 26.175258007,
+      "drain_s": 0.002133716829121113,
+      "completed_with_background_s": 26.17739172382912,
+      "daemon_cpu_s": 4.87,
+      "copies": 33,
+      "physical_pread_ops": 3450,
+      "physical_pread_bytes": 2411724800,
+      "action_sha256": "3dddb155b95a61faf8ac2b16c060a0855454a9db61e9c3d68edfdcecad74341e",
+      "read_latency_total_s": 21.11438,
+      "first_count": 864,
+      "reused_count": 288,
+      "first_response_mean_ms": 24.844765175925925,
+      "reused_response_mean_ms": 16.321501350694444,
+      "p99_neighbors": [
+        {
+          "rank_from_slowest": 11,
+          "index": 30,
+          "key": 30,
+          "response_ms": 29.237928999999998
+        },
+        {
+          "rank_from_slowest": 12,
+          "index": 79,
+          "key": 1,
+          "response_ms": 29.158507
+        },
+        {
+          "rank_from_slowest": 13,
+          "index": 98,
+          "key": 79,
+          "response_ms": 29.157457
+        }
+      ],
+      "slowest": {
+        "index": 803,
+        "response_ms": 30.930599
+      }
+    }
+  ],
+  "comparisons": [
+    {
+      "block": "moving_shared-74801-r1",
+      "baseline": "NoHotspot",
+      "primary": true,
+      "throughput_gain_pct": 8.520705892119928,
+      "p99_reduction_pct": 4.107760457790677,
+      "drain_gain_pct": 8.511201690426384,
+      "full_acceptance": true,
+      "service_requests": {
+        "Full": {
+          "remote": 84,
+          "local": 148,
+          "inflight": 920
+        },
+        "baseline": {
+          "remote": 84,
+          "local": 148,
+          "inflight": 920
+        }
+      },
+      "copies": {
+        "Full": 28,
+        "baseline": 28
+      },
+      "same_aggregate_io_work": true,
+      "same_actions": false,
+      "background_tasks": {
+        "Full": 84,
+        "baseline": 84
+      },
+      "wall_difference_s": 0.5180239599999998,
+      "daemon_cpu_difference_s": 0.5,
+      "read_counter_difference_s": 0.09279499999999974
+    },
+    {
+      "block": "moving_shared-74801-r1",
+      "baseline": "NoAffinity",
+      "primary": true,
+      "throughput_gain_pct": 16.05373125469354,
+      "p99_reduction_pct": 4.589036354451981,
+      "drain_gain_pct": 16.04203970202591,
+      "full_acceptance": true,
+      "service_requests": {
+        "Full": {
+          "remote": 84,
+          "local": 148,
+          "inflight": 920
+        },
+        "baseline": {
+          "remote": 107,
+          "local": 125,
+          "inflight": 920
+        }
+      },
+      "copies": {
+        "Full": 28,
+        "baseline": 36
+      },
+      "same_aggregate_io_work": false,
+      "same_actions": false,
+      "background_tasks": {
+        "Full": 84,
+        "baseline": 107
+      },
+      "wall_difference_s": 0.9760009959999998,
+      "daemon_cpu_difference_s": 0.6299999999999999,
+      "read_counter_difference_s": 0.4984409999999997
+    },
+    {
+      "block": "moving_shared-74801-r1",
+      "baseline": "NoJoint",
+      "primary": true,
+      "throughput_gain_pct": 16.261656058335138,
+      "p99_reduction_pct": 3.9086245635688077,
+      "drain_gain_pct": 16.247963613796124,
+      "full_acceptance": true,
+      "service_requests": {
+        "Full": {
+          "remote": 84,
+          "local": 148,
+          "inflight": 920
+        },
+        "baseline": {
+          "remote": 110,
+          "local": 122,
+          "inflight": 920
+        }
+      },
+      "copies": {
+        "Full": 28,
+        "baseline": 54
+      },
+      "same_aggregate_io_work": false,
+      "same_actions": false,
+      "background_tasks": {
+        "Full": 84,
+        "baseline": 110
+      },
+      "wall_difference_s": 0.9886419709999998,
+      "daemon_cpu_difference_s": 0.6799999999999997,
+      "read_counter_difference_s": 0.5099589999999998
+    },
+    {
+      "block": "moving_shared-74801-r1",
+      "baseline": "PoolSIEVE1",
+      "primary": true,
+      "throughput_gain_pct": 10.933599732186927,
+      "p99_reduction_pct": 3.707157254747795,
+      "drain_gain_pct": 10.922397075487922,
+      "full_acceptance": true,
+      "service_requests": {
+        "Full": {
+          "remote": 84,
+          "local": 148,
+          "inflight": 920
+        },
+        "baseline": {
+          "remote": 77,
+          "local": 155,
+          "inflight": 920
+        }
+      },
+      "copies": {
+        "Full": 28,
+        "baseline": 77
+      },
+      "same_aggregate_io_work": false,
+      "same_actions": false,
+      "background_tasks": {
+        "Full": 84,
+        "baseline": 77
+      },
+      "wall_difference_s": 0.6647180060000002,
+      "daemon_cpu_difference_s": 0.8300000000000001,
+      "read_counter_difference_s": 0.15816699999999972
+    },
+    {
+      "block": "moving_shared-74801-r1",
+      "baseline": "SyncSubmission",
+      "primary": false,
+      "throughput_gain_pct": 10.415064527990815,
+      "p99_reduction_pct": 2.6371257684464355,
+      "drain_gain_pct": 10.409427348057188,
+      "full_acceptance": true,
+      "service_requests": {
+        "Full": {
+          "remote": 84,
+          "local": 148,
+          "inflight": 920
+        },
+        "baseline": {
+          "remote": 84,
+          "local": 148,
+          "inflight": 920
+        }
+      },
+      "copies": {
+        "Full": 28,
+        "baseline": 28
+      },
+      "same_aggregate_io_work": true,
+      "same_actions": true,
+      "background_tasks": {
+        "Full": 84,
+        "baseline": 84
+      },
+      "wall_difference_s": 0.6331931930000003,
+      "daemon_cpu_difference_s": 0.5099999999999998,
+      "read_counter_difference_s": 0.18353200000000003
+    },
+    {
+      "block": "moving_shared-74801-r2",
+      "baseline": "NoHotspot",
+      "primary": true,
+      "throughput_gain_pct": 0.6297101401099736,
+      "p99_reduction_pct": 0.01844138486931657,
+      "drain_gain_pct": 0.629748099964833,
+      "full_acceptance": true,
+      "service_requests": {
+        "Full": {
+          "remote": 84,
+          "local": 148,
+          "inflight": 920
+        },
+        "baseline": {
+          "remote": 84,
+          "local": 148,
+          "inflight": 920
+        }
+      },
+      "copies": {
+        "Full": 28,
+        "baseline": 28
+      },
+      "same_aggregate_io_work": true,
+      "same_actions": false,
+      "background_tasks": {
+        "Full": 84,
+        "baseline": 84
+      },
+      "wall_difference_s": 0.04152825199999999,
+      "daemon_cpu_difference_s": 0.050000000000000266,
+      "read_counter_difference_s": -0.0006129999999999747
+    },
+    {
+      "block": "moving_shared-74801-r2",
+      "baseline": "NoAffinity",
+      "primary": true,
+      "throughput_gain_pct": 6.4141451517548465,
+      "p99_reduction_pct": -0.576442446335057,
+      "drain_gain_pct": 6.4124034526451545,
+      "full_acceptance": false,
+      "service_requests": {
+        "Full": {
+          "remote": 84,
+          "local": 148,
+          "inflight": 920
+        },
+        "baseline": {
+          "remote": 107,
+          "local": 125,
+          "inflight": 920
+        }
+      },
+      "copies": {
+        "Full": 28,
+        "baseline": 36
+      },
+      "same_aggregate_io_work": false,
+      "same_actions": false,
+      "background_tasks": {
+        "Full": 84,
+        "baseline": 107
+      },
+      "wall_difference_s": 0.4230013450000003,
+      "daemon_cpu_difference_s": 0.10000000000000009,
+      "read_counter_difference_s": 0.3538769999999998
+    },
+    {
+      "block": "moving_shared-74801-r2",
+      "baseline": "NoJoint",
+      "primary": true,
+      "throughput_gain_pct": 8.504774224722178,
+      "p99_reduction_pct": -1.2741627689655477,
+      "drain_gain_pct": 8.501874649307295,
+      "full_acceptance": false,
+      "service_requests": {
+        "Full": {
+          "remote": 84,
+          "local": 148,
+          "inflight": 920
+        },
+        "baseline": {
+          "remote": 110,
+          "local": 122,
+          "inflight": 920
+        }
+      },
+      "copies": {
+        "Full": 28,
+        "baseline": 54
+      },
+      "same_aggregate_io_work": false,
+      "same_actions": false,
+      "background_tasks": {
+        "Full": 84,
+        "baseline": 110
+      },
+      "wall_difference_s": 0.5608745749999997,
+      "daemon_cpu_difference_s": 0.2400000000000002,
+      "read_counter_difference_s": 0.38850399999999974
+    },
+    {
+      "block": "moving_shared-74801-r2",
+      "baseline": "PoolSIEVE1",
+      "primary": true,
+      "throughput_gain_pct": 2.218497515882878,
+      "p99_reduction_pct": -0.8043405913778168,
+      "drain_gain_pct": 2.2165966573673312,
+      "full_acceptance": false,
+      "service_requests": {
+        "Full": {
+          "remote": 84,
+          "local": 148,
+          "inflight": 920
+        },
+        "baseline": {
+          "remote": 77,
+          "local": 155,
+          "inflight": 920
+        }
+      },
+      "copies": {
+        "Full": 28,
+        "baseline": 77
+      },
+      "same_aggregate_io_work": false,
+      "same_actions": false,
+      "background_tasks": {
+        "Full": 84,
+        "baseline": 77
+      },
+      "wall_difference_s": 0.14630592399999998,
+      "daemon_cpu_difference_s": 0.30000000000000027,
+      "read_counter_difference_s": -0.0912320000000002
+    },
+    {
+      "block": "moving_shared-74801-r2",
+      "baseline": "SyncSubmission",
+      "primary": false,
+      "throughput_gain_pct": 0.8494795711700531,
+      "p99_reduction_pct": 2.167494206443088,
+      "drain_gain_pct": 0.8495945430342378,
+      "full_acceptance": true,
+      "service_requests": {
+        "Full": {
+          "remote": 84,
+          "local": 148,
+          "inflight": 920
+        },
+        "baseline": {
+          "remote": 84,
+          "local": 148,
+          "inflight": 920
+        }
+      },
+      "copies": {
+        "Full": 28,
+        "baseline": 28
+      },
+      "same_aggregate_io_work": true,
+      "same_actions": true,
+      "background_tasks": {
+        "Full": 84,
+        "baseline": 84
+      },
+      "wall_difference_s": 0.056021651000000006,
+      "daemon_cpu_difference_s": 0.040000000000000036,
+      "read_counter_difference_s": 0.0030959999999997656
+    },
+    {
+      "block": "public_toolagent-74802-r1",
+      "baseline": "NoHotspot",
+      "primary": true,
+      "throughput_gain_pct": 3.5458516245391314,
+      "p99_reduction_pct": 0.9315330936898958,
+      "drain_gain_pct": 3.54544204915781,
+      "full_acceptance": true,
+      "service_requests": {
+        "Full": {
+          "remote": 967,
+          "local": 183,
+          "inflight": 2
+        },
+        "baseline": {
+          "remote": 1002,
+          "local": 148,
+          "inflight": 2
+        }
+      },
+      "copies": {
+        "Full": 33,
+        "baseline": 25
+      },
+      "same_aggregate_io_work": false,
+      "same_actions": false,
+      "background_tasks": {
+        "Full": 967,
+        "baseline": 1002
+      },
+      "wall_difference_s": 0.905724627999998,
+      "daemon_cpu_difference_s": 0.3700000000000001,
+      "read_counter_difference_s": 0.7032209999999992
+    },
+    {
+      "block": "public_toolagent-74802-r1",
+      "baseline": "NoAffinity",
+      "primary": true,
+      "throughput_gain_pct": 2.3221264818013676,
+      "p99_reduction_pct": 0.31767385838765705,
+      "drain_gain_pct": 2.32171166212618,
+      "full_acceptance": true,
+      "service_requests": {
+        "Full": {
+          "remote": 967,
+          "local": 183,
+          "inflight": 2
+        },
+        "baseline": {
+          "remote": 995,
+          "local": 155,
+          "inflight": 2
+        }
+      },
+      "copies": {
+        "Full": 33,
+        "baseline": 21
+      },
+      "same_aggregate_io_work": false,
+      "same_actions": false,
+      "background_tasks": {
+        "Full": 967,
+        "baseline": 995
+      },
+      "wall_difference_s": 0.5931458409999983,
+      "daemon_cpu_difference_s": 0.03000000000000025,
+      "read_counter_difference_s": 0.464815999999999
+    },
+    {
+      "block": "public_toolagent-74802-r1",
+      "baseline": "NoJoint",
+      "primary": true,
+      "throughput_gain_pct": 1.0883843868130016,
+      "p99_reduction_pct": 0.10996149545937639,
+      "drain_gain_pct": 1.0882767162936346,
+      "full_acceptance": true,
+      "service_requests": {
+        "Full": {
+          "remote": 967,
+          "local": 183,
+          "inflight": 2
+        },
+        "baseline": {
+          "remote": 987,
+          "local": 163,
+          "inflight": 2
+        }
+      },
+      "copies": {
+        "Full": 33,
+        "baseline": 113
+      },
+      "same_aggregate_io_work": false,
+      "same_actions": false,
+      "background_tasks": {
+        "Full": 967,
+        "baseline": 987
+      },
+      "wall_difference_s": 0.27800840199999755,
+      "daemon_cpu_difference_s": 0.10000000000000053,
+      "read_counter_difference_s": 0.6636160000000011
+    },
+    {
+      "block": "public_toolagent-74802-r1",
+      "baseline": "PoolSIEVE1",
+      "primary": true,
+      "throughput_gain_pct": 18.58044505919729,
+      "p99_reduction_pct": 11.958587027778966,
+      "drain_gain_pct": 18.66099924658251,
+      "full_acceptance": true,
+      "service_requests": {
+        "Full": {
+          "remote": 967,
+          "local": 183,
+          "inflight": 2
+        },
+        "baseline": {
+          "remote": 1096,
+          "local": 54,
+          "inflight": 2
+        }
+      },
+      "copies": {
+        "Full": 33,
+        "baseline": 1096
+      },
+      "same_aggregate_io_work": false,
+      "same_actions": false,
+      "background_tasks": {
+        "Full": 967,
+        "baseline": 1096
+      },
+      "wall_difference_s": 4.746043679,
+      "daemon_cpu_difference_s": 6.279999999999999,
+      "read_counter_difference_s": 1.6584649999999996
+    },
+    {
+      "block": "public_toolagent-74802-r1",
+      "baseline": "SyncSubmission",
+      "primary": false,
+      "throughput_gain_pct": 4.1892226939513,
+      "p99_reduction_pct": 0.7428782373626874,
+      "drain_gain_pct": 4.189572202424663,
+      "full_acceptance": true,
+      "service_requests": {
+        "Full": {
+          "remote": 967,
+          "local": 183,
+          "inflight": 2
+        },
+        "baseline": {
+          "remote": 997,
+          "local": 153,
+          "inflight": 2
+        }
+      },
+      "copies": {
+        "Full": 33,
+        "baseline": 23
+      },
+      "same_aggregate_io_work": false,
+      "same_actions": false,
+      "background_tasks": {
+        "Full": 967,
+        "baseline": 997
+      },
+      "wall_difference_s": 1.070062305999997,
+      "daemon_cpu_difference_s": 0.27000000000000046,
+      "read_counter_difference_s": 0.5181100000000001
+    },
+    {
+      "block": "public_toolagent-74802-r2",
+      "baseline": "NoHotspot",
+      "primary": true,
+      "throughput_gain_pct": -0.9084582537524089,
+      "p99_reduction_pct": 2.6576369439083924,
+      "drain_gain_pct": -0.9081588109656313,
+      "full_acceptance": false,
+      "service_requests": {
+        "Full": {
+          "remote": 997,
+          "local": 153,
+          "inflight": 2
+        },
+        "baseline": {
+          "remote": 1002,
+          "local": 148,
+          "inflight": 2
+        }
+      },
+      "copies": {
+        "Full": 25,
+        "baseline": 25
+      },
+      "same_aggregate_io_work": false,
+      "same_actions": false,
+      "background_tasks": {
+        "Full": 997,
+        "baseline": 1002
+      },
+      "wall_difference_s": -0.23499939200000242,
+      "daemon_cpu_difference_s": -0.33999999999999986,
+      "read_counter_difference_s": 0.0885440000000024
+    },
+    {
+      "block": "public_toolagent-74802-r2",
+      "baseline": "NoAffinity",
+      "primary": true,
+      "throughput_gain_pct": 0.8083441826298943,
+      "p99_reduction_pct": 3.738293468056353,
+      "drain_gain_pct": 0.8081468687877624,
+      "full_acceptance": true,
+      "service_requests": {
+        "Full": {
+          "remote": 997,
+          "local": 153,
+          "inflight": 2
+        },
+        "baseline": {
+          "remote": 1010,
+          "local": 140,
+          "inflight": 2
+        }
+      },
+      "copies": {
+        "Full": 25,
+        "baseline": 21
+      },
+      "same_aggregate_io_work": false,
+      "same_actions": false,
+      "background_tasks": {
+        "Full": 997,
+        "baseline": 1010
+      },
+      "wall_difference_s": 0.20910194899999723,
+      "daemon_cpu_difference_s": -0.14000000000000057,
+      "read_counter_difference_s": 0.29920100000000005
+    },
+    {
+      "block": "public_toolagent-74802-r2",
+      "baseline": "NoJoint",
+      "primary": true,
+      "throughput_gain_pct": 2.198555167121974,
+      "p99_reduction_pct": 3.219217472118363,
+      "drain_gain_pct": 2.198444250638776,
+      "full_acceptance": true,
+      "service_requests": {
+        "Full": {
+          "remote": 997,
+          "local": 153,
+          "inflight": 2
+        },
+        "baseline": {
+          "remote": 988,
+          "local": 162,
+          "inflight": 2
+        }
+      },
+      "copies": {
+        "Full": 25,
+        "baseline": 114
+      },
+      "same_aggregate_io_work": false,
+      "same_actions": false,
+      "background_tasks": {
+        "Full": 997,
+        "baseline": 988
+      },
+      "wall_difference_s": 0.5687208249999998,
+      "daemon_cpu_difference_s": 0.71,
+      "read_counter_difference_s": 0.3165520000000015
+    },
+    {
+      "block": "public_toolagent-74802-r2",
+      "baseline": "PoolSIEVE1",
+      "primary": true,
+      "throughput_gain_pct": 17.301388997652232,
+      "p99_reduction_pct": 14.655457070790023,
+      "drain_gain_pct": 17.38089999448409,
+      "full_acceptance": true,
+      "service_requests": {
+        "Full": {
+          "remote": 997,
+          "local": 153,
+          "inflight": 2
+        },
+        "baseline": {
+          "remote": 1096,
+          "local": 54,
+          "inflight": 2
+        }
+      },
+      "copies": {
+        "Full": 25,
+        "baseline": 1096
+      },
+      "same_aggregate_io_work": false,
+      "same_actions": false,
+      "background_tasks": {
+        "Full": 997,
+        "baseline": 1096
+      },
+      "wall_difference_s": 4.4755120869999985,
+      "daemon_cpu_difference_s": 6.5200000000000005,
+      "read_counter_difference_s": 1.2359730000000013
+    },
+    {
+      "block": "public_toolagent-74802-r2",
+      "baseline": "SyncSubmission",
+      "primary": false,
+      "throughput_gain_pct": 1.1880455442100368,
+      "p99_reduction_pct": 6.2541473745552185,
+      "drain_gain_pct": 1.1880405307611808,
+      "full_acceptance": true,
+      "service_requests": {
+        "Full": {
+          "remote": 997,
+          "local": 153,
+          "inflight": 2
+        },
+        "baseline": {
+          "remote": 967,
+          "local": 183,
+          "inflight": 2
+        }
+      },
+      "copies": {
+        "Full": 25,
+        "baseline": 33
+      },
+      "same_aggregate_io_work": false,
+      "same_actions": false,
+      "background_tasks": {
+        "Full": 997,
+        "baseline": 967
+      },
+      "wall_difference_s": 0.30732285099999856,
+      "daemon_cpu_difference_s": 0.41999999999999993,
+      "read_counter_difference_s": -0.32357899999999873
+    }
+  ]
+}

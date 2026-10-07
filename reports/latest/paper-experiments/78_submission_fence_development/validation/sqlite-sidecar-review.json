@@ -1,0 +1,40 @@
+{
+  "passed": true,
+  "source_and_original_evidence_unchanged": true,
+  "server_access": false,
+  "checks": [
+    {
+      "test": "no_sidecar_main_db",
+      "passed": true
+    },
+    {
+      "test": "paired_empty_WAL_read_only_exact_and_unchanged",
+      "passed": true
+    },
+    {
+      "test": "nonempty_WAL_rejected",
+      "passed": true
+    },
+    {
+      "test": "unpaired_WAL_rejected",
+      "passed": true
+    },
+    {
+      "test": "unknown_journal_rejected",
+      "passed": true
+    }
+  ],
+  "readonly_side_effect_reproduction": {
+    "succeeded": false,
+    "error": "unable to open database file",
+    "before": {
+      "state.db": "e3b5f2ec8eacd82de647be0215ea618fac77438b97cf52933644ceed6fd4509a"
+    },
+    "after": {
+      "state.db": "e3b5f2ec8eacd82de647be0215ea618fac77438b97cf52933644ceed6fd4509a"
+    },
+    "limitation": "Local read-only reproduction not sufficient to establish server sidecar origin."
+  },
+  "verifier_sha256": "bd739eebb6ee369116e18407255b886fb9212efa1c37d4dfa26edcc424220482",
+  "collector_sha256": "2dc03916ffe33690eea3833b023b92d0c5d43f6ed87a5982e2c3f7fd3d382e42"
+}
