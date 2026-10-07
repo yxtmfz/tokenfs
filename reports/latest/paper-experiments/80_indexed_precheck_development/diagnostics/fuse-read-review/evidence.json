@@ -1,0 +1,355 @@
+{
+  "scope": "Frozen77 diagnostic trace and local headers; no server execution; not candidate80 speed evidence",
+  "inputs_sha256": {
+    "hotspot-object77/tail-evidence/Full/request-trace.json": "9dc1e46977edd69e39ea1f34386dd275a1668bf6defc86dcce0598313a8771d8",
+    "hotspot-object77/tail-evidence/Full/result.json": "c1b6d79046a06e4118ea445e1901b5a9d6409ecf41d3353ae6efba190942e30f",
+    "hotspot-object77/tail-evidence/NoHotspot/request-trace.json": "95241551cc96443fd79b72fa40adf2debcb0e43a3cc171095e6f64fc13cbe0b4",
+    "hotspot-object77/tail-evidence/NoHotspot/result.json": "ecbf249c3a5685f6393e5ae2893f6736d851a68462ba974f2b576c1f3974c8ba",
+    "tokenfs-eval/src/main.cpp": "2877d41476b903069092c688ec8b884a5f514d7a7395b616407451e5b23ce6e1",
+    "tokenfs-eval/src/aligned_read.h": "ed29cd3873c2be7e3ed5e4ccfd86bedb16ec0d2989dbe1c63dd5c695a8f4020b",
+    "tokenfs-eval/src/read_fill.h": "1d4c10841b50540aff8870c13cd5b90972321635e64315534d111789263b60c8",
+    "tokenfs-eval/scripts/evidence_benchmark.py": "8cfb14a1c033acad1a2125d6e3f709020900ab33bf2544a070c794ae82cfcd57",
+    "cn7-debs/libfuse3-dev_3.14.0-5build1_amd64.deb": "cfa8460d23b5143d14bb336b3008784df72a5e9fc32057ec1dc85beadca9aecb",
+    "affinity-shared-preflight-cn7.json": "8274adf30f67d39d4eba64770c3bbf72a059ede91d5554268e49b6894e62f29c",
+    "hotspot-indexed80/build.log": "b03673985f8df144aaca9c2f3353a67563976f7455a34371e98af8bc066b5093",
+    "hotspot-fuse-read-review/fuse3-package/usr/include/fuse3/fuse_common.h": "41e5bda1724deda46a213ea237461323801d6256ec8f9756e19a0c73b20ea608"
+  },
+  "arms": {
+    "Full": {
+      "handles": 1152,
+      "groups": [
+        {
+          "tier": "inflight",
+          "kind": "EOF",
+          "n": 2,
+          "returned_bytes": 0,
+          "pread_mean_us": 0.0,
+          "pread_sum_ms": 0.0,
+          "callback_mean_us": 17.362,
+          "callback_sum_ms": 0.034724
+        },
+        {
+          "tier": "inflight",
+          "kind": "captured-tail",
+          "n": 8,
+          "returned_bytes": 4194304,
+          "pread_mean_us": 0.0,
+          "pread_sum_ms": 0.0,
+          "callback_mean_us": 95.092875,
+          "callback_sum_ms": 0.760743
+        },
+        {
+          "tier": "local",
+          "kind": "EOF",
+          "n": 173,
+          "returned_bytes": 0,
+          "pread_mean_us": 2.8512947976878613,
+          "pread_sum_ms": 0.493274,
+          "callback_mean_us": 20.694346820809248,
+          "callback_sum_ms": 3.580122
+        },
+        {
+          "tier": "local",
+          "kind": "captured-tail",
+          "n": 346,
+          "returned_bytes": 162464,
+          "pread_mean_us": 0.0,
+          "pread_sum_ms": 0.0,
+          "callback_mean_us": 30.656167630057805,
+          "callback_sum_ms": 10.607034
+        },
+        {
+          "tier": "local",
+          "kind": "data-pread",
+          "n": 346,
+          "returned_bytes": 362644832,
+          "pread_mean_us": 3955.875395953757,
+          "pread_sum_ms": 1368.732887,
+          "callback_mean_us": 4384.270228323699,
+          "callback_sum_ms": 1516.957499
+        },
+        {
+          "tier": "remote",
+          "kind": "EOF",
+          "n": 977,
+          "returned_bytes": 0,
+          "pread_mean_us": 2.819908904810645,
+          "pread_sum_ms": 2.755051,
+          "callback_mean_us": 19.672341862845446,
+          "callback_sum_ms": 19.219878
+        },
+        {
+          "tier": "remote",
+          "kind": "captured-tail",
+          "n": 1954,
+          "returned_bytes": 920592,
+          "pread_mean_us": 0.0,
+          "pread_sum_ms": 0.0,
+          "callback_mean_us": 312.5642047082907,
+          "callback_sum_ms": 610.750456
+        },
+        {
+          "tier": "remote",
+          "kind": "data-pread",
+          "n": 1954,
+          "returned_bytes": 2047996912,
+          "pread_mean_us": 9949.861961105426,
+          "pread_sum_ms": 19442.030272,
+          "callback_mean_us": 10428.496245649949,
+          "callback_sum_ms": 20377.281664
+        }
+      ],
+      "sequences": [
+        {
+          "count": 3,
+          "callback_bytes_and_pread": [
+            [
+              1048528,
+              true
+            ],
+            [
+              48,
+              false
+            ],
+            [
+              1048528,
+              true
+            ],
+            [
+              48,
+              false
+            ],
+            [
+              0,
+              true
+            ]
+          ]
+        },
+        {
+          "count": 1147,
+          "callback_bytes_and_pread": [
+            [
+              1048128,
+              true
+            ],
+            [
+              448,
+              false
+            ],
+            [
+              1048080,
+              true
+            ],
+            [
+              496,
+              false
+            ],
+            [
+              0,
+              true
+            ]
+          ]
+        },
+        {
+          "count": 2,
+          "callback_bytes_and_pread": [
+            [
+              1048128,
+              false
+            ],
+            [
+              448,
+              false
+            ],
+            [
+              1048080,
+              false
+            ],
+            [
+              496,
+              false
+            ],
+            [
+              0,
+              false
+            ]
+          ]
+        }
+      ],
+      "aggregate_metrics": {
+        "direct_read_tail_bytes": 1083056,
+        "direct_backend_pread_ops": 3450,
+        "direct_backend_pread_bytes": 2411724800,
+        "direct_read_tail_hits": 2300
+      }
+    },
+    "NoHotspot": {
+      "handles": 1152,
+      "groups": [
+        {
+          "tier": "inflight",
+          "kind": "EOF",
+          "n": 2,
+          "returned_bytes": 0,
+          "pread_mean_us": 0.0,
+          "pread_sum_ms": 0.0,
+          "callback_mean_us": 12.1995,
+          "callback_sum_ms": 0.024399
+        },
+        {
+          "tier": "inflight",
+          "kind": "captured-tail",
+          "n": 8,
+          "returned_bytes": 4194304,
+          "pread_mean_us": 0.0,
+          "pread_sum_ms": 0.0,
+          "callback_mean_us": 96.306375,
+          "callback_sum_ms": 0.770451
+        },
+        {
+          "tier": "local",
+          "kind": "EOF",
+          "n": 148,
+          "returned_bytes": 0,
+          "pread_mean_us": 2.928054054054054,
+          "pread_sum_ms": 0.433352,
+          "callback_mean_us": 20.42331081081081,
+          "callback_sum_ms": 3.02265
+        },
+        {
+          "tier": "local",
+          "kind": "captured-tail",
+          "n": 296,
+          "returned_bytes": 185904,
+          "pread_mean_us": 0.0,
+          "pread_sum_ms": 0.0,
+          "callback_mean_us": 30.650016891891894,
+          "callback_sum_ms": 9.072405
+        },
+        {
+          "tier": "local",
+          "kind": "data-pread",
+          "n": 296,
+          "returned_bytes": 310192592,
+          "pread_mean_us": 4105.225655405406,
+          "pread_sum_ms": 1215.146794,
+          "callback_mean_us": 4513.131277027027,
+          "callback_sum_ms": 1335.886858
+        },
+        {
+          "tier": "remote",
+          "kind": "EOF",
+          "n": 1002,
+          "returned_bytes": 0,
+          "pread_mean_us": 2.8700099800399204,
+          "pread_sum_ms": 2.87575,
+          "callback_mean_us": 20.098469061876248,
+          "callback_sum_ms": 20.138666
+        },
+        {
+          "tier": "remote",
+          "kind": "captured-tail",
+          "n": 2004,
+          "returned_bytes": 1264192,
+          "pread_mean_us": 0.0,
+          "pread_sum_ms": 0.0,
+          "callback_mean_us": 312.18961826347305,
+          "callback_sum_ms": 625.627995
+        },
+        {
+          "tier": "remote",
+          "kind": "data-pread",
+          "n": 2004,
+          "returned_bytes": 2100082112,
+          "pread_mean_us": 9887.703836826347,
+          "pread_sum_ms": 19814.958489,
+          "callback_mean_us": 10380.699060878243,
+          "callback_sum_ms": 20802.920918
+        }
+      ],
+      "sequences": [
+        {
+          "count": 3,
+          "callback_bytes_and_pread": [
+            [
+              1048528,
+              true
+            ],
+            [
+              48,
+              false
+            ],
+            [
+              1048528,
+              true
+            ],
+            [
+              48,
+              false
+            ],
+            [
+              0,
+              true
+            ]
+          ]
+        },
+        {
+          "count": 1147,
+          "callback_bytes_and_pread": [
+            [
+              1047968,
+              true
+            ],
+            [
+              608,
+              false
+            ],
+            [
+              1047920,
+              true
+            ],
+            [
+              656,
+              false
+            ],
+            [
+              0,
+              true
+            ]
+          ]
+        },
+        {
+          "count": 2,
+          "callback_bytes_and_pread": [
+            [
+              1047968,
+              false
+            ],
+            [
+              608,
+              false
+            ],
+            [
+              1047920,
+              false
+            ],
+            [
+              656,
+              false
+            ],
+            [
+              0,
+              false
+            ]
+          ]
+        }
+      ],
+      "aggregate_metrics": {
+        "direct_read_tail_bytes": 1450096,
+        "direct_backend_pread_bytes": 2411724800,
+        "direct_backend_pread_ops": 3450,
+        "direct_read_tail_hits": 2300
+      }
+    }
+  }
+}

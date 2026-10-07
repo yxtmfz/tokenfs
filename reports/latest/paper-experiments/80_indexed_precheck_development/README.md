@@ -86,6 +86,8 @@ cn7 为单客户端、三个逻辑缓存域、串行 caller，cn13 提供远端 
 - [run-unit 模型](models/hotspot-run-unit-review/README.md)保留 80 个模型臂及 60 个前缀 case/240 个验证臂，主要 moving74801 仍为 84 remote/28 copy，不晋升。模型值不是墙时/p99。
 - [79 extra-read 诊断](models/hotspot-extra-read79/README.md)保留 29 个纯文本文件及 3 前缀/9 比较：模型中的 84 vs77 是 16 个 Full 独有 remote 与 9 个 SIEVE 独有 remote 的净差，不是真实逐请求 source 标签。不能挑出“7 次读”就推算实际节省。
 - [planning cost 只读审查](diagnostics/planning-cost-review/README.md)针对 80 源码和旧 79 计数；提出单次锁内精确复用的可能性，同时明确没有实测瓶颈或速度保证，未作为本批实现。
+- [已执行的 moving trace](diagnostics/moving-trace/README.md)新增的是诊断附录：Full/NoHotspot 共 2,304 个请求、双重复核一致。实际全部同序号请求 tier 相同，最慢 12 个均首次 remote、无 copy pipeline 重叠；这不增加主速度轮次或内容 SHA 样本，原四表与源码未变。
+- [FUSE callback 只读审查](diagnostics/fuse-read-review/README.md)使用历史 77 trace、本地 3.14 头文件和既有 6.8 kernel 回执，注明上游版本推断与 Ubuntu 补丁/未捕获握手的局限。它反驳“三次均为数据远读”的假设，不构成新内核检查或 80 性能测量；未打包或运行库二进制。
 
 归档检查（不运行模型或服务器）：
 

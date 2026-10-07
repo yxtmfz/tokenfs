@@ -1,0 +1,237 @@
+{
+  "diagnosis_only": true,
+  "performance_evidence": false,
+  "raw_27_hashes_unchanged": true,
+  "binary_sha256": "f5e2981b8b4f0ce54bb2994e53998608de4cec4a3c861531e8e86e0aab031f71",
+  "request_count_per_arm": 1152,
+  "same_ordinal_tier_mismatches": 0,
+  "same_ordinal_location_mismatches": 44,
+  "metrics": {
+    "Full": {
+      "open_remote": 84,
+      "open_local": 148,
+      "open_inflight": 920,
+      "direct_backend_pread_ops": 696,
+      "direct_backend_pread_bytes": 486539264,
+      "read_fill_copy_count": 28,
+      "read_fill_copy_bytes": 58720256,
+      "read_release_count": 1152,
+      "shared_placement_plans": 60,
+      "copy_cost_planning_us": 30650,
+      "submission_precheck_us": 11057,
+      "replica_touch_batched": 90,
+      "peer_cache_hit": 81,
+      "cross_gpu_local_replica_hit": 9
+    },
+    "NoHotspot": {
+      "open_remote": 84,
+      "open_local": 148,
+      "open_inflight": 920,
+      "direct_backend_pread_ops": 696,
+      "direct_backend_pread_bytes": 486539264,
+      "read_fill_copy_count": 28,
+      "read_fill_copy_bytes": 58720256,
+      "read_release_count": 1152,
+      "shared_placement_plans": 38,
+      "copy_cost_planning_us": 31009,
+      "submission_precheck_us": 10723,
+      "replica_touch_batched": 88,
+      "peer_cache_hit": 67,
+      "cross_gpu_local_replica_hit": 21
+    }
+  },
+  "wall_delta_ms": 62.70454599999997,
+  "response_sum_delta_ms": 63.16778599999998,
+  "controller_loop_residual_delta_ms": -0.4632400000000061,
+  "additive_response_components_delta_ms": {
+    "client_open_ms": -29.443947999999864,
+    "client_read_ms": 91.18818999999985,
+    "client_close_ms": 0.09377699999999933,
+    "ipc_scheduling_ms": 1.329767000000004
+  },
+  "additive_client_read_components_delta_ms": {
+    "pread_ms": 44.445192000000134,
+    "daemon_read_non_pread_ms": 32.8807589999999,
+    "client_read_minus_daemon_read_ms": 13.86223899999959
+  },
+  "strata": {
+    "first/remote": {
+      "n": 67,
+      "response_delta_sum_ms": 36.72031300000003,
+      "pread_delta_sum_ms": 46.14618299999984
+    },
+    "reused/inflight": {
+      "n": 920,
+      "response_delta_sum_ms": 23.844438000000082,
+      "pread_delta_sum_ms": 0.0
+    },
+    "reused/local": {
+      "n": 148,
+      "response_delta_sum_ms": 4.515255000000025,
+      "pread_delta_sum_ms": -0.17112799999995332
+    },
+    "reused/remote": {
+      "n": 17,
+      "response_delta_sum_ms": -1.9122199999999907,
+      "pread_delta_sum_ms": -1.5298630000000344
+    }
+  },
+  "index844": {
+    "Full": {
+      "index": "844",
+      "key": "17",
+      "caller": "1",
+      "tier": "remote",
+      "access_class": "first",
+      "response_ms": "71.248458",
+      "client_open_ms": "1.527324",
+      "client_read_ms": "69.333809",
+      "pread_ms": "67.382246",
+      "read_non_pread_ms": "0.903099",
+      "copy_pipeline_overlap_ms": "0.0",
+      "copy_attempt_overlap_ms": "0.0",
+      "shared_plan_overlap_ms": "0.0"
+    },
+    "NoHotspot": {
+      "index": "844",
+      "key": "17",
+      "caller": "1",
+      "tier": "remote",
+      "access_class": "first",
+      "response_ms": "23.847562999999997",
+      "client_open_ms": "1.547895",
+      "client_read_ms": "21.929085",
+      "pread_ms": "19.781461",
+      "read_non_pread_ms": "1.137589",
+      "copy_pipeline_overlap_ms": "0.0",
+      "copy_attempt_overlap_ms": "0.0",
+      "shared_plan_overlap_ms": "0.0"
+    }
+  },
+  "index844_response_delta_ms": 47.400895000000006,
+  "index844_response_delta_over_wall_delta": 0.7559403268783738,
+  "index844_read_callbacks": {
+    "Full": [
+      {
+        "op": "read",
+        "bytes": 1047696,
+        "pread_ns": 48526142,
+        "start_ns": 7817406174301573,
+        "end_ns": 7817406223152448
+      },
+      {
+        "op": "read",
+        "bytes": 880,
+        "pread_ns": 0,
+        "start_ns": 7817406223569899,
+        "end_ns": 7817406223590112
+      },
+      {
+        "op": "read",
+        "bytes": 1047648,
+        "pread_ns": 18852678,
+        "start_ns": 7817406223655974,
+        "end_ns": 7817406242817717
+      },
+      {
+        "op": "read",
+        "bytes": 928,
+        "pread_ns": 0,
+        "start_ns": 7817406243237255,
+        "end_ns": 7817406243467874
+      },
+      {
+        "op": "read",
+        "bytes": 0,
+        "pread_ns": 3426,
+        "start_ns": 7817406243529837,
+        "end_ns": 7817406243551732
+      }
+    ],
+    "NoHotspot": [
+      {
+        "op": "read",
+        "bytes": 1047520,
+        "pread_ns": 9898404,
+        "start_ns": 7817413356923387,
+        "end_ns": 7817413367332367
+      },
+      {
+        "op": "read",
+        "bytes": 1056,
+        "pread_ns": 0,
+        "start_ns": 7817413367728702,
+        "end_ns": 7817413367752164
+      },
+      {
+        "op": "read",
+        "bytes": 1047472,
+        "pread_ns": 9879885,
+        "start_ns": 7817413367812942,
+        "end_ns": 7817413378046580
+      },
+      {
+        "op": "read",
+        "bytes": 1104,
+        "pread_ns": 0,
+        "start_ns": 7817413378457094,
+        "end_ns": 7817413378687934
+      },
+      {
+        "op": "read",
+        "bytes": 0,
+        "pread_ns": 3172,
+        "start_ns": 7817413378746681,
+        "end_ns": 7817413378768811
+      }
+    ]
+  },
+  "p99_ordinal": {
+    "Full": 776,
+    "NoHotspot": 416
+  },
+  "p99_ms": {
+    "Full": 26.965899,
+    "NoHotspot": 26.816452
+  },
+  "index776_response_ms": {
+    "Full": 26.965899,
+    "NoHotspot": 26.962799999999998
+  },
+  "top12_all_first_remote": true,
+  "top12_overlaps_ms": {
+    "Full": {
+      "copy_pipeline_overlap_ms": 0.0,
+      "copy_attempt_overlap_ms": 0.113283,
+      "shared_plan_overlap_ms": 0.7538940000000001,
+      "all_release_overlap_ms": 2.871698
+    },
+    "NoHotspot": {
+      "copy_pipeline_overlap_ms": 0.0,
+      "copy_attempt_overlap_ms": 0.0,
+      "shared_plan_overlap_ms": 0.836343,
+      "all_release_overlap_ms": 2.964081
+    }
+  },
+  "event_spans_ms": {
+    "Full": {
+      "shared_plan": 36.569692,
+      "copy_attempt": 174.992147,
+      "copy_pipeline": 113.505164
+    },
+    "NoHotspot": {
+      "shared_plan": 35.077668,
+      "copy_attempt": 174.687527,
+      "copy_pipeline": 114.376893
+    }
+  },
+  "boundaries": [
+    "Aggregate physical counters match; per-request physical ops, bytes, and offsets are unavailable and remain null.",
+    "pread elapsed intervals can contain scheduling and backend waits; this trace cannot identify their underlying cause.",
+    "Overlapping callback and background durations are not additive wall-time cost.",
+    "Index 844 is retained in every statistic. Its paired excess describes this diagnostic only, not a corrected formal result.",
+    "First-read top12 does not prove every tail in other inputs/runs is a first read.",
+    "Equal backend tier sequence is not equal GPU-domain placement: 44 local request locations differ.",
+    "Single diagnostic pair does not estimate a stable performance effect or confidence interval."
+  ]
+}

@@ -1,0 +1,126 @@
+{
+  "passed": true,
+  "server_execution": false,
+  "binary_execution": false,
+  "source80_and_original77_evidence_unchanged": true,
+  "checks": [
+    {
+      "name": "frozen80_config_input_identity",
+      "result": {
+        "passed": true,
+        "diagnosis_only": true,
+        "executed": false,
+        "source_files": 355,
+        "requests": 1152,
+        "arms": [
+          "Full",
+          "NoHotspot"
+        ],
+        "policy_differences": {
+          "measured_static_reuse_value": [
+            false,
+            true
+          ]
+        },
+        "binary_bound": "f5e2981b8b4f0ce54bb2994e53998608de4cec4a3c861531e8e86e0aab031f71",
+        "objects": 67
+      }
+    },
+    {
+      "name": "downloaded80_original_freeze_and_spec",
+      "passed": true
+    },
+    {
+      "name": "historical77_Full_parser_only",
+      "requests": 1152,
+      "events": 10413,
+      "evidence_for80_speed": false
+    },
+    {
+      "name": "historical77_NoHotspot_parser_only",
+      "requests": 1152,
+      "events": 10384,
+      "evidence_for80_speed": false
+    },
+    {
+      "name": "historical77_both_top12_union_parser_only",
+      "union_count": 21,
+      "rows": 1152,
+      "physical_IO_unknown_null": true
+    },
+    {
+      "name": "dropped_trace",
+      "rejected": true,
+      "reason": "trace clock/dropped"
+    },
+    {
+      "name": "wrong_read_bytes",
+      "rejected": true,
+      "reason": "read bytes"
+    },
+    {
+      "name": "sidecar_parser_refusal",
+      "rejected": true,
+      "reason": "SQLite sidecar present: refuse immutable archive read"
+    },
+    {
+      "name": "sidecar_schema_refusal",
+      "rejected": true,
+      "reason": "SQLite sidecar present: preserve archive and refuse schema audit"
+    },
+    {
+      "name": "both_actual_index_definitions_synthetic_schema",
+      "passed": true
+    },
+    {
+      "name": "missing_index",
+      "rejected": true,
+      "reason": "actual partial index definitions differ"
+    },
+    {
+      "name": "wrong_index_definition",
+      "rejected": true,
+      "reason": "actual partial index definitions differ"
+    },
+    {
+      "name": "same_ordinal_wrong_key",
+      "rejected": true,
+      "reason": "same ordinal/key/caller mismatch"
+    }
+  ],
+  "driver_hashes": {
+    "tail-trace.py": "353fad33d1ec5b86c9289d105958608ba585f5166024d89c7834a2b5fd73fd8f",
+    "tail-trace-analysis.py": "1687d83d295bd3672d08870de26e1840e99a92c9b57724af824b3dfdac1eb043",
+    "collect-trace.py": "2a0d0fb63248b9272c2f7ccd298a10493cb35cc6228ce66b99d51d776debbbe0"
+  },
+  "diagnostic_freeze_sha256": "529c88a5db2c678b9df1bd1f198bf08e21021380ed4252cc9ff6c6b36391e1e0",
+  "historical77_identity": {
+    "trace.json": "af58b861b0fd973eab1b64a356c0e0d4393d709657c757b2cb3159d5bf759f2d",
+    "input.json": "5bdeda24f3fe11f395f5cc948a9dbf4bc3195a6634dc321e69fdd89db5c78a6a",
+    "diagnostic-audit.json": "d32123f623313a023b402e2f42a8cf5fd8ea88704c2f0e884f44dadc83707ab3",
+    "receipts.json": "45f339c1e9ac773491410cc9d0edf2ee967bf14ea1b1579521105559fdf52984",
+    "source-freeze.json": "8b7c53b502ed2916f84925589f326ecdb5b64d5fcd90e9fae6a1057979804f78",
+    "manifest.json": "701ce8a96caf3ed0f494193c5c0d267810402db75a5633453edad499f86eb865",
+    "objects.json": "13880ad5372b83e8cc84e23318aa2870d627eacd6cd5c7513387509bbd0ac65b",
+    "Full/tokenfs.log": "72bfd34434125d671b6c8a901f933d14a6fa66b9c299a28bce44011ee25ac399",
+    "Full/policy-events.json": "d641deab14a482f6c0c44bcbf829af3f88c53b17b982ecc73d278facd599d43f",
+    "Full/result.json": "c1b6d79046a06e4118ea445e1901b5a9d6409ecf41d3353ae6efba190942e30f",
+    "Full/config.json": "95ff8aa6daecde3f1b85b9e9ffcf885cedfe337acbd8af8b67cba99d91aa1779",
+    "Full/state.db": "ee46c4c22b85039eee5921ddb76a6f4dd3d27c3b682bbc42a66f5764534d3dd1",
+    "Full/files.json": "2b66fb67038c390ba82ada03e374d93943109fcc4047ab54bb8bd2b7343e6b3f",
+    "Full/requests.json": "cb7ce8127b6e474de8eaad0e17849ca33fcb8a4883db88e4bafb32fc942a5ee3",
+    "Full/request-trace.json": "9dc1e46977edd69e39ea1f34386dd275a1668bf6defc86dcce0598313a8771d8",
+    "Full/environment.json": "ea70ca4fb0f3f4e63ab8b33f04b197066842ff99395aa0b72d847c5a1a0e063a",
+    "Full/execution.json": "79b81efefdfb10ed8806b599e1cb044f05748f5213998602b8f211e7450830d9",
+    "NoHotspot/tokenfs.log": "72bfd34434125d671b6c8a901f933d14a6fa66b9c299a28bce44011ee25ac399",
+    "NoHotspot/policy-events.json": "552d1464454b61409e5ed0959599c662c2bcbfdf91191f4a98057588b297e6de",
+    "NoHotspot/result.json": "ecbf249c3a5685f6393e5ae2893f6736d851a68462ba974f2b576c1f3974c8ba",
+    "NoHotspot/config.json": "ce633edbf3d9139549fc67a6915905bc917eca77cee682a30d53c1e79010784a",
+    "NoHotspot/state.db": "340b9f4a31e77ab2321b891515b41beb741842e39d75a5fd2d9eedf1ce6d1be1",
+    "NoHotspot/files.json": "88cac427dc6fd52283d7f22749a1bb888b594fbb1dbcb40aa5eaa80f4b393d2b",
+    "NoHotspot/requests.json": "813c9af0ea2a4737171e8191cc1fb62aca5ae184df3b409ba59842113a55cfcb",
+    "NoHotspot/request-trace.json": "95241551cc96443fd79b72fa40adf2debcb0e43a3cc171095e6f64fc13cbe0b4",
+    "NoHotspot/environment.json": "2e53084274353d440bf855c0139dcf4c11d34aea432e185143cfd36be2212811",
+    "NoHotspot/execution.json": "275d87cf3d21e6ac5c5e62f9944886d3d88ad547e6ea43fe274a94490ea96673"
+  }
+}
