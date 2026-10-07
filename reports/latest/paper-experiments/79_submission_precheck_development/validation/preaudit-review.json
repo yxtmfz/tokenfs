@@ -1,0 +1,193 @@
+{
+  "preexecution_checks_passed": true,
+  "performance_results_reviewed": false,
+  "server_access": false,
+  "source_files": 350,
+  "source_archive_sha256": "623debd261469ae7377c6072ceb3333f425abf2014bb686f4b153a56f16ffb65",
+  "source_hashes_exact": true,
+  "frozen_spec_sha256": "d3a613b58be7040e18a8c86bdc7da91e9ffad78f13932895f21bf82b4f188bdb",
+  "orders": {
+    "moving_shared-74801-r1": [
+      "NoSubmitPrecheck",
+      "NoHotspot",
+      "NoAffinity",
+      "PoolSIEVE1",
+      "Full",
+      "NoJoint"
+    ],
+    "public_toolagent-74802-r1": [
+      "NoHotspot",
+      "PoolSIEVE1",
+      "Full",
+      "NoAffinity",
+      "NoSubmitPrecheck",
+      "NoJoint"
+    ],
+    "moving_shared-74801-r2": [
+      "NoJoint",
+      "Full",
+      "PoolSIEVE1",
+      "NoAffinity",
+      "NoHotspot",
+      "NoSubmitPrecheck"
+    ],
+    "public_toolagent-74802-r2": [
+      "NoJoint",
+      "NoSubmitPrecheck",
+      "NoAffinity",
+      "Full",
+      "PoolSIEVE1",
+      "NoHotspot"
+    ]
+  },
+  "policy_differences": {
+    "Full": [],
+    "NoHotspot": [
+      "measured_static_reuse_value"
+    ],
+    "NoAffinity": [
+      "shared_caller_only"
+    ],
+    "NoJoint": [
+      "measured_joint_admission"
+    ],
+    "PoolSIEVE1": [
+      "local_eviction_policy",
+      "read_through_cache",
+      "read_through_min_reads",
+      "measured_shift_reset",
+      "measured_policy",
+      "measured_admission",
+      "measured_cost",
+      "measured_value_victim",
+      "measured_size_aware",
+      "measured_frequency_admission",
+      "measured_causal_window",
+      "compact_measured_planning",
+      "shared_value_placement",
+      "shared_pool_cache",
+      "measured_burst_reuse",
+      "adaptive_reuse_control",
+      "efficient_measured_planning",
+      "burst_interval_survival",
+      "reuse_scaled_exploration",
+      "persistent_run_reuse",
+      "persistent_reuse_immediate_decay",
+      "novel_reuse_decay",
+      "cohort_reuse_prior",
+      "recent_value_floor"
+    ],
+    "NoSubmitPrecheck": [
+      "precheck_shared_submission"
+    ]
+  },
+  "cpu_affinity": {
+    "cpus": [
+      0,
+      2,
+      4,
+      6
+    ],
+    "independent_before_after_receipt_check": true,
+    "process_inheritance": "Linux subprocess inheritance; no per-thread live receipt",
+    "not_controlled_against_batch78": true
+  },
+  "checks": [
+    {
+      "name": "valid_affinity",
+      "passed": true
+    },
+    {
+      "name": "before_wrong_affinity",
+      "rejection": "fixture: before CPU affinity receipt mismatch"
+    },
+    {
+      "name": "after_wrong_affinity",
+      "rejection": "fixture: after CPU affinity receipt mismatch"
+    },
+    {
+      "name": "overlapping_case",
+      "rejection": "fixture: execution order/overlap differs from frozen order"
+    },
+    {
+      "name": "Full_speed_no_attempts",
+      "rejection": "Full: precheck not exercised"
+    },
+    {
+      "name": "Full_content_not_activated",
+      "rejection": "Full: precheck activation"
+    },
+    {
+      "name": "NoHotspot_speed_no_attempts",
+      "rejection": "NoHotspot: precheck not exercised"
+    },
+    {
+      "name": "NoHotspot_content_not_activated",
+      "rejection": "NoHotspot: precheck activation"
+    },
+    {
+      "name": "NoAffinity_speed_no_attempts",
+      "rejection": "NoAffinity: precheck not exercised"
+    },
+    {
+      "name": "NoAffinity_content_not_activated",
+      "rejection": "NoAffinity: precheck activation"
+    },
+    {
+      "name": "NoJoint_speed_no_attempts",
+      "rejection": "NoJoint: precheck not exercised"
+    },
+    {
+      "name": "NoJoint_content_not_activated",
+      "rejection": "NoJoint: precheck activation"
+    },
+    {
+      "name": "PoolSIEVE1_inactive_attempt",
+      "rejection": "PoolSIEVE1: inactive precheck ran"
+    },
+    {
+      "name": "NoSubmitPrecheck_inactive_attempt",
+      "rejection": "NoSubmitPrecheck: inactive precheck ran"
+    },
+    {
+      "name": "content_zero_attempts_all_arms_accepted",
+      "passed": true
+    },
+    {
+      "name": "rejections_exceed_attempts",
+      "rejection": "fixture: invalid precheck attempt/rejection accounting"
+    },
+    {
+      "name": "NoSubmitPrecheck_flag_mutation",
+      "rejection": "/private/var/folders/7w/1p_0183x2q94dh28z82q5n980000gn/T/tokenfs-preaudit79-g32c8p68/wrong-control: config mismatch"
+    },
+    {
+      "name": "synthetic_repeat_and_separate_control_gate",
+      "passed": true,
+      "not_performance_evidence": true
+    }
+  ],
+  "content_prefix_zero_attempts_allowed": true,
+  "content_activation_required": true,
+  "all_arms_require_release_fence": true,
+  "collection_preserves_empty_wal_pairs": true,
+  "targeted_python_tests": 6,
+  "full_frozen_python_tests": 163,
+  "synthetic_fixture": {
+    "primary_passes": 8,
+    "total_primary": 16,
+    "implementation_passes": 2,
+    "total_implementation": 4,
+    "positive_aggregate_does_not_override_failed_repeat": true,
+    "not_performance_evidence": true
+  },
+  "frozen_source_unchanged": true,
+  "tools": {
+    "verify79.py": "50fc662b792f6854ee20101ddc4b9636d4bda11e0a9b33a2901e4d5d87e3ed45",
+    "preaudit79.py": "d79521f0879696b6fe9fae2ee5bec19e0febfa35da30d0854d81b8b6db328571",
+    "build.sh": "999a852aa6a5bfb1722b32b504625fbae08ddd8f659c4b9f93daac5328a8379d",
+    "launch.sh": "4f563505eb2d3c758a7972128357377e2a975b3afc2fb227f00a0bf1b536dfda",
+    "collect.sh": "be82867433a44f113d4e78b93cbaa77c83403ef7a8c271effbf9b77af6b3fbd9",
+    "package.py": "089cecc4c8bb9c1338744df0ee7f279c74984443322ad6a467f4e96c9c5d9fdb"
+  }
+}

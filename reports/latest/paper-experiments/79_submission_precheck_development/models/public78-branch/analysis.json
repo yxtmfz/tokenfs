@@ -1,0 +1,3916 @@
+{
+  "source_version": 78,
+  "not_real_cost_replay": true,
+  "definition": "Algebraic decomposition of printed observed event fields plus original78 fixed-prefix forecast component replay. Event logs lack per-sample rates, observation clock, timestamps and rejection details. Counterfactual one-observation margins hold cost/state fixed; they are evidence of sensitivity, not reconstructed rejected decisions.",
+  "second_visit_initial_forecast": 4.571428571428571,
+  "one_observation_later_forecast": 4.350606413762832,
+  "uncertainty_factor_for_one_count1_victim": 2.414213562373095,
+  "rows": [
+    {
+      "round": 1,
+      "arm": "Full",
+      "remote": 967,
+      "local": 183,
+      "ready_actions": 33,
+      "action_counts": {
+        "SHARED_PLACE": 33,
+        "ADMIT": 33,
+        "PROMOTE_READY": 16,
+        "REPLICATE_READY": 17,
+        "EVICT": 21
+      },
+      "commit_rejects": {
+        "measured_commit_capacity_bounded_calibration": 12,
+        "measured_commit_net_gain": 21
+      },
+      "early_duplicate_requests": [
+        {
+          "index": 34,
+          "key": 7,
+          "caller": 2,
+          "seconds": 0.021051723,
+          "response_seconds": 0.021407567
+        },
+        {
+          "index": 60,
+          "key": 45,
+          "caller": 1,
+          "seconds": 0.024169824,
+          "response_seconds": 0.024542073
+        },
+        {
+          "index": 61,
+          "key": 46,
+          "caller": 1,
+          "seconds": 0.026235706,
+          "response_seconds": 0.026548067
+        },
+        {
+          "index": 62,
+          "key": 47,
+          "caller": 1,
+          "seconds": 0.02595921,
+          "response_seconds": 0.026277257
+        },
+        {
+          "index": 63,
+          "key": 48,
+          "caller": 1,
+          "seconds": 0.025975362,
+          "response_seconds": 0.026275155
+        },
+        {
+          "index": 64,
+          "key": 49,
+          "caller": 1,
+          "seconds": 0.027420761,
+          "response_seconds": 0.027719173
+        },
+        {
+          "index": 65,
+          "key": 50,
+          "caller": 1,
+          "seconds": 0.027367286,
+          "response_seconds": 0.02768008
+        },
+        {
+          "index": 66,
+          "key": 51,
+          "caller": 1,
+          "seconds": 0.027128448,
+          "response_seconds": 0.027427964
+        },
+        {
+          "index": 67,
+          "key": 52,
+          "caller": 1,
+          "seconds": 0.027139202,
+          "response_seconds": 0.027445759
+        },
+        {
+          "index": 68,
+          "key": 53,
+          "caller": 1,
+          "seconds": 0.02625751,
+          "response_seconds": 0.026570217
+        },
+        {
+          "index": 69,
+          "key": 54,
+          "caller": 1,
+          "seconds": 0.026157638,
+          "response_seconds": 0.026455417
+        }
+      ],
+      "events45_56": [
+        {
+          "seq": 37,
+          "action": "SHARED_PLACE",
+          "key": 45,
+          "score": 3519.9323829288696,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 18814.2,
+            "victim_loss": 0.0,
+            "copy": 5358.33,
+            "burst_remaining": 0.0,
+            "uncertainty": 9935.97,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 4115.613529332201,
+          "dimensionless_forecast_ratio": 4.571420485891149,
+          "counterfactual_one_observation_decay_margin_us": 2611.1153307012682
+        },
+        {
+          "seq": 38,
+          "action": "ADMIT",
+          "key": 45,
+          "score": 2611.113473564251,
+          "fields": {
+            "incoming": 17905.4,
+            "displaced": 0.0,
+            "copy": 5358.33,
+            "frequency": 1.0,
+            "calibrated": 1.0,
+            "affinity_count": 2.0,
+            "affinity_adjusted_items": 5.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 9935.97,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 4115.613529332201,
+          "dimensionless_forecast_ratio": 4.350602862097532
+        },
+        {
+          "seq": 41,
+          "action": "SHARED_PLACE",
+          "key": 46,
+          "score": 3279.312726335016,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 18738.2,
+            "victim_loss": 0.0,
+            "copy": 5563.08,
+            "burst_remaining": 0.0,
+            "uncertainty": 9895.82,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 4098.982854802922,
+          "dimensionless_forecast_ratio": 4.571426781657258,
+          "counterfactual_one_observation_decay_margin_us": 2374.1668424786076
+        },
+        {
+          "seq": 42,
+          "action": "ADMIT",
+          "key": 46,
+          "score": 2374.1662513161546,
+          "fields": {
+            "incoming": 17833.1,
+            "displaced": 0.0,
+            "copy": 5563.08,
+            "frequency": 1.0,
+            "calibrated": 1.0,
+            "affinity_count": 2.0,
+            "affinity_adjusted_items": 5.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 9895.82,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 4098.982854802922,
+          "dimensionless_forecast_ratio": 4.350615904407682
+        },
+        {
+          "seq": 45,
+          "action": "SHARED_PLACE",
+          "key": 47,
+          "score": 3081.1031506962354,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 18669.2,
+            "victim_loss": 0.0,
+            "copy": 5728.71,
+            "burst_remaining": 0.0,
+            "uncertainty": 9859.37,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 4083.884770454423,
+          "dimensionless_forecast_ratio": 4.571431626833741,
+          "counterfactual_one_observation_decay_margin_us": 2179.2903012820943
+        },
+        {
+          "seq": 46,
+          "action": "ADMIT",
+          "key": 47,
+          "score": 2179.290912795478,
+          "fields": {
+            "incoming": 17767.4,
+            "displaced": 0.0,
+            "copy": 5728.71,
+            "frequency": 1.0,
+            "calibrated": 1.0,
+            "affinity_count": 2.0,
+            "affinity_adjusted_items": 5.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 9859.37,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 4083.884770454423,
+          "dimensionless_forecast_ratio": 4.350612467947519
+        },
+        {
+          "seq": 49,
+          "action": "SHARED_PLACE",
+          "key": 48,
+          "score": 2907.63104906823,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 18608.2,
+            "victim_loss": 0.0,
+            "copy": 5873.4,
+            "burst_remaining": 0.0,
+            "uncertainty": 9827.15,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 4070.538809474761,
+          "dimensionless_forecast_ratio": 4.571434119897532,
+          "counterfactual_one_observation_decay_margin_us": 2008.764795320441
+        },
+        {
+          "seq": 50,
+          "action": "ADMIT",
+          "key": 48,
+          "score": 2008.7655142720032,
+          "fields": {
+            "incoming": 17709.3,
+            "displaced": 0.0,
+            "copy": 5873.4,
+            "frequency": 1.0,
+            "calibrated": 1.0,
+            "affinity_count": 2.0,
+            "affinity_adjusted_items": 1.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 9827.15,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 4070.538809474761,
+          "dimensionless_forecast_ratio": 4.350603403848914
+        },
+        {
+          "seq": 53,
+          "action": "SHARED_PLACE",
+          "key": 49,
+          "score": 2659.5509940767515,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 18542.0,
+            "victim_loss": 0.0,
+            "copy": 6090.25,
+            "burst_remaining": 0.0,
+            "uncertainty": 9792.2,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 4056.062045469822,
+          "dimensionless_forecast_ratio": 4.571429083711722,
+          "counterfactual_one_observation_decay_margin_us": 1763.8825211996595
+        },
+        {
+          "seq": 54,
+          "action": "ADMIT",
+          "key": 49,
+          "score": 1763.8823071136285,
+          "fields": {
+            "incoming": 17646.3,
+            "displaced": 0.0,
+            "copy": 6090.25,
+            "frequency": 1.0,
+            "calibrated": 1.0,
+            "affinity_count": 2.0,
+            "affinity_adjusted_items": 2.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 9792.2,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 4056.062045469822,
+          "dimensionless_forecast_ratio": 4.350599128459829
+        },
+        {
+          "seq": 57,
+          "action": "SHARED_PLACE",
+          "key": 50,
+          "score": 2452.260086560411,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 18481.6,
+            "victim_loss": 0.0,
+            "copy": 6269.06,
+            "burst_remaining": 0.0,
+            "uncertainty": 9760.33,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 4042.861059236991,
+          "dimensionless_forecast_ratio": 4.5714160662963845,
+          "counterfactual_one_observation_decay_margin_us": 1559.5092264414777
+        },
+        {
+          "seq": 58,
+          "action": "ADMIT",
+          "key": 50,
+          "score": 1559.5069528520226,
+          "fields": {
+            "incoming": 17588.9,
+            "displaced": 0.0,
+            "copy": 6269.06,
+            "frequency": 1.0,
+            "calibrated": 1.0,
+            "affinity_count": 2.0,
+            "affinity_adjusted_items": 3.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 9760.33,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 4042.861059236991,
+          "dimensionless_forecast_ratio": 4.350607092918389
+        },
+        {
+          "seq": 61,
+          "action": "SHARED_PLACE",
+          "key": 51,
+          "score": 2279.186471431465,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 18433.5,
+            "victim_loss": 0.0,
+            "copy": 6419.39,
+            "burst_remaining": 0.0,
+            "uncertainty": 9734.88,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 4032.3193240745954,
+          "dimensionless_forecast_ratio": 4.571438549011847,
+          "counterfactual_one_observation_decay_margin_us": 1388.759074452721
+        },
+        {
+          "seq": 62,
+          "action": "ADMIT",
+          "key": 51,
+          "score": 1388.761468999739,
+          "fields": {
+            "incoming": 17543.0,
+            "displaced": 0.0,
+            "copy": 6419.39,
+            "frequency": 1.0,
+            "calibrated": 1.0,
+            "affinity_count": 2.0,
+            "affinity_adjusted_items": 4.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 9734.88,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 4032.3193240745954,
+          "dimensionless_forecast_ratio": 4.350597904104745
+        },
+        {
+          "seq": 65,
+          "action": "SHARED_PLACE",
+          "key": 52,
+          "score": 2115.956679804358,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 18381.9,
+            "victim_loss": 0.0,
+            "copy": 6558.32,
+            "burst_remaining": 0.0,
+            "uncertainty": 9707.68,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 4021.0527151780475,
+          "dimensionless_forecast_ratio": 4.571414826424645,
+          "counterfactual_one_observation_decay_margin_us": 1228.0218129302657
+        },
+        {
+          "seq": 66,
+          "action": "ADMIT",
+          "key": 52,
+          "score": 1228.0194297825456,
+          "fields": {
+            "incoming": 17494.0,
+            "displaced": 0.0,
+            "copy": 6558.32,
+            "frequency": 0.0,
+            "calibrated": 1.0,
+            "affinity_count": 2.0,
+            "affinity_adjusted_items": 5.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 9707.68,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 4021.0527151780475,
+          "dimensionless_forecast_ratio": 4.35060200379029
+        },
+        {
+          "seq": 69,
+          "action": "SHARED_PLACE",
+          "key": 53,
+          "score": 2014.7218367842324,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 18331.2,
+            "victim_loss": 0.0,
+            "copy": 6635.6,
+            "burst_remaining": 0.0,
+            "uncertainty": 9680.87,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 4009.947649570825,
+          "dimensionless_forecast_ratio": 4.571431250969559,
+          "counterfactual_one_observation_decay_margin_us": 1129.2360256525021
+        },
+        {
+          "seq": 70,
+          "action": "ADMIT",
+          "key": 53,
+          "score": 1129.2362804149016,
+          "fields": {
+            "incoming": 17445.7,
+            "displaced": 0.0,
+            "copy": 6635.6,
+            "frequency": 0.0,
+            "calibrated": 1.0,
+            "affinity_count": 2.0,
+            "affinity_adjusted_items": 5.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 9680.87,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 4009.947649570825,
+          "dimensionless_forecast_ratio": 4.350605425451669
+        },
+        {
+          "seq": 73,
+          "action": "SHARED_PLACE",
+          "key": 54,
+          "score": 1930.4616219187265,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 18284.8,
+            "victim_loss": 0.0,
+            "copy": 6697.97,
+            "burst_remaining": 0.0,
+            "uncertainty": 9656.37,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 3999.799417292684,
+          "dimensionless_forecast_ratio": 4.571429237413185,
+          "counterfactual_one_observation_decay_margin_us": 1047.2171556873034
+        },
+        {
+          "seq": 74,
+          "action": "ADMIT",
+          "key": 54,
+          "score": 1047.2168456561922,
+          "fields": {
+            "incoming": 17401.6,
+            "displaced": 0.0,
+            "copy": 6697.97,
+            "frequency": 0.0,
+            "calibrated": 1.0,
+            "affinity_count": 2.0,
+            "affinity_adjusted_items": 5.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 9656.37,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 3999.799417292684,
+          "dimensionless_forecast_ratio": 4.350618164692492
+        },
+        {
+          "seq": 77,
+          "action": "SHARED_PLACE",
+          "key": 55,
+          "score": 1853.5773038001207,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 18242.6,
+            "victim_loss": 0.0,
+            "copy": 6754.92,
+            "burst_remaining": 0.0,
+            "uncertainty": 9634.07,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 3990.562454851764,
+          "dimensionless_forecast_ratio": 4.571435782898341,
+          "counterfactual_one_observation_decay_margin_us": 972.3713021116495
+        },
+        {
+          "seq": 78,
+          "action": "ADMIT",
+          "key": 55,
+          "score": 972.3729397759716,
+          "fields": {
+            "incoming": 17361.4,
+            "displaced": 0.0,
+            "copy": 6754.92,
+            "frequency": 0.0,
+            "calibrated": 1.0,
+            "affinity_count": 2.0,
+            "affinity_adjusted_items": 5.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 9634.07,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 3990.562454851764,
+          "dimensionless_forecast_ratio": 4.350614780854224
+        },
+        {
+          "seq": 101,
+          "action": "SHARED_PLACE",
+          "key": 48,
+          "score": 4869.744770148383,
+          "fields": {
+            "caller": 2.0,
+            "incoming": 76323.2,
+            "victim_loss": 12720.5,
+            "copy": 7088.01,
+            "burst_remaining": 0.0,
+            "uncertainty": 51644.9,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 102,
+          "action": "ADMIT",
+          "key": 48,
+          "score": 4869.744770148376,
+          "fields": {
+            "incoming": 76323.2,
+            "displaced": 12720.5,
+            "copy": 7088.01,
+            "frequency": 4.0,
+            "calibrated": 1.0,
+            "affinity_count": 7.0,
+            "affinity_adjusted_items": 5.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 51644.9,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 105,
+          "action": "SHARED_PLACE",
+          "key": 49,
+          "score": 4840.227409844141,
+          "fields": {
+            "caller": 2.0,
+            "incoming": 76236.0,
+            "victim_loss": 12706.0,
+            "copy": 7103.86,
+            "burst_remaining": 0.0,
+            "uncertainty": 51585.9,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 106,
+          "action": "ADMIT",
+          "key": 49,
+          "score": 4840.227409844129,
+          "fields": {
+            "incoming": 76236.0,
+            "displaced": 12706.0,
+            "copy": 7103.86,
+            "frequency": 4.0,
+            "calibrated": 1.0,
+            "affinity_count": 7.0,
+            "affinity_adjusted_items": 5.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 51585.9,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 109,
+          "action": "SHARED_PLACE",
+          "key": 50,
+          "score": 4743.84085608364,
+          "fields": {
+            "caller": 2.0,
+            "incoming": 76142.6,
+            "victim_loss": 12690.4,
+            "copy": 7185.62,
+            "burst_remaining": 0.0,
+            "uncertainty": 51522.7,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 110,
+          "action": "ADMIT",
+          "key": 50,
+          "score": 4743.840856083634,
+          "fields": {
+            "incoming": 76142.6,
+            "displaced": 12690.4,
+            "copy": 7185.62,
+            "frequency": 4.0,
+            "calibrated": 1.0,
+            "affinity_count": 7.0,
+            "affinity_adjusted_items": 5.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 51522.7,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 113,
+          "action": "SHARED_PLACE",
+          "key": 51,
+          "score": 4687.270807400295,
+          "fields": {
+            "caller": 2.0,
+            "incoming": 76084.2,
+            "victim_loss": 12680.7,
+            "copy": 7233.03,
+            "burst_remaining": 0.0,
+            "uncertainty": 51483.2,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 114,
+          "action": "ADMIT",
+          "key": 51,
+          "score": 4687.270807400298,
+          "fields": {
+            "incoming": 76084.2,
+            "displaced": 12680.7,
+            "copy": 7233.03,
+            "frequency": 4.0,
+            "calibrated": 1.0,
+            "affinity_count": 7.0,
+            "affinity_adjusted_items": 5.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 51483.2,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 117,
+          "action": "SHARED_PLACE",
+          "key": 52,
+          "score": 4622.868150502458,
+          "fields": {
+            "caller": 2.0,
+            "incoming": 76009.8,
+            "victim_loss": 12668.3,
+            "copy": 7285.78,
+            "burst_remaining": 0.0,
+            "uncertainty": 51432.9,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 118,
+          "action": "ADMIT",
+          "key": 52,
+          "score": 4622.868150502462,
+          "fields": {
+            "incoming": 76009.8,
+            "displaced": 12668.3,
+            "copy": 7285.78,
+            "frequency": 4.0,
+            "calibrated": 1.0,
+            "affinity_count": 7.0,
+            "affinity_adjusted_items": 5.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 51432.9,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        }
+      ],
+      "aggregate_cost_metrics": {
+        "request_cost_remote_bytes": 2027945984,
+        "request_cost_remote_us": 19505863,
+        "request_cost_remote_samples": 967,
+        "copy_cost_charged_us": 244948,
+        "copy_cost_remaining_us": 185417,
+        "copy_cost_planning_us": 34962,
+        "copy_cost_capture_us": 24569,
+        "copy_cost_samples": 33,
+        "copy_cost_full_us": 244948,
+        "request_cost_local_us": 1515999,
+        "request_cost_local_bytes": 383778816,
+        "request_cost_local_samples": 183,
+        "request_cost_inflight_us": 662,
+        "request_cost_inflight_bytes": 4194304,
+        "request_cost_inflight_samples": 2
+      },
+      "input_hashes": {
+        "requests.json": "47b0ab8dc30247f6aec418131b57f195e99deb9541d86f2189159f8c2584922c",
+        "policy-events.json": "eae144c0b0dcc1024bea9b6f6977adf28e62d33c465c9f27aadc22f1d69d421f",
+        "result.json": "0473385b5471d0ca8d813b51ce4bb5d6c1fdc412631ca14f156df608c9244871"
+      }
+    },
+    {
+      "round": 1,
+      "arm": "SyncSubmission",
+      "remote": 997,
+      "local": 153,
+      "ready_actions": 23,
+      "action_counts": {
+        "SHARED_PLACE": 23,
+        "ADMIT": 23,
+        "PROMOTE_READY": 8,
+        "REPLICATE_READY": 15,
+        "EVICT": 11
+      },
+      "commit_rejects": {
+        "measured_commit_capacity_bounded_calibration": 12,
+        "measured_commit_net_gain": 11
+      },
+      "early_duplicate_requests": [
+        {
+          "index": 34,
+          "key": 7,
+          "caller": 2,
+          "seconds": 0.025179855,
+          "response_seconds": 0.025679172
+        },
+        {
+          "index": 60,
+          "key": 45,
+          "caller": 1,
+          "seconds": 0.024527741,
+          "response_seconds": 0.024779977
+        },
+        {
+          "index": 61,
+          "key": 46,
+          "caller": 1,
+          "seconds": 0.024583069,
+          "response_seconds": 0.02485771
+        },
+        {
+          "index": 62,
+          "key": 47,
+          "caller": 1,
+          "seconds": 0.024913309,
+          "response_seconds": 0.025142838
+        },
+        {
+          "index": 63,
+          "key": 48,
+          "caller": 1,
+          "seconds": 0.024860049,
+          "response_seconds": 0.025089553
+        },
+        {
+          "index": 64,
+          "key": 49,
+          "caller": 1,
+          "seconds": 0.024709845,
+          "response_seconds": 0.024932239
+        },
+        {
+          "index": 65,
+          "key": 50,
+          "caller": 1,
+          "seconds": 0.024478637,
+          "response_seconds": 0.024722513
+        },
+        {
+          "index": 66,
+          "key": 51,
+          "caller": 1,
+          "seconds": 0.024492595,
+          "response_seconds": 0.024717983
+        },
+        {
+          "index": 67,
+          "key": 52,
+          "caller": 1,
+          "seconds": 0.024851198,
+          "response_seconds": 0.025078887
+        },
+        {
+          "index": 68,
+          "key": 53,
+          "caller": 1,
+          "seconds": 0.024813676,
+          "response_seconds": 0.025039247
+        },
+        {
+          "index": 69,
+          "key": 54,
+          "caller": 1,
+          "seconds": 0.024762453,
+          "response_seconds": 0.024991565
+        }
+      ],
+      "events45_56": [
+        {
+          "seq": 37,
+          "action": "SHARED_PLACE",
+          "key": 45,
+          "score": 5401.231308169619,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 33082.9,
+            "victim_loss": 0.0,
+            "copy": 5626.42,
+            "burst_remaining": 0.0,
+            "uncertainty": 22055.3,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 38,
+          "action": "ADMIT",
+          "key": 45,
+          "score": 5401.2313081696175,
+          "fields": {
+            "incoming": 33082.9,
+            "displaced": 0.0,
+            "copy": 5626.42,
+            "frequency": 2.0,
+            "calibrated": 1.0,
+            "affinity_count": 4.0,
+            "affinity_adjusted_items": 3.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 22055.3,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 41,
+          "action": "SHARED_PLACE",
+          "key": 46,
+          "score": 5267.774012019636,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 33070.6,
+            "victim_loss": 0.0,
+            "copy": 5755.77,
+            "burst_remaining": 0.0,
+            "uncertainty": 22047.1,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 42,
+          "action": "ADMIT",
+          "key": 46,
+          "score": 5267.774012019636,
+          "fields": {
+            "incoming": 33070.6,
+            "displaced": 0.0,
+            "copy": 5755.77,
+            "frequency": 2.0,
+            "calibrated": 1.0,
+            "affinity_count": 4.0,
+            "affinity_adjusted_items": 3.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 22047.1,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 45,
+          "action": "SHARED_PLACE",
+          "key": 47,
+          "score": 5144.922318772398,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 33082.5,
+            "victim_loss": 0.0,
+            "copy": 5882.57,
+            "burst_remaining": 0.0,
+            "uncertainty": 22055.0,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 46,
+          "action": "ADMIT",
+          "key": 47,
+          "score": 5144.922318772397,
+          "fields": {
+            "incoming": 33082.5,
+            "displaced": 0.0,
+            "copy": 5882.57,
+            "frequency": 1.0,
+            "calibrated": 1.0,
+            "affinity_count": 4.0,
+            "affinity_adjusted_items": 1.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 22055.0,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 49,
+          "action": "SHARED_PLACE",
+          "key": 48,
+          "score": 5210.180060004379,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 33074.5,
+            "victim_loss": 0.0,
+            "copy": 5814.67,
+            "burst_remaining": 0.0,
+            "uncertainty": 22049.7,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 50,
+          "action": "ADMIT",
+          "key": 48,
+          "score": 5210.180060004377,
+          "fields": {
+            "incoming": 33074.5,
+            "displaced": 0.0,
+            "copy": 5814.67,
+            "frequency": 1.0,
+            "calibrated": 1.0,
+            "affinity_count": 4.0,
+            "affinity_adjusted_items": 2.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 22049.7,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 53,
+          "action": "SHARED_PLACE",
+          "key": 49,
+          "score": 5116.269557031897,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 33062.5,
+            "victim_loss": 0.0,
+            "copy": 5904.56,
+            "burst_remaining": 0.0,
+            "uncertainty": 22041.7,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 54,
+          "action": "ADMIT",
+          "key": 49,
+          "score": 5116.269557031898,
+          "fields": {
+            "incoming": 33062.5,
+            "displaced": 0.0,
+            "copy": 5904.56,
+            "frequency": 1.0,
+            "calibrated": 1.0,
+            "affinity_count": 4.0,
+            "affinity_adjusted_items": 3.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 22041.7,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 57,
+          "action": "SHARED_PLACE",
+          "key": 50,
+          "score": 5037.679885580594,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 33081.8,
+            "victim_loss": 0.0,
+            "copy": 5989.59,
+            "burst_remaining": 0.0,
+            "uncertainty": 22054.5,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 58,
+          "action": "ADMIT",
+          "key": 50,
+          "score": 5037.679885580593,
+          "fields": {
+            "incoming": 33081.8,
+            "displaced": 0.0,
+            "copy": 5989.59,
+            "frequency": 1.0,
+            "calibrated": 1.0,
+            "affinity_count": 4.0,
+            "affinity_adjusted_items": 4.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 22054.5,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 61,
+          "action": "SHARED_PLACE",
+          "key": 51,
+          "score": 6057.713503007508,
+          "fields": {
+            "caller": 2.0,
+            "incoming": 76518.0,
+            "victim_loss": 12753.0,
+            "copy": 5930.56,
+            "burst_remaining": 0.0,
+            "uncertainty": 51776.7,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 62,
+          "action": "ADMIT",
+          "key": 51,
+          "score": 6057.713503007501,
+          "fields": {
+            "incoming": 76518.0,
+            "displaced": 12753.0,
+            "copy": 5930.56,
+            "frequency": 4.0,
+            "calibrated": 1.0,
+            "affinity_count": 7.0,
+            "affinity_adjusted_items": 5.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 51776.7,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 65,
+          "action": "SHARED_PLACE",
+          "key": 52,
+          "score": 5912.333947573541,
+          "fields": {
+            "caller": 2.0,
+            "incoming": 76493.6,
+            "victim_loss": 12748.9,
+            "copy": 6072.11,
+            "burst_remaining": 0.0,
+            "uncertainty": 51760.2,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 66,
+          "action": "ADMIT",
+          "key": 52,
+          "score": 5912.33394757354,
+          "fields": {
+            "incoming": 76493.6,
+            "displaced": 12748.9,
+            "copy": 6072.11,
+            "frequency": 4.0,
+            "calibrated": 1.0,
+            "affinity_count": 7.0,
+            "affinity_adjusted_items": 5.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 51760.2,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 69,
+          "action": "SHARED_PLACE",
+          "key": 53,
+          "score": 5817.739744642735,
+          "fields": {
+            "caller": 2.0,
+            "incoming": 76451.4,
+            "victim_loss": 12741.9,
+            "copy": 6160.1,
+            "burst_remaining": 0.0,
+            "uncertainty": 51731.7,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 70,
+          "action": "ADMIT",
+          "key": 53,
+          "score": 5817.739744642741,
+          "fields": {
+            "incoming": 76451.4,
+            "displaced": 12741.9,
+            "copy": 6160.1,
+            "frequency": 4.0,
+            "calibrated": 1.0,
+            "affinity_count": 7.0,
+            "affinity_adjusted_items": 5.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 51731.7,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 73,
+          "action": "SHARED_PLACE",
+          "key": 54,
+          "score": 5744.3286013677425,
+          "fields": {
+            "caller": 2.0,
+            "incoming": 76471.1,
+            "victim_loss": 12745.2,
+            "copy": 6236.59,
+            "burst_remaining": 0.0,
+            "uncertainty": 51745.0,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 74,
+          "action": "ADMIT",
+          "key": 54,
+          "score": 5744.328601367744,
+          "fields": {
+            "incoming": 76471.1,
+            "displaced": 12745.2,
+            "copy": 6236.59,
+            "frequency": 5.0,
+            "calibrated": 1.0,
+            "affinity_count": 7.0,
+            "affinity_adjusted_items": 5.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 51745.0,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 77,
+          "action": "SHARED_PLACE",
+          "key": 55,
+          "score": 5634.513678041534,
+          "fields": {
+            "caller": 2.0,
+            "incoming": 76432.2,
+            "victim_loss": 12738.7,
+            "copy": 6340.32,
+            "burst_remaining": 0.0,
+            "uncertainty": 51718.7,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 78,
+          "action": "ADMIT",
+          "key": 55,
+          "score": 5634.513678041541,
+          "fields": {
+            "incoming": 76432.2,
+            "displaced": 12738.7,
+            "copy": 6340.32,
+            "frequency": 4.0,
+            "calibrated": 1.0,
+            "affinity_count": 7.0,
+            "affinity_adjusted_items": 5.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 51718.7,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        }
+      ],
+      "aggregate_cost_metrics": {
+        "request_cost_remote_bytes": 2090860544,
+        "request_cost_remote_us": 20264305,
+        "request_cost_remote_samples": 997,
+        "copy_cost_charged_us": 146206,
+        "copy_cost_remaining_us": 106856,
+        "copy_cost_planning_us": 19817,
+        "copy_cost_capture_us": 19533,
+        "copy_cost_samples": 23,
+        "copy_cost_full_us": 146206,
+        "request_cost_local_us": 1275186,
+        "request_cost_local_bytes": 320864256,
+        "request_cost_local_samples": 153,
+        "request_cost_inflight_us": 660,
+        "request_cost_inflight_bytes": 4194304,
+        "request_cost_inflight_samples": 2
+      },
+      "input_hashes": {
+        "requests.json": "46d807dff2e9a7d84d937256d985602bcefbcf1c68c503af66cdb00035082dee",
+        "policy-events.json": "b6c193dc7a3917b28b631a65e7d5c1b985fddaa1a704570cf69629d1a86f4fd8",
+        "result.json": "3fb4b82cc6ac6d9665407a7ab5c5157f442c5739a1aeda12c5bccb183c0a0bf7"
+      }
+    },
+    {
+      "round": 1,
+      "arm": "NoHotspot",
+      "remote": 1002,
+      "local": 148,
+      "ready_actions": 25,
+      "action_counts": {
+        "SHARED_PLACE": 25,
+        "ADMIT": 25,
+        "PROMOTE_READY": 8,
+        "REPLICATE_READY": 17,
+        "EVICT": 13
+      },
+      "commit_rejects": {
+        "measured_commit_capacity_bounded_calibration": 12,
+        "measured_commit_net_gain": 13
+      },
+      "early_duplicate_requests": [
+        {
+          "index": 34,
+          "key": 7,
+          "caller": 2,
+          "seconds": 0.022394696,
+          "response_seconds": 0.022899428
+        },
+        {
+          "index": 60,
+          "key": 45,
+          "caller": 1,
+          "seconds": 0.025568156,
+          "response_seconds": 0.025836165
+        },
+        {
+          "index": 61,
+          "key": 46,
+          "caller": 1,
+          "seconds": 0.023928949,
+          "response_seconds": 0.024158463
+        },
+        {
+          "index": 62,
+          "key": 47,
+          "caller": 1,
+          "seconds": 0.024168298,
+          "response_seconds": 0.024385095
+        },
+        {
+          "index": 63,
+          "key": 48,
+          "caller": 1,
+          "seconds": 0.026017735,
+          "response_seconds": 0.026246723
+        },
+        {
+          "index": 64,
+          "key": 49,
+          "caller": 1,
+          "seconds": 0.026510221,
+          "response_seconds": 0.026741422
+        },
+        {
+          "index": 65,
+          "key": 50,
+          "caller": 1,
+          "seconds": 0.024209457,
+          "response_seconds": 0.024439329
+        },
+        {
+          "index": 66,
+          "key": 51,
+          "caller": 1,
+          "seconds": 0.02579644,
+          "response_seconds": 0.026028943
+        },
+        {
+          "index": 67,
+          "key": 52,
+          "caller": 1,
+          "seconds": 0.026075683,
+          "response_seconds": 0.026333047
+        },
+        {
+          "index": 68,
+          "key": 53,
+          "caller": 1,
+          "seconds": 0.023931267,
+          "response_seconds": 0.02416174
+        },
+        {
+          "index": 69,
+          "key": 54,
+          "caller": 1,
+          "seconds": 0.025676132,
+          "response_seconds": 0.025931705
+        }
+      ],
+      "events45_56": [
+        {
+          "seq": 37,
+          "action": "SHARED_PLACE",
+          "key": 45,
+          "score": 5688.60120828135,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 34306.8,
+            "victim_loss": 0.0,
+            "copy": 5747.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 22871.2,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 38,
+          "action": "ADMIT",
+          "key": 45,
+          "score": 5688.601208281351,
+          "fields": {
+            "incoming": 34306.8,
+            "displaced": 0.0,
+            "copy": 5747.0,
+            "frequency": 2.0,
+            "calibrated": 1.0,
+            "affinity_count": 4.0,
+            "affinity_adjusted_items": 3.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 22871.2,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 41,
+          "action": "SHARED_PLACE",
+          "key": 46,
+          "score": 5549.296039084231,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 34264.3,
+            "victim_loss": 0.0,
+            "copy": 5872.15,
+            "burst_remaining": 0.0,
+            "uncertainty": 22842.9,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 42,
+          "action": "ADMIT",
+          "key": 46,
+          "score": 5549.296039084229,
+          "fields": {
+            "incoming": 34264.3,
+            "displaced": 0.0,
+            "copy": 5872.15,
+            "frequency": 2.0,
+            "calibrated": 1.0,
+            "affinity_count": 4.0,
+            "affinity_adjusted_items": 3.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 22842.9,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 45,
+          "action": "SHARED_PLACE",
+          "key": 47,
+          "score": 5470.313271204115,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 34229.9,
+            "victim_loss": 0.0,
+            "copy": 5939.64,
+            "burst_remaining": 0.0,
+            "uncertainty": 22819.9,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 46,
+          "action": "ADMIT",
+          "key": 47,
+          "score": 5470.313271204113,
+          "fields": {
+            "incoming": 34229.9,
+            "displaced": 0.0,
+            "copy": 5939.64,
+            "frequency": 1.0,
+            "calibrated": 1.0,
+            "affinity_count": 4.0,
+            "affinity_adjusted_items": 1.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 22819.9,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 49,
+          "action": "SHARED_PLACE",
+          "key": 48,
+          "score": 5481.203725967083,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 34193.8,
+            "victim_loss": 0.0,
+            "copy": 5916.73,
+            "burst_remaining": 0.0,
+            "uncertainty": 22795.9,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 50,
+          "action": "ADMIT",
+          "key": 48,
+          "score": 5481.203725967084,
+          "fields": {
+            "incoming": 34193.8,
+            "displaced": 0.0,
+            "copy": 5916.73,
+            "frequency": 1.0,
+            "calibrated": 1.0,
+            "affinity_count": 4.0,
+            "affinity_adjusted_items": 2.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 22795.9,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 53,
+          "action": "SHARED_PLACE",
+          "key": 49,
+          "score": 5383.681443706188,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 34181.6,
+            "victim_loss": 0.0,
+            "copy": 6010.19,
+            "burst_remaining": 0.0,
+            "uncertainty": 22787.7,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 54,
+          "action": "ADMIT",
+          "key": 49,
+          "score": 5383.6814437061885,
+          "fields": {
+            "incoming": 34181.6,
+            "displaced": 0.0,
+            "copy": 6010.19,
+            "frequency": 1.0,
+            "calibrated": 1.0,
+            "affinity_count": 4.0,
+            "affinity_adjusted_items": 3.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 22787.7,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 57,
+          "action": "SHARED_PLACE",
+          "key": 50,
+          "score": 5285.580704479911,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 34153.2,
+            "victim_loss": 0.0,
+            "copy": 6098.82,
+            "burst_remaining": 0.0,
+            "uncertainty": 22768.8,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 58,
+          "action": "ADMIT",
+          "key": 50,
+          "score": 5285.580704479909,
+          "fields": {
+            "incoming": 34153.2,
+            "displaced": 0.0,
+            "copy": 6098.82,
+            "frequency": 1.0,
+            "calibrated": 1.0,
+            "affinity_count": 4.0,
+            "affinity_adjusted_items": 4.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 22768.8,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 61,
+          "action": "SHARED_PLACE",
+          "key": 51,
+          "score": 5852.709186826352,
+          "fields": {
+            "caller": 2.0,
+            "incoming": 76583.9,
+            "victim_loss": 12764.0,
+            "copy": 6145.89,
+            "burst_remaining": 0.0,
+            "uncertainty": 51821.3,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 62,
+          "action": "ADMIT",
+          "key": 51,
+          "score": 5852.709186826348,
+          "fields": {
+            "incoming": 76583.9,
+            "displaced": 12764.0,
+            "copy": 6145.89,
+            "frequency": 4.0,
+            "calibrated": 1.0,
+            "affinity_count": 7.0,
+            "affinity_adjusted_items": 5.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 51821.3,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 65,
+          "action": "SHARED_PLACE",
+          "key": 52,
+          "score": 5704.794625125418,
+          "fields": {
+            "caller": 2.0,
+            "incoming": 76563.0,
+            "victim_loss": 12760.5,
+            "copy": 6290.53,
+            "burst_remaining": 0.0,
+            "uncertainty": 51807.2,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 66,
+          "action": "ADMIT",
+          "key": 52,
+          "score": 5704.794625125403,
+          "fields": {
+            "incoming": 76563.0,
+            "displaced": 12760.5,
+            "copy": 6290.53,
+            "frequency": 4.0,
+            "calibrated": 1.0,
+            "affinity_count": 7.0,
+            "affinity_adjusted_items": 5.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 51807.2,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 69,
+          "action": "SHARED_PLACE",
+          "key": 53,
+          "score": 5588.33835198445,
+          "fields": {
+            "caller": 2.0,
+            "incoming": 76490.0,
+            "victim_loss": 12748.3,
+            "copy": 6395.55,
+            "burst_remaining": 0.0,
+            "uncertainty": 51757.8,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 70,
+          "action": "ADMIT",
+          "key": 53,
+          "score": 5588.338351984454,
+          "fields": {
+            "incoming": 76490.0,
+            "displaced": 12748.3,
+            "copy": 6395.55,
+            "frequency": 4.0,
+            "calibrated": 1.0,
+            "affinity_count": 7.0,
+            "affinity_adjusted_items": 5.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 51757.8,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 73,
+          "action": "SHARED_PLACE",
+          "key": 54,
+          "score": 5523.197838054388,
+          "fields": {
+            "caller": 2.0,
+            "incoming": 76411.4,
+            "victim_loss": 12735.2,
+            "copy": 6448.37,
+            "burst_remaining": 0.0,
+            "uncertainty": 51704.6,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 74,
+          "action": "ADMIT",
+          "key": 54,
+          "score": 5523.197838054379,
+          "fields": {
+            "incoming": 76411.4,
+            "displaced": 12735.2,
+            "copy": 6448.37,
+            "frequency": 5.0,
+            "calibrated": 1.0,
+            "affinity_count": 7.0,
+            "affinity_adjusted_items": 5.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 51704.6,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 77,
+          "action": "SHARED_PLACE",
+          "key": 55,
+          "score": 5430.604560580177,
+          "fields": {
+            "caller": 2.0,
+            "incoming": 76372.7,
+            "victim_loss": 12728.8,
+            "copy": 6534.9,
+            "burst_remaining": 0.0,
+            "uncertainty": 51678.4,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 78,
+          "action": "ADMIT",
+          "key": 55,
+          "score": 5430.604560580182,
+          "fields": {
+            "incoming": 76372.7,
+            "displaced": 12728.8,
+            "copy": 6534.9,
+            "frequency": 4.0,
+            "calibrated": 1.0,
+            "affinity_count": 7.0,
+            "affinity_adjusted_items": 5.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 51678.4,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 81,
+          "action": "SHARED_PLACE",
+          "key": 56,
+          "score": 12282.90653932048,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 75279.3,
+            "victim_loss": 10754.2,
+            "copy": 6616.06,
+            "burst_remaining": 0.0,
+            "uncertainty": 45626.1,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 82,
+          "action": "ADMIT",
+          "key": 56,
+          "score": 12282.906539320478,
+          "fields": {
+            "incoming": 75279.3,
+            "displaced": 10754.2,
+            "copy": 6616.06,
+            "frequency": 5.0,
+            "calibrated": 1.0,
+            "affinity_count": 8.0,
+            "affinity_adjusted_items": 4.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 45626.1,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        }
+      ],
+      "aggregate_cost_metrics": {
+        "request_cost_remote_bytes": 2101346304,
+        "request_cost_remote_us": 20457241,
+        "request_cost_remote_samples": 1002,
+        "copy_cost_capture_us": 20406,
+        "copy_cost_samples": 25,
+        "copy_cost_full_us": 167468,
+        "copy_cost_planning_us": 24339,
+        "copy_cost_remaining_us": 122723,
+        "copy_cost_charged_us": 167468,
+        "request_cost_local_us": 1266669,
+        "request_cost_local_bytes": 310378496,
+        "request_cost_local_samples": 148,
+        "request_cost_inflight_us": 719,
+        "request_cost_inflight_bytes": 4194304,
+        "request_cost_inflight_samples": 2
+      },
+      "input_hashes": {
+        "requests.json": "61381bdcf991184004f4a61c9e32f16feb5f6411fe0c0d8c86b9d46b528deffc",
+        "policy-events.json": "ce561cd8063d7498065a81501dceea2986470da5a25bb6bcfe0ee2f912d04f92",
+        "result.json": "ee7b25bc36699154943b436ea733d12078070e0dc3bf69cbd1c3b423b9083e70"
+      }
+    },
+    {
+      "round": 2,
+      "arm": "Full",
+      "remote": 997,
+      "local": 153,
+      "ready_actions": 25,
+      "action_counts": {
+        "SHARED_PLACE": 36,
+        "ADMIT": 25,
+        "PROMOTE_READY": 8,
+        "REPLICATE_READY": 17,
+        "EVICT": 13
+      },
+      "commit_rejects": {
+        "measured_commit_capacity_bounded_calibration": 12,
+        "measured_commit_victim_loss": 11,
+        "measured_commit_net_gain": 13
+      },
+      "early_duplicate_requests": [
+        {
+          "index": 34,
+          "key": 7,
+          "caller": 2,
+          "seconds": 0.023059661,
+          "response_seconds": 0.023408158
+        },
+        {
+          "index": 60,
+          "key": 45,
+          "caller": 1,
+          "seconds": 0.023815386,
+          "response_seconds": 0.024077345
+        },
+        {
+          "index": 61,
+          "key": 46,
+          "caller": 1,
+          "seconds": 0.026876142,
+          "response_seconds": 0.027104569
+        },
+        {
+          "index": 62,
+          "key": 47,
+          "caller": 1,
+          "seconds": 0.02619866,
+          "response_seconds": 0.026438136
+        },
+        {
+          "index": 63,
+          "key": 48,
+          "caller": 1,
+          "seconds": 0.025267922,
+          "response_seconds": 0.025497944
+        },
+        {
+          "index": 64,
+          "key": 49,
+          "caller": 1,
+          "seconds": 0.025265944,
+          "response_seconds": 0.025487073
+        },
+        {
+          "index": 65,
+          "key": 50,
+          "caller": 1,
+          "seconds": 0.025142845,
+          "response_seconds": 0.025375064
+        },
+        {
+          "index": 66,
+          "key": 51,
+          "caller": 1,
+          "seconds": 0.024276444,
+          "response_seconds": 0.024513058
+        },
+        {
+          "index": 67,
+          "key": 52,
+          "caller": 1,
+          "seconds": 0.024952298,
+          "response_seconds": 0.025187499
+        },
+        {
+          "index": 68,
+          "key": 53,
+          "caller": 1,
+          "seconds": 0.025081094,
+          "response_seconds": 0.025300404
+        },
+        {
+          "index": 69,
+          "key": 54,
+          "caller": 1,
+          "seconds": 0.025520997,
+          "response_seconds": 0.02574326
+        }
+      ],
+      "events45_56": [
+        {
+          "seq": 37,
+          "action": "SHARED_PLACE",
+          "key": 45,
+          "score": 607.2677951670676,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 12777.5,
+            "victim_loss": 0.0,
+            "copy": 5422.33,
+            "burst_remaining": 0.0,
+            "uncertainty": 6747.93,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 2795.0841239442793,
+          "dimensionless_forecast_ratio": 4.571418760008213,
+          "counterfactual_one_observation_decay_margin_us": -9.947387239740806
+        },
+        {
+          "seq": 38,
+          "action": "SHARED_PLACE",
+          "key": 46,
+          "score": 785.8759390073456,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 13156.0,
+            "victim_loss": 0.0,
+            "copy": 5422.33,
+            "burst_remaining": 0.0,
+            "uncertainty": 6947.82,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 2877.881272927037,
+          "dimensionless_forecast_ratio": 4.571418607071058,
+          "counterfactual_one_observation_decay_margin_us": 150.37737201505672
+        },
+        {
+          "seq": 39,
+          "action": "ADMIT",
+          "key": 46,
+          "score": 150.37592579403008,
+          "fields": {
+            "incoming": 12520.5,
+            "displaced": 0.0,
+            "copy": 5422.33,
+            "frequency": 1.0,
+            "calibrated": 1.0,
+            "affinity_count": 2.0,
+            "affinity_adjusted_items": 5.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 6947.82,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 2877.881272927037,
+          "dimensionless_forecast_ratio": 4.350596432793644
+        },
+        {
+          "seq": 42,
+          "action": "SHARED_PLACE",
+          "key": 47,
+          "score": 562.8037445900136,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 13110.3,
+            "victim_loss": 0.0,
+            "copy": 5623.85,
+            "burst_remaining": 0.0,
+            "uncertainty": 6923.69,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 2867.8862996669745,
+          "dimensionless_forecast_ratio": 4.5714155409586485,
+          "counterfactual_one_observation_decay_margin_us": -70.48729089486051
+        },
+        {
+          "seq": 43,
+          "action": "SHARED_PLACE",
+          "key": 48,
+          "score": 529.055467075038,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 13038.8,
+            "victim_loss": 0.0,
+            "copy": 5623.85,
+            "burst_remaining": 0.0,
+            "uncertainty": 6885.92,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 2852.241453416143,
+          "dimensionless_forecast_ratio": 4.571422235092814,
+          "counterfactual_one_observation_decay_margin_us": -100.78177185009542
+        },
+        {
+          "seq": 44,
+          "action": "SHARED_PLACE",
+          "key": 49,
+          "score": 505.83918497294326,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 12989.6,
+            "victim_loss": 0.0,
+            "copy": 5623.85,
+            "burst_remaining": 0.0,
+            "uncertainty": 6859.94,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 2841.4801850656895,
+          "dimensionless_forecast_ratio": 4.571420229594072,
+          "counterfactual_one_observation_decay_margin_us": -121.62145548031276
+        },
+        {
+          "seq": 45,
+          "action": "SHARED_PLACE",
+          "key": 50,
+          "score": 480.22431221100396,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 12935.3,
+            "victim_loss": 0.0,
+            "copy": 5623.85,
+            "burst_remaining": 0.0,
+            "uncertainty": 6831.28,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 2829.608824368077,
+          "dimensionless_forecast_ratio": 4.571409266398785,
+          "counterfactual_one_observation_decay_margin_us": -144.61337505072856
+        },
+        {
+          "seq": 46,
+          "action": "SHARED_PLACE",
+          "key": 51,
+          "score": 456.75306909079245,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 12885.6,
+            "victim_loss": 0.0,
+            "copy": 5623.85,
+            "burst_remaining": 0.0,
+            "uncertainty": 6805.01,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 2818.7274340845356,
+          "dimensionless_forecast_ratio": 4.571424623816093,
+          "counterfactual_one_observation_decay_margin_us": -165.683867275568
+        },
+        {
+          "seq": 47,
+          "action": "SHARED_PLACE",
+          "key": 52,
+          "score": 431.2195656130043,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 12831.5,
+            "victim_loss": 0.0,
+            "copy": 5623.85,
+            "burst_remaining": 0.0,
+            "uncertainty": 6776.43,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 2806.889210471913,
+          "dimensionless_forecast_ratio": 4.571430875193924,
+          "counterfactual_one_observation_decay_margin_us": -188.60407853123058
+        },
+        {
+          "seq": 48,
+          "action": "SHARED_PLACE",
+          "key": 53,
+          "score": 405.2369653018668,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 12776.4,
+            "victim_loss": 0.0,
+            "copy": 5623.85,
+            "burst_remaining": 0.0,
+            "uncertainty": 6747.35,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 2794.843880078103,
+          "dimensionless_forecast_ratio": 4.571418135757535,
+          "counterfactual_one_observation_decay_margin_us": -211.92508177325317
+        },
+        {
+          "seq": 49,
+          "action": "SHARED_PLACE",
+          "key": 54,
+          "score": 383.25001376759974,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 12729.8,
+            "victim_loss": 0.0,
+            "copy": 5623.85,
+            "burst_remaining": 0.0,
+            "uncertainty": 6722.75,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 2784.654226443725,
+          "dimensionless_forecast_ratio": 4.5714113727711165,
+          "counterfactual_one_observation_decay_margin_us": -231.66102743781516
+        },
+        {
+          "seq": 50,
+          "action": "SHARED_PLACE",
+          "key": 55,
+          "score": 367.000422079509,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 12695.4,
+            "victim_loss": 0.0,
+            "copy": 5623.85,
+            "burst_remaining": 0.0,
+            "uncertainty": 6704.56,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 2777.1196817441582,
+          "dimensionless_forecast_ratio": 4.571427037680532,
+          "counterfactual_one_observation_decay_margin_us": -246.24893238947118
+        },
+        {
+          "seq": 51,
+          "action": "SHARED_PLACE",
+          "key": 56,
+          "score": 347.14101920726716,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 12653.3,
+            "victim_loss": 0.0,
+            "copy": 5623.85,
+            "burst_remaining": 0.0,
+            "uncertainty": 6682.34,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 2767.9158563882283,
+          "dimensionless_forecast_ratio": 4.571417866911213,
+          "counterfactual_one_observation_decay_margin_us": -264.0747012034601
+        },
+        {
+          "seq": 52,
+          "action": "SHARED_PLACE",
+          "key": 45,
+          "score": 5502.512262930461,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 33379.1,
+            "victim_loss": 0.0,
+            "copy": 5623.85,
+            "burst_remaining": 0.0,
+            "uncertainty": 22252.7,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 53,
+          "action": "ADMIT",
+          "key": 45,
+          "score": 5502.5122629304615,
+          "fields": {
+            "incoming": 33379.1,
+            "displaced": 0.0,
+            "copy": 5623.85,
+            "frequency": 2.0,
+            "calibrated": 1.0,
+            "affinity_count": 4.0,
+            "affinity_adjusted_items": 2.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 22252.7,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 56,
+          "action": "SHARED_PLACE",
+          "key": 47,
+          "score": 5343.533353080646,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 33701.7,
+            "victim_loss": 0.0,
+            "copy": 5890.36,
+            "burst_remaining": 0.0,
+            "uncertainty": 22467.8,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 57,
+          "action": "ADMIT",
+          "key": 47,
+          "score": 5343.5333530806465,
+          "fields": {
+            "incoming": 33701.7,
+            "displaced": 0.0,
+            "copy": 5890.36,
+            "frequency": 2.0,
+            "calibrated": 1.0,
+            "affinity_count": 4.0,
+            "affinity_adjusted_items": 4.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 22467.8,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 60,
+          "action": "SHARED_PLACE",
+          "key": 48,
+          "score": 5246.172323476578,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 33701.3,
+            "victim_loss": 0.0,
+            "copy": 5987.6,
+            "burst_remaining": 0.0,
+            "uncertainty": 22467.5,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 61,
+          "action": "ADMIT",
+          "key": 48,
+          "score": 5246.172323476579,
+          "fields": {
+            "incoming": 33701.3,
+            "displaced": 0.0,
+            "copy": 5987.6,
+            "frequency": 1.0,
+            "calibrated": 1.0,
+            "affinity_count": 4.0,
+            "affinity_adjusted_items": 1.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 22467.5,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 64,
+          "action": "SHARED_PLACE",
+          "key": 49,
+          "score": 5149.122559638432,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 33696.9,
+            "victim_loss": 0.0,
+            "copy": 6083.19,
+            "burst_remaining": 0.0,
+            "uncertainty": 22464.6,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 65,
+          "action": "ADMIT",
+          "key": 49,
+          "score": 5149.122559638431,
+          "fields": {
+            "incoming": 33696.9,
+            "displaced": 0.0,
+            "copy": 6083.19,
+            "frequency": 1.0,
+            "calibrated": 1.0,
+            "affinity_count": 4.0,
+            "affinity_adjusted_items": 2.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 22464.6,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 68,
+          "action": "SHARED_PLACE",
+          "key": 50,
+          "score": 5154.5973795804275,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 33952.3,
+            "victim_loss": 0.0,
+            "copy": 6162.82,
+            "burst_remaining": 0.0,
+            "uncertainty": 22634.8,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 69,
+          "action": "ADMIT",
+          "key": 50,
+          "score": 5154.597379580428,
+          "fields": {
+            "incoming": 33952.3,
+            "displaced": 0.0,
+            "copy": 6162.82,
+            "frequency": 1.0,
+            "calibrated": 1.0,
+            "affinity_count": 4.0,
+            "affinity_adjusted_items": 3.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 22634.8,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 72,
+          "action": "SHARED_PLACE",
+          "key": 51,
+          "score": 5129.97066032271,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 33897.1,
+            "victim_loss": 0.0,
+            "copy": 6169.06,
+            "burst_remaining": 0.0,
+            "uncertainty": 22598.1,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 73,
+          "action": "ADMIT",
+          "key": 51,
+          "score": 5129.970660322709,
+          "fields": {
+            "incoming": 33897.1,
+            "displaced": 0.0,
+            "copy": 6169.06,
+            "frequency": 1.0,
+            "calibrated": 1.0,
+            "affinity_count": 4.0,
+            "affinity_adjusted_items": 4.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 22598.1,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 80,
+          "action": "SHARED_PLACE",
+          "key": 48,
+          "score": 5294.458627395128,
+          "fields": {
+            "caller": 2.0,
+            "incoming": 74034.7,
+            "victim_loss": 12339.1,
+            "copy": 6304.75,
+            "burst_remaining": 0.0,
+            "uncertainty": 50096.4,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 81,
+          "action": "ADMIT",
+          "key": 48,
+          "score": 5294.458627395128,
+          "fields": {
+            "incoming": 74034.7,
+            "displaced": 12339.1,
+            "copy": 6304.75,
+            "frequency": 4.0,
+            "calibrated": 1.0,
+            "affinity_count": 7.0,
+            "affinity_adjusted_items": 4.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 50096.4,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 84,
+          "action": "SHARED_PLACE",
+          "key": 52,
+          "score": 5340.882913679874,
+          "fields": {
+            "caller": 2.0,
+            "incoming": 74593.5,
+            "victim_loss": 12432.2,
+            "copy": 6345.86,
+            "burst_remaining": 0.0,
+            "uncertainty": 50474.5,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 85,
+          "action": "ADMIT",
+          "key": 52,
+          "score": 5340.882913679877,
+          "fields": {
+            "incoming": 74593.5,
+            "displaced": 12432.2,
+            "copy": 6345.86,
+            "frequency": 4.0,
+            "calibrated": 1.0,
+            "affinity_count": 7.0,
+            "affinity_adjusted_items": 5.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 50474.5,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 88,
+          "action": "SHARED_PLACE",
+          "key": 53,
+          "score": 5248.614694722346,
+          "fields": {
+            "caller": 2.0,
+            "incoming": 74585.1,
+            "victim_loss": 12430.8,
+            "copy": 6436.82,
+            "burst_remaining": 0.0,
+            "uncertainty": 50468.8,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 89,
+          "action": "ADMIT",
+          "key": 53,
+          "score": 5248.614694722345,
+          "fields": {
+            "incoming": 74585.1,
+            "displaced": 12430.8,
+            "copy": 6436.82,
+            "frequency": 4.0,
+            "calibrated": 1.0,
+            "affinity_count": 7.0,
+            "affinity_adjusted_items": 5.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 50468.8,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 92,
+          "action": "SHARED_PLACE",
+          "key": 54,
+          "score": 5183.587928864596,
+          "fields": {
+            "caller": 2.0,
+            "incoming": 74584.3,
+            "victim_loss": 12430.7,
+            "copy": 6501.73,
+            "burst_remaining": 0.0,
+            "uncertainty": 50468.3,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 93,
+          "action": "ADMIT",
+          "key": 54,
+          "score": 5183.587928864593,
+          "fields": {
+            "incoming": 74584.3,
+            "displaced": 12430.7,
+            "copy": 6501.73,
+            "frequency": 5.0,
+            "calibrated": 1.0,
+            "affinity_count": 7.0,
+            "affinity_adjusted_items": 5.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 50468.3,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 96,
+          "action": "SHARED_PLACE",
+          "key": 55,
+          "score": 5112.991425777589,
+          "fields": {
+            "caller": 2.0,
+            "incoming": 74570.7,
+            "victim_loss": 12428.5,
+            "copy": 6570.19,
+            "burst_remaining": 0.0,
+            "uncertainty": 50459.1,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 97,
+          "action": "ADMIT",
+          "key": 55,
+          "score": 5112.9914257775945,
+          "fields": {
+            "incoming": 74570.7,
+            "displaced": 12428.5,
+            "copy": 6570.19,
+            "frequency": 5.0,
+            "calibrated": 1.0,
+            "affinity_count": 7.0,
+            "affinity_adjusted_items": 5.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 50459.1,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        }
+      ],
+      "aggregate_cost_metrics": {
+        "request_cost_remote_bytes": 2090860544,
+        "request_cost_remote_us": 20120669,
+        "request_cost_remote_samples": 997,
+        "copy_cost_charged_us": 165031,
+        "copy_cost_remaining_us": 122755,
+        "copy_cost_planning_us": 21571,
+        "copy_cost_capture_us": 20705,
+        "copy_cost_samples": 25,
+        "copy_cost_full_us": 165031,
+        "request_cost_local_us": 1304332,
+        "request_cost_local_bytes": 320864256,
+        "request_cost_local_samples": 153,
+        "request_cost_inflight_us": 626,
+        "request_cost_inflight_bytes": 4194304,
+        "request_cost_inflight_samples": 2
+      },
+      "input_hashes": {
+        "requests.json": "42b42a4249bf1265bf570a1734d3f6af270013ea0dbbd20b0cd078f56e5da3b9",
+        "policy-events.json": "44500187d0773bc3bafe58f37787b9559e7b9d47a33a41574fed942b28210b76",
+        "result.json": "a2065f74e3733cd8eabbaa68e60d36641f0253d273c01375a236de7d285626a2"
+      }
+    },
+    {
+      "round": 2,
+      "arm": "SyncSubmission",
+      "remote": 967,
+      "local": 183,
+      "ready_actions": 33,
+      "action_counts": {
+        "SHARED_PLACE": 33,
+        "ADMIT": 33,
+        "PROMOTE_READY": 16,
+        "REPLICATE_READY": 17,
+        "EVICT": 21
+      },
+      "commit_rejects": {
+        "measured_commit_capacity_bounded_calibration": 12,
+        "measured_commit_net_gain": 21
+      },
+      "early_duplicate_requests": [
+        {
+          "index": 34,
+          "key": 7,
+          "caller": 2,
+          "seconds": 0.021231639,
+          "response_seconds": 0.021659283
+        },
+        {
+          "index": 60,
+          "key": 45,
+          "caller": 1,
+          "seconds": 0.02481134,
+          "response_seconds": 0.025034216
+        },
+        {
+          "index": 61,
+          "key": 46,
+          "caller": 1,
+          "seconds": 0.027132836,
+          "response_seconds": 0.027352886
+        },
+        {
+          "index": 62,
+          "key": 47,
+          "caller": 1,
+          "seconds": 0.026788551,
+          "response_seconds": 0.027004409
+        },
+        {
+          "index": 63,
+          "key": 48,
+          "caller": 1,
+          "seconds": 0.029054745,
+          "response_seconds": 0.029285909
+        },
+        {
+          "index": 64,
+          "key": 49,
+          "caller": 1,
+          "seconds": 0.028348464,
+          "response_seconds": 0.028585225
+        },
+        {
+          "index": 65,
+          "key": 50,
+          "caller": 1,
+          "seconds": 0.029857795,
+          "response_seconds": 0.030096559
+        },
+        {
+          "index": 66,
+          "key": 51,
+          "caller": 1,
+          "seconds": 0.027999343,
+          "response_seconds": 0.0282345
+        },
+        {
+          "index": 67,
+          "key": 52,
+          "caller": 1,
+          "seconds": 0.028159782,
+          "response_seconds": 0.028411428
+        },
+        {
+          "index": 68,
+          "key": 53,
+          "caller": 1,
+          "seconds": 0.026768635,
+          "response_seconds": 0.027045892
+        },
+        {
+          "index": 69,
+          "key": 54,
+          "caller": 1,
+          "seconds": 0.026737478,
+          "response_seconds": 0.026981751
+        }
+      ],
+      "events45_56": [
+        {
+          "seq": 37,
+          "action": "SHARED_PLACE",
+          "key": 45,
+          "score": 2669.982596371494,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 18174.7,
+            "victim_loss": 0.0,
+            "copy": 5906.5,
+            "burst_remaining": 0.0,
+            "uncertainty": 9598.24,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 3975.721182911936,
+          "dimensionless_forecast_ratio": 4.571422180739624,
+          "counterfactual_one_observation_decay_margin_us": 1792.0564937936015
+        },
+        {
+          "seq": 38,
+          "action": "ADMIT",
+          "key": 45,
+          "score": 1792.0555542531329,
+          "fields": {
+            "incoming": 17296.8,
+            "displaced": 0.0,
+            "copy": 5906.5,
+            "frequency": 1.0,
+            "calibrated": 1.0,
+            "affinity_count": 2.0,
+            "affinity_adjusted_items": 5.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 9598.24,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 3975.721182911936,
+          "dimensionless_forecast_ratio": 4.350606897270223
+        },
+        {
+          "seq": 41,
+          "action": "SHARED_PLACE",
+          "key": 46,
+          "score": 2456.9864214288355,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 18086.8,
+            "victim_loss": 0.0,
+            "copy": 6078.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 9551.8,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 3956.485105075329,
+          "dimensionless_forecast_ratio": 4.571431338588506,
+          "counterfactual_one_observation_decay_margin_us": 1583.3063149013096
+        },
+        {
+          "seq": 42,
+          "action": "ADMIT",
+          "key": 46,
+          "score": 1583.3071130075032,
+          "fields": {
+            "incoming": 17213.1,
+            "displaced": 0.0,
+            "copy": 6078.0,
+            "frequency": 1.0,
+            "calibrated": 1.0,
+            "affinity_count": 2.0,
+            "affinity_adjusted_items": 5.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 9551.8,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 3956.485105075329,
+          "dimensionless_forecast_ratio": 4.3506040191884585
+        },
+        {
+          "seq": 45,
+          "action": "SHARED_PLACE",
+          "key": 47,
+          "score": 2307.1976851158543,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 18034.1,
+            "victim_loss": 0.0,
+            "copy": 6202.93,
+            "burst_remaining": 0.0,
+            "uncertainty": 9523.98,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 3944.9616837701096,
+          "dimensionless_forecast_ratio": 4.571425896021688,
+          "counterfactual_one_observation_decay_margin_us": 1436.0632440246688
+        },
+        {
+          "seq": 46,
+          "action": "ADMIT",
+          "key": 47,
+          "score": 1436.0631741424622,
+          "fields": {
+            "incoming": 17163.0,
+            "displaced": 0.0,
+            "copy": 6202.93,
+            "frequency": 1.0,
+            "calibrated": 1.0,
+            "affinity_count": 2.0,
+            "affinity_adjusted_items": 5.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 9523.98,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 3944.9616837701096,
+          "dimensionless_forecast_ratio": 4.350612597990486
+        },
+        {
+          "seq": 49,
+          "action": "SHARED_PLACE",
+          "key": 48,
+          "score": 2343.6666108940426,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 18399.6,
+            "victim_loss": 0.0,
+            "copy": 6338.93,
+            "burst_remaining": 0.0,
+            "uncertainty": 9717.0,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 4024.913185579365,
+          "dimensionless_forecast_ratio": 4.571427792759081,
+          "counterfactual_one_observation_decay_margin_us": 1454.8767482282387
+        },
+        {
+          "seq": 50,
+          "action": "ADMIT",
+          "key": 48,
+          "score": 1454.876923364378,
+          "fields": {
+            "incoming": 17510.8,
+            "displaced": 0.0,
+            "copy": 6338.93,
+            "frequency": 1.0,
+            "calibrated": 1.0,
+            "affinity_count": 2.0,
+            "affinity_adjusted_items": 1.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 9717.0,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 4024.913185579365,
+          "dimensionless_forecast_ratio": 4.350603154060182
+        },
+        {
+          "seq": 53,
+          "action": "SHARED_PLACE",
+          "key": 49,
+          "score": 2094.7423571632007,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 18311.2,
+            "victim_loss": 0.0,
+            "copy": 6546.13,
+            "burst_remaining": 0.0,
+            "uncertainty": 9670.29,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 4005.565270080918,
+          "dimensionless_forecast_ratio": 4.571439675886268,
+          "counterfactual_one_observation_decay_margin_us": 1210.2226429712578
+        },
+        {
+          "seq": 54,
+          "action": "ADMIT",
+          "key": 49,
+          "score": 1210.2246035306207,
+          "fields": {
+            "incoming": 17426.6,
+            "displaced": 0.0,
+            "copy": 6546.13,
+            "frequency": 1.0,
+            "calibrated": 1.0,
+            "affinity_count": 2.0,
+            "affinity_adjusted_items": 2.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 9670.29,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 4005.565270080918,
+          "dimensionless_forecast_ratio": 4.350596938256347
+        },
+        {
+          "seq": 57,
+          "action": "SHARED_PLACE",
+          "key": 50,
+          "score": 2135.6979256109407,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 18685.9,
+            "victim_loss": 0.0,
+            "copy": 6682.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 9868.19,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 4087.5381340745535,
+          "dimensionless_forecast_ratio": 4.571431357234449,
+          "counterfactual_one_observation_decay_margin_us": 1233.0783852520772
+        },
+        {
+          "seq": 58,
+          "action": "ADMIT",
+          "key": 50,
+          "score": 1233.0790056588366,
+          "fields": {
+            "incoming": 17783.3,
+            "displaced": 0.0,
+            "copy": 6682.0,
+            "frequency": 1.0,
+            "calibrated": 1.0,
+            "affinity_count": 2.0,
+            "affinity_adjusted_items": 3.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 9868.19,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 4087.5381340745535,
+          "dimensionless_forecast_ratio": 4.350613845472113
+        },
+        {
+          "seq": 61,
+          "action": "SHARED_PLACE",
+          "key": 51,
+          "score": 1978.6738305445979,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 18617.0,
+            "victim_loss": 0.0,
+            "copy": 6806.5,
+            "burst_remaining": 0.0,
+            "uncertainty": 9831.79,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 4072.4607604041726,
+          "dimensionless_forecast_ratio": 4.571437539929138,
+          "counterfactual_one_observation_decay_margin_us": 1079.3824941433027
+        },
+        {
+          "seq": 62,
+          "action": "ADMIT",
+          "key": 51,
+          "score": 1079.3842221439772,
+          "fields": {
+            "incoming": 17717.7,
+            "displaced": 0.0,
+            "copy": 6806.5,
+            "frequency": 1.0,
+            "calibrated": 1.0,
+            "affinity_count": 2.0,
+            "affinity_adjusted_items": 4.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 9831.79,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 4072.4607604041726,
+          "dimensionless_forecast_ratio": 4.350612821679245
+        },
+        {
+          "seq": 65,
+          "action": "SHARED_PLACE",
+          "key": 52,
+          "score": 1816.879188297975,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 18511.9,
+            "victim_loss": 0.0,
+            "copy": 6918.74,
+            "burst_remaining": 0.0,
+            "uncertainty": 9776.33,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 4049.4884762349607,
+          "dimensionless_forecast_ratio": 4.571416886019038,
+          "counterfactual_one_observation_decay_margin_us": 922.6646913152633
+        },
+        {
+          "seq": 66,
+          "action": "ADMIT",
+          "key": 52,
+          "score": 922.6625375350659,
+          "fields": {
+            "incoming": 17617.7,
+            "displaced": 0.0,
+            "copy": 6918.74,
+            "frequency": 0.0,
+            "calibrated": 1.0,
+            "affinity_count": 2.0,
+            "affinity_adjusted_items": 5.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 9776.33,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 4049.4884762349607,
+          "dimensionless_forecast_ratio": 4.350598872769278
+        },
+        {
+          "seq": 69,
+          "action": "SHARED_PLACE",
+          "key": 53,
+          "score": 1739.2001570773555,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 18441.7,
+            "victim_loss": 0.0,
+            "copy": 6963.25,
+            "burst_remaining": 0.0,
+            "uncertainty": 9739.21,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 4034.112868799671,
+          "dimensionless_forecast_ratio": 4.571438777191981,
+          "counterfactual_one_observation_decay_margin_us": 848.3766603532985
+        },
+        {
+          "seq": 70,
+          "action": "ADMIT",
+          "key": 53,
+          "score": 848.3785131533305,
+          "fields": {
+            "incoming": 17550.8,
+            "displaced": 0.0,
+            "copy": 6963.25,
+            "frequency": 0.0,
+            "calibrated": 1.0,
+            "affinity_count": 2.0,
+            "affinity_adjusted_items": 5.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 9739.21,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 4034.112868799671,
+          "dimensionless_forecast_ratio": 4.3505971624492865
+        },
+        {
+          "seq": 73,
+          "action": "SHARED_PLACE",
+          "key": 54,
+          "score": 1673.0273681863273,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 18384.3,
+            "victim_loss": 0.0,
+            "copy": 7002.34,
+            "burst_remaining": 0.0,
+            "uncertainty": 9708.9,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 4021.5580557241424,
+          "dimensionless_forecast_ratio": 4.571437175656943,
+          "counterfactual_one_observation_decay_margin_us": 784.9765696794608
+        },
+        {
+          "seq": 74,
+          "action": "ADMIT",
+          "key": 54,
+          "score": 784.9782953360327,
+          "fields": {
+            "incoming": 17496.2,
+            "displaced": 0.0,
+            "copy": 7002.34,
+            "frequency": 0.0,
+            "calibrated": 1.0,
+            "affinity_count": 2.0,
+            "affinity_adjusted_items": 5.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 9708.9,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 4021.5580557241424,
+          "dimensionless_forecast_ratio": 4.350602367929647
+        },
+        {
+          "seq": 77,
+          "action": "SHARED_PLACE",
+          "key": 55,
+          "score": 1579.10614440881,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 18288.8,
+            "victim_loss": 0.0,
+            "copy": 7051.22,
+            "burst_remaining": 0.0,
+            "uncertainty": 9658.5,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 4000.681692180539,
+          "dimensionless_forecast_ratio": 4.57142092452545,
+          "counterfactual_one_observation_decay_margin_us": 695.6684587894293
+        },
+        {
+          "seq": 78,
+          "action": "ADMIT",
+          "key": 55,
+          "score": 695.6673723896656,
+          "fields": {
+            "incoming": 17405.4,
+            "displaced": 0.0,
+            "copy": 7051.22,
+            "frequency": 0.0,
+            "calibrated": 1.0,
+            "affinity_count": 2.0,
+            "affinity_adjusted_items": 5.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 9658.5,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          },
+          "inferred_saving_us_if_second_visit_victim_count1": 4000.681692180539,
+          "dimensionless_forecast_ratio": 4.35060855604169
+        },
+        {
+          "seq": 101,
+          "action": "SHARED_PLACE",
+          "key": 48,
+          "score": 4717.008880342808,
+          "fields": {
+            "caller": 2.0,
+            "incoming": 76750.8,
+            "victim_loss": 12791.8,
+            "copy": 7307.73,
+            "burst_remaining": 0.0,
+            "uncertainty": 51934.2,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 102,
+          "action": "ADMIT",
+          "key": 48,
+          "score": 4717.008880342814,
+          "fields": {
+            "incoming": 76750.8,
+            "displaced": 12791.8,
+            "copy": 7307.73,
+            "frequency": 4.0,
+            "calibrated": 1.0,
+            "affinity_count": 7.0,
+            "affinity_adjusted_items": 5.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 51934.2,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 105,
+          "action": "SHARED_PLACE",
+          "key": 49,
+          "score": 4698.5866758681805,
+          "fields": {
+            "caller": 2.0,
+            "incoming": 76709.5,
+            "victim_loss": 12784.9,
+            "copy": 7319.69,
+            "burst_remaining": 0.0,
+            "uncertainty": 51906.3,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 106,
+          "action": "ADMIT",
+          "key": 49,
+          "score": 4698.586675868174,
+          "fields": {
+            "incoming": 76709.5,
+            "displaced": 12784.9,
+            "copy": 7319.69,
+            "frequency": 4.0,
+            "calibrated": 1.0,
+            "affinity_count": 7.0,
+            "affinity_adjusted_items": 5.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 51906.3,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 109,
+          "action": "SHARED_PLACE",
+          "key": 50,
+          "score": 4835.635581617287,
+          "fields": {
+            "caller": 2.0,
+            "incoming": 76670.4,
+            "victim_loss": 12778.4,
+            "copy": 7176.51,
+            "burst_remaining": 0.0,
+            "uncertainty": 51879.8,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 110,
+          "action": "ADMIT",
+          "key": 50,
+          "score": 4835.6355816172845,
+          "fields": {
+            "incoming": 76670.4,
+            "displaced": 12778.4,
+            "copy": 7176.51,
+            "frequency": 4.0,
+            "calibrated": 1.0,
+            "affinity_count": 7.0,
+            "affinity_adjusted_items": 5.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 51879.8,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 113,
+          "action": "SHARED_PLACE",
+          "key": 51,
+          "score": 4755.370755797456,
+          "fields": {
+            "caller": 2.0,
+            "incoming": 76584.3,
+            "victim_loss": 12764.0,
+            "copy": 7243.28,
+            "burst_remaining": 0.0,
+            "uncertainty": 51821.6,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 114,
+          "action": "ADMIT",
+          "key": 51,
+          "score": 4755.370755797447,
+          "fields": {
+            "incoming": 76584.3,
+            "displaced": 12764.0,
+            "copy": 7243.28,
+            "frequency": 4.0,
+            "calibrated": 1.0,
+            "affinity_count": 7.0,
+            "affinity_adjusted_items": 5.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 51821.6,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 117,
+          "action": "SHARED_PLACE",
+          "key": 52,
+          "score": 4690.692450524788,
+          "fields": {
+            "caller": 2.0,
+            "incoming": 76550.2,
+            "victim_loss": 12758.4,
+            "copy": 7302.62,
+            "burst_remaining": 0.0,
+            "uncertainty": 51798.5,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 118,
+          "action": "ADMIT",
+          "key": 52,
+          "score": 4690.692450524785,
+          "fields": {
+            "incoming": 76550.2,
+            "displaced": 12758.4,
+            "copy": 7302.62,
+            "frequency": 4.0,
+            "calibrated": 1.0,
+            "affinity_count": 7.0,
+            "affinity_adjusted_items": 5.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 51798.5,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        }
+      ],
+      "aggregate_cost_metrics": {
+        "request_cost_remote_bytes": 2027945984,
+        "request_cost_remote_us": 19586247,
+        "request_cost_remote_samples": 967,
+        "copy_cost_charged_us": 247682,
+        "copy_cost_remaining_us": 183666,
+        "copy_cost_planning_us": 34883,
+        "copy_cost_capture_us": 29133,
+        "copy_cost_samples": 33,
+        "copy_cost_full_us": 247682,
+        "request_cost_local_us": 1513756,
+        "request_cost_local_bytes": 383778816,
+        "request_cost_local_samples": 183,
+        "request_cost_inflight_us": 682,
+        "request_cost_inflight_bytes": 4194304,
+        "request_cost_inflight_samples": 2
+      },
+      "input_hashes": {
+        "requests.json": "ce25a115e5d5888436a332e8d862413fa59d28d750fe1604317fe19c65986535",
+        "policy-events.json": "edf11efac48af5ead1c958f84bc4656d2e722938f92ee2a0da99922fcfcd5793",
+        "result.json": "291a9c3483adc6220d2331f7c79f40ee8d241447613590284f062405c59d8734"
+      }
+    },
+    {
+      "round": 2,
+      "arm": "NoHotspot",
+      "remote": 1002,
+      "local": 148,
+      "ready_actions": 25,
+      "action_counts": {
+        "SHARED_PLACE": 25,
+        "ADMIT": 25,
+        "PROMOTE_READY": 8,
+        "REPLICATE_READY": 17,
+        "EVICT": 13
+      },
+      "commit_rejects": {
+        "measured_commit_capacity_bounded_calibration": 12,
+        "measured_commit_net_gain": 13
+      },
+      "early_duplicate_requests": [
+        {
+          "index": 34,
+          "key": 7,
+          "caller": 2,
+          "seconds": 0.020990077,
+          "response_seconds": 0.021466317
+        },
+        {
+          "index": 60,
+          "key": 45,
+          "caller": 1,
+          "seconds": 0.025424455,
+          "response_seconds": 0.025660804
+        },
+        {
+          "index": 61,
+          "key": 46,
+          "caller": 1,
+          "seconds": 0.023807639,
+          "response_seconds": 0.024006526
+        },
+        {
+          "index": 62,
+          "key": 47,
+          "caller": 1,
+          "seconds": 0.02517301,
+          "response_seconds": 0.025410906
+        },
+        {
+          "index": 63,
+          "key": 48,
+          "caller": 1,
+          "seconds": 0.025362707,
+          "response_seconds": 0.025581091
+        },
+        {
+          "index": 64,
+          "key": 49,
+          "caller": 1,
+          "seconds": 0.026506155,
+          "response_seconds": 0.026733858
+        },
+        {
+          "index": 65,
+          "key": 50,
+          "caller": 1,
+          "seconds": 0.024868121,
+          "response_seconds": 0.025093065
+        },
+        {
+          "index": 66,
+          "key": 51,
+          "caller": 1,
+          "seconds": 0.025167768,
+          "response_seconds": 0.025364099
+        },
+        {
+          "index": 67,
+          "key": 52,
+          "caller": 1,
+          "seconds": 0.026690931,
+          "response_seconds": 0.026898083
+        },
+        {
+          "index": 68,
+          "key": 53,
+          "caller": 1,
+          "seconds": 0.025018654,
+          "response_seconds": 0.025247979
+        },
+        {
+          "index": 69,
+          "key": 54,
+          "caller": 1,
+          "seconds": 0.025421512,
+          "response_seconds": 0.025633781
+        }
+      ],
+      "events45_56": [
+        {
+          "seq": 37,
+          "action": "SHARED_PLACE",
+          "key": 45,
+          "score": 5456.4567419337545,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 33418.1,
+            "victim_loss": 0.0,
+            "copy": 5682.92,
+            "burst_remaining": 0.0,
+            "uncertainty": 22278.7,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 38,
+          "action": "ADMIT",
+          "key": 45,
+          "score": 5456.456741933755,
+          "fields": {
+            "incoming": 33418.1,
+            "displaced": 0.0,
+            "copy": 5682.92,
+            "frequency": 2.0,
+            "calibrated": 1.0,
+            "affinity_count": 4.0,
+            "affinity_adjusted_items": 3.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 22278.7,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 41,
+          "action": "SHARED_PLACE",
+          "key": 46,
+          "score": 5158.677029205846,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 33409.6,
+            "victim_loss": 0.0,
+            "copy": 5977.85,
+            "burst_remaining": 0.0,
+            "uncertainty": 22273.0,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 42,
+          "action": "ADMIT",
+          "key": 46,
+          "score": 5158.677029205848,
+          "fields": {
+            "incoming": 33409.6,
+            "displaced": 0.0,
+            "copy": 5977.85,
+            "frequency": 2.0,
+            "calibrated": 1.0,
+            "affinity_count": 4.0,
+            "affinity_adjusted_items": 4.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 22273.0,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 45,
+          "action": "SHARED_PLACE",
+          "key": 47,
+          "score": 5303.279754495292,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 33402.2,
+            "victim_loss": 0.0,
+            "copy": 5830.79,
+            "burst_remaining": 0.0,
+            "uncertainty": 22268.1,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 46,
+          "action": "ADMIT",
+          "key": 47,
+          "score": 5303.279754495291,
+          "fields": {
+            "incoming": 33402.2,
+            "displaced": 0.0,
+            "copy": 5830.79,
+            "frequency": 1.0,
+            "calibrated": 1.0,
+            "affinity_count": 4.0,
+            "affinity_adjusted_items": 1.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 22268.1,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 49,
+          "action": "SHARED_PLACE",
+          "key": 48,
+          "score": 5198.180640223563,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 33378.5,
+            "victim_loss": 0.0,
+            "copy": 5928.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 22252.4,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 50,
+          "action": "ADMIT",
+          "key": 48,
+          "score": 5198.1806402235625,
+          "fields": {
+            "incoming": 33378.5,
+            "displaced": 0.0,
+            "copy": 5928.0,
+            "frequency": 1.0,
+            "calibrated": 1.0,
+            "affinity_count": 4.0,
+            "affinity_adjusted_items": 2.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 22252.4,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 53,
+          "action": "SHARED_PLACE",
+          "key": 49,
+          "score": 5123.252553093986,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 33367.3,
+            "victim_loss": 0.0,
+            "copy": 5999.19,
+            "burst_remaining": 0.0,
+            "uncertainty": 22244.9,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 54,
+          "action": "ADMIT",
+          "key": 49,
+          "score": 5123.252553093985,
+          "fields": {
+            "incoming": 33367.3,
+            "displaced": 0.0,
+            "copy": 5999.19,
+            "frequency": 1.0,
+            "calibrated": 1.0,
+            "affinity_count": 4.0,
+            "affinity_adjusted_items": 3.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 22244.9,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 57,
+          "action": "SHARED_PLACE",
+          "key": 50,
+          "score": 5052.16884826207,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 33366.9,
+            "victim_loss": 0.0,
+            "copy": 6070.12,
+            "burst_remaining": 0.0,
+            "uncertainty": 22244.6,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 58,
+          "action": "ADMIT",
+          "key": 50,
+          "score": 5052.168848262071,
+          "fields": {
+            "incoming": 33366.9,
+            "displaced": 0.0,
+            "copy": 6070.12,
+            "frequency": 1.0,
+            "calibrated": 1.0,
+            "affinity_count": 4.0,
+            "affinity_adjusted_items": 4.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 22244.6,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 61,
+          "action": "SHARED_PLACE",
+          "key": 51,
+          "score": 5678.527071996694,
+          "fields": {
+            "caller": 2.0,
+            "incoming": 75504.4,
+            "victim_loss": 12584.1,
+            "copy": 6150.94,
+            "burst_remaining": 0.0,
+            "uncertainty": 51090.9,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 62,
+          "action": "ADMIT",
+          "key": 51,
+          "score": 5678.527071996701,
+          "fields": {
+            "incoming": 75504.4,
+            "displaced": 12584.1,
+            "copy": 6150.94,
+            "frequency": 4.0,
+            "calibrated": 1.0,
+            "affinity_count": 7.0,
+            "affinity_adjusted_items": 5.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 51090.9,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 65,
+          "action": "SHARED_PLACE",
+          "key": 52,
+          "score": 5562.645378803776,
+          "fields": {
+            "caller": 2.0,
+            "incoming": 75454.8,
+            "victim_loss": 12575.8,
+            "copy": 6259.05,
+            "burst_remaining": 0.0,
+            "uncertainty": 51057.3,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 66,
+          "action": "ADMIT",
+          "key": 52,
+          "score": 5562.645378803774,
+          "fields": {
+            "incoming": 75454.8,
+            "displaced": 12575.8,
+            "copy": 6259.05,
+            "frequency": 4.0,
+            "calibrated": 1.0,
+            "affinity_count": 7.0,
+            "affinity_adjusted_items": 5.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 51057.3,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 69,
+          "action": "SHARED_PLACE",
+          "key": 53,
+          "score": 5489.213267443636,
+          "fields": {
+            "caller": 2.0,
+            "incoming": 75422.7,
+            "victim_loss": 12570.4,
+            "copy": 6327.45,
+            "burst_remaining": 0.0,
+            "uncertainty": 51035.6,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 70,
+          "action": "ADMIT",
+          "key": 53,
+          "score": 5489.2132674436325,
+          "fields": {
+            "incoming": 75422.7,
+            "displaced": 12570.4,
+            "copy": 6327.45,
+            "frequency": 4.0,
+            "calibrated": 1.0,
+            "affinity_count": 7.0,
+            "affinity_adjusted_items": 5.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 51035.6,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 73,
+          "action": "SHARED_PLACE",
+          "key": 54,
+          "score": 5399.243854736895,
+          "fields": {
+            "caller": 2.0,
+            "incoming": 75408.1,
+            "victim_loss": 12568.0,
+            "copy": 6415.13,
+            "burst_remaining": 0.0,
+            "uncertainty": 51025.7,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 74,
+          "action": "ADMIT",
+          "key": 54,
+          "score": 5399.2438547368965,
+          "fields": {
+            "incoming": 75408.1,
+            "displaced": 12568.0,
+            "copy": 6415.13,
+            "frequency": 5.0,
+            "calibrated": 1.0,
+            "affinity_count": 7.0,
+            "affinity_adjusted_items": 5.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 51025.7,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 77,
+          "action": "SHARED_PLACE",
+          "key": 55,
+          "score": 5319.204835387034,
+          "fields": {
+            "caller": 2.0,
+            "incoming": 75381.0,
+            "victim_loss": 12563.5,
+            "copy": 6490.92,
+            "burst_remaining": 0.0,
+            "uncertainty": 51007.3,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 78,
+          "action": "ADMIT",
+          "key": 55,
+          "score": 5319.204835387027,
+          "fields": {
+            "incoming": 75381.0,
+            "displaced": 12563.5,
+            "copy": 6490.92,
+            "frequency": 4.0,
+            "calibrated": 1.0,
+            "affinity_count": 7.0,
+            "affinity_adjusted_items": 5.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 51007.3,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 81,
+          "action": "SHARED_PLACE",
+          "key": 56,
+          "score": 11821.016056354987,
+          "fields": {
+            "caller": 1.0,
+            "incoming": 73046.0,
+            "victim_loss": 10435.1,
+            "copy": 6517.28,
+            "burst_remaining": 0.0,
+            "uncertainty": 44272.6,
+            "explore": 0.0,
+            "exploration_reads": 1.0,
+            "cohort_disk_reuse": 0.0
+          }
+        },
+        {
+          "seq": 82,
+          "action": "ADMIT",
+          "key": 56,
+          "score": 11821.01605635498,
+          "fields": {
+            "incoming": 73046.0,
+            "displaced": 10435.1,
+            "copy": 6517.28,
+            "frequency": 5.0,
+            "calibrated": 1.0,
+            "affinity_count": 8.0,
+            "affinity_adjusted_items": 4.0,
+            "burst_remaining": 0.0,
+            "uncertainty": 44272.6,
+            "explore": 0.0,
+            "cohort_disk_reuse": 0.0
+          }
+        }
+      ],
+      "aggregate_cost_metrics": {
+        "request_cost_remote_bytes": 2101346304,
+        "request_cost_remote_us": 20246834,
+        "request_cost_remote_samples": 1002,
+        "copy_cost_charged_us": 165715,
+        "copy_cost_remaining_us": 119428,
+        "copy_cost_planning_us": 24412,
+        "copy_cost_capture_us": 21875,
+        "copy_cost_samples": 25,
+        "copy_cost_full_us": 165715,
+        "request_cost_local_us": 1268576,
+        "request_cost_local_bytes": 310378496,
+        "request_cost_local_samples": 148,
+        "request_cost_inflight_us": 615,
+        "request_cost_inflight_bytes": 4194304,
+        "request_cost_inflight_samples": 2
+      },
+      "input_hashes": {
+        "requests.json": "2ac6c5d4f90d8abf2c775354fd7ea76cb093fa62b25e92fba6663dba41cff90e",
+        "policy-events.json": "d30cff20358402fd71d9b4ef5ccb88256ee739e099baf293e4aa702987bbff0e",
+        "result.json": "b6132bdf9e33529e5bcf588cae104febca1cfd0980d784ba583fa69ec01c09a3"
+      }
+    }
+  ]
+}

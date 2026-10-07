@@ -1,0 +1,59 @@
+{
+  "passed": true,
+  "study": "submission_precheck_hpj_study",
+  "source_files": 350,
+  "source_archive_sha256": "623debd261469ae7377c6072ceb3333f425abf2014bb686f4b153a56f16ffb65",
+  "binary_sha256": "fa02620a8982818ca6bf99067bc3a57166211fc056ab8cebdc223a27f5728e27",
+  "binary_receipts_verified": 30,
+  "binary_file_verified": false,
+  "speed_runs": 24,
+  "speed_requests": 27648,
+  "correctness_runs": 6,
+  "content_checks": 576,
+  "source_report_exact": true,
+  "input_payload_hashes_reproduced": true,
+  "sql_metrics_and_access_exact": true,
+  "raw_evidence_unchanged": true,
+  "sqlite_preservation": {
+    "databases": 30,
+    "sidecar_files": 48,
+    "empty_wal_pairs": 24,
+    "all_original_components_preserved": true,
+    "sqlite_read_mode": "immutable only after WAL confirmed absent or zero-byte"
+  },
+  "reverse_run_order_verified": true,
+  "cpu_affinity_review": {
+    "expected_cpus": [
+      0,
+      2,
+      4,
+      6
+    ],
+    "speed_cases": 24,
+    "before_after_receipts_verified": 48,
+    "independently_verified": true,
+    "scope": "speed-driver parent affinity before/after each case; subprocesses inherit this set; no live per-thread receipt",
+    "comparison_limit": "batch79 only; batch78 was not CPU-pinned and is not a controlled timing baseline"
+  },
+  "precheck_activity_review": {
+    "speed_cases": 24,
+    "content_cases": 6,
+    "fresh_enabled_cache_lifecycle_verified": true,
+    "speed_attempts_and_rejections_required": true,
+    "content_attempts_not_required": true,
+    "inactive_arms_zero_activity_required": true
+  },
+  "paired_comparisons": 20,
+  "aggregate_comparisons": 10,
+  "interpretation": "Frozen HPJ/SIEVE development comparisons on two inspected inputs, two reversed-order rounds; NoSubmitPrecheck is a separate submission-time policy diagnostic, not a fourth policy innovation or independent confirmation.",
+  "p99_aggregation": "median of two per-run nearest-rank p99 values; not pooled request p99",
+  "throughput_aggregation": "sum logical bytes / sum full foreground wall seconds",
+  "ram_accounting": "tail payload is additional to retained capture budget; tail metric excludes C++ object metadata",
+  "strict_both_improved_primary": 11,
+  "strict_both_improved_submission_precheck": 3,
+  "acceptance_criterion": "throughput gain > 0; p99 reduction > 0; drain gain >= 0; active mechanism; changed actions for component ablations",
+  "full_acceptance_primary": 11,
+  "primary_comparisons": 16,
+  "primary_all_passed": false,
+  "full_acceptance_submission_precheck": 3
+}
