@@ -1,0 +1,74 @@
+{
+  "real79_full_db_equivalence": {
+    "before_plan": [
+      "COMPOUND QUERY",
+      "LEFT-MOST SUBQUERY",
+      "SCAN files",
+      "UNION ALL",
+      "SCAN r",
+      "SEARCH f USING INDEX sqlite_autoindex_files_1 (logical_path=?)"
+    ],
+    "after_plan": [
+      "COMPOUND QUERY",
+      "LEFT-MOST SUBQUERY",
+      "SCAN files USING COVERING INDEX idx_files_shared_precheck_local",
+      "UNION ALL",
+      "SCAN r USING COVERING INDEX idx_replicas_shared_precheck_ready",
+      "SEARCH f USING INDEX sqlite_autoindex_files_1 (logical_path=?)"
+    ],
+    "same_rows": true,
+    "row_count": 12,
+    "files_count": 864,
+    "replica_count": 8,
+    "indexes": [
+      [
+        "idx_files_shared_precheck_local",
+        "CREATE INDEX idx_files_shared_precheck_local ON files(gpu_id,physical_path,size_bytes) WHERE tier='local' AND state='COMMITTED'"
+      ],
+      [
+        "idx_replicas_shared_precheck_ready",
+        "CREATE INDEX idx_replicas_shared_precheck_ready ON local_replicas(logical_path,gpu_id,physical_path,size_bytes) WHERE state='READY'"
+      ]
+    ]
+  },
+  "idempotent": true,
+  "second_create_failure": {
+    "error": "there is already a table named idx_replicas_shared_precheck_ready",
+    "rollback_both_new_indexes": true,
+    "autocommit_restored": true,
+    "query_unchanged": true
+  },
+  "second_create_failure_prior_first_index_preserved": true,
+  "same_name_wrong_definition": {
+    "setup_sql_succeeds": true,
+    "rows_unchanged": true,
+    "indexes": [
+      [
+        "idx_files_shared_precheck_local",
+        "CREATE INDEX idx_files_shared_precheck_local ON files(updated_at)"
+      ],
+      [
+        "idx_replicas_shared_precheck_ready",
+        "CREATE INDEX idx_replicas_shared_precheck_ready ON local_replicas(created_at)"
+      ]
+    ],
+    "plan": [
+      "COMPOUND QUERY",
+      "LEFT-MOST SUBQUERY",
+      "SCAN files",
+      "UNION ALL",
+      "SCAN r",
+      "SEARCH f USING INDEX sqlite_autoindex_files_1 (logical_path=?)"
+    ],
+    "limitation": "CREATE IF NOT EXISTS alone cannot certify the intended covering plan; validate or label setup rather than plan."
+  },
+  "sqlite_version": "3.51.0",
+  "source_sha256": "25dde14cc6f3070094212ee2f5f6885096d40cd8f8a5a50224e0973fabafbe40",
+  "read_only_evidence_sha256": "999d3be1f215d868c0f1d35c9e821543490e3afa74aafd0ed6de453cb7fd1e34",
+  "query": "SELECT gpu_id,physical_path,size_bytes FROM files WHERE tier='local' AND state='COMMITTED' UNION ALL SELECT r.gpu_id,r.physical_path,r.size_bytes FROM local_replicas r JOIN files f ON f.logical_path=r.logical_path WHERE r.state='READY' AND f.state='COMMITTED';",
+  "ddl": [
+    "CREATE INDEX IF NOT EXISTS idx_files_shared_precheck_local ON files(gpu_id,physical_path,size_bytes) WHERE tier='local' AND state='COMMITTED';",
+    "CREATE INDEX IF NOT EXISTS idx_replicas_shared_precheck_ready ON local_replicas(logical_path,gpu_id,physical_path,size_bytes) WHERE state='READY';"
+  ],
+  "evidence_unchanged": true
+}

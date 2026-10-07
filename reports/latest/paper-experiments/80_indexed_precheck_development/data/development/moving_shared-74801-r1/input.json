@@ -1,0 +1,29 @@
+{
+  "spec": {
+    "id": "moving_shared-74801-r1",
+    "scenario": "moving_shared",
+    "seed": 74801,
+    "repeat": 1,
+    "variants": [
+      "Full",
+      "NoHotspot",
+      "NoAffinity",
+      "NoJoint",
+      "PoolSIEVE1",
+      "NoIndexedPrecheck"
+    ],
+    "quota_mib": 24,
+    "shard_mib": 2,
+    "requests": 1152
+  },
+  "order": [
+    "NoHotspot",
+    "NoJoint",
+    "NoIndexedPrecheck",
+    "NoAffinity",
+    "PoolSIEVE1",
+    "Full"
+  ],
+  "trace_sha256": "851c2f4bbdeae15c3897b1ee3705c1a81e92a33f60abe47730d0e4ae0fec29d4",
+  "objects_sha256": "3807945508213ec89735621e716615aa6afea7a4b2e7a2f4274a41a915b917ea"
+}

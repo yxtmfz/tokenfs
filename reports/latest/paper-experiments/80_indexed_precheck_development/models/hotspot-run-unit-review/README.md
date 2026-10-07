@@ -1,0 +1,13 @@
+# Per-key logical-run normalization: limited model benefit, no promotion
+
+The predeclared single candidate and unchanged constraints are in PROTOCOL.md. All80arms completed:40exact original reproductions and40counterfactual arms. No server run, no repository source edit, no parameter sweep. These are serial/instant-copy fixed-cost models, not actual throughput or p99.
+
+Full improves only moving73501 (79→78remote,29copies unchanged) and uniform73702 (544remote/45copies→533/41). Their fixed service-cost savings are10.5ms and147.5ms respectively. Other8inputs tie the original Full in remote/disk/RAM/copy counts. In particular, moving74801 remains84remote/28copies, matching NoHotspot; the primary missing H benefit is unresolved. Do not promote the candidate to server based on this batch.
+
+All public inputs have only singleton runs; all four public arms reproduce original counts exactly. All10NoHotspot arms preserve aggregate counts and full request/RAM-eviction/copy logs exactly. The static baseline was not weakened. Some H-enabled ablations become worse: NoAffinity and NoJoint on moving73502/73503/74801 have additional reads or copies; NoAffinity on stationary73701 also regresses. Uniform NoJoint adds15remote/15copies. Full's lack of corresponding regression is not a license to hide these results or call all performance indicators improved.
+
+Verification passed:1152requests per arm, unchanged two-slot RAM budget and current capture protection, exact40original results,60prefix cases/240verification arms at127/401/806 with every source/RAM-eviction/copy decision equal to the corresponding full prefix. Logs and all results are retained. Prefix equality checks causality, not statistical independence. Header identities and model transformation are in source-identity.json/build_model.py.
+
+Recent run counting scans only existing per-key positions within the original request window; persistent normalization omits the completed-run mean-length multiplier while retaining the same age, immediate decay, confidence and competition. Cohort prior, uncertainty, calibration, costs, placement and joint charging remain untouched. This removes a real unit mismatch but does not show that mismatch explains actual primary-input slowdown. An observed logical run can itself be served from retained RAM after an intervening key, so run counts remain an upper approximation to effective disk demand, not measured future disk opportunities.
+
+See tables.md for Full/NoHotspot and results.json for every arm and reason counter. No actual speed claim follows, and the model introduces per-resident counting work that would itself require timing if ever implemented.
