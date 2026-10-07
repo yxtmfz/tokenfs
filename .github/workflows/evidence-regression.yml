@@ -108,3 +108,6 @@ jobs:
 
       - name: Check object-cohort study controls
         run: python3 -m unittest tests.object_cohort_hpj_test
+
+      - name: Check deferred submission and release fence
+        run: python3 -m unittest tests.release_fence_test tests.submission_fence_hpj_test

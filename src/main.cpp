@@ -89,6 +89,7 @@ struct Config {
   bool novel_reuse_decay = false;
   bool profile_control_path = false;
   bool batch_background_metrics = false;
+  bool defer_background_submission_metrics = false;
   bool batch_policy_events = false;
   std::string request_trace_path;
   bool foreground_read_fill = false;
@@ -1448,6 +1449,8 @@ class TokenFS {
       : config_(std::move(config)), trace_(config_.request_trace_path), fills_(config_.read_fill_buffer_bytes,config_.retain_read_fill), metadata_(config_.metadata_db) {}
 
   void Init() {
+    if(config_.defer_background_submission_metrics && !config_.batch_background_metrics)
+      throw std::runtime_error("deferred background submission metrics require batched durable telemetry");
     if(config_.ram_first_routing && !config_.retain_read_fill)
       throw std::runtime_error("RAM-first routing requires validated retained captures");
     if(config_.reuse_direct_read_tail && (!config_.readonly_canonical || !config_.backend_direct_io))
@@ -1504,6 +1507,37 @@ class TokenFS {
           task = std::move(background_tasks_.front());
           background_tasks_.pop_front();
         }
+        if(config_.defer_background_submission_metrics) {
+          bool task_failed=false;
+          try {task();}
+          catch(const std::exception& e) {
+            task_failed=true;
+            std::cerr<<"background task failed: "<<e.what()<<std::endl;
+          }
+          catch(...) {
+            task_failed=true;
+            std::cerr<<"background task failed: unknown exception"<<std::endl;
+          }
+          {
+            // The task has ended. A foreground fence may now publish this
+            // outcome too, together with all still-pending task telemetry.
+            // SubmitBackground records accepted submissions before the worker
+            // can take a task, so completion cannot overtake submission.
+            std::lock_guard<std::mutex> lock(buffered_metrics_mu_);
+            if(task_failed)++buffered_metrics_["background_error_count"];
+            ++buffered_metrics_["background_completed"];
+          }
+          try {FlushBufferedMetrics(0,true);}
+          catch(const std::exception& e) {
+            // Flush restored the entire transaction, including this one
+            // completion. Never add it again or bypass the durable fence.
+            std::cerr<<"background telemetry failed: "<<e.what()<<std::endl;
+          }
+          catch(...) {
+            std::cerr<<"background telemetry failed: unknown exception"<<std::endl;
+          }
+          continue;
+        }
         bool completion_durable=false;
         try {
           task();
@@ -1536,11 +1570,22 @@ class TokenFS {
   bool SubmitBackground(std::function<void()> task) {
     std::lock_guard<std::mutex> lock(background_mu_);
     if (background_stopping_ || background_tasks_.size() >= 64) {
-      metadata_.AddMetric("background_queue_rejected", 1);
+      if(config_.defer_background_submission_metrics)AddBufferedMetric("background_queue_rejected",1);
+      else metadata_.AddMetric("background_queue_rejected", 1);
       return false;
     }
-    metadata_.AddMetric("background_submitted", 1);
-    background_tasks_.push_back(std::move(task));
+    if(config_.defer_background_submission_metrics) {
+      background_tasks_.push_back(std::move(task));
+      try {AddBufferedMetric("background_submitted",1);}
+      catch(...) {
+        // The queue mutex still excludes the worker. An allocation failure
+        // while recording acceptance must not leave an uncounted task queued.
+        background_tasks_.pop_back();throw;
+      }
+    } else {
+      metadata_.AddMetric("background_submitted", 1);
+      background_tasks_.push_back(std::move(task));
+    }
     background_cv_.notify_one();
     return true;
   }
@@ -2051,6 +2096,7 @@ class TokenFS {
       FlushBufferedMetrics();
       return 0;
     }
+    const bool readonly=!it->second.writable;
     bool should_dedup = false;
     if(diagnostic.Enabled()){diagnostic.e.wait_ns=RequestTrace::Now()-diagnostic.e.start_ns;diagnostic.e.handle=fi->fh;diagnostic.e.path=it->second.logical_path;diagnostic.e.caller=it->second.caller_gpu_id;diagnostic.e.tier=it->second.tier;}
     if (it->second.fd >= 0) {
@@ -2085,6 +2131,10 @@ class TokenFS {
       AddBufferedMetric("read_fill_partial_fallback",1);
       if(auto meta=metadata_.Get(fallback_path))ScheduleSharedPlacement(*meta,fallback_caller);
     }
+    // The release fence publishes any fallback submission before a benchmark
+    // may treat submitted==completed as a fully observed queue drain. Count a
+    // valid read handle exactly once; repeated Release only retries the fence.
+    if(readonly)AddBufferedMetric("read_release_count",1);
     const auto flush_start=diagnostic.Enabled()?RequestTrace::Now():0;
     FlushBufferedMetrics();
     if(diagnostic.Enabled())diagnostic.e.flush_ns=RequestTrace::Now()-flush_start;
@@ -4027,7 +4077,7 @@ class TokenFS {
     }
   }
 
-  void FlushBufferedMetrics(uint64_t completed_tasks=0) {
+  void FlushBufferedMetrics(uint64_t completed_tasks=0,bool count_background_failure=false) {
     // A concurrent flush must finish before background_completed can advance.
     std::lock_guard<std::mutex> flush_lock(flush_metrics_mu_);
     std::unordered_map<std::string, uint64_t> pending;
@@ -4042,9 +4092,9 @@ class TokenFS {
       pending_max.swap(buffered_metric_max_);
       events.swap(buffered_policy_events_);
     }
-    // A successful task and its telemetry share one durable commit. The
-    // completion delta is local to this flush, never visible in the buffer to
-    // an earlier foreground flush or retried after the worker's error path.
+    // The legacy worker adds a temporary completion only for this attempt.
+    // Deferred submissions instead buffer terminal outcomes before entering
+    // the fence, so a failed batch retains its completion for an exact retry.
     if(completed_tasks)pending["background_completed"]+=completed_tasks;
     try {metadata_.ApplyMetricBatch(pending, pending_max, events);}
     catch (...) {
@@ -4052,6 +4102,10 @@ class TokenFS {
       // newer events, without duplicating already durable data.
       std::lock_guard<std::mutex> lock(buffered_metrics_mu_);
       if(completed_tasks)pending["background_completed"]-=completed_tasks;
+      // Keep the failure signal with the restored completion while the fence
+      // remains locked. Otherwise a foreground retry could publish completion
+      // before the worker's outer catch had buffered its error observation.
+      if(count_background_failure)++pending["background_error_count"];
       for(const auto& [key,value]:pending)buffered_metrics_[key]+=value;
       for(const auto& [key,value]:pending_max)buffered_metric_max_[key]=std::max(buffered_metric_max_[key],value);
       events.insert(events.end(),buffered_policy_events_.begin(),buffered_policy_events_.end());
@@ -4293,6 +4347,7 @@ Config LoadConfig(const fs::path& path) {
   if(root["policy"] && root["policy"]["reuse_direct_read_tail"]) config.reuse_direct_read_tail=root["policy"]["reuse_direct_read_tail"].as<bool>();
   if(root["policy"] && root["policy"]["ram_first_routing"]) config.ram_first_routing=root["policy"]["ram_first_routing"].as<bool>();
   if(root["policy"] && root["policy"]["batch_background_metrics"]) config.batch_background_metrics=root["policy"]["batch_background_metrics"].as<bool>();
+  if(root["policy"] && root["policy"]["defer_background_submission_metrics"]) config.defer_background_submission_metrics=root["policy"]["defer_background_submission_metrics"].as<bool>();
   if(root["policy"] && root["policy"]["batch_policy_events"]) config.batch_policy_events=root["policy"]["batch_policy_events"].as<bool>();
   if(root["policy"] && root["policy"]["request_trace_path"]) config.request_trace_path=root["policy"]["request_trace_path"].as<std::string>();
   if(root["policy"] && root["policy"]["recent_value_floor"]) config.recent_value_floor=root["policy"]["recent_value_floor"].as<bool>();

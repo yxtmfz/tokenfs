@@ -3,11 +3,184 @@
 #include "../src/main.cpp"
 #undef main
 #include <cassert>
+#include <atomic>
 #include <future>
 #include <map>
 
 namespace {
 struct TokenFSTestAccess {
+  struct TelemetryProbe {
+    sqlite3* db=nullptr;
+    explicit TelemetryProbe(const fs::path& path) {
+      assert(sqlite3_open(path.c_str(),&db)==SQLITE_OK);
+      assert(sqlite3_busy_timeout(db,3000)==SQLITE_OK);
+    }
+    ~TelemetryProbe(){sqlite3_close(db);}
+    void Exec(const char* sql){assert(sqlite3_exec(db,sql,nullptr,nullptr,nullptr)==SQLITE_OK);}
+    uint64_t Metric(const char* name) {
+      sqlite3_stmt* st=nullptr;
+      assert(sqlite3_prepare_v2(db,"SELECT value FROM metrics WHERE name=?",-1,&st,nullptr)==SQLITE_OK);
+      sqlite3_bind_text(st,1,name,-1,SQLITE_TRANSIENT);const int rc=sqlite3_step(st);
+      assert(rc==SQLITE_ROW || rc==SQLITE_DONE);
+      const uint64_t n=rc==SQLITE_ROW?sqlite3_column_int64(st,0):0;sqlite3_finalize(st);return n;
+    }
+    // Read both counters from one SQLite statement/snapshot, even while a
+    // worker is committing. Two separate SELECTs can invent an ordering bug.
+    std::pair<uint64_t,uint64_t> Counts() {
+      sqlite3_stmt* st=nullptr;
+      assert(sqlite3_prepare_v2(db,"SELECT COALESCE((SELECT value FROM metrics WHERE name='background_submitted'),0),COALESCE((SELECT value FROM metrics WHERE name='background_completed'),0)",-1,&st,nullptr)==SQLITE_OK);
+      assert(sqlite3_step(st)==SQLITE_ROW);
+      const std::pair<uint64_t,uint64_t> n{sqlite3_column_int64(st,0),sqlite3_column_int64(st,1)};
+      sqlite3_finalize(st);assert(n.second<=n.first);return n;
+    }
+    std::vector<std::string> Events() {
+      std::vector<std::string> out;sqlite3_stmt* st=nullptr;
+      assert(sqlite3_prepare_v2(db,"SELECT action FROM policy_events ORDER BY seq",-1,&st,nullptr)==SQLITE_OK);
+      int rc;while((rc=sqlite3_step(st))==SQLITE_ROW)out.emplace_back(reinterpret_cast<const char*>(sqlite3_column_text(st,0)));
+      assert(rc==SQLITE_DONE);sqlite3_finalize(st);return out;
+    }
+  };
+  template<class Predicate> static void Await(Predicate ready) {
+    const auto until=std::chrono::steady_clock::now()+std::chrono::seconds(3);
+    while(!ready()){assert(std::chrono::steady_clock::now()<until);std::this_thread::yield();}
+  }
+  static Config DeferredConfig(const fs::path& root) {
+    Config cfg;cfg.mount_point=root/"mnt";cfg.metadata_db=root/"state.db";
+    cfg.batch_background_metrics=true;cfg.batch_policy_events=true;cfg.defer_background_submission_metrics=true;
+    return cfg;
+  }
+  static void deferred_config_parse(const fs::path& root) {
+    fs::create_directories(root);const auto path=root/"config.yaml";
+    for(const char* value:{"false","true"}) {
+      std::ofstream(path)<<"filesystem: {}\nbackends: []\ngpus: []\npolicy:\n  batch_background_metrics: true\n  defer_background_submission_metrics: "<<value<<"\n";
+      const auto cfg=LoadConfig(path);
+      assert(cfg.batch_background_metrics && cfg.defer_background_submission_metrics==(std::string(value)=="true"));
+    }
+    std::ofstream(path)<<"filesystem: {}\nbackends: []\ngpus: []\n";
+    assert(!LoadConfig(path).defer_background_submission_metrics);
+  }
+  static void deferred_background_fence(const fs::path& root) {
+    auto cfg=DeferredConfig(root);TokenFS filesystem(cfg);filesystem.Init();TelemetryProbe probe(cfg.metadata_db);
+    std::unique_lock<std::mutex> fence(filesystem.flush_metrics_mu_);
+    std::promise<void> started,proceed;auto started_f=started.get_future();auto proceed_f=proceed.get_future().share();
+    auto submitted=std::async(std::launch::async,[&]{return filesystem.SubmitBackground([&]{
+      started.set_value();proceed_f.wait();filesystem.AddBackgroundMetric("fence_value",7);
+      filesystem.RecordPolicyEvent("fenced","/gpu0/k",0,4096,"test");
+    });});
+    // An accepted submission has no synchronous durable fence of its own.
+    assert(submitted.wait_for(std::chrono::seconds(3))==std::future_status::ready && submitted.get());
+    assert(started_f.wait_for(std::chrono::seconds(3))==std::future_status::ready);
+    assert((probe.Counts()==std::pair<uint64_t,uint64_t>{0,0}));
+    proceed.set_value();
+    Await([&]{std::lock_guard<std::mutex> lock(filesystem.buffered_metrics_mu_);return filesystem.buffered_metrics_["background_completed"]==1;});
+    assert((probe.Counts()==std::pair<uint64_t,uint64_t>{0,0}));
+    assert(probe.Metric("fence_value")==0 && probe.Events().empty());
+    fence.unlock();Await([&]{return probe.Counts().second==1;});
+    assert(probe.Metric("fence_value")==7 && probe.Events()==std::vector<std::string>{"fenced"});
+    // Both exception kinds are terminal task outcomes, each counted once.
+    assert(filesystem.SubmitBackground([&]{filesystem.AddBackgroundMetric("fence_value",3);throw std::runtime_error("task injected");}));
+    Await([&]{return probe.Counts().second==2;});
+    assert(filesystem.SubmitBackground([&]{filesystem.AddBackgroundMetric("fence_value",5);throw 17;}));
+    Await([&]{return probe.Counts().second==3;});
+    filesystem.FlushBufferedMetrics();filesystem.FlushBufferedMetrics();
+    assert((probe.Counts()==std::pair<uint64_t,uint64_t>{3,3}));
+    assert(probe.Metric("fence_value")==15 && probe.Metric("background_error_count")==2);
+  }
+  static void deferred_background_failure_retry(const fs::path& root,int retry_mode) {
+    auto cfg=DeferredConfig(root);auto filesystem=std::make_unique<TokenFS>(cfg);filesystem->Init();TelemetryProbe probe(cfg.metadata_db);
+    const char* triggers[]={
+      "CREATE TRIGGER reject_batch BEFORE INSERT ON metrics WHEN NEW.name='background_submitted' BEGIN SELECT RAISE(ABORT,'injected submitted'); END;",
+      "CREATE TRIGGER reject_batch BEFORE INSERT ON policy_events WHEN NEW.action='reject' BEGIN SELECT RAISE(ABORT,'injected event'); END;",
+      "CREATE TRIGGER reject_batch BEFORE INSERT ON metrics WHEN NEW.name='background_completed' BEGIN SELECT RAISE(ABORT,'injected completed'); END;"};
+    probe.Exec(triggers[retry_mode]);
+    assert(filesystem->SubmitBackground([&]{
+      filesystem->AddBackgroundMetric("retry_value",7);
+      filesystem->RecordPolicyEvent("reject","/gpu0/k",0,4096,"test");
+      if(retry_mode==1)throw std::runtime_error("task and fence injected");
+      if(retry_mode==2)throw 23;
+    }));
+    const uint64_t expected_errors=retry_mode?2:1;
+    Await([&]{std::lock_guard<std::mutex> lock(filesystem->buffered_metrics_mu_);return filesystem->buffered_metrics_["background_error_count"]==expected_errors;});
+    assert((probe.Counts()==std::pair<uint64_t,uint64_t>{0,0}));
+    assert(probe.Metric("retry_value")==0 && probe.Events().empty());
+    {std::lock_guard<std::mutex> lock(filesystem->buffered_metrics_mu_);
+      assert(filesystem->buffered_metrics_.at("background_submitted")==1);
+      assert(filesystem->buffered_metrics_.at("background_completed")==1);}
+    bool failed=false;try{filesystem->FlushBufferedMetrics();}catch(const std::runtime_error&){failed=true;}
+    assert(failed && probe.Events().empty());
+    assert((probe.Counts()==std::pair<uint64_t,uint64_t>{0,0}));
+    probe.Exec("DROP TRIGGER reject_batch;");
+    if(retry_mode==0) {filesystem->FlushBufferedMetrics();filesystem->FlushBufferedMetrics();}
+    if(retry_mode==1) {
+      assert(filesystem->SubmitBackground([&]{filesystem->AddBackgroundMetric("retry_value",5);filesystem->RecordPolicyEvent("newer","/gpu0/k",0,4096,"test");}));
+      Await([&]{return probe.Counts().second==2;});filesystem->FlushBufferedMetrics();
+    }
+    if(retry_mode==2)filesystem.reset(); // join, then the destructor's existing fence retries.
+    const uint64_t expected_tasks=retry_mode==1?2:1;
+    assert((probe.Counts()==std::pair<uint64_t,uint64_t>{expected_tasks,expected_tasks}));
+    assert(probe.Metric("retry_value")==uint64_t(retry_mode==1?12:7));
+    assert(probe.Metric("background_error_count")==expected_errors);
+    assert(probe.Events()==(retry_mode==1?std::vector<std::string>{"reject","newer"}:std::vector<std::string>{"reject"}));
+  }
+  static void deferred_background_queue_shutdown(const fs::path& root) {
+    auto cfg=DeferredConfig(root);auto filesystem=std::make_unique<TokenFS>(cfg);filesystem->Init();TelemetryProbe probe(cfg.metadata_db);
+    std::atomic<unsigned> ran{0};std::promise<void> started,proceed;auto started_f=started.get_future();auto proceed_f=proceed.get_future().share();
+    assert(filesystem->SubmitBackground([&]{started.set_value();proceed_f.wait();++ran;}));
+    assert(started_f.wait_for(std::chrono::seconds(3))==std::future_status::ready);
+    for(int i=0;i<64;++i)assert(filesystem->SubmitBackground([&]{++ran;}));
+    assert(!filesystem->SubmitBackground([&]{assert(false);}));
+    {std::lock_guard<std::mutex> lock(filesystem->background_mu_);filesystem->background_stopping_=true;}
+    filesystem->background_cv_.notify_all();
+    assert(!filesystem->SubmitBackground([&]{assert(false);}));
+    assert((probe.Counts()==std::pair<uint64_t,uint64_t>{0,0}));
+    proceed.set_value();filesystem.reset(); // A real join, not submitted==completed polling.
+    assert(ran==65 && (probe.Counts()==std::pair<uint64_t,uint64_t>{65,65}));
+    assert(probe.Metric("background_queue_rejected")==2 && probe.Metric("background_error_count")==0);
+  }
+  static void deferred_failed_fence_handoff(const fs::path& root) {
+    auto cfg=DeferredConfig(root);TokenFS filesystem(cfg);filesystem.Init();TelemetryProbe probe(cfg.metadata_db);
+    // Model an ended task whose worker is descheduled in its outer catch.
+    // A foreground retry must already have the failure signal in its batch.
+    filesystem.AddBufferedMetric("background_submitted",1);filesystem.AddBufferedMetric("background_completed",1);
+    probe.Exec("CREATE TRIGGER reject_handoff BEFORE INSERT ON metrics WHEN NEW.name='background_completed' BEGIN SELECT RAISE(ABORT,'injected handoff'); END;");
+    std::promise<void> caught,finish;auto caught_f=caught.get_future();auto finish_f=finish.get_future().share();
+    auto failed_fence=std::async(std::launch::async,[&]{
+      try{filesystem.FlushBufferedMetrics(0,true);assert(false);}
+      catch(const std::runtime_error&){caught.set_value();finish_f.wait();}
+    });
+    assert(caught_f.wait_for(std::chrono::seconds(3))==std::future_status::ready);
+    assert((probe.Counts()==std::pair<uint64_t,uint64_t>{0,0}));
+    probe.Exec("DROP TRIGGER reject_handoff;");filesystem.FlushBufferedMetrics();
+    assert((probe.Counts()==std::pair<uint64_t,uint64_t>{1,1}));
+    assert(probe.Metric("background_error_count")==1);
+    finish.set_value();failed_fence.get();filesystem.FlushBufferedMetrics();
+    assert(probe.Metric("background_error_count")==1);
+  }
+  static void readonly_release_fence(const fs::path& root) {
+    assert(!Config{}.defer_background_submission_metrics);
+    auto invalid=DeferredConfig(root/"invalid");invalid.batch_background_metrics=false;bool rejected=false;
+    try{TokenFS bad(invalid);bad.Init();}catch(const std::runtime_error&){rejected=true;}assert(rejected);
+    auto cfg=DeferredConfig(root);cfg.request_read_costs=true;
+    cfg.gpus.push_back({0,"/gpu0",root/"local",8192,"remote"});
+    cfg.backends.emplace("remote",BackendConfig{"remote","directory",root/"remote"});
+    TokenFS filesystem(cfg);filesystem.Init();TelemetryProbe probe(cfg.metadata_db);
+    std::ofstream(root/"remote/gpu0/k")<<std::string(4096,'x');
+    fuse_file_info fi{};fi.flags=O_RDONLY;char bytes[2048];
+    assert(filesystem.Open("/gpu0/k",&fi)==0);
+    assert(filesystem.Read("/gpu0/k",bytes,sizeof(bytes),0,&fi)==2048);
+    probe.Exec("CREATE TRIGGER reject_release BEFORE INSERT ON metrics WHEN NEW.name='read_release_count' BEGIN SELECT RAISE(ABORT,'injected release'); END;");
+    bool failed=false;try{filesystem.Release("/gpu0/k",&fi);}catch(const std::runtime_error&){failed=true;}
+    assert(failed && filesystem.FindHandle(&fi)==nullptr);
+    assert(probe.Metric("read_release_count")==0 && probe.Metric("read_bytes")==0);
+    assert(filesystem.buffered_metrics_.at("read_release_count")==1);
+    probe.Exec("DROP TRIGGER reject_release;");
+    assert(filesystem.Release("/gpu0/k",&fi)==0); // unknown handle retries only the failed fence.
+    assert(probe.Metric("read_release_count")==1 && probe.Metric("read_bytes")==2048);
+    assert(filesystem.Release("/gpu0/k",&fi)==0 && probe.Metric("read_release_count")==1);
+    fuse_file_info writable{};writable.flags=O_RDWR;
+    assert(filesystem.Open("/gpu0/k",&writable)==0);
+    assert(filesystem.Release("/gpu0/k",&writable)==0 && probe.Metric("read_release_count")==1);
+  }
   static void ram_first_routing(const fs::path& root,bool enabled,bool lean) {
     Config cfg;cfg.mount_point=root/"mnt";cfg.metadata_db=root/"state.db";
     cfg.foreground_read_fill=true;cfg.request_read_costs=true;cfg.coalesce_pending_reads=true;
@@ -154,6 +327,8 @@ struct TokenFSTestAccess {
     assert(metric("direct_read_tail_hits")==uint64_t(enabled?2:0));
     assert(metric("direct_read_tail_bytes")==uint64_t(enabled?96:0));
     assert(metric("direct_read_tail_buffer_bytes_peak")==uint64_t(enabled?4096:0));
+    assert(metric("read_release_count")==1);
+    assert(filesystem.Release("/gpu0/k",&fi)==0 && metric("read_release_count")==1);
     sqlite3_close(db);
   }
   static void background_metric_fence(const fs::path& root,bool batched) {
@@ -768,6 +943,13 @@ int main() {
   TokenFSTestAccess::telemetry_retry_and_release_lock(root/"telemetry-retry");
   TokenFSTestAccess::background_metric_fence(root/"metric-fence-on",true);
   TokenFSTestAccess::background_metric_fence(root/"metric-fence-off",false);
+  TokenFSTestAccess::deferred_background_fence(root/"deferred-fence");
+  TokenFSTestAccess::deferred_config_parse(root/"deferred-config");
+  for(int retry_mode=0;retry_mode<3;++retry_mode)
+    TokenFSTestAccess::deferred_background_failure_retry(root/("deferred-retry-"+std::to_string(retry_mode)),retry_mode);
+  TokenFSTestAccess::deferred_background_queue_shutdown(root/"deferred-queue-shutdown");
+  TokenFSTestAccess::deferred_failed_fence_handoff(root/"deferred-failed-handoff");
+  TokenFSTestAccess::readonly_release_fence(root/"readonly-release-fence");
   TokenFSTestAccess::inflight_reads(root/"inflight-enabled",true);
   TokenFSTestAccess::inflight_reads(root/"inflight-disabled",false);
   TokenFSTestAccess::inflight_reads(root/"retained-after-ready",true,true);
