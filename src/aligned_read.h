@@ -39,7 +39,7 @@ class AlignedReadTail {
       struct stat current{};
       // Reuse only the next contiguous, fully covered request. Partial or
       // overlapping requests use the unchanged aligned backend operation.
-      if(offset==tail_offset_ && size<=tail_size_ &&
+      if(offset==tail_offset_ && size<=tail_.size() && tail_size_<=tail_.size() && size<=tail_size_ &&
          fstat(fd,&current)==0 && SameIdentity(current,identity_)) {
         std::memcpy(output,tail_.data(),size);
         tail_size_-=size;tail_offset_+=off_t(size);
