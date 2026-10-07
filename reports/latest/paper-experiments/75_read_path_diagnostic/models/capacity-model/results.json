@@ -1,0 +1,2830 @@
+{
+  "speed_evidence": false,
+  "description": "Fixed capacities 2/3/4/8 objects per domain, 3 domains, 2 MiB objects; 10 inspected inputs \u00d7 2 frozen H algorithms \u00d7 4 capacities \u00d7 4 arms = 320 model arms. Constant 21 ms remote read, 10.5 ms local, 8 ms copy, instantaneous copy. No throughput/p99 evidence and no claim original 24 MiB condition passes.",
+  "rows": [
+    {
+      "input": "moving_shared-73501",
+      "capacity_objects_per_domain": 2,
+      "capacity_mib_global": 12,
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=118 copies=47 copy_cost=21 net_gain=86 no_reuse=2 victim_loss=232\nNoHotspot remote=125 copies=29 copy_cost=15 net_gain=25 no_reuse=167 victim_loss=146\nNoAffinity remote=142 copies=50 copy_cost=7 net_gain=44 no_reuse=2 victim_loss=83\nNoJoint remote=136 copies=130 copy_cost=21 no_reuse=2\n",
+          "arms": {
+            "Full": {
+              "remote": 118,
+              "copies": 47,
+              "copy_cost": 21,
+              "net_gain": 86,
+              "no_reuse": 2,
+              "victim_loss": 232
+            },
+            "NoHotspot": {
+              "remote": 125,
+              "copies": 29,
+              "copy_cost": 15,
+              "net_gain": 25,
+              "no_reuse": 167,
+              "victim_loss": 146
+            },
+            "NoAffinity": {
+              "remote": 142,
+              "copies": 50,
+              "copy_cost": 7,
+              "net_gain": 44,
+              "no_reuse": 2,
+              "victim_loss": 83
+            },
+            "NoJoint": {
+              "remote": 136,
+              "copies": 130,
+              "copy_cost": 21,
+              "no_reuse": 2
+            }
+          }
+        },
+        "opportunity74": {
+          "stdout": "Full remote=118 copies=41 copy_cost=3 net_gain=70 no_reuse=167 victim_loss=101\nNoHotspot remote=125 copies=29 copy_cost=15 net_gain=25 no_reuse=167 victim_loss=146\nNoAffinity remote=143 copies=46 copy_cost=1 net_gain=40 no_reuse=56 victim_loss=40\nNoJoint remote=121 copies=66 copy_cost=3 no_reuse=167\n",
+          "arms": {
+            "Full": {
+              "remote": 118,
+              "copies": 41,
+              "copy_cost": 3,
+              "net_gain": 70,
+              "no_reuse": 167,
+              "victim_loss": 101
+            },
+            "NoHotspot": {
+              "remote": 125,
+              "copies": 29,
+              "copy_cost": 15,
+              "net_gain": 25,
+              "no_reuse": 167,
+              "victim_loss": 146
+            },
+            "NoAffinity": {
+              "remote": 143,
+              "copies": 46,
+              "copy_cost": 1,
+              "net_gain": 40,
+              "no_reuse": 56,
+              "victim_loss": 40
+            },
+            "NoJoint": {
+              "remote": 121,
+              "copies": 66,
+              "copy_cost": 3,
+              "no_reuse": 167
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "moving_shared-73501",
+      "capacity_objects_per_domain": 3,
+      "capacity_mib_global": 18,
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=87 copies=54 copy_cost=16 net_gain=87 no_reuse=1 victim_loss=138\nNoHotspot remote=86 copies=26 copy_cost=3 net_gain=8 no_reuse=161 victim_loss=34\nNoAffinity remote=124 copies=52 copy_cost=6 net_gain=43 no_reuse=1 victim_loss=65\nNoJoint remote=112 copies=109 copy_cost=16 no_reuse=1\n",
+          "arms": {
+            "Full": {
+              "remote": 87,
+              "copies": 54,
+              "copy_cost": 16,
+              "net_gain": 87,
+              "no_reuse": 1,
+              "victim_loss": 138
+            },
+            "NoHotspot": {
+              "remote": 86,
+              "copies": 26,
+              "copy_cost": 3,
+              "net_gain": 8,
+              "no_reuse": 161,
+              "victim_loss": 34
+            },
+            "NoAffinity": {
+              "remote": 124,
+              "copies": 52,
+              "copy_cost": 6,
+              "net_gain": 43,
+              "no_reuse": 1,
+              "victim_loss": 65
+            },
+            "NoJoint": {
+              "remote": 112,
+              "copies": 109,
+              "copy_cost": 16,
+              "no_reuse": 1
+            }
+          }
+        },
+        "opportunity74": {
+          "stdout": "Full remote=79 copies=27 copy_cost=3 net_gain=47 no_reuse=161 victim_loss=1\nNoHotspot remote=86 copies=26 copy_cost=3 net_gain=8 no_reuse=161 victim_loss=34\nNoAffinity remote=122 copies=42 copy_cost=1 net_gain=32 no_reuse=55 victim_loss=24\nNoJoint remote=101 copies=49 copy_cost=3 no_reuse=161\n",
+          "arms": {
+            "Full": {
+              "remote": 79,
+              "copies": 27,
+              "copy_cost": 3,
+              "net_gain": 47,
+              "no_reuse": 161,
+              "victim_loss": 1
+            },
+            "NoHotspot": {
+              "remote": 86,
+              "copies": 26,
+              "copy_cost": 3,
+              "net_gain": 8,
+              "no_reuse": 161,
+              "victim_loss": 34
+            },
+            "NoAffinity": {
+              "remote": 122,
+              "copies": 42,
+              "copy_cost": 1,
+              "net_gain": 32,
+              "no_reuse": 55,
+              "victim_loss": 24
+            },
+            "NoJoint": {
+              "remote": 101,
+              "copies": 49,
+              "copy_cost": 3,
+              "no_reuse": 161
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "moving_shared-73501",
+      "capacity_objects_per_domain": 4,
+      "capacity_mib_global": 24,
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=77 copies=65 copy_cost=13 net_gain=113 victim_loss=80\nNoHotspot remote=79 copies=28 copy_cost=3 net_gain=3 no_reuse=155 victim_loss=15\nNoAffinity remote=95 copies=44 copy_cost=6 net_gain=32 victim_loss=45\nNoJoint remote=99 copies=97 copy_cost=13\n",
+          "arms": {
+            "Full": {
+              "remote": 77,
+              "copies": 65,
+              "copy_cost": 13,
+              "net_gain": 113,
+              "victim_loss": 80
+            },
+            "NoHotspot": {
+              "remote": 79,
+              "copies": 28,
+              "copy_cost": 3,
+              "net_gain": 3,
+              "no_reuse": 155,
+              "victim_loss": 15
+            },
+            "NoAffinity": {
+              "remote": 95,
+              "copies": 44,
+              "copy_cost": 6,
+              "net_gain": 32,
+              "victim_loss": 45
+            },
+            "NoJoint": {
+              "remote": 99,
+              "copies": 97,
+              "copy_cost": 13
+            }
+          }
+        },
+        "opportunity74": {
+          "stdout": "Full remote=78 copies=29 copy_cost=3 net_gain=44 no_reuse=155\nNoHotspot remote=79 copies=28 copy_cost=3 net_gain=3 no_reuse=155 victim_loss=15\nNoAffinity remote=97 copies=36 copy_cost=1 net_gain=23 no_reuse=52 victim_loss=8\nNoJoint remote=85 copies=36 copy_cost=3 no_reuse=155\n",
+          "arms": {
+            "Full": {
+              "remote": 78,
+              "copies": 29,
+              "copy_cost": 3,
+              "net_gain": 44,
+              "no_reuse": 155
+            },
+            "NoHotspot": {
+              "remote": 79,
+              "copies": 28,
+              "copy_cost": 3,
+              "net_gain": 3,
+              "no_reuse": 155,
+              "victim_loss": 15
+            },
+            "NoAffinity": {
+              "remote": 97,
+              "copies": 36,
+              "copy_cost": 1,
+              "net_gain": 23,
+              "no_reuse": 52,
+              "victim_loss": 8
+            },
+            "NoJoint": {
+              "remote": 85,
+              "copies": 36,
+              "copy_cost": 3,
+              "no_reuse": 155
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "moving_shared-73501",
+      "capacity_objects_per_domain": 8,
+      "capacity_mib_global": 48,
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=62 copies=61 copy_cost=4 net_gain=130 victim_loss=1\nNoHotspot remote=73 copies=37 no_reuse=129\nNoAffinity remote=71 copies=51 copy_cost=1 net_gain=29 victim_loss=19\nNoJoint remote=75 copies=75 copy_cost=2\n",
+          "arms": {
+            "Full": {
+              "remote": 62,
+              "copies": 61,
+              "copy_cost": 4,
+              "net_gain": 130,
+              "victim_loss": 1
+            },
+            "NoHotspot": {
+              "remote": 73,
+              "copies": 37,
+              "no_reuse": 129
+            },
+            "NoAffinity": {
+              "remote": 71,
+              "copies": 51,
+              "copy_cost": 1,
+              "net_gain": 29,
+              "victim_loss": 19
+            },
+            "NoJoint": {
+              "remote": 75,
+              "copies": 75,
+              "copy_cost": 2
+            }
+          }
+        },
+        "opportunity74": {
+          "stdout": "Full remote=73 copies=37 net_gain=6 no_reuse=129\nNoHotspot remote=73 copies=37 no_reuse=129\nNoAffinity remote=71 copies=29 copy_cost=1 net_gain=3 no_reuse=41\nNoJoint remote=73 copies=37 no_reuse=129\n",
+          "arms": {
+            "Full": {
+              "remote": 73,
+              "copies": 37,
+              "net_gain": 6,
+              "no_reuse": 129
+            },
+            "NoHotspot": {
+              "remote": 73,
+              "copies": 37,
+              "no_reuse": 129
+            },
+            "NoAffinity": {
+              "remote": 71,
+              "copies": 29,
+              "copy_cost": 1,
+              "net_gain": 3,
+              "no_reuse": 41
+            },
+            "NoJoint": {
+              "remote": 73,
+              "copies": 37,
+              "no_reuse": 129
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "moving_shared-73502",
+      "capacity_objects_per_domain": 2,
+      "capacity_mib_global": 12,
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=124 copies=55 copy_cost=27 net_gain=91 no_reuse=5 victim_loss=236\nNoHotspot remote=129 copies=30 copy_cost=15 net_gain=29 no_reuse=182 victim_loss=139\nNoAffinity remote=162 copies=60 copy_cost=8 net_gain=53 no_reuse=3 victim_loss=91\nNoJoint remote=157 copies=148 copy_cost=27 no_reuse=5\n",
+          "arms": {
+            "Full": {
+              "remote": 124,
+              "copies": 55,
+              "copy_cost": 27,
+              "net_gain": 91,
+              "no_reuse": 5,
+              "victim_loss": 236
+            },
+            "NoHotspot": {
+              "remote": 129,
+              "copies": 30,
+              "copy_cost": 15,
+              "net_gain": 29,
+              "no_reuse": 182,
+              "victim_loss": 139
+            },
+            "NoAffinity": {
+              "remote": 162,
+              "copies": 60,
+              "copy_cost": 8,
+              "net_gain": 53,
+              "no_reuse": 3,
+              "victim_loss": 91
+            },
+            "NoJoint": {
+              "remote": 157,
+              "copies": 148,
+              "copy_cost": 27,
+              "no_reuse": 5
+            }
+          }
+        },
+        "opportunity74": {
+          "stdout": "Full remote=120 copies=41 copy_cost=6 net_gain=70 no_reuse=182 victim_loss=89\nNoHotspot remote=129 copies=30 copy_cost=15 net_gain=29 no_reuse=182 victim_loss=139\nNoAffinity remote=154 copies=39 copy_cost=2 net_gain=31 no_reuse=61 victim_loss=52\nNoJoint remote=139 copies=78 copy_cost=6 no_reuse=182\n",
+          "arms": {
+            "Full": {
+              "remote": 120,
+              "copies": 41,
+              "copy_cost": 6,
+              "net_gain": 70,
+              "no_reuse": 182,
+              "victim_loss": 89
+            },
+            "NoHotspot": {
+              "remote": 129,
+              "copies": 30,
+              "copy_cost": 15,
+              "net_gain": 29,
+              "no_reuse": 182,
+              "victim_loss": 139
+            },
+            "NoAffinity": {
+              "remote": 154,
+              "copies": 39,
+              "copy_cost": 2,
+              "net_gain": 31,
+              "no_reuse": 61,
+              "victim_loss": 52
+            },
+            "NoJoint": {
+              "remote": 139,
+              "copies": 78,
+              "copy_cost": 6,
+              "no_reuse": 182
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "moving_shared-73502",
+      "capacity_objects_per_domain": 3,
+      "capacity_mib_global": 18,
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=98 copies=63 copy_cost=24 net_gain=104 no_reuse=2 victim_loss=145\nNoHotspot remote=92 copies=26 copy_cost=9 net_gain=7 no_reuse=176 victim_loss=30\nNoAffinity remote=120 copies=50 copy_cost=7 net_gain=40 no_reuse=2 victim_loss=61\nNoJoint remote=108 copies=102 copy_cost=24 no_reuse=2\n",
+          "arms": {
+            "Full": {
+              "remote": 98,
+              "copies": 63,
+              "copy_cost": 24,
+              "net_gain": 104,
+              "no_reuse": 2,
+              "victim_loss": 145
+            },
+            "NoHotspot": {
+              "remote": 92,
+              "copies": 26,
+              "copy_cost": 9,
+              "net_gain": 7,
+              "no_reuse": 176,
+              "victim_loss": 30
+            },
+            "NoAffinity": {
+              "remote": 120,
+              "copies": 50,
+              "copy_cost": 7,
+              "net_gain": 40,
+              "no_reuse": 2,
+              "victim_loss": 61
+            },
+            "NoJoint": {
+              "remote": 108,
+              "copies": 102,
+              "copy_cost": 24,
+              "no_reuse": 2
+            }
+          }
+        },
+        "opportunity74": {
+          "stdout": "Full remote=84 copies=26 copy_cost=6 net_gain=46 no_reuse=176 victim_loss=2\nNoHotspot remote=92 copies=26 copy_cost=9 net_gain=7 no_reuse=176 victim_loss=30\nNoAffinity remote=132 copies=44 copy_cost=1 net_gain=33 no_reuse=59 victim_loss=28\nNoJoint remote=106 copies=48 copy_cost=6 no_reuse=176\n",
+          "arms": {
+            "Full": {
+              "remote": 84,
+              "copies": 26,
+              "copy_cost": 6,
+              "net_gain": 46,
+              "no_reuse": 176,
+              "victim_loss": 2
+            },
+            "NoHotspot": {
+              "remote": 92,
+              "copies": 26,
+              "copy_cost": 9,
+              "net_gain": 7,
+              "no_reuse": 176,
+              "victim_loss": 30
+            },
+            "NoAffinity": {
+              "remote": 132,
+              "copies": 44,
+              "copy_cost": 1,
+              "net_gain": 33,
+              "no_reuse": 59,
+              "victim_loss": 28
+            },
+            "NoJoint": {
+              "remote": 106,
+              "copies": 48,
+              "copy_cost": 6,
+              "no_reuse": 176
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "moving_shared-73502",
+      "capacity_objects_per_domain": 4,
+      "capacity_mib_global": 24,
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=76 copies=64 copy_cost=15 net_gain=111 no_reuse=1 victim_loss=75\nNoHotspot remote=85 copies=28 copy_cost=6 net_gain=3 no_reuse=169 victim_loss=12\nNoAffinity remote=112 copies=55 copy_cost=7 net_gain=42 no_reuse=1 victim_loss=49\nNoJoint remote=88 copies=85 copy_cost=18 no_reuse=1\n",
+          "arms": {
+            "Full": {
+              "remote": 76,
+              "copies": 64,
+              "copy_cost": 15,
+              "net_gain": 111,
+              "no_reuse": 1,
+              "victim_loss": 75
+            },
+            "NoHotspot": {
+              "remote": 85,
+              "copies": 28,
+              "copy_cost": 6,
+              "net_gain": 3,
+              "no_reuse": 169,
+              "victim_loss": 12
+            },
+            "NoAffinity": {
+              "remote": 112,
+              "copies": 55,
+              "copy_cost": 7,
+              "net_gain": 42,
+              "no_reuse": 1,
+              "victim_loss": 49
+            },
+            "NoJoint": {
+              "remote": 88,
+              "copies": 85,
+              "copy_cost": 18,
+              "no_reuse": 1
+            }
+          }
+        },
+        "opportunity74": {
+          "stdout": "Full remote=83 copies=28 copy_cost=6 net_gain=38 no_reuse=169 victim_loss=2\nNoHotspot remote=85 copies=28 copy_cost=6 net_gain=3 no_reuse=169 victim_loss=12\nNoAffinity remote=120 copies=43 copy_cost=1 net_gain=28 no_reuse=57 victim_loss=19\nNoJoint remote=104 copies=49 copy_cost=6 no_reuse=169\n",
+          "arms": {
+            "Full": {
+              "remote": 83,
+              "copies": 28,
+              "copy_cost": 6,
+              "net_gain": 38,
+              "no_reuse": 169,
+              "victim_loss": 2
+            },
+            "NoHotspot": {
+              "remote": 85,
+              "copies": 28,
+              "copy_cost": 6,
+              "net_gain": 3,
+              "no_reuse": 169,
+              "victim_loss": 12
+            },
+            "NoAffinity": {
+              "remote": 120,
+              "copies": 43,
+              "copy_cost": 1,
+              "net_gain": 28,
+              "no_reuse": 57,
+              "victim_loss": 19
+            },
+            "NoJoint": {
+              "remote": 104,
+              "copies": 49,
+              "copy_cost": 6,
+              "no_reuse": 169
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "moving_shared-73502",
+      "capacity_objects_per_domain": 8,
+      "capacity_mib_global": 48,
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=65 copies=65 copy_cost=3 net_gain=135 victim_loss=5\nNoHotspot remote=83 copies=40 copy_cost=6 no_reuse=143\nNoAffinity remote=81 copies=64 copy_cost=4 net_gain=43 victim_loss=13\nNoJoint remote=74 copies=74 copy_cost=5\n",
+          "arms": {
+            "Full": {
+              "remote": 65,
+              "copies": 65,
+              "copy_cost": 3,
+              "net_gain": 135,
+              "victim_loss": 5
+            },
+            "NoHotspot": {
+              "remote": 83,
+              "copies": 40,
+              "copy_cost": 6,
+              "no_reuse": 143
+            },
+            "NoAffinity": {
+              "remote": 81,
+              "copies": 64,
+              "copy_cost": 4,
+              "net_gain": 43,
+              "victim_loss": 13
+            },
+            "NoJoint": {
+              "remote": 74,
+              "copies": 74,
+              "copy_cost": 5
+            }
+          }
+        },
+        "opportunity74": {
+          "stdout": "Full remote=83 copies=40 copy_cost=6 net_gain=9 no_reuse=143\nNoHotspot remote=83 copies=40 copy_cost=6 no_reuse=143\nNoAffinity remote=80 copies=30 copy_cost=1 net_gain=7 no_reuse=49\nNoJoint remote=83 copies=40 copy_cost=6 no_reuse=143\n",
+          "arms": {
+            "Full": {
+              "remote": 83,
+              "copies": 40,
+              "copy_cost": 6,
+              "net_gain": 9,
+              "no_reuse": 143
+            },
+            "NoHotspot": {
+              "remote": 83,
+              "copies": 40,
+              "copy_cost": 6,
+              "no_reuse": 143
+            },
+            "NoAffinity": {
+              "remote": 80,
+              "copies": 30,
+              "copy_cost": 1,
+              "net_gain": 7,
+              "no_reuse": 49
+            },
+            "NoJoint": {
+              "remote": 83,
+              "copies": 40,
+              "copy_cost": 6,
+              "no_reuse": 143
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "moving_shared-73503",
+      "capacity_objects_per_domain": 2,
+      "capacity_mib_global": 12,
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=122 copies=59 copy_cost=16 net_gain=115 no_reuse=2 victim_loss=221\nNoHotspot remote=127 copies=28 copy_cost=21 net_gain=37 no_reuse=168 victim_loss=137\nNoAffinity remote=150 copies=51 copy_cost=6 net_gain=45 no_reuse=2 victim_loss=91\nNoJoint remote=141 copies=137 copy_cost=16 no_reuse=2\n",
+          "arms": {
+            "Full": {
+              "remote": 122,
+              "copies": 59,
+              "copy_cost": 16,
+              "net_gain": 115,
+              "no_reuse": 2,
+              "victim_loss": 221
+            },
+            "NoHotspot": {
+              "remote": 127,
+              "copies": 28,
+              "copy_cost": 21,
+              "net_gain": 37,
+              "no_reuse": 168,
+              "victim_loss": 137
+            },
+            "NoAffinity": {
+              "remote": 150,
+              "copies": 51,
+              "copy_cost": 6,
+              "net_gain": 45,
+              "no_reuse": 2,
+              "victim_loss": 91
+            },
+            "NoJoint": {
+              "remote": 141,
+              "copies": 137,
+              "copy_cost": 16,
+              "no_reuse": 2
+            }
+          }
+        },
+        "opportunity74": {
+          "stdout": "Full remote=117 copies=42 copy_cost=6 net_gain=77 no_reuse=168 victim_loss=88\nNoHotspot remote=127 copies=28 copy_cost=21 net_gain=37 no_reuse=168 victim_loss=137\nNoAffinity remote=152 copies=39 copy_cost=2 net_gain=33 no_reuse=57 victim_loss=54\nNoJoint remote=140 copies=84 copy_cost=6 no_reuse=168\n",
+          "arms": {
+            "Full": {
+              "remote": 117,
+              "copies": 42,
+              "copy_cost": 6,
+              "net_gain": 77,
+              "no_reuse": 168,
+              "victim_loss": 88
+            },
+            "NoHotspot": {
+              "remote": 127,
+              "copies": 28,
+              "copy_cost": 21,
+              "net_gain": 37,
+              "no_reuse": 168,
+              "victim_loss": 137
+            },
+            "NoAffinity": {
+              "remote": 152,
+              "copies": 39,
+              "copy_cost": 2,
+              "net_gain": 33,
+              "no_reuse": 57,
+              "victim_loss": 54
+            },
+            "NoJoint": {
+              "remote": 140,
+              "copies": 84,
+              "copy_cost": 6,
+              "no_reuse": 168
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "moving_shared-73503",
+      "capacity_objects_per_domain": 3,
+      "capacity_mib_global": 18,
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=85 copies=53 copy_cost=13 net_gain=81 no_reuse=1 victim_loss=142\nNoHotspot remote=85 copies=25 copy_cost=9 net_gain=10 no_reuse=162 victim_loss=32\nNoAffinity remote=135 copies=58 copy_cost=6 net_gain=49 no_reuse=1 victim_loss=70\nNoJoint remote=122 copies=119 copy_cost=13 no_reuse=1\n",
+          "arms": {
+            "Full": {
+              "remote": 85,
+              "copies": 53,
+              "copy_cost": 13,
+              "net_gain": 81,
+              "no_reuse": 1,
+              "victim_loss": 142
+            },
+            "NoHotspot": {
+              "remote": 85,
+              "copies": 25,
+              "copy_cost": 9,
+              "net_gain": 10,
+              "no_reuse": 162,
+              "victim_loss": 32
+            },
+            "NoAffinity": {
+              "remote": 135,
+              "copies": 58,
+              "copy_cost": 6,
+              "net_gain": 49,
+              "no_reuse": 1,
+              "victim_loss": 70
+            },
+            "NoJoint": {
+              "remote": 122,
+              "copies": 119,
+              "copy_cost": 13,
+              "no_reuse": 1
+            }
+          }
+        },
+        "opportunity74": {
+          "stdout": "Full remote=78 copies=25 copy_cost=6 net_gain=45 no_reuse=162 victim_loss=2\nNoHotspot remote=85 copies=25 copy_cost=9 net_gain=10 no_reuse=162 victim_loss=32\nNoAffinity remote=134 copies=45 copy_cost=2 net_gain=35 no_reuse=55 victim_loss=32\nNoJoint remote=111 copies=58 copy_cost=6 no_reuse=162\n",
+          "arms": {
+            "Full": {
+              "remote": 78,
+              "copies": 25,
+              "copy_cost": 6,
+              "net_gain": 45,
+              "no_reuse": 162,
+              "victim_loss": 2
+            },
+            "NoHotspot": {
+              "remote": 85,
+              "copies": 25,
+              "copy_cost": 9,
+              "net_gain": 10,
+              "no_reuse": 162,
+              "victim_loss": 32
+            },
+            "NoAffinity": {
+              "remote": 134,
+              "copies": 45,
+              "copy_cost": 2,
+              "net_gain": 35,
+              "no_reuse": 55,
+              "victim_loss": 32
+            },
+            "NoJoint": {
+              "remote": 111,
+              "copies": 58,
+              "copy_cost": 6,
+              "no_reuse": 162
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "moving_shared-73503",
+      "capacity_objects_per_domain": 4,
+      "capacity_mib_global": 24,
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=78 copies=63 copy_cost=12 net_gain=105 victim_loss=93\nNoHotspot remote=79 copies=28 copy_cost=9 no_reuse=156 victim_loss=15\nNoAffinity remote=114 copies=53 copy_cost=6 net_gain=41 victim_loss=55\nNoJoint remote=107 copies=104 copy_cost=12\n",
+          "arms": {
+            "Full": {
+              "remote": 78,
+              "copies": 63,
+              "copy_cost": 12,
+              "net_gain": 105,
+              "victim_loss": 93
+            },
+            "NoHotspot": {
+              "remote": 79,
+              "copies": 28,
+              "copy_cost": 9,
+              "no_reuse": 156,
+              "victim_loss": 15
+            },
+            "NoAffinity": {
+              "remote": 114,
+              "copies": 53,
+              "copy_cost": 6,
+              "net_gain": 41,
+              "victim_loss": 55
+            },
+            "NoJoint": {
+              "remote": 107,
+              "copies": 104,
+              "copy_cost": 12
+            }
+          }
+        },
+        "opportunity74": {
+          "stdout": "Full remote=78 copies=28 copy_cost=6 net_gain=44 no_reuse=156\nNoHotspot remote=79 copies=28 copy_cost=9 no_reuse=156 victim_loss=15\nNoAffinity remote=119 copies=42 copy_cost=2 net_gain=29 no_reuse=51 victim_loss=24\nNoJoint remote=99 copies=49 copy_cost=6 no_reuse=156\n",
+          "arms": {
+            "Full": {
+              "remote": 78,
+              "copies": 28,
+              "copy_cost": 6,
+              "net_gain": 44,
+              "no_reuse": 156
+            },
+            "NoHotspot": {
+              "remote": 79,
+              "copies": 28,
+              "copy_cost": 9,
+              "no_reuse": 156,
+              "victim_loss": 15
+            },
+            "NoAffinity": {
+              "remote": 119,
+              "copies": 42,
+              "copy_cost": 2,
+              "net_gain": 29,
+              "no_reuse": 51,
+              "victim_loss": 24
+            },
+            "NoJoint": {
+              "remote": 99,
+              "copies": 49,
+              "copy_cost": 6,
+              "no_reuse": 156
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "moving_shared-73503",
+      "capacity_objects_per_domain": 8,
+      "capacity_mib_global": 48,
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=60 copies=60 net_gain=118 victim_loss=12\nNoHotspot remote=79 copies=40 copy_cost=9 no_reuse=130 victim_loss=4\nNoAffinity remote=77 copies=54 copy_cost=3 net_gain=34 victim_loss=20\nNoJoint remote=73 copies=73 copy_cost=2\n",
+          "arms": {
+            "Full": {
+              "remote": 60,
+              "copies": 60,
+              "net_gain": 118,
+              "victim_loss": 12
+            },
+            "NoHotspot": {
+              "remote": 79,
+              "copies": 40,
+              "copy_cost": 9,
+              "no_reuse": 130,
+              "victim_loss": 4
+            },
+            "NoAffinity": {
+              "remote": 77,
+              "copies": 54,
+              "copy_cost": 3,
+              "net_gain": 34,
+              "victim_loss": 20
+            },
+            "NoJoint": {
+              "remote": 73,
+              "copies": 73,
+              "copy_cost": 2
+            }
+          }
+        },
+        "opportunity74": {
+          "stdout": "Full remote=78 copies=40 copy_cost=6 net_gain=15 no_reuse=130\nNoHotspot remote=79 copies=40 copy_cost=9 no_reuse=130 victim_loss=4\nNoAffinity remote=71 copies=30 copy_cost=1 net_gain=8 no_reuse=40\nNoJoint remote=78 copies=40 copy_cost=6 no_reuse=130\n",
+          "arms": {
+            "Full": {
+              "remote": 78,
+              "copies": 40,
+              "copy_cost": 6,
+              "net_gain": 15,
+              "no_reuse": 130
+            },
+            "NoHotspot": {
+              "remote": 79,
+              "copies": 40,
+              "copy_cost": 9,
+              "no_reuse": 130,
+              "victim_loss": 4
+            },
+            "NoAffinity": {
+              "remote": 71,
+              "copies": 30,
+              "copy_cost": 1,
+              "net_gain": 8,
+              "no_reuse": 40
+            },
+            "NoJoint": {
+              "remote": 78,
+              "copies": 40,
+              "copy_cost": 6,
+              "no_reuse": 130
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "moving_shared-74801",
+      "capacity_objects_per_domain": 2,
+      "capacity_mib_global": 12,
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=114 copies=44 copy_cost=19 net_gain=75 no_reuse=1 victim_loss=231\nNoHotspot remote=127 copies=30 copy_cost=18 net_gain=31 no_reuse=185 victim_loss=119\nNoAffinity remote=160 copies=56 copy_cost=5 net_gain=50 no_reuse=1 victim_loss=98\nNoJoint remote=162 copies=157 copy_cost=16 no_reuse=1\n",
+          "arms": {
+            "Full": {
+              "remote": 114,
+              "copies": 44,
+              "copy_cost": 19,
+              "net_gain": 75,
+              "no_reuse": 1,
+              "victim_loss": 231
+            },
+            "NoHotspot": {
+              "remote": 127,
+              "copies": 30,
+              "copy_cost": 18,
+              "net_gain": 31,
+              "no_reuse": 185,
+              "victim_loss": 119
+            },
+            "NoAffinity": {
+              "remote": 160,
+              "copies": 56,
+              "copy_cost": 5,
+              "net_gain": 50,
+              "no_reuse": 1,
+              "victim_loss": 98
+            },
+            "NoJoint": {
+              "remote": 162,
+              "copies": 157,
+              "copy_cost": 16,
+              "no_reuse": 1
+            }
+          }
+        },
+        "opportunity74": {
+          "stdout": "Full remote=113 copies=39 copy_cost=3 net_gain=61 no_reuse=185 victim_loss=74\nNoHotspot remote=127 copies=30 copy_cost=18 net_gain=31 no_reuse=185 victim_loss=119\nNoAffinity remote=157 copies=37 copy_cost=1 net_gain=30 no_reuse=62 victim_loss=57\nNoJoint remote=158 copies=96 copy_cost=3 no_reuse=185\n",
+          "arms": {
+            "Full": {
+              "remote": 113,
+              "copies": 39,
+              "copy_cost": 3,
+              "net_gain": 61,
+              "no_reuse": 185,
+              "victim_loss": 74
+            },
+            "NoHotspot": {
+              "remote": 127,
+              "copies": 30,
+              "copy_cost": 18,
+              "net_gain": 31,
+              "no_reuse": 185,
+              "victim_loss": 119
+            },
+            "NoAffinity": {
+              "remote": 157,
+              "copies": 37,
+              "copy_cost": 1,
+              "net_gain": 30,
+              "no_reuse": 62,
+              "victim_loss": 57
+            },
+            "NoJoint": {
+              "remote": 158,
+              "copies": 96,
+              "copy_cost": 3,
+              "no_reuse": 185
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "moving_shared-74801",
+      "capacity_objects_per_domain": 3,
+      "capacity_mib_global": 18,
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=92 copies=55 copy_cost=13 net_gain=89 victim_loss=151\nNoHotspot remote=93 copies=27 copy_cost=6 net_gain=5 no_reuse=178 victim_loss=30\nNoAffinity remote=130 copies=54 copy_cost=5 net_gain=45 victim_loss=71\nNoJoint remote=126 copies=124 copy_cost=10\n",
+          "arms": {
+            "Full": {
+              "remote": 92,
+              "copies": 55,
+              "copy_cost": 13,
+              "net_gain": 89,
+              "victim_loss": 151
+            },
+            "NoHotspot": {
+              "remote": 93,
+              "copies": 27,
+              "copy_cost": 6,
+              "net_gain": 5,
+              "no_reuse": 178,
+              "victim_loss": 30
+            },
+            "NoAffinity": {
+              "remote": 130,
+              "copies": 54,
+              "copy_cost": 5,
+              "net_gain": 45,
+              "victim_loss": 71
+            },
+            "NoJoint": {
+              "remote": 126,
+              "copies": 124,
+              "copy_cost": 10
+            }
+          }
+        },
+        "opportunity74": {
+          "stdout": "Full remote=86 copies=27 copy_cost=3 net_gain=47 no_reuse=178 victim_loss=5\nNoHotspot remote=93 copies=27 copy_cost=6 net_gain=5 no_reuse=178 victim_loss=30\nNoAffinity remote=124 copies=33 copy_cost=1 net_gain=23 no_reuse=59 victim_loss=31\nNoJoint remote=136 copies=77 copy_cost=3 no_reuse=178\n",
+          "arms": {
+            "Full": {
+              "remote": 86,
+              "copies": 27,
+              "copy_cost": 3,
+              "net_gain": 47,
+              "no_reuse": 178,
+              "victim_loss": 5
+            },
+            "NoHotspot": {
+              "remote": 93,
+              "copies": 27,
+              "copy_cost": 6,
+              "net_gain": 5,
+              "no_reuse": 178,
+              "victim_loss": 30
+            },
+            "NoAffinity": {
+              "remote": 124,
+              "copies": 33,
+              "copy_cost": 1,
+              "net_gain": 23,
+              "no_reuse": 59,
+              "victim_loss": 31
+            },
+            "NoJoint": {
+              "remote": 136,
+              "copies": 77,
+              "copy_cost": 3,
+              "no_reuse": 178
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "moving_shared-74801",
+      "capacity_objects_per_domain": 4,
+      "capacity_mib_global": 24,
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=79 copies=68 copy_cost=8 net_gain=110 victim_loss=90\nNoHotspot remote=84 copies=28 copy_cost=3 net_gain=1 no_reuse=172 victim_loss=7\nNoAffinity remote=105 copies=48 copy_cost=4 net_gain=36 victim_loss=53\nNoJoint remote=111 copies=111 copy_cost=5\n",
+          "arms": {
+            "Full": {
+              "remote": 79,
+              "copies": 68,
+              "copy_cost": 8,
+              "net_gain": 110,
+              "victim_loss": 90
+            },
+            "NoHotspot": {
+              "remote": 84,
+              "copies": 28,
+              "copy_cost": 3,
+              "net_gain": 1,
+              "no_reuse": 172,
+              "victim_loss": 7
+            },
+            "NoAffinity": {
+              "remote": 105,
+              "copies": 48,
+              "copy_cost": 4,
+              "net_gain": 36,
+              "victim_loss": 53
+            },
+            "NoJoint": {
+              "remote": 111,
+              "copies": 111,
+              "copy_cost": 5
+            }
+          }
+        },
+        "opportunity74": {
+          "stdout": "Full remote=84 copies=28 copy_cost=3 net_gain=39 no_reuse=172\nNoHotspot remote=84 copies=28 copy_cost=3 net_gain=1 no_reuse=172 victim_loss=7\nNoAffinity remote=103 copies=32 copy_cost=1 net_gain=19 no_reuse=57 victim_loss=13\nNoJoint remote=111 copies=55 copy_cost=3 no_reuse=172\n",
+          "arms": {
+            "Full": {
+              "remote": 84,
+              "copies": 28,
+              "copy_cost": 3,
+              "net_gain": 39,
+              "no_reuse": 172
+            },
+            "NoHotspot": {
+              "remote": 84,
+              "copies": 28,
+              "copy_cost": 3,
+              "net_gain": 1,
+              "no_reuse": 172,
+              "victim_loss": 7
+            },
+            "NoAffinity": {
+              "remote": 103,
+              "copies": 32,
+              "copy_cost": 1,
+              "net_gain": 19,
+              "no_reuse": 57,
+              "victim_loss": 13
+            },
+            "NoJoint": {
+              "remote": 111,
+              "copies": 55,
+              "copy_cost": 3,
+              "no_reuse": 172
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "moving_shared-74801",
+      "capacity_objects_per_domain": 8,
+      "capacity_mib_global": 48,
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=67 copies=67 net_gain=141 victim_loss=3\nNoHotspot remote=78 copies=34 copy_cost=3 no_reuse=144\nNoAffinity remote=82 copies=62 net_gain=41 victim_loss=20\nNoJoint remote=82 copies=82\n",
+          "arms": {
+            "Full": {
+              "remote": 67,
+              "copies": 67,
+              "net_gain": 141,
+              "victim_loss": 3
+            },
+            "NoHotspot": {
+              "remote": 78,
+              "copies": 34,
+              "copy_cost": 3,
+              "no_reuse": 144
+            },
+            "NoAffinity": {
+              "remote": 82,
+              "copies": 62,
+              "net_gain": 41,
+              "victim_loss": 20
+            },
+            "NoJoint": {
+              "remote": 82,
+              "copies": 82
+            }
+          }
+        },
+        "opportunity74": {
+          "stdout": "Full remote=78 copies=34 copy_cost=3 net_gain=1 no_reuse=144\nNoHotspot remote=78 copies=34 copy_cost=3 no_reuse=144\nNoAffinity remote=80 copies=34 net_gain=9 no_reuse=46\nNoJoint remote=78 copies=34 copy_cost=3 no_reuse=144\n",
+          "arms": {
+            "Full": {
+              "remote": 78,
+              "copies": 34,
+              "copy_cost": 3,
+              "net_gain": 1,
+              "no_reuse": 144
+            },
+            "NoHotspot": {
+              "remote": 78,
+              "copies": 34,
+              "copy_cost": 3,
+              "no_reuse": 144
+            },
+            "NoAffinity": {
+              "remote": 80,
+              "copies": 34,
+              "net_gain": 9,
+              "no_reuse": 46
+            },
+            "NoJoint": {
+              "remote": 78,
+              "copies": 34,
+              "copy_cost": 3,
+              "no_reuse": 144
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "public_toolagent-73601",
+      "capacity_objects_per_domain": 2,
+      "capacity_mib_global": 12,
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=1010 copies=22 net_gain=36 no_reuse=2319 victim_loss=663\nNoHotspot remote=1006 copies=13 net_gain=13 no_reuse=2319 victim_loss=674\nNoAffinity remote=1044 copies=22 net_gain=16 no_reuse=775 victim_loss=247\nNoJoint remote=1051 copies=275 no_reuse=2334\n",
+          "arms": {
+            "Full": {
+              "remote": 1010,
+              "copies": 22,
+              "net_gain": 36,
+              "no_reuse": 2319,
+              "victim_loss": 663
+            },
+            "NoHotspot": {
+              "remote": 1006,
+              "copies": 13,
+              "net_gain": 13,
+              "no_reuse": 2319,
+              "victim_loss": 674
+            },
+            "NoAffinity": {
+              "remote": 1044,
+              "copies": 22,
+              "net_gain": 16,
+              "no_reuse": 775,
+              "victim_loss": 247
+            },
+            "NoJoint": {
+              "remote": 1051,
+              "copies": 275,
+              "no_reuse": 2334
+            }
+          }
+        },
+        "opportunity74": {
+          "stdout": "Full remote=1017 copies=22 net_gain=29 no_reuse=2319 victim_loss=691\nNoHotspot remote=1006 copies=13 net_gain=13 no_reuse=2319 victim_loss=674\nNoAffinity remote=1044 copies=21 net_gain=15 no_reuse=775 victim_loss=248\nNoJoint remote=1054 copies=277 no_reuse=2337\n",
+          "arms": {
+            "Full": {
+              "remote": 1017,
+              "copies": 22,
+              "net_gain": 29,
+              "no_reuse": 2319,
+              "victim_loss": 691
+            },
+            "NoHotspot": {
+              "remote": 1006,
+              "copies": 13,
+              "net_gain": 13,
+              "no_reuse": 2319,
+              "victim_loss": 674
+            },
+            "NoAffinity": {
+              "remote": 1044,
+              "copies": 21,
+              "net_gain": 15,
+              "no_reuse": 775,
+              "victim_loss": 248
+            },
+            "NoJoint": {
+              "remote": 1054,
+              "copies": 277,
+              "no_reuse": 2337
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "public_toolagent-73601",
+      "capacity_objects_per_domain": 3,
+      "capacity_mib_global": 18,
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=938 copies=28 net_gain=41 no_reuse=2295 victim_loss=460\nNoHotspot remote=940 copies=19 net_gain=19 no_reuse=2295 victim_loss=488\nNoAffinity remote=983 copies=28 net_gain=19 no_reuse=768 victim_loss=187\nNoJoint remote=1008 copies=238 no_reuse=2319\n",
+          "arms": {
+            "Full": {
+              "remote": 938,
+              "copies": 28,
+              "net_gain": 41,
+              "no_reuse": 2295,
+              "victim_loss": 460
+            },
+            "NoHotspot": {
+              "remote": 940,
+              "copies": 19,
+              "net_gain": 19,
+              "no_reuse": 2295,
+              "victim_loss": 488
+            },
+            "NoAffinity": {
+              "remote": 983,
+              "copies": 28,
+              "net_gain": 19,
+              "no_reuse": 768,
+              "victim_loss": 187
+            },
+            "NoJoint": {
+              "remote": 1008,
+              "copies": 238,
+              "no_reuse": 2319
+            }
+          }
+        },
+        "opportunity74": {
+          "stdout": "Full remote=942 copies=28 net_gain=37 no_reuse=2295 victim_loss=476\nNoHotspot remote=940 copies=19 net_gain=19 no_reuse=2295 victim_loss=488\nNoAffinity remote=985 copies=28 net_gain=19 no_reuse=768 victim_loss=189\nNoJoint remote=1012 copies=241 no_reuse=2322\n",
+          "arms": {
+            "Full": {
+              "remote": 942,
+              "copies": 28,
+              "net_gain": 37,
+              "no_reuse": 2295,
+              "victim_loss": 476
+            },
+            "NoHotspot": {
+              "remote": 940,
+              "copies": 19,
+              "net_gain": 19,
+              "no_reuse": 2295,
+              "victim_loss": 488
+            },
+            "NoAffinity": {
+              "remote": 985,
+              "copies": 28,
+              "net_gain": 19,
+              "no_reuse": 768,
+              "victim_loss": 189
+            },
+            "NoJoint": {
+              "remote": 1012,
+              "copies": 241,
+              "no_reuse": 2322
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "public_toolagent-73601",
+      "capacity_objects_per_domain": 4,
+      "capacity_mib_global": 24,
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=865 copies=34 net_gain=45 no_reuse=2271 victim_loss=255\nNoHotspot remote=873 copies=25 net_gain=25 no_reuse=2271 victim_loss=299\nNoAffinity remote=921 copies=34 net_gain=22 no_reuse=761 victim_loss=126\nNoJoint remote=960 copies=196 no_reuse=2304\n",
+          "arms": {
+            "Full": {
+              "remote": 865,
+              "copies": 34,
+              "net_gain": 45,
+              "no_reuse": 2271,
+              "victim_loss": 255
+            },
+            "NoHotspot": {
+              "remote": 873,
+              "copies": 25,
+              "net_gain": 25,
+              "no_reuse": 2271,
+              "victim_loss": 299
+            },
+            "NoAffinity": {
+              "remote": 921,
+              "copies": 34,
+              "net_gain": 22,
+              "no_reuse": 761,
+              "victim_loss": 126
+            },
+            "NoJoint": {
+              "remote": 960,
+              "copies": 196,
+              "no_reuse": 2304
+            }
+          }
+        },
+        "opportunity74": {
+          "stdout": "Full remote=869 copies=34 net_gain=44 no_reuse=2271 victim_loss=268\nNoHotspot remote=873 copies=25 net_gain=25 no_reuse=2271 victim_loss=299\nNoAffinity remote=922 copies=33 net_gain=21 no_reuse=761 victim_loss=128\nNoJoint remote=969 copies=204 no_reuse=2307\n",
+          "arms": {
+            "Full": {
+              "remote": 869,
+              "copies": 34,
+              "net_gain": 44,
+              "no_reuse": 2271,
+              "victim_loss": 268
+            },
+            "NoHotspot": {
+              "remote": 873,
+              "copies": 25,
+              "net_gain": 25,
+              "no_reuse": 2271,
+              "victim_loss": 299
+            },
+            "NoAffinity": {
+              "remote": 922,
+              "copies": 33,
+              "net_gain": 21,
+              "no_reuse": 761,
+              "victim_loss": 128
+            },
+            "NoJoint": {
+              "remote": 969,
+              "copies": 204,
+              "no_reuse": 2307
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "public_toolagent-73601",
+      "capacity_objects_per_domain": 8,
+      "capacity_mib_global": 48,
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=799 copies=41 net_gain=46 no_reuse=2218 victim_loss=80\nNoHotspot remote=833 copies=41 net_gain=39 no_reuse=2218 victim_loss=189\nNoAffinity remote=826 copies=44 net_gain=20 no_reuse=739 victim_loss=43\nNoJoint remote=830 copies=94 no_reuse=2227\n",
+          "arms": {
+            "Full": {
+              "remote": 799,
+              "copies": 41,
+              "net_gain": 46,
+              "no_reuse": 2218,
+              "victim_loss": 80
+            },
+            "NoHotspot": {
+              "remote": 833,
+              "copies": 41,
+              "net_gain": 39,
+              "no_reuse": 2218,
+              "victim_loss": 189
+            },
+            "NoAffinity": {
+              "remote": 826,
+              "copies": 44,
+              "net_gain": 20,
+              "no_reuse": 739,
+              "victim_loss": 43
+            },
+            "NoJoint": {
+              "remote": 830,
+              "copies": 94,
+              "no_reuse": 2227
+            }
+          }
+        },
+        "opportunity74": {
+          "stdout": "Full remote=799 copies=41 net_gain=46 no_reuse=2218 victim_loss=80\nNoHotspot remote=833 copies=41 net_gain=39 no_reuse=2218 victim_loss=189\nNoAffinity remote=826 copies=44 net_gain=20 no_reuse=739 victim_loss=43\nNoJoint remote=831 copies=95 no_reuse=2227\n",
+          "arms": {
+            "Full": {
+              "remote": 799,
+              "copies": 41,
+              "net_gain": 46,
+              "no_reuse": 2218,
+              "victim_loss": 80
+            },
+            "NoHotspot": {
+              "remote": 833,
+              "copies": 41,
+              "net_gain": 39,
+              "no_reuse": 2218,
+              "victim_loss": 189
+            },
+            "NoAffinity": {
+              "remote": 826,
+              "copies": 44,
+              "net_gain": 20,
+              "no_reuse": 739,
+              "victim_loss": 43
+            },
+            "NoJoint": {
+              "remote": 831,
+              "copies": 95,
+              "no_reuse": 2227
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "public_toolagent-73602",
+      "capacity_objects_per_domain": 2,
+      "capacity_mib_global": 12,
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=1026 copies=29 net_gain=40 no_reuse=2316 victim_loss=710\nNoHotspot remote=1012 copies=17 net_gain=16 no_reuse=2316 victim_loss=692\nNoAffinity remote=1031 copies=20 net_gain=14 no_reuse=771 victim_loss=240\nNoJoint remote=1040 copies=270 no_reuse=2316\n",
+          "arms": {
+            "Full": {
+              "remote": 1026,
+              "copies": 29,
+              "net_gain": 40,
+              "no_reuse": 2316,
+              "victim_loss": 710
+            },
+            "NoHotspot": {
+              "remote": 1012,
+              "copies": 17,
+              "net_gain": 16,
+              "no_reuse": 2316,
+              "victim_loss": 692
+            },
+            "NoAffinity": {
+              "remote": 1031,
+              "copies": 20,
+              "net_gain": 14,
+              "no_reuse": 771,
+              "victim_loss": 240
+            },
+            "NoJoint": {
+              "remote": 1040,
+              "copies": 270,
+              "no_reuse": 2316
+            }
+          }
+        },
+        "opportunity74": {
+          "stdout": "Full remote=1026 copies=29 net_gain=40 no_reuse=2316 victim_loss=710\nNoHotspot remote=1012 copies=17 net_gain=16 no_reuse=2316 victim_loss=692\nNoAffinity remote=1024 copies=19 net_gain=13 no_reuse=771 victim_loss=234\nNoJoint remote=1040 copies=270 no_reuse=2316\n",
+          "arms": {
+            "Full": {
+              "remote": 1026,
+              "copies": 29,
+              "net_gain": 40,
+              "no_reuse": 2316,
+              "victim_loss": 710
+            },
+            "NoHotspot": {
+              "remote": 1012,
+              "copies": 17,
+              "net_gain": 16,
+              "no_reuse": 2316,
+              "victim_loss": 692
+            },
+            "NoAffinity": {
+              "remote": 1024,
+              "copies": 19,
+              "net_gain": 13,
+              "no_reuse": 771,
+              "victim_loss": 234
+            },
+            "NoJoint": {
+              "remote": 1040,
+              "copies": 270,
+              "no_reuse": 2316
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "public_toolagent-73602",
+      "capacity_objects_per_domain": 3,
+      "capacity_mib_global": 18,
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=954 copies=37 net_gain=48 no_reuse=2299 victim_loss=495\nNoHotspot remote=943 copies=23 net_gain=19 no_reuse=2299 victim_loss=491\nNoAffinity remote=969 copies=27 net_gain=18 no_reuse=765 victim_loss=177\nNoJoint remote=996 copies=232 no_reuse=2299\n",
+          "arms": {
+            "Full": {
+              "remote": 954,
+              "copies": 37,
+              "net_gain": 48,
+              "no_reuse": 2299,
+              "victim_loss": 495
+            },
+            "NoHotspot": {
+              "remote": 943,
+              "copies": 23,
+              "net_gain": 19,
+              "no_reuse": 2299,
+              "victim_loss": 491
+            },
+            "NoAffinity": {
+              "remote": 969,
+              "copies": 27,
+              "net_gain": 18,
+              "no_reuse": 765,
+              "victim_loss": 177
+            },
+            "NoJoint": {
+              "remote": 996,
+              "copies": 232,
+              "no_reuse": 2299
+            }
+          }
+        },
+        "opportunity74": {
+          "stdout": "Full remote=954 copies=37 net_gain=47 no_reuse=2299 victim_loss=496\nNoHotspot remote=943 copies=23 net_gain=19 no_reuse=2299 victim_loss=491\nNoAffinity remote=969 copies=26 net_gain=17 no_reuse=765 victim_loss=178\nNoJoint remote=994 copies=230 no_reuse=2299\n",
+          "arms": {
+            "Full": {
+              "remote": 954,
+              "copies": 37,
+              "net_gain": 47,
+              "no_reuse": 2299,
+              "victim_loss": 496
+            },
+            "NoHotspot": {
+              "remote": 943,
+              "copies": 23,
+              "net_gain": 19,
+              "no_reuse": 2299,
+              "victim_loss": 491
+            },
+            "NoAffinity": {
+              "remote": 969,
+              "copies": 26,
+              "net_gain": 17,
+              "no_reuse": 765,
+              "victim_loss": 178
+            },
+            "NoJoint": {
+              "remote": 994,
+              "copies": 230,
+              "no_reuse": 2299
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "public_toolagent-73602",
+      "capacity_objects_per_domain": 4,
+      "capacity_mib_global": 24,
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=879 copies=43 net_gain=56 no_reuse=2278 victim_loss=271\nNoHotspot remote=870 copies=28 net_gain=24 no_reuse=2278 victim_loss=276\nNoAffinity remote=904 copies=34 net_gain=22 no_reuse=758 victim_loss=112\nNoJoint remote=919 copies=161 no_reuse=2278\n",
+          "arms": {
+            "Full": {
+              "remote": 879,
+              "copies": 43,
+              "net_gain": 56,
+              "no_reuse": 2278,
+              "victim_loss": 271
+            },
+            "NoHotspot": {
+              "remote": 870,
+              "copies": 28,
+              "net_gain": 24,
+              "no_reuse": 2278,
+              "victim_loss": 276
+            },
+            "NoAffinity": {
+              "remote": 904,
+              "copies": 34,
+              "net_gain": 22,
+              "no_reuse": 758,
+              "victim_loss": 112
+            },
+            "NoJoint": {
+              "remote": 919,
+              "copies": 161,
+              "no_reuse": 2278
+            }
+          }
+        },
+        "opportunity74": {
+          "stdout": "Full remote=879 copies=43 net_gain=56 no_reuse=2278 victim_loss=271\nNoHotspot remote=870 copies=28 net_gain=24 no_reuse=2278 victim_loss=276\nNoAffinity remote=904 copies=33 net_gain=21 no_reuse=758 victim_loss=113\nNoJoint remote=916 copies=158 no_reuse=2278\n",
+          "arms": {
+            "Full": {
+              "remote": 879,
+              "copies": 43,
+              "net_gain": 56,
+              "no_reuse": 2278,
+              "victim_loss": 271
+            },
+            "NoHotspot": {
+              "remote": 870,
+              "copies": 28,
+              "net_gain": 24,
+              "no_reuse": 2278,
+              "victim_loss": 276
+            },
+            "NoAffinity": {
+              "remote": 904,
+              "copies": 33,
+              "net_gain": 21,
+              "no_reuse": 758,
+              "victim_loss": 113
+            },
+            "NoJoint": {
+              "remote": 916,
+              "copies": 158,
+              "no_reuse": 2278
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "public_toolagent-73602",
+      "capacity_objects_per_domain": 8,
+      "capacity_mib_global": 48,
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=770 copies=36 net_gain=32 no_reuse=2215 victim_loss=4\nNoHotspot remote=818 copies=36 net_gain=30 no_reuse=2233 victim_loss=132\nNoAffinity remote=780 copies=34 net_gain=10 no_reuse=738 victim_loss=8\nNoJoint remote=788 copies=53 no_reuse=2218\n",
+          "arms": {
+            "Full": {
+              "remote": 770,
+              "copies": 36,
+              "net_gain": 32,
+              "no_reuse": 2215,
+              "victim_loss": 4
+            },
+            "NoHotspot": {
+              "remote": 818,
+              "copies": 36,
+              "net_gain": 30,
+              "no_reuse": 2233,
+              "victim_loss": 132
+            },
+            "NoAffinity": {
+              "remote": 780,
+              "copies": 34,
+              "net_gain": 10,
+              "no_reuse": 738,
+              "victim_loss": 8
+            },
+            "NoJoint": {
+              "remote": 788,
+              "copies": 53,
+              "no_reuse": 2218
+            }
+          }
+        },
+        "opportunity74": {
+          "stdout": "Full remote=770 copies=36 net_gain=32 no_reuse=2215 victim_loss=4\nNoHotspot remote=818 copies=36 net_gain=30 no_reuse=2233 victim_loss=132\nNoAffinity remote=780 copies=34 net_gain=10 no_reuse=738 victim_loss=8\nNoJoint remote=788 copies=53 no_reuse=2218\n",
+          "arms": {
+            "Full": {
+              "remote": 770,
+              "copies": 36,
+              "net_gain": 32,
+              "no_reuse": 2215,
+              "victim_loss": 4
+            },
+            "NoHotspot": {
+              "remote": 818,
+              "copies": 36,
+              "net_gain": 30,
+              "no_reuse": 2233,
+              "victim_loss": 132
+            },
+            "NoAffinity": {
+              "remote": 780,
+              "copies": 34,
+              "net_gain": 10,
+              "no_reuse": 738,
+              "victim_loss": 8
+            },
+            "NoJoint": {
+              "remote": 788,
+              "copies": 53,
+              "no_reuse": 2218
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "public_toolagent-73603",
+      "capacity_objects_per_domain": 2,
+      "capacity_mib_global": 12,
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=1035 copies=24 net_gain=32 no_reuse=2472 victim_loss=589\nNoHotspot remote=1046 copies=12 net_gain=10 no_reuse=2487 victim_loss=629\nNoAffinity remote=1041 copies=19 net_gain=13 no_reuse=822 victim_loss=200\nNoJoint remote=1069 copies=247 no_reuse=2472\n",
+          "arms": {
+            "Full": {
+              "remote": 1035,
+              "copies": 24,
+              "net_gain": 32,
+              "no_reuse": 2472,
+              "victim_loss": 589
+            },
+            "NoHotspot": {
+              "remote": 1046,
+              "copies": 12,
+              "net_gain": 10,
+              "no_reuse": 2487,
+              "victim_loss": 629
+            },
+            "NoAffinity": {
+              "remote": 1041,
+              "copies": 19,
+              "net_gain": 13,
+              "no_reuse": 822,
+              "victim_loss": 200
+            },
+            "NoJoint": {
+              "remote": 1069,
+              "copies": 247,
+              "no_reuse": 2472
+            }
+          }
+        },
+        "opportunity74": {
+          "stdout": "Full remote=1031 copies=21 net_gain=26 no_reuse=2472 victim_loss=583\nNoHotspot remote=1046 copies=12 net_gain=10 no_reuse=2487 victim_loss=629\nNoAffinity remote=1043 copies=16 net_gain=10 no_reuse=823 victim_loss=204\nNoJoint remote=1067 copies=245 no_reuse=2472\n",
+          "arms": {
+            "Full": {
+              "remote": 1031,
+              "copies": 21,
+              "net_gain": 26,
+              "no_reuse": 2472,
+              "victim_loss": 583
+            },
+            "NoHotspot": {
+              "remote": 1046,
+              "copies": 12,
+              "net_gain": 10,
+              "no_reuse": 2487,
+              "victim_loss": 629
+            },
+            "NoAffinity": {
+              "remote": 1043,
+              "copies": 16,
+              "net_gain": 10,
+              "no_reuse": 823,
+              "victim_loss": 204
+            },
+            "NoJoint": {
+              "remote": 1067,
+              "copies": 245,
+              "no_reuse": 2472
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "public_toolagent-73603",
+      "capacity_objects_per_domain": 3,
+      "capacity_mib_global": 18,
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=975 copies=30 net_gain=42 no_reuse=2456 victim_loss=408\nNoHotspot remote=1001 copies=18 net_gain=16 no_reuse=2480 victim_loss=488\nNoAffinity remote=992 copies=25 net_gain=16 no_reuse=816 victim_loss=151\nNoJoint remote=1036 copies=220 no_reuse=2456\n",
+          "arms": {
+            "Full": {
+              "remote": 975,
+              "copies": 30,
+              "net_gain": 42,
+              "no_reuse": 2456,
+              "victim_loss": 408
+            },
+            "NoHotspot": {
+              "remote": 1001,
+              "copies": 18,
+              "net_gain": 16,
+              "no_reuse": 2480,
+              "victim_loss": 488
+            },
+            "NoAffinity": {
+              "remote": 992,
+              "copies": 25,
+              "net_gain": 16,
+              "no_reuse": 816,
+              "victim_loss": 151
+            },
+            "NoJoint": {
+              "remote": 1036,
+              "copies": 220,
+              "no_reuse": 2456
+            }
+          }
+        },
+        "opportunity74": {
+          "stdout": "Full remote=971 copies=27 net_gain=34 no_reuse=2456 victim_loss=404\nNoHotspot remote=1001 copies=18 net_gain=16 no_reuse=2480 victim_loss=488\nNoAffinity remote=994 copies=22 net_gain=13 no_reuse=817 victim_loss=155\nNoJoint remote=1034 copies=218 no_reuse=2456\n",
+          "arms": {
+            "Full": {
+              "remote": 971,
+              "copies": 27,
+              "net_gain": 34,
+              "no_reuse": 2456,
+              "victim_loss": 404
+            },
+            "NoHotspot": {
+              "remote": 1001,
+              "copies": 18,
+              "net_gain": 16,
+              "no_reuse": 2480,
+              "victim_loss": 488
+            },
+            "NoAffinity": {
+              "remote": 994,
+              "copies": 22,
+              "net_gain": 13,
+              "no_reuse": 817,
+              "victim_loss": 155
+            },
+            "NoJoint": {
+              "remote": 1034,
+              "copies": 218,
+              "no_reuse": 2456
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "public_toolagent-73603",
+      "capacity_objects_per_domain": 4,
+      "capacity_mib_global": 24,
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=920 copies=34 net_gain=58 no_reuse=2429 victim_loss=242\nNoHotspot remote=938 copies=21 net_gain=19 no_reuse=2459 victim_loss=305\nNoAffinity remote=940 copies=28 net_gain=16 no_reuse=810 victim_loss=102\nNoJoint remote=985 copies=175 no_reuse=2435\n",
+          "arms": {
+            "Full": {
+              "remote": 920,
+              "copies": 34,
+              "net_gain": 58,
+              "no_reuse": 2429,
+              "victim_loss": 242
+            },
+            "NoHotspot": {
+              "remote": 938,
+              "copies": 21,
+              "net_gain": 19,
+              "no_reuse": 2459,
+              "victim_loss": 305
+            },
+            "NoAffinity": {
+              "remote": 940,
+              "copies": 28,
+              "net_gain": 16,
+              "no_reuse": 810,
+              "victim_loss": 102
+            },
+            "NoJoint": {
+              "remote": 985,
+              "copies": 175,
+              "no_reuse": 2435
+            }
+          }
+        },
+        "opportunity74": {
+          "stdout": "Full remote=913 copies=28 net_gain=37 no_reuse=2429 victim_loss=242\nNoHotspot remote=938 copies=21 net_gain=19 no_reuse=2459 victim_loss=305\nNoAffinity remote=943 copies=26 net_gain=14 no_reuse=811 victim_loss=106\nNoJoint remote=982 copies=172 no_reuse=2435\n",
+          "arms": {
+            "Full": {
+              "remote": 913,
+              "copies": 28,
+              "net_gain": 37,
+              "no_reuse": 2429,
+              "victim_loss": 242
+            },
+            "NoHotspot": {
+              "remote": 938,
+              "copies": 21,
+              "net_gain": 19,
+              "no_reuse": 2459,
+              "victim_loss": 305
+            },
+            "NoAffinity": {
+              "remote": 943,
+              "copies": 26,
+              "net_gain": 14,
+              "no_reuse": 811,
+              "victim_loss": 106
+            },
+            "NoJoint": {
+              "remote": 982,
+              "copies": 172,
+              "no_reuse": 2435
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "public_toolagent-73603",
+      "capacity_objects_per_domain": 8,
+      "capacity_mib_global": 48,
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=821 copies=29 net_gain=15 no_reuse=2388\nNoHotspot remote=851 copies=29 net_gain=9 no_reuse=2403 victim_loss=81\nNoAffinity remote=830 copies=38 net_gain=14 no_reuse=792\nNoJoint remote=831 copies=39 no_reuse=2388\n",
+          "arms": {
+            "Full": {
+              "remote": 821,
+              "copies": 29,
+              "net_gain": 15,
+              "no_reuse": 2388
+            },
+            "NoHotspot": {
+              "remote": 851,
+              "copies": 29,
+              "net_gain": 9,
+              "no_reuse": 2403,
+              "victim_loss": 81
+            },
+            "NoAffinity": {
+              "remote": 830,
+              "copies": 38,
+              "net_gain": 14,
+              "no_reuse": 792
+            },
+            "NoJoint": {
+              "remote": 831,
+              "copies": 39,
+              "no_reuse": 2388
+            }
+          }
+        },
+        "opportunity74": {
+          "stdout": "Full remote=821 copies=29 net_gain=15 no_reuse=2388\nNoHotspot remote=851 copies=29 net_gain=9 no_reuse=2403 victim_loss=81\nNoAffinity remote=830 copies=38 net_gain=14 no_reuse=792\nNoJoint remote=831 copies=39 no_reuse=2388\n",
+          "arms": {
+            "Full": {
+              "remote": 821,
+              "copies": 29,
+              "net_gain": 15,
+              "no_reuse": 2388
+            },
+            "NoHotspot": {
+              "remote": 851,
+              "copies": 29,
+              "net_gain": 9,
+              "no_reuse": 2403,
+              "victim_loss": 81
+            },
+            "NoAffinity": {
+              "remote": 830,
+              "copies": 38,
+              "net_gain": 14,
+              "no_reuse": 792
+            },
+            "NoJoint": {
+              "remote": 831,
+              "copies": 39,
+              "no_reuse": 2388
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "public_toolagent-74802",
+      "capacity_objects_per_domain": 2,
+      "capacity_mib_global": 12,
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=1072 copies=23 net_gain=37 no_reuse=2646 victim_loss=521\nNoHotspot remote=1072 copies=14 net_gain=14 no_reuse=2631 victim_loss=559\nNoAffinity remote=1071 copies=13 net_gain=7 no_reuse=876 victim_loss=182\nNoJoint remote=1061 copies=181 no_reuse=2646\n",
+          "arms": {
+            "Full": {
+              "remote": 1072,
+              "copies": 23,
+              "net_gain": 37,
+              "no_reuse": 2646,
+              "victim_loss": 521
+            },
+            "NoHotspot": {
+              "remote": 1072,
+              "copies": 14,
+              "net_gain": 14,
+              "no_reuse": 2631,
+              "victim_loss": 559
+            },
+            "NoAffinity": {
+              "remote": 1071,
+              "copies": 13,
+              "net_gain": 7,
+              "no_reuse": 876,
+              "victim_loss": 182
+            },
+            "NoJoint": {
+              "remote": 1061,
+              "copies": 181,
+              "no_reuse": 2646
+            }
+          }
+        },
+        "opportunity74": {
+          "stdout": "Full remote=1073 copies=23 net_gain=37 no_reuse=2646 victim_loss=524\nNoHotspot remote=1072 copies=14 net_gain=14 no_reuse=2631 victim_loss=559\nNoAffinity remote=1071 copies=13 net_gain=7 no_reuse=876 victim_loss=182\nNoJoint remote=1061 copies=181 no_reuse=2646\n",
+          "arms": {
+            "Full": {
+              "remote": 1073,
+              "copies": 23,
+              "net_gain": 37,
+              "no_reuse": 2646,
+              "victim_loss": 524
+            },
+            "NoHotspot": {
+              "remote": 1072,
+              "copies": 14,
+              "net_gain": 14,
+              "no_reuse": 2631,
+              "victim_loss": 559
+            },
+            "NoAffinity": {
+              "remote": 1071,
+              "copies": 13,
+              "net_gain": 7,
+              "no_reuse": 876,
+              "victim_loss": 182
+            },
+            "NoJoint": {
+              "remote": 1061,
+              "copies": 181,
+              "no_reuse": 2646
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "public_toolagent-74802",
+      "capacity_objects_per_domain": 3,
+      "capacity_mib_global": 18,
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=1015 copies=27 net_gain=38 no_reuse=2629 victim_loss=358\nNoHotspot remote=1035 copies=19 net_gain=16 no_reuse=2614 victim_loss=455\nNoAffinity remote=1036 copies=18 net_gain=9 no_reuse=868 victim_loss=150\nNoJoint remote=1030 copies=156 no_reuse=2629\n",
+          "arms": {
+            "Full": {
+              "remote": 1015,
+              "copies": 27,
+              "net_gain": 38,
+              "no_reuse": 2629,
+              "victim_loss": 358
+            },
+            "NoHotspot": {
+              "remote": 1035,
+              "copies": 19,
+              "net_gain": 16,
+              "no_reuse": 2614,
+              "victim_loss": 455
+            },
+            "NoAffinity": {
+              "remote": 1036,
+              "copies": 18,
+              "net_gain": 9,
+              "no_reuse": 868,
+              "victim_loss": 150
+            },
+            "NoJoint": {
+              "remote": 1030,
+              "copies": 156,
+              "no_reuse": 2629
+            }
+          }
+        },
+        "opportunity74": {
+          "stdout": "Full remote=1015 copies=27 net_gain=38 no_reuse=2629 victim_loss=358\nNoHotspot remote=1035 copies=19 net_gain=16 no_reuse=2614 victim_loss=455\nNoAffinity remote=1036 copies=18 net_gain=9 no_reuse=868 victim_loss=150\nNoJoint remote=1027 copies=153 no_reuse=2629\n",
+          "arms": {
+            "Full": {
+              "remote": 1015,
+              "copies": 27,
+              "net_gain": 38,
+              "no_reuse": 2629,
+              "victim_loss": 358
+            },
+            "NoHotspot": {
+              "remote": 1035,
+              "copies": 19,
+              "net_gain": 16,
+              "no_reuse": 2614,
+              "victim_loss": 455
+            },
+            "NoAffinity": {
+              "remote": 1036,
+              "copies": 18,
+              "net_gain": 9,
+              "no_reuse": 868,
+              "victim_loss": 150
+            },
+            "NoJoint": {
+              "remote": 1027,
+              "copies": 153,
+              "no_reuse": 2629
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "public_toolagent-74802",
+      "capacity_objects_per_domain": 4,
+      "capacity_mib_global": 24,
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=967 copies=33 net_gain=44 no_reuse=2611 victim_loss=217\nNoHotspot remote=1002 copies=25 net_gain=20 no_reuse=2596 victim_loss=361\nNoAffinity remote=995 copies=21 net_gain=9 no_reuse=860 victim_loss=114\nNoJoint remote=987 copies=119 no_reuse=2611\n",
+          "arms": {
+            "Full": {
+              "remote": 967,
+              "copies": 33,
+              "net_gain": 44,
+              "no_reuse": 2611,
+              "victim_loss": 217
+            },
+            "NoHotspot": {
+              "remote": 1002,
+              "copies": 25,
+              "net_gain": 20,
+              "no_reuse": 2596,
+              "victim_loss": 361
+            },
+            "NoAffinity": {
+              "remote": 995,
+              "copies": 21,
+              "net_gain": 9,
+              "no_reuse": 860,
+              "victim_loss": 114
+            },
+            "NoJoint": {
+              "remote": 987,
+              "copies": 119,
+              "no_reuse": 2611
+            }
+          }
+        },
+        "opportunity74": {
+          "stdout": "Full remote=967 copies=33 net_gain=44 no_reuse=2611 victim_loss=217\nNoHotspot remote=1002 copies=25 net_gain=20 no_reuse=2596 victim_loss=361\nNoAffinity remote=995 copies=21 net_gain=9 no_reuse=860 victim_loss=114\nNoJoint remote=979 copies=111 no_reuse=2611\n",
+          "arms": {
+            "Full": {
+              "remote": 967,
+              "copies": 33,
+              "net_gain": 44,
+              "no_reuse": 2611,
+              "victim_loss": 217
+            },
+            "NoHotspot": {
+              "remote": 1002,
+              "copies": 25,
+              "net_gain": 20,
+              "no_reuse": 2596,
+              "victim_loss": 361
+            },
+            "NoAffinity": {
+              "remote": 995,
+              "copies": 21,
+              "net_gain": 9,
+              "no_reuse": 860,
+              "victim_loss": 114
+            },
+            "NoJoint": {
+              "remote": 979,
+              "copies": 111,
+              "no_reuse": 2611
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "public_toolagent-74802",
+      "capacity_objects_per_domain": 8,
+      "capacity_mib_global": 48,
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=876 copies=36 net_gain=31 no_reuse=2530 victim_loss=5\nNoHotspot remote=936 copies=36 net_gain=31 no_reuse=2530 victim_loss=185\nNoAffinity remote=899 copies=35 net_gain=11 no_reuse=840 victim_loss=24\nNoJoint remote=882 copies=42 no_reuse=2530\n",
+          "arms": {
+            "Full": {
+              "remote": 876,
+              "copies": 36,
+              "net_gain": 31,
+              "no_reuse": 2530,
+              "victim_loss": 5
+            },
+            "NoHotspot": {
+              "remote": 936,
+              "copies": 36,
+              "net_gain": 31,
+              "no_reuse": 2530,
+              "victim_loss": 185
+            },
+            "NoAffinity": {
+              "remote": 899,
+              "copies": 35,
+              "net_gain": 11,
+              "no_reuse": 840,
+              "victim_loss": 24
+            },
+            "NoJoint": {
+              "remote": 882,
+              "copies": 42,
+              "no_reuse": 2530
+            }
+          }
+        },
+        "opportunity74": {
+          "stdout": "Full remote=876 copies=36 net_gain=31 no_reuse=2530 victim_loss=5\nNoHotspot remote=936 copies=36 net_gain=31 no_reuse=2530 victim_loss=185\nNoAffinity remote=899 copies=35 net_gain=11 no_reuse=840 victim_loss=24\nNoJoint remote=882 copies=42 no_reuse=2530\n",
+          "arms": {
+            "Full": {
+              "remote": 876,
+              "copies": 36,
+              "net_gain": 31,
+              "no_reuse": 2530,
+              "victim_loss": 5
+            },
+            "NoHotspot": {
+              "remote": 936,
+              "copies": 36,
+              "net_gain": 31,
+              "no_reuse": 2530,
+              "victim_loss": 185
+            },
+            "NoAffinity": {
+              "remote": 899,
+              "copies": 35,
+              "net_gain": 11,
+              "no_reuse": 840,
+              "victim_loss": 24
+            },
+            "NoJoint": {
+              "remote": 882,
+              "copies": 42,
+              "no_reuse": 2530
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "stationary_shared-73701",
+      "capacity_objects_per_domain": 2,
+      "capacity_mib_global": 12,
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=119 copies=50 copy_cost=24 net_gain=90 no_reuse=6 victim_loss=225\nNoHotspot remote=118 copies=22 copy_cost=24 net_gain=24 no_reuse=183 victim_loss=104\nNoAffinity remote=135 copies=45 copy_cost=8 net_gain=39 no_reuse=4 victim_loss=78\nNoJoint remote=150 copies=142 copy_cost=24 no_reuse=6\n",
+          "arms": {
+            "Full": {
+              "remote": 119,
+              "copies": 50,
+              "copy_cost": 24,
+              "net_gain": 90,
+              "no_reuse": 6,
+              "victim_loss": 225
+            },
+            "NoHotspot": {
+              "remote": 118,
+              "copies": 22,
+              "copy_cost": 24,
+              "net_gain": 24,
+              "no_reuse": 183,
+              "victim_loss": 104
+            },
+            "NoAffinity": {
+              "remote": 135,
+              "copies": 45,
+              "copy_cost": 8,
+              "net_gain": 39,
+              "no_reuse": 4,
+              "victim_loss": 78
+            },
+            "NoJoint": {
+              "remote": 150,
+              "copies": 142,
+              "copy_cost": 24,
+              "no_reuse": 6
+            }
+          }
+        },
+        "opportunity74": {
+          "stdout": "Full remote=110 copies=26 copy_cost=6 net_gain=34 no_reuse=183 victim_loss=95\nNoHotspot remote=118 copies=22 copy_cost=24 net_gain=24 no_reuse=183 victim_loss=104\nNoAffinity remote=132 copies=27 copy_cost=2 net_gain=21 no_reuse=62 victim_loss=41\nNoJoint remote=129 copies=69 copy_cost=3 no_reuse=183\n",
+          "arms": {
+            "Full": {
+              "remote": 110,
+              "copies": 26,
+              "copy_cost": 6,
+              "net_gain": 34,
+              "no_reuse": 183,
+              "victim_loss": 95
+            },
+            "NoHotspot": {
+              "remote": 118,
+              "copies": 22,
+              "copy_cost": 24,
+              "net_gain": 24,
+              "no_reuse": 183,
+              "victim_loss": 104
+            },
+            "NoAffinity": {
+              "remote": 132,
+              "copies": 27,
+              "copy_cost": 2,
+              "net_gain": 21,
+              "no_reuse": 62,
+              "victim_loss": 41
+            },
+            "NoJoint": {
+              "remote": 129,
+              "copies": 69,
+              "copy_cost": 3,
+              "no_reuse": 183
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "stationary_shared-73701",
+      "capacity_objects_per_domain": 3,
+      "capacity_mib_global": 18,
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=77 copies=33 copy_cost=21 net_gain=44 no_reuse=3 victim_loss=145\nNoHotspot remote=65 copies=9 no_reuse=177\nNoAffinity remote=91 copies=27 copy_cost=8 net_gain=18 no_reuse=3 victim_loss=53\nNoJoint remote=95 copies=90 copy_cost=21 no_reuse=3\n",
+          "arms": {
+            "Full": {
+              "remote": 77,
+              "copies": 33,
+              "copy_cost": 21,
+              "net_gain": 44,
+              "no_reuse": 3,
+              "victim_loss": 145
+            },
+            "NoHotspot": {
+              "remote": 65,
+              "copies": 9,
+              "no_reuse": 177
+            },
+            "NoAffinity": {
+              "remote": 91,
+              "copies": 27,
+              "copy_cost": 8,
+              "net_gain": 18,
+              "no_reuse": 3,
+              "victim_loss": 53
+            },
+            "NoJoint": {
+              "remote": 95,
+              "copies": 90,
+              "copy_cost": 21,
+              "no_reuse": 3
+            }
+          }
+        },
+        "opportunity74": {
+          "stdout": "Full remote=65 copies=9 no_reuse=177\nNoHotspot remote=65 copies=9 no_reuse=177\nNoAffinity remote=86 copies=18 copy_cost=2 net_gain=9 no_reuse=61 victim_loss=5\nNoJoint remote=65 copies=9 no_reuse=177\n",
+          "arms": {
+            "Full": {
+              "remote": 65,
+              "copies": 9,
+              "no_reuse": 177
+            },
+            "NoHotspot": {
+              "remote": 65,
+              "copies": 9,
+              "no_reuse": 177
+            },
+            "NoAffinity": {
+              "remote": 86,
+              "copies": 18,
+              "copy_cost": 2,
+              "net_gain": 9,
+              "no_reuse": 61,
+              "victim_loss": 5
+            },
+            "NoJoint": {
+              "remote": 65,
+              "copies": 9,
+              "no_reuse": 177
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "stationary_shared-73701",
+      "capacity_objects_per_domain": 4,
+      "capacity_mib_global": 24,
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=74 copies=53 copy_cost=16 net_gain=76 no_reuse=2 victim_loss=104\nNoHotspot remote=65 copies=12 no_reuse=171\nNoAffinity remote=84 copies=29 copy_cost=8 net_gain=14 no_reuse=2 victim_loss=45\nNoJoint remote=81 copies=79 copy_cost=16 no_reuse=2\n",
+          "arms": {
+            "Full": {
+              "remote": 74,
+              "copies": 53,
+              "copy_cost": 16,
+              "net_gain": 76,
+              "no_reuse": 2,
+              "victim_loss": 104
+            },
+            "NoHotspot": {
+              "remote": 65,
+              "copies": 12,
+              "no_reuse": 171
+            },
+            "NoAffinity": {
+              "remote": 84,
+              "copies": 29,
+              "copy_cost": 8,
+              "net_gain": 14,
+              "no_reuse": 2,
+              "victim_loss": 45
+            },
+            "NoJoint": {
+              "remote": 81,
+              "copies": 79,
+              "copy_cost": 16,
+              "no_reuse": 2
+            }
+          }
+        },
+        "opportunity74": {
+          "stdout": "Full remote=65 copies=12 no_reuse=171\nNoHotspot remote=65 copies=12 no_reuse=171\nNoAffinity remote=86 copies=22 copy_cost=2 net_gain=9 no_reuse=56 victim_loss=6\nNoJoint remote=65 copies=12 no_reuse=171\n",
+          "arms": {
+            "Full": {
+              "remote": 65,
+              "copies": 12,
+              "no_reuse": 171
+            },
+            "NoHotspot": {
+              "remote": 65,
+              "copies": 12,
+              "no_reuse": 171
+            },
+            "NoAffinity": {
+              "remote": 86,
+              "copies": 22,
+              "copy_cost": 2,
+              "net_gain": 9,
+              "no_reuse": 56,
+              "victim_loss": 6
+            },
+            "NoJoint": {
+              "remote": 65,
+              "copies": 12,
+              "no_reuse": 171
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "stationary_shared-73701",
+      "capacity_objects_per_domain": 8,
+      "capacity_mib_global": 48,
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=66 copies=66 copy_cost=4 net_gain=131 victim_loss=13\nNoHotspot remote=65 copies=24 no_reuse=145\nNoAffinity remote=78 copies=35 copy_cost=6 net_gain=16 victim_loss=37\nNoJoint remote=71 copies=71 copy_cost=5\n",
+          "arms": {
+            "Full": {
+              "remote": 66,
+              "copies": 66,
+              "copy_cost": 4,
+              "net_gain": 131,
+              "victim_loss": 13
+            },
+            "NoHotspot": {
+              "remote": 65,
+              "copies": 24,
+              "no_reuse": 145
+            },
+            "NoAffinity": {
+              "remote": 78,
+              "copies": 35,
+              "copy_cost": 6,
+              "net_gain": 16,
+              "victim_loss": 37
+            },
+            "NoJoint": {
+              "remote": 71,
+              "copies": 71,
+              "copy_cost": 5
+            }
+          }
+        },
+        "opportunity74": {
+          "stdout": "Full remote=65 copies=24 no_reuse=145\nNoHotspot remote=65 copies=24 no_reuse=145\nNoAffinity remote=68 copies=20 copy_cost=1 net_gain=1 no_reuse=47\nNoJoint remote=65 copies=24 no_reuse=145\n",
+          "arms": {
+            "Full": {
+              "remote": 65,
+              "copies": 24,
+              "no_reuse": 145
+            },
+            "NoHotspot": {
+              "remote": 65,
+              "copies": 24,
+              "no_reuse": 145
+            },
+            "NoAffinity": {
+              "remote": 68,
+              "copies": 20,
+              "copy_cost": 1,
+              "net_gain": 1,
+              "no_reuse": 47
+            },
+            "NoJoint": {
+              "remote": 65,
+              "copies": 24,
+              "no_reuse": 145
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "uniform-73702",
+      "capacity_objects_per_domain": 2,
+      "capacity_mib_global": 12,
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=784 copies=36 copy_cost=33 net_gain=52 no_reuse=32 victim_loss=2219\nNoHotspot remote=785 copies=25 net_gain=20 no_reuse=65 victim_loss=2254\nNoAffinity remote=792 copies=31 copy_cost=11 net_gain=25 no_reuse=10 victim_loss=740\nNoJoint remote=858 copies=837 copy_cost=33 no_reuse=32\n",
+          "arms": {
+            "Full": {
+              "remote": 784,
+              "copies": 36,
+              "copy_cost": 33,
+              "net_gain": 52,
+              "no_reuse": 32,
+              "victim_loss": 2219
+            },
+            "NoHotspot": {
+              "remote": 785,
+              "copies": 25,
+              "net_gain": 20,
+              "no_reuse": 65,
+              "victim_loss": 2254
+            },
+            "NoAffinity": {
+              "remote": 792,
+              "copies": 31,
+              "copy_cost": 11,
+              "net_gain": 25,
+              "no_reuse": 10,
+              "victim_loss": 740
+            },
+            "NoJoint": {
+              "remote": 858,
+              "copies": 837,
+              "copy_cost": 33,
+              "no_reuse": 32
+            }
+          }
+        },
+        "opportunity74": {
+          "stdout": "Full remote=781 copies=27 net_gain=42 no_reuse=65 victim_loss=2220\nNoHotspot remote=785 copies=25 net_gain=20 no_reuse=65 victim_loss=2254\nNoAffinity remote=792 copies=25 net_gain=19 no_reuse=21 victim_loss=746\nNoJoint remote=858 copies=837 no_reuse=65\n",
+          "arms": {
+            "Full": {
+              "remote": 781,
+              "copies": 27,
+              "net_gain": 42,
+              "no_reuse": 65,
+              "victim_loss": 2220
+            },
+            "NoHotspot": {
+              "remote": 785,
+              "copies": 25,
+              "net_gain": 20,
+              "no_reuse": 65,
+              "victim_loss": 2254
+            },
+            "NoAffinity": {
+              "remote": 792,
+              "copies": 25,
+              "net_gain": 19,
+              "no_reuse": 21,
+              "victim_loss": 746
+            },
+            "NoJoint": {
+              "remote": 858,
+              "copies": 837,
+              "no_reuse": 65
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "uniform-73702",
+      "capacity_objects_per_domain": 3,
+      "capacity_mib_global": 18,
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=663 copies=40 copy_cost=33 net_gain=53 no_reuse=23 victim_loss=1855\nNoHotspot remote=667 copies=35 net_gain=31 no_reuse=56 victim_loss=1889\nNoAffinity remote=659 copies=35 copy_cost=10 net_gain=26 no_reuse=8 victim_loss=606\nNoJoint remote=720 copies=702 copy_cost=33 no_reuse=23\n",
+          "arms": {
+            "Full": {
+              "remote": 663,
+              "copies": 40,
+              "copy_cost": 33,
+              "net_gain": 53,
+              "no_reuse": 23,
+              "victim_loss": 1855
+            },
+            "NoHotspot": {
+              "remote": 667,
+              "copies": 35,
+              "net_gain": 31,
+              "no_reuse": 56,
+              "victim_loss": 1889
+            },
+            "NoAffinity": {
+              "remote": 659,
+              "copies": 35,
+              "copy_cost": 10,
+              "net_gain": 26,
+              "no_reuse": 8,
+              "victim_loss": 606
+            },
+            "NoJoint": {
+              "remote": 720,
+              "copies": 702,
+              "copy_cost": 33,
+              "no_reuse": 23
+            }
+          }
+        },
+        "opportunity74": {
+          "stdout": "Full remote=647 copies=34 net_gain=42 no_reuse=56 victim_loss=1818\nNoHotspot remote=667 copies=35 net_gain=31 no_reuse=56 victim_loss=1889\nNoAffinity remote=661 copies=31 net_gain=22 no_reuse=18 victim_loss=612\nNoJoint remote=717 copies=699 no_reuse=56\n",
+          "arms": {
+            "Full": {
+              "remote": 647,
+              "copies": 34,
+              "net_gain": 42,
+              "no_reuse": 56,
+              "victim_loss": 1818
+            },
+            "NoHotspot": {
+              "remote": 667,
+              "copies": 35,
+              "net_gain": 31,
+              "no_reuse": 56,
+              "victim_loss": 1889
+            },
+            "NoAffinity": {
+              "remote": 661,
+              "copies": 31,
+              "net_gain": 22,
+              "no_reuse": 18,
+              "victim_loss": 612
+            },
+            "NoJoint": {
+              "remote": 717,
+              "copies": 699,
+              "no_reuse": 56
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "uniform-73702",
+      "capacity_objects_per_domain": 4,
+      "capacity_mib_global": 24,
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=544 copies=45 copy_cost=29 net_gain=56 no_reuse=19 victim_loss=1495\nNoHotspot remote=546 copies=41 net_gain=36 no_reuse=48 victim_loss=1521\nNoAffinity remote=532 copies=41 copy_cost=10 net_gain=29 no_reuse=5 victim_loss=476\nNoJoint remote=576 copies=561 copy_cost=29 no_reuse=19\n",
+          "arms": {
+            "Full": {
+              "remote": 544,
+              "copies": 45,
+              "copy_cost": 29,
+              "net_gain": 56,
+              "no_reuse": 19,
+              "victim_loss": 1495
+            },
+            "NoHotspot": {
+              "remote": 546,
+              "copies": 41,
+              "net_gain": 36,
+              "no_reuse": 48,
+              "victim_loss": 1521
+            },
+            "NoAffinity": {
+              "remote": 532,
+              "copies": 41,
+              "copy_cost": 10,
+              "net_gain": 29,
+              "no_reuse": 5,
+              "victim_loss": 476
+            },
+            "NoJoint": {
+              "remote": 576,
+              "copies": 561,
+              "copy_cost": 29,
+              "no_reuse": 19
+            }
+          }
+        },
+        "opportunity74": {
+          "stdout": "Full remote=529 copies=38 net_gain=42 no_reuse=48 victim_loss=1464\nNoHotspot remote=546 copies=41 net_gain=36 no_reuse=48 victim_loss=1521\nNoAffinity remote=532 copies=33 net_gain=21 no_reuse=15 victim_loss=484\nNoJoint remote=600 copies=585 no_reuse=48\n",
+          "arms": {
+            "Full": {
+              "remote": 529,
+              "copies": 38,
+              "net_gain": 42,
+              "no_reuse": 48,
+              "victim_loss": 1464
+            },
+            "NoHotspot": {
+              "remote": 546,
+              "copies": 41,
+              "net_gain": 36,
+              "no_reuse": 48,
+              "victim_loss": 1521
+            },
+            "NoAffinity": {
+              "remote": 532,
+              "copies": 33,
+              "net_gain": 21,
+              "no_reuse": 15,
+              "victim_loss": 484
+            },
+            "NoJoint": {
+              "remote": 600,
+              "copies": 585,
+              "no_reuse": 48
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "uniform-73702",
+      "capacity_objects_per_domain": 8,
+      "capacity_mib_global": 48,
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=24 copies=24 copy_cost=4 no_reuse=3\nNoHotspot remote=24 copies=24 no_reuse=7\nNoAffinity remote=30 copies=24 copy_cost=2 no_reuse=2 victim_loss=2\nNoJoint remote=24 copies=24 copy_cost=4 no_reuse=3\n",
+          "arms": {
+            "Full": {
+              "remote": 24,
+              "copies": 24,
+              "copy_cost": 4,
+              "no_reuse": 3
+            },
+            "NoHotspot": {
+              "remote": 24,
+              "copies": 24,
+              "no_reuse": 7
+            },
+            "NoAffinity": {
+              "remote": 30,
+              "copies": 24,
+              "copy_cost": 2,
+              "no_reuse": 2,
+              "victim_loss": 2
+            },
+            "NoJoint": {
+              "remote": 24,
+              "copies": 24,
+              "copy_cost": 4,
+              "no_reuse": 3
+            }
+          }
+        },
+        "opportunity74": {
+          "stdout": "Full remote=24 copies=24 no_reuse=7\nNoHotspot remote=24 copies=24 no_reuse=7\nNoAffinity remote=30 copies=24 no_reuse=4 victim_loss=2\nNoJoint remote=24 copies=24 no_reuse=7\n",
+          "arms": {
+            "Full": {
+              "remote": 24,
+              "copies": 24,
+              "no_reuse": 7
+            },
+            "NoHotspot": {
+              "remote": 24,
+              "copies": 24,
+              "no_reuse": 7
+            },
+            "NoAffinity": {
+              "remote": 30,
+              "copies": 24,
+              "no_reuse": 4,
+              "victim_loss": 2
+            },
+            "NoJoint": {
+              "remote": 24,
+              "copies": 24,
+              "no_reuse": 7
+            }
+          }
+        }
+      }
+    }
+  ]
+}

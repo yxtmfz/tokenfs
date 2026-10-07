@@ -1,0 +1,29 @@
+{
+  "spec": {
+    "id": "public_toolagent-74802-r2",
+    "scenario": "public_toolagent",
+    "seed": 74802,
+    "repeat": 2,
+    "variants": [
+      "Full",
+      "NoHotspot",
+      "NoAffinity",
+      "NoJoint",
+      "PoolSIEVE1",
+      "NoRAMFirst"
+    ],
+    "quota_mib": 24,
+    "shard_mib": 2,
+    "requests": 1152
+  },
+  "order": [
+    "PoolSIEVE1",
+    "NoJoint",
+    "NoRAMFirst",
+    "NoAffinity",
+    "NoHotspot",
+    "Full"
+  ],
+  "trace_sha256": "e00841d2995b879c725efde1e6059e90a0e6205c8a00734ae511c02a1138c77a",
+  "objects_sha256": "df30abfd158ec4c230d23603dfa3be31219fd572082e980179e6e4955c421657"
+}

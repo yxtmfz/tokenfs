@@ -1,0 +1,39 @@
+{
+  "passed": true,
+  "model_arms": 480,
+  "model_requests": 552960,
+  "original_warm_baseline_reproduction_arms": 80,
+  "constant_cost_proxy_not_actual_time": true,
+  "checks": [
+    {
+      "h": "retained",
+      "gate": "old",
+      "stdout": "passed: all four arms share gate; no-sample calibration, copy-only threshold, full read/copy calibration, first-seen regular admission and optimistic guard\n"
+    },
+    {
+      "h": "retained",
+      "gate": "copy_calibrated",
+      "stdout": "passed: all four arms share gate; no-sample calibration, copy-only threshold, full read/copy calibration, first-seen regular admission and optimistic guard\n"
+    },
+    {
+      "h": "retained",
+      "gate": "all_calibrated",
+      "stdout": "passed: all four arms share gate; no-sample calibration, copy-only threshold, full read/copy calibration, first-seen regular admission and optimistic guard\n"
+    },
+    {
+      "h": "opportunity74",
+      "gate": "old",
+      "stdout": "passed: all four arms share gate; no-sample calibration, copy-only threshold, full read/copy calibration, first-seen regular admission and optimistic guard\n"
+    },
+    {
+      "h": "opportunity74",
+      "gate": "copy_calibrated",
+      "stdout": "passed: all four arms share gate; no-sample calibration, copy-only threshold, full read/copy calibration, first-seen regular admission and optimistic guard\n"
+    },
+    {
+      "h": "opportunity74",
+      "gate": "all_calibrated",
+      "stdout": "passed: all four arms share gate; no-sample calibration, copy-only threshold, full read/copy calibration, first-seen regular admission and optimistic guard\n"
+    }
+  ]
+}
