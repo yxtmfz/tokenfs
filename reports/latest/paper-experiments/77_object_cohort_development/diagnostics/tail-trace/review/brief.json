@@ -1,0 +1,46 @@
+{
+  "diagnosis_only": true,
+  "performance_evidence": false,
+  "summary": {
+    "Full": {
+      "p99_ms": 29.895044,
+      "remote_requests": 977,
+      "copies": 33,
+      "background_submitted": 977,
+      "background_no_gain": 941,
+      "top12_first": 7,
+      "top12_reused": 5,
+      "top12_copy_overlap": 7,
+      "top12_own_release_inside": 0,
+      "first_request_last_data_read_non_pread_mean_ms": 0.6023922835648148,
+      "all_request_read_non_pread_mean_ms": 1.4975526354166666,
+      "top12_means": {
+        "response_ms": 35.52669541666667,
+        "client_open_ms": 5.226804333333333,
+        "pread_ms": 25.791695,
+        "read_non_pread_ms": 2.9503548333333334,
+        "copy_pipeline_overlap_ms": 2.115904
+      }
+    },
+    "NoHotspot": {
+      "p99_ms": 29.621361,
+      "remote_requests": 1002,
+      "copies": 25,
+      "background_submitted": 1002,
+      "background_no_gain": 977,
+      "top12_first": 12,
+      "top12_reused": 0,
+      "top12_copy_overlap": 3,
+      "top12_own_release_inside": 0,
+      "first_request_last_data_read_non_pread_mean_ms": 0.6043316724537037,
+      "all_request_read_non_pread_mean_ms": 1.531293365451389,
+      "top12_means": {
+        "response_ms": 30.136923,
+        "client_open_ms": 5.10770875,
+        "pread_ms": 20.397221333333334,
+        "read_non_pread_ms": 2.9636605,
+        "copy_pipeline_overlap_ms": 0.7593735833333333
+      }
+    }
+  }
+}

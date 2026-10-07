@@ -1,0 +1,30 @@
+{
+  "passed": true,
+  "diagnosis_only": true,
+  "performance_evidence": false,
+  "arms": {
+    "Full": {
+      "passed": true,
+      "requests": 1152,
+      "event_count": 10413,
+      "dropped": 0,
+      "top_count": 12,
+      "physical_pread_ops": 3450,
+      "physical_pread_bytes": 2411724800,
+      "extra_tail_buffer_bytes_peak": 4096
+    },
+    "NoHotspot": {
+      "passed": true,
+      "requests": 1152,
+      "event_count": 10384,
+      "dropped": 0,
+      "top_count": 12,
+      "physical_pread_ops": 3450,
+      "physical_pread_bytes": 2411724800,
+      "extra_tail_buffer_bytes_peak": 4096
+    }
+  },
+  "source_files_checked": 340,
+  "binary_sha256": "6334375577555abe6886db40a49f55f379f8291993880fdf6f8d5c4cdd2cf8cb",
+  "limitation": "No per-request content hash; run_case validates retained replicas after timing. Trace durations are diagnostic only."
+}

@@ -1,0 +1,1810 @@
+{
+  "speed_evidence": false,
+  "description": "Fixed 10 known inputs \u00d7 original/event vs distinct-object newcomer prior \u00d7 retained/74 H \u00d7 4 arms =160 arms. Only NewcomerDiskPrior numerator changed; all other logic, old zero guards, controls, cost constants and geometry unchanged. Instant copies, 21ms remote/10.5ms local/8ms copy; no actual rates/p99. Distinct recurrent entries/(entries+1) is bounded object support, not an unbiased probability; entries have unequal ages and incomplete future-return exposure. Positive cohort value in an admission is association, not proof it drove max()-combined acceptance.",
+  "baseline_arms_exactly_reproduced": 80,
+  "rows": [
+    {
+      "input": "moving_shared-73501",
+      "variants": {
+        "retained_event_prior": {
+          "stdout": "Full remote=77 copies=65 cohort_admissions=47 copy_cost=13 net_gain=113 victim_loss=80\nNoHotspot remote=79 copies=28 cohort_admissions=0 copy_cost=3 net_gain=3 no_reuse=155 victim_loss=15\nNoAffinity remote=95 copies=44 cohort_admissions=12 copy_cost=6 net_gain=32 victim_loss=45\nNoJoint remote=99 copies=97 cohort_admissions=56 copy_cost=13\n",
+          "arms": {
+            "Full": {
+              "remote": 77,
+              "copies": 65,
+              "cohort_admissions": 47,
+              "copy_cost": 13,
+              "net_gain": 113,
+              "victim_loss": 80,
+              "cohort_positive_headroom": 8,
+              "cohort_positive_net_gain": 39
+            },
+            "NoHotspot": {
+              "remote": 79,
+              "copies": 28,
+              "cohort_admissions": 0,
+              "copy_cost": 3,
+              "net_gain": 3,
+              "no_reuse": 155,
+              "victim_loss": 15,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoAffinity": {
+              "remote": 95,
+              "copies": 44,
+              "cohort_admissions": 12,
+              "copy_cost": 6,
+              "net_gain": 32,
+              "victim_loss": 45,
+              "cohort_positive_headroom": 3,
+              "cohort_positive_net_gain": 9
+            },
+            "NoJoint": {
+              "remote": 99,
+              "copies": 97,
+              "cohort_admissions": 56,
+              "copy_cost": 13,
+              "cohort_positive_headroom": 7,
+              "cohort_positive_net_gain": 0
+            }
+          }
+        },
+        "retained_object_prior": {
+          "stdout": "Full remote=79 copies=29 cohort_admissions=8 copy_cost=161 net_gain=51\nNoHotspot remote=79 copies=28 cohort_admissions=0 copy_cost=3 net_gain=3 no_reuse=155 victim_loss=15\nNoAffinity remote=101 copies=38 cohort_admissions=3 copy_cost=54 net_gain=26 victim_loss=9\nNoJoint remote=89 copies=39 cohort_admissions=8 copy_cost=161\n",
+          "arms": {
+            "Full": {
+              "remote": 79,
+              "copies": 29,
+              "cohort_admissions": 8,
+              "copy_cost": 161,
+              "net_gain": 51,
+              "cohort_positive_headroom": 8,
+              "cohort_positive_net_gain": 0
+            },
+            "NoHotspot": {
+              "remote": 79,
+              "copies": 28,
+              "cohort_admissions": 0,
+              "copy_cost": 3,
+              "net_gain": 3,
+              "no_reuse": 155,
+              "victim_loss": 15,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoAffinity": {
+              "remote": 101,
+              "copies": 38,
+              "cohort_admissions": 3,
+              "copy_cost": 54,
+              "net_gain": 26,
+              "victim_loss": 9,
+              "cohort_positive_headroom": 3,
+              "cohort_positive_net_gain": 0
+            },
+            "NoJoint": {
+              "remote": 89,
+              "copies": 39,
+              "cohort_admissions": 8,
+              "copy_cost": 161,
+              "cohort_positive_headroom": 8,
+              "cohort_positive_net_gain": 0
+            }
+          }
+        },
+        "opportunity74_event_prior": {
+          "stdout": "Full remote=78 copies=29 cohort_admissions=0 copy_cost=3 net_gain=44 no_reuse=155\nNoHotspot remote=79 copies=28 cohort_admissions=0 copy_cost=3 net_gain=3 no_reuse=155 victim_loss=15\nNoAffinity remote=97 copies=36 cohort_admissions=0 copy_cost=1 net_gain=23 no_reuse=52 victim_loss=8\nNoJoint remote=85 copies=36 cohort_admissions=0 copy_cost=3 no_reuse=155\n",
+          "arms": {
+            "Full": {
+              "remote": 78,
+              "copies": 29,
+              "cohort_admissions": 0,
+              "copy_cost": 3,
+              "net_gain": 44,
+              "no_reuse": 155,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoHotspot": {
+              "remote": 79,
+              "copies": 28,
+              "cohort_admissions": 0,
+              "copy_cost": 3,
+              "net_gain": 3,
+              "no_reuse": 155,
+              "victim_loss": 15,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoAffinity": {
+              "remote": 97,
+              "copies": 36,
+              "cohort_admissions": 0,
+              "copy_cost": 1,
+              "net_gain": 23,
+              "no_reuse": 52,
+              "victim_loss": 8,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoJoint": {
+              "remote": 85,
+              "copies": 36,
+              "cohort_admissions": 0,
+              "copy_cost": 3,
+              "no_reuse": 155,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            }
+          }
+        },
+        "opportunity74_object_prior": {
+          "stdout": "Full remote=78 copies=29 cohort_admissions=0 copy_cost=3 net_gain=44 no_reuse=155\nNoHotspot remote=79 copies=28 cohort_admissions=0 copy_cost=3 net_gain=3 no_reuse=155 victim_loss=15\nNoAffinity remote=97 copies=36 cohort_admissions=0 copy_cost=1 net_gain=23 no_reuse=52 victim_loss=8\nNoJoint remote=85 copies=36 cohort_admissions=0 copy_cost=3 no_reuse=155\n",
+          "arms": {
+            "Full": {
+              "remote": 78,
+              "copies": 29,
+              "cohort_admissions": 0,
+              "copy_cost": 3,
+              "net_gain": 44,
+              "no_reuse": 155,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoHotspot": {
+              "remote": 79,
+              "copies": 28,
+              "cohort_admissions": 0,
+              "copy_cost": 3,
+              "net_gain": 3,
+              "no_reuse": 155,
+              "victim_loss": 15,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoAffinity": {
+              "remote": 97,
+              "copies": 36,
+              "cohort_admissions": 0,
+              "copy_cost": 1,
+              "net_gain": 23,
+              "no_reuse": 52,
+              "victim_loss": 8,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoJoint": {
+              "remote": 85,
+              "copies": 36,
+              "cohort_admissions": 0,
+              "copy_cost": 3,
+              "no_reuse": 155,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "moving_shared-73502",
+      "variants": {
+        "retained_event_prior": {
+          "stdout": "Full remote=76 copies=64 cohort_admissions=49 copy_cost=15 net_gain=111 no_reuse=1 victim_loss=75\nNoHotspot remote=85 copies=28 cohort_admissions=0 copy_cost=6 net_gain=3 no_reuse=169 victim_loss=12\nNoAffinity remote=112 copies=55 cohort_admissions=17 copy_cost=7 net_gain=42 no_reuse=1 victim_loss=49\nNoJoint remote=88 copies=85 cohort_admissions=58 copy_cost=18 no_reuse=1\n",
+          "arms": {
+            "Full": {
+              "remote": 76,
+              "copies": 64,
+              "cohort_admissions": 49,
+              "copy_cost": 15,
+              "net_gain": 111,
+              "no_reuse": 1,
+              "victim_loss": 75,
+              "cohort_positive_headroom": 6,
+              "cohort_positive_net_gain": 43
+            },
+            "NoHotspot": {
+              "remote": 85,
+              "copies": 28,
+              "cohort_admissions": 0,
+              "copy_cost": 6,
+              "net_gain": 3,
+              "no_reuse": 169,
+              "victim_loss": 12,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoAffinity": {
+              "remote": 112,
+              "copies": 55,
+              "cohort_admissions": 17,
+              "copy_cost": 7,
+              "net_gain": 42,
+              "no_reuse": 1,
+              "victim_loss": 49,
+              "cohort_positive_headroom": 3,
+              "cohort_positive_net_gain": 14
+            },
+            "NoJoint": {
+              "remote": 88,
+              "copies": 85,
+              "cohort_admissions": 58,
+              "copy_cost": 18,
+              "no_reuse": 1,
+              "cohort_positive_headroom": 6,
+              "cohort_positive_net_gain": 0
+            }
+          }
+        },
+        "retained_object_prior": {
+          "stdout": "Full remote=83 copies=28 cohort_admissions=6 copy_cost=174 net_gain=47 no_reuse=1 victim_loss=1\nNoHotspot remote=85 copies=28 cohort_admissions=0 copy_cost=6 net_gain=3 no_reuse=169 victim_loss=12\nNoAffinity remote=120 copies=51 cohort_admissions=3 copy_cost=57 net_gain=39 no_reuse=1 victim_loss=11\nNoJoint remote=101 copies=46 cohort_admissions=6 copy_cost=174 no_reuse=1\n",
+          "arms": {
+            "Full": {
+              "remote": 83,
+              "copies": 28,
+              "cohort_admissions": 6,
+              "copy_cost": 174,
+              "net_gain": 47,
+              "no_reuse": 1,
+              "victim_loss": 1,
+              "cohort_positive_headroom": 6,
+              "cohort_positive_net_gain": 0
+            },
+            "NoHotspot": {
+              "remote": 85,
+              "copies": 28,
+              "cohort_admissions": 0,
+              "copy_cost": 6,
+              "net_gain": 3,
+              "no_reuse": 169,
+              "victim_loss": 12,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoAffinity": {
+              "remote": 120,
+              "copies": 51,
+              "cohort_admissions": 3,
+              "copy_cost": 57,
+              "net_gain": 39,
+              "no_reuse": 1,
+              "victim_loss": 11,
+              "cohort_positive_headroom": 3,
+              "cohort_positive_net_gain": 0
+            },
+            "NoJoint": {
+              "remote": 101,
+              "copies": 46,
+              "cohort_admissions": 6,
+              "copy_cost": 174,
+              "no_reuse": 1,
+              "cohort_positive_headroom": 6,
+              "cohort_positive_net_gain": 0
+            }
+          }
+        },
+        "opportunity74_event_prior": {
+          "stdout": "Full remote=83 copies=28 cohort_admissions=0 copy_cost=6 net_gain=38 no_reuse=169 victim_loss=2\nNoHotspot remote=85 copies=28 cohort_admissions=0 copy_cost=6 net_gain=3 no_reuse=169 victim_loss=12\nNoAffinity remote=120 copies=43 cohort_admissions=0 copy_cost=1 net_gain=28 no_reuse=57 victim_loss=19\nNoJoint remote=104 copies=49 cohort_admissions=0 copy_cost=6 no_reuse=169\n",
+          "arms": {
+            "Full": {
+              "remote": 83,
+              "copies": 28,
+              "cohort_admissions": 0,
+              "copy_cost": 6,
+              "net_gain": 38,
+              "no_reuse": 169,
+              "victim_loss": 2,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoHotspot": {
+              "remote": 85,
+              "copies": 28,
+              "cohort_admissions": 0,
+              "copy_cost": 6,
+              "net_gain": 3,
+              "no_reuse": 169,
+              "victim_loss": 12,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoAffinity": {
+              "remote": 120,
+              "copies": 43,
+              "cohort_admissions": 0,
+              "copy_cost": 1,
+              "net_gain": 28,
+              "no_reuse": 57,
+              "victim_loss": 19,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoJoint": {
+              "remote": 104,
+              "copies": 49,
+              "cohort_admissions": 0,
+              "copy_cost": 6,
+              "no_reuse": 169,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            }
+          }
+        },
+        "opportunity74_object_prior": {
+          "stdout": "Full remote=83 copies=28 cohort_admissions=0 copy_cost=6 net_gain=38 no_reuse=169 victim_loss=2\nNoHotspot remote=85 copies=28 cohort_admissions=0 copy_cost=6 net_gain=3 no_reuse=169 victim_loss=12\nNoAffinity remote=120 copies=43 cohort_admissions=0 copy_cost=1 net_gain=28 no_reuse=57 victim_loss=19\nNoJoint remote=104 copies=49 cohort_admissions=0 copy_cost=6 no_reuse=169\n",
+          "arms": {
+            "Full": {
+              "remote": 83,
+              "copies": 28,
+              "cohort_admissions": 0,
+              "copy_cost": 6,
+              "net_gain": 38,
+              "no_reuse": 169,
+              "victim_loss": 2,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoHotspot": {
+              "remote": 85,
+              "copies": 28,
+              "cohort_admissions": 0,
+              "copy_cost": 6,
+              "net_gain": 3,
+              "no_reuse": 169,
+              "victim_loss": 12,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoAffinity": {
+              "remote": 120,
+              "copies": 43,
+              "cohort_admissions": 0,
+              "copy_cost": 1,
+              "net_gain": 28,
+              "no_reuse": 57,
+              "victim_loss": 19,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoJoint": {
+              "remote": 104,
+              "copies": 49,
+              "cohort_admissions": 0,
+              "copy_cost": 6,
+              "no_reuse": 169,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "moving_shared-73503",
+      "variants": {
+        "retained_event_prior": {
+          "stdout": "Full remote=78 copies=63 cohort_admissions=47 copy_cost=12 net_gain=105 victim_loss=93\nNoHotspot remote=79 copies=28 cohort_admissions=0 copy_cost=9 no_reuse=156 victim_loss=15\nNoAffinity remote=114 copies=53 cohort_admissions=13 copy_cost=6 net_gain=41 victim_loss=55\nNoJoint remote=107 copies=104 cohort_admissions=56 copy_cost=12\n",
+          "arms": {
+            "Full": {
+              "remote": 78,
+              "copies": 63,
+              "cohort_admissions": 47,
+              "copy_cost": 12,
+              "net_gain": 105,
+              "victim_loss": 93,
+              "cohort_positive_headroom": 8,
+              "cohort_positive_net_gain": 39
+            },
+            "NoHotspot": {
+              "remote": 79,
+              "copies": 28,
+              "cohort_admissions": 0,
+              "copy_cost": 9,
+              "no_reuse": 156,
+              "victim_loss": 15,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoAffinity": {
+              "remote": 114,
+              "copies": 53,
+              "cohort_admissions": 13,
+              "copy_cost": 6,
+              "net_gain": 41,
+              "victim_loss": 55,
+              "cohort_positive_headroom": 4,
+              "cohort_positive_net_gain": 9
+            },
+            "NoJoint": {
+              "remote": 107,
+              "copies": 104,
+              "cohort_admissions": 56,
+              "copy_cost": 12,
+              "cohort_positive_headroom": 4,
+              "cohort_positive_net_gain": 0
+            }
+          }
+        },
+        "retained_object_prior": {
+          "stdout": "Full remote=78 copies=28 cohort_admissions=8 copy_cost=162 net_gain=48\nNoHotspot remote=79 copies=28 cohort_admissions=0 copy_cost=9 no_reuse=156 victim_loss=15\nNoAffinity remote=114 copies=45 cohort_admissions=4 copy_cost=55 net_gain=33 victim_loss=14\nNoJoint remote=98 copies=47 cohort_admissions=8 copy_cost=165\n",
+          "arms": {
+            "Full": {
+              "remote": 78,
+              "copies": 28,
+              "cohort_admissions": 8,
+              "copy_cost": 162,
+              "net_gain": 48,
+              "cohort_positive_headroom": 8,
+              "cohort_positive_net_gain": 0
+            },
+            "NoHotspot": {
+              "remote": 79,
+              "copies": 28,
+              "cohort_admissions": 0,
+              "copy_cost": 9,
+              "no_reuse": 156,
+              "victim_loss": 15,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoAffinity": {
+              "remote": 114,
+              "copies": 45,
+              "cohort_admissions": 4,
+              "copy_cost": 55,
+              "net_gain": 33,
+              "victim_loss": 14,
+              "cohort_positive_headroom": 4,
+              "cohort_positive_net_gain": 0
+            },
+            "NoJoint": {
+              "remote": 98,
+              "copies": 47,
+              "cohort_admissions": 8,
+              "copy_cost": 165,
+              "cohort_positive_headroom": 8,
+              "cohort_positive_net_gain": 0
+            }
+          }
+        },
+        "opportunity74_event_prior": {
+          "stdout": "Full remote=78 copies=28 cohort_admissions=0 copy_cost=6 net_gain=44 no_reuse=156\nNoHotspot remote=79 copies=28 cohort_admissions=0 copy_cost=9 no_reuse=156 victim_loss=15\nNoAffinity remote=119 copies=42 cohort_admissions=0 copy_cost=2 net_gain=29 no_reuse=51 victim_loss=24\nNoJoint remote=99 copies=49 cohort_admissions=0 copy_cost=6 no_reuse=156\n",
+          "arms": {
+            "Full": {
+              "remote": 78,
+              "copies": 28,
+              "cohort_admissions": 0,
+              "copy_cost": 6,
+              "net_gain": 44,
+              "no_reuse": 156,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoHotspot": {
+              "remote": 79,
+              "copies": 28,
+              "cohort_admissions": 0,
+              "copy_cost": 9,
+              "no_reuse": 156,
+              "victim_loss": 15,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoAffinity": {
+              "remote": 119,
+              "copies": 42,
+              "cohort_admissions": 0,
+              "copy_cost": 2,
+              "net_gain": 29,
+              "no_reuse": 51,
+              "victim_loss": 24,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoJoint": {
+              "remote": 99,
+              "copies": 49,
+              "cohort_admissions": 0,
+              "copy_cost": 6,
+              "no_reuse": 156,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            }
+          }
+        },
+        "opportunity74_object_prior": {
+          "stdout": "Full remote=78 copies=28 cohort_admissions=0 copy_cost=6 net_gain=44 no_reuse=156\nNoHotspot remote=79 copies=28 cohort_admissions=0 copy_cost=9 no_reuse=156 victim_loss=15\nNoAffinity remote=119 copies=42 cohort_admissions=0 copy_cost=2 net_gain=29 no_reuse=51 victim_loss=24\nNoJoint remote=99 copies=49 cohort_admissions=0 copy_cost=6 no_reuse=156\n",
+          "arms": {
+            "Full": {
+              "remote": 78,
+              "copies": 28,
+              "cohort_admissions": 0,
+              "copy_cost": 6,
+              "net_gain": 44,
+              "no_reuse": 156,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoHotspot": {
+              "remote": 79,
+              "copies": 28,
+              "cohort_admissions": 0,
+              "copy_cost": 9,
+              "no_reuse": 156,
+              "victim_loss": 15,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoAffinity": {
+              "remote": 119,
+              "copies": 42,
+              "cohort_admissions": 0,
+              "copy_cost": 2,
+              "net_gain": 29,
+              "no_reuse": 51,
+              "victim_loss": 24,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoJoint": {
+              "remote": 99,
+              "copies": 49,
+              "cohort_admissions": 0,
+              "copy_cost": 6,
+              "no_reuse": 156,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "moving_shared-74801",
+      "variants": {
+        "retained_event_prior": {
+          "stdout": "Full remote=79 copies=68 cohort_admissions=54 copy_cost=8 net_gain=110 victim_loss=90\nNoHotspot remote=84 copies=28 cohort_admissions=0 copy_cost=3 net_gain=1 no_reuse=172 victim_loss=7\nNoAffinity remote=105 copies=48 cohort_admissions=19 copy_cost=4 net_gain=36 victim_loss=53\nNoJoint remote=111 copies=111 cohort_admissions=63 copy_cost=5\n",
+          "arms": {
+            "Full": {
+              "remote": 79,
+              "copies": 68,
+              "cohort_admissions": 54,
+              "copy_cost": 8,
+              "net_gain": 110,
+              "victim_loss": 90,
+              "cohort_positive_headroom": 8,
+              "cohort_positive_net_gain": 46
+            },
+            "NoHotspot": {
+              "remote": 84,
+              "copies": 28,
+              "cohort_admissions": 0,
+              "copy_cost": 3,
+              "net_gain": 1,
+              "no_reuse": 172,
+              "victim_loss": 7,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoAffinity": {
+              "remote": 105,
+              "copies": 48,
+              "cohort_admissions": 19,
+              "copy_cost": 4,
+              "net_gain": 36,
+              "victim_loss": 53,
+              "cohort_positive_headroom": 5,
+              "cohort_positive_net_gain": 14
+            },
+            "NoJoint": {
+              "remote": 111,
+              "copies": 111,
+              "cohort_admissions": 63,
+              "copy_cost": 5,
+              "cohort_positive_headroom": 8,
+              "cohort_positive_net_gain": 0
+            }
+          }
+        },
+        "retained_object_prior": {
+          "stdout": "Full remote=84 copies=28 cohort_admissions=8 copy_cost=175 net_gain=48\nNoHotspot remote=84 copies=28 cohort_admissions=0 copy_cost=3 net_gain=1 no_reuse=172 victim_loss=7\nNoAffinity remote=107 copies=36 cohort_admissions=5 copy_cost=59 net_gain=24 victim_loss=12\nNoJoint remote=110 copies=54 cohort_admissions=8 copy_cost=175\n",
+          "arms": {
+            "Full": {
+              "remote": 84,
+              "copies": 28,
+              "cohort_admissions": 8,
+              "copy_cost": 175,
+              "net_gain": 48,
+              "cohort_positive_headroom": 8,
+              "cohort_positive_net_gain": 0
+            },
+            "NoHotspot": {
+              "remote": 84,
+              "copies": 28,
+              "cohort_admissions": 0,
+              "copy_cost": 3,
+              "net_gain": 1,
+              "no_reuse": 172,
+              "victim_loss": 7,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoAffinity": {
+              "remote": 107,
+              "copies": 36,
+              "cohort_admissions": 5,
+              "copy_cost": 59,
+              "net_gain": 24,
+              "victim_loss": 12,
+              "cohort_positive_headroom": 5,
+              "cohort_positive_net_gain": 0
+            },
+            "NoJoint": {
+              "remote": 110,
+              "copies": 54,
+              "cohort_admissions": 8,
+              "copy_cost": 175,
+              "cohort_positive_headroom": 8,
+              "cohort_positive_net_gain": 0
+            }
+          }
+        },
+        "opportunity74_event_prior": {
+          "stdout": "Full remote=84 copies=28 cohort_admissions=0 copy_cost=3 net_gain=39 no_reuse=172\nNoHotspot remote=84 copies=28 cohort_admissions=0 copy_cost=3 net_gain=1 no_reuse=172 victim_loss=7\nNoAffinity remote=103 copies=32 cohort_admissions=0 copy_cost=1 net_gain=19 no_reuse=57 victim_loss=13\nNoJoint remote=111 copies=55 cohort_admissions=0 copy_cost=3 no_reuse=172\n",
+          "arms": {
+            "Full": {
+              "remote": 84,
+              "copies": 28,
+              "cohort_admissions": 0,
+              "copy_cost": 3,
+              "net_gain": 39,
+              "no_reuse": 172,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoHotspot": {
+              "remote": 84,
+              "copies": 28,
+              "cohort_admissions": 0,
+              "copy_cost": 3,
+              "net_gain": 1,
+              "no_reuse": 172,
+              "victim_loss": 7,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoAffinity": {
+              "remote": 103,
+              "copies": 32,
+              "cohort_admissions": 0,
+              "copy_cost": 1,
+              "net_gain": 19,
+              "no_reuse": 57,
+              "victim_loss": 13,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoJoint": {
+              "remote": 111,
+              "copies": 55,
+              "cohort_admissions": 0,
+              "copy_cost": 3,
+              "no_reuse": 172,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            }
+          }
+        },
+        "opportunity74_object_prior": {
+          "stdout": "Full remote=84 copies=28 cohort_admissions=0 copy_cost=3 net_gain=39 no_reuse=172\nNoHotspot remote=84 copies=28 cohort_admissions=0 copy_cost=3 net_gain=1 no_reuse=172 victim_loss=7\nNoAffinity remote=103 copies=32 cohort_admissions=0 copy_cost=1 net_gain=19 no_reuse=57 victim_loss=13\nNoJoint remote=111 copies=55 cohort_admissions=0 copy_cost=3 no_reuse=172\n",
+          "arms": {
+            "Full": {
+              "remote": 84,
+              "copies": 28,
+              "cohort_admissions": 0,
+              "copy_cost": 3,
+              "net_gain": 39,
+              "no_reuse": 172,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoHotspot": {
+              "remote": 84,
+              "copies": 28,
+              "cohort_admissions": 0,
+              "copy_cost": 3,
+              "net_gain": 1,
+              "no_reuse": 172,
+              "victim_loss": 7,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoAffinity": {
+              "remote": 103,
+              "copies": 32,
+              "cohort_admissions": 0,
+              "copy_cost": 1,
+              "net_gain": 19,
+              "no_reuse": 57,
+              "victim_loss": 13,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoJoint": {
+              "remote": 111,
+              "copies": 55,
+              "cohort_admissions": 0,
+              "copy_cost": 3,
+              "no_reuse": 172,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "public_toolagent-73601",
+      "variants": {
+        "retained_event_prior": {
+          "stdout": "Full remote=865 copies=34 cohort_admissions=0 net_gain=45 no_reuse=2271 victim_loss=255\nNoHotspot remote=873 copies=25 cohort_admissions=0 net_gain=25 no_reuse=2271 victim_loss=299\nNoAffinity remote=921 copies=34 cohort_admissions=0 net_gain=22 no_reuse=761 victim_loss=126\nNoJoint remote=960 copies=196 cohort_admissions=0 no_reuse=2304\n",
+          "arms": {
+            "Full": {
+              "remote": 865,
+              "copies": 34,
+              "cohort_admissions": 0,
+              "net_gain": 45,
+              "no_reuse": 2271,
+              "victim_loss": 255,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoHotspot": {
+              "remote": 873,
+              "copies": 25,
+              "cohort_admissions": 0,
+              "net_gain": 25,
+              "no_reuse": 2271,
+              "victim_loss": 299,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoAffinity": {
+              "remote": 921,
+              "copies": 34,
+              "cohort_admissions": 0,
+              "net_gain": 22,
+              "no_reuse": 761,
+              "victim_loss": 126,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoJoint": {
+              "remote": 960,
+              "copies": 196,
+              "cohort_admissions": 0,
+              "no_reuse": 2304,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            }
+          }
+        },
+        "retained_object_prior": {
+          "stdout": "Full remote=865 copies=34 cohort_admissions=0 net_gain=45 no_reuse=2271 victim_loss=255\nNoHotspot remote=873 copies=25 cohort_admissions=0 net_gain=25 no_reuse=2271 victim_loss=299\nNoAffinity remote=921 copies=34 cohort_admissions=0 net_gain=22 no_reuse=761 victim_loss=126\nNoJoint remote=960 copies=196 cohort_admissions=0 no_reuse=2304\n",
+          "arms": {
+            "Full": {
+              "remote": 865,
+              "copies": 34,
+              "cohort_admissions": 0,
+              "net_gain": 45,
+              "no_reuse": 2271,
+              "victim_loss": 255,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoHotspot": {
+              "remote": 873,
+              "copies": 25,
+              "cohort_admissions": 0,
+              "net_gain": 25,
+              "no_reuse": 2271,
+              "victim_loss": 299,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoAffinity": {
+              "remote": 921,
+              "copies": 34,
+              "cohort_admissions": 0,
+              "net_gain": 22,
+              "no_reuse": 761,
+              "victim_loss": 126,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoJoint": {
+              "remote": 960,
+              "copies": 196,
+              "cohort_admissions": 0,
+              "no_reuse": 2304,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            }
+          }
+        },
+        "opportunity74_event_prior": {
+          "stdout": "Full remote=869 copies=34 cohort_admissions=0 net_gain=44 no_reuse=2271 victim_loss=268\nNoHotspot remote=873 copies=25 cohort_admissions=0 net_gain=25 no_reuse=2271 victim_loss=299\nNoAffinity remote=922 copies=33 cohort_admissions=0 net_gain=21 no_reuse=761 victim_loss=128\nNoJoint remote=969 copies=204 cohort_admissions=0 no_reuse=2307\n",
+          "arms": {
+            "Full": {
+              "remote": 869,
+              "copies": 34,
+              "cohort_admissions": 0,
+              "net_gain": 44,
+              "no_reuse": 2271,
+              "victim_loss": 268,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoHotspot": {
+              "remote": 873,
+              "copies": 25,
+              "cohort_admissions": 0,
+              "net_gain": 25,
+              "no_reuse": 2271,
+              "victim_loss": 299,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoAffinity": {
+              "remote": 922,
+              "copies": 33,
+              "cohort_admissions": 0,
+              "net_gain": 21,
+              "no_reuse": 761,
+              "victim_loss": 128,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoJoint": {
+              "remote": 969,
+              "copies": 204,
+              "cohort_admissions": 0,
+              "no_reuse": 2307,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            }
+          }
+        },
+        "opportunity74_object_prior": {
+          "stdout": "Full remote=869 copies=34 cohort_admissions=0 net_gain=44 no_reuse=2271 victim_loss=268\nNoHotspot remote=873 copies=25 cohort_admissions=0 net_gain=25 no_reuse=2271 victim_loss=299\nNoAffinity remote=922 copies=33 cohort_admissions=0 net_gain=21 no_reuse=761 victim_loss=128\nNoJoint remote=969 copies=204 cohort_admissions=0 no_reuse=2307\n",
+          "arms": {
+            "Full": {
+              "remote": 869,
+              "copies": 34,
+              "cohort_admissions": 0,
+              "net_gain": 44,
+              "no_reuse": 2271,
+              "victim_loss": 268,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoHotspot": {
+              "remote": 873,
+              "copies": 25,
+              "cohort_admissions": 0,
+              "net_gain": 25,
+              "no_reuse": 2271,
+              "victim_loss": 299,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoAffinity": {
+              "remote": 922,
+              "copies": 33,
+              "cohort_admissions": 0,
+              "net_gain": 21,
+              "no_reuse": 761,
+              "victim_loss": 128,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoJoint": {
+              "remote": 969,
+              "copies": 204,
+              "cohort_admissions": 0,
+              "no_reuse": 2307,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "public_toolagent-73602",
+      "variants": {
+        "retained_event_prior": {
+          "stdout": "Full remote=879 copies=43 cohort_admissions=0 net_gain=56 no_reuse=2278 victim_loss=271\nNoHotspot remote=870 copies=28 cohort_admissions=0 net_gain=24 no_reuse=2278 victim_loss=276\nNoAffinity remote=904 copies=34 cohort_admissions=0 net_gain=22 no_reuse=758 victim_loss=112\nNoJoint remote=919 copies=161 cohort_admissions=0 no_reuse=2278\n",
+          "arms": {
+            "Full": {
+              "remote": 879,
+              "copies": 43,
+              "cohort_admissions": 0,
+              "net_gain": 56,
+              "no_reuse": 2278,
+              "victim_loss": 271,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoHotspot": {
+              "remote": 870,
+              "copies": 28,
+              "cohort_admissions": 0,
+              "net_gain": 24,
+              "no_reuse": 2278,
+              "victim_loss": 276,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoAffinity": {
+              "remote": 904,
+              "copies": 34,
+              "cohort_admissions": 0,
+              "net_gain": 22,
+              "no_reuse": 758,
+              "victim_loss": 112,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoJoint": {
+              "remote": 919,
+              "copies": 161,
+              "cohort_admissions": 0,
+              "no_reuse": 2278,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            }
+          }
+        },
+        "retained_object_prior": {
+          "stdout": "Full remote=879 copies=43 cohort_admissions=0 net_gain=56 no_reuse=2278 victim_loss=271\nNoHotspot remote=870 copies=28 cohort_admissions=0 net_gain=24 no_reuse=2278 victim_loss=276\nNoAffinity remote=904 copies=34 cohort_admissions=0 net_gain=22 no_reuse=758 victim_loss=112\nNoJoint remote=919 copies=161 cohort_admissions=0 no_reuse=2278\n",
+          "arms": {
+            "Full": {
+              "remote": 879,
+              "copies": 43,
+              "cohort_admissions": 0,
+              "net_gain": 56,
+              "no_reuse": 2278,
+              "victim_loss": 271,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoHotspot": {
+              "remote": 870,
+              "copies": 28,
+              "cohort_admissions": 0,
+              "net_gain": 24,
+              "no_reuse": 2278,
+              "victim_loss": 276,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoAffinity": {
+              "remote": 904,
+              "copies": 34,
+              "cohort_admissions": 0,
+              "net_gain": 22,
+              "no_reuse": 758,
+              "victim_loss": 112,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoJoint": {
+              "remote": 919,
+              "copies": 161,
+              "cohort_admissions": 0,
+              "no_reuse": 2278,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            }
+          }
+        },
+        "opportunity74_event_prior": {
+          "stdout": "Full remote=879 copies=43 cohort_admissions=0 net_gain=56 no_reuse=2278 victim_loss=271\nNoHotspot remote=870 copies=28 cohort_admissions=0 net_gain=24 no_reuse=2278 victim_loss=276\nNoAffinity remote=904 copies=33 cohort_admissions=0 net_gain=21 no_reuse=758 victim_loss=113\nNoJoint remote=916 copies=158 cohort_admissions=0 no_reuse=2278\n",
+          "arms": {
+            "Full": {
+              "remote": 879,
+              "copies": 43,
+              "cohort_admissions": 0,
+              "net_gain": 56,
+              "no_reuse": 2278,
+              "victim_loss": 271,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoHotspot": {
+              "remote": 870,
+              "copies": 28,
+              "cohort_admissions": 0,
+              "net_gain": 24,
+              "no_reuse": 2278,
+              "victim_loss": 276,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoAffinity": {
+              "remote": 904,
+              "copies": 33,
+              "cohort_admissions": 0,
+              "net_gain": 21,
+              "no_reuse": 758,
+              "victim_loss": 113,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoJoint": {
+              "remote": 916,
+              "copies": 158,
+              "cohort_admissions": 0,
+              "no_reuse": 2278,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            }
+          }
+        },
+        "opportunity74_object_prior": {
+          "stdout": "Full remote=879 copies=43 cohort_admissions=0 net_gain=56 no_reuse=2278 victim_loss=271\nNoHotspot remote=870 copies=28 cohort_admissions=0 net_gain=24 no_reuse=2278 victim_loss=276\nNoAffinity remote=904 copies=33 cohort_admissions=0 net_gain=21 no_reuse=758 victim_loss=113\nNoJoint remote=916 copies=158 cohort_admissions=0 no_reuse=2278\n",
+          "arms": {
+            "Full": {
+              "remote": 879,
+              "copies": 43,
+              "cohort_admissions": 0,
+              "net_gain": 56,
+              "no_reuse": 2278,
+              "victim_loss": 271,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoHotspot": {
+              "remote": 870,
+              "copies": 28,
+              "cohort_admissions": 0,
+              "net_gain": 24,
+              "no_reuse": 2278,
+              "victim_loss": 276,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoAffinity": {
+              "remote": 904,
+              "copies": 33,
+              "cohort_admissions": 0,
+              "net_gain": 21,
+              "no_reuse": 758,
+              "victim_loss": 113,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoJoint": {
+              "remote": 916,
+              "copies": 158,
+              "cohort_admissions": 0,
+              "no_reuse": 2278,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "public_toolagent-73603",
+      "variants": {
+        "retained_event_prior": {
+          "stdout": "Full remote=920 copies=34 cohort_admissions=0 net_gain=58 no_reuse=2429 victim_loss=242\nNoHotspot remote=938 copies=21 cohort_admissions=0 net_gain=19 no_reuse=2459 victim_loss=305\nNoAffinity remote=940 copies=28 cohort_admissions=0 net_gain=16 no_reuse=810 victim_loss=102\nNoJoint remote=985 copies=175 cohort_admissions=0 no_reuse=2435\n",
+          "arms": {
+            "Full": {
+              "remote": 920,
+              "copies": 34,
+              "cohort_admissions": 0,
+              "net_gain": 58,
+              "no_reuse": 2429,
+              "victim_loss": 242,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoHotspot": {
+              "remote": 938,
+              "copies": 21,
+              "cohort_admissions": 0,
+              "net_gain": 19,
+              "no_reuse": 2459,
+              "victim_loss": 305,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoAffinity": {
+              "remote": 940,
+              "copies": 28,
+              "cohort_admissions": 0,
+              "net_gain": 16,
+              "no_reuse": 810,
+              "victim_loss": 102,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoJoint": {
+              "remote": 985,
+              "copies": 175,
+              "cohort_admissions": 0,
+              "no_reuse": 2435,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            }
+          }
+        },
+        "retained_object_prior": {
+          "stdout": "Full remote=920 copies=34 cohort_admissions=0 net_gain=58 no_reuse=2429 victim_loss=242\nNoHotspot remote=938 copies=21 cohort_admissions=0 net_gain=19 no_reuse=2459 victim_loss=305\nNoAffinity remote=940 copies=28 cohort_admissions=0 net_gain=16 no_reuse=810 victim_loss=102\nNoJoint remote=985 copies=175 cohort_admissions=0 no_reuse=2435\n",
+          "arms": {
+            "Full": {
+              "remote": 920,
+              "copies": 34,
+              "cohort_admissions": 0,
+              "net_gain": 58,
+              "no_reuse": 2429,
+              "victim_loss": 242,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoHotspot": {
+              "remote": 938,
+              "copies": 21,
+              "cohort_admissions": 0,
+              "net_gain": 19,
+              "no_reuse": 2459,
+              "victim_loss": 305,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoAffinity": {
+              "remote": 940,
+              "copies": 28,
+              "cohort_admissions": 0,
+              "net_gain": 16,
+              "no_reuse": 810,
+              "victim_loss": 102,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoJoint": {
+              "remote": 985,
+              "copies": 175,
+              "cohort_admissions": 0,
+              "no_reuse": 2435,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            }
+          }
+        },
+        "opportunity74_event_prior": {
+          "stdout": "Full remote=913 copies=28 cohort_admissions=0 net_gain=37 no_reuse=2429 victim_loss=242\nNoHotspot remote=938 copies=21 cohort_admissions=0 net_gain=19 no_reuse=2459 victim_loss=305\nNoAffinity remote=943 copies=26 cohort_admissions=0 net_gain=14 no_reuse=811 victim_loss=106\nNoJoint remote=982 copies=172 cohort_admissions=0 no_reuse=2435\n",
+          "arms": {
+            "Full": {
+              "remote": 913,
+              "copies": 28,
+              "cohort_admissions": 0,
+              "net_gain": 37,
+              "no_reuse": 2429,
+              "victim_loss": 242,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoHotspot": {
+              "remote": 938,
+              "copies": 21,
+              "cohort_admissions": 0,
+              "net_gain": 19,
+              "no_reuse": 2459,
+              "victim_loss": 305,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoAffinity": {
+              "remote": 943,
+              "copies": 26,
+              "cohort_admissions": 0,
+              "net_gain": 14,
+              "no_reuse": 811,
+              "victim_loss": 106,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoJoint": {
+              "remote": 982,
+              "copies": 172,
+              "cohort_admissions": 0,
+              "no_reuse": 2435,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            }
+          }
+        },
+        "opportunity74_object_prior": {
+          "stdout": "Full remote=913 copies=28 cohort_admissions=0 net_gain=37 no_reuse=2429 victim_loss=242\nNoHotspot remote=938 copies=21 cohort_admissions=0 net_gain=19 no_reuse=2459 victim_loss=305\nNoAffinity remote=943 copies=26 cohort_admissions=0 net_gain=14 no_reuse=811 victim_loss=106\nNoJoint remote=982 copies=172 cohort_admissions=0 no_reuse=2435\n",
+          "arms": {
+            "Full": {
+              "remote": 913,
+              "copies": 28,
+              "cohort_admissions": 0,
+              "net_gain": 37,
+              "no_reuse": 2429,
+              "victim_loss": 242,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoHotspot": {
+              "remote": 938,
+              "copies": 21,
+              "cohort_admissions": 0,
+              "net_gain": 19,
+              "no_reuse": 2459,
+              "victim_loss": 305,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoAffinity": {
+              "remote": 943,
+              "copies": 26,
+              "cohort_admissions": 0,
+              "net_gain": 14,
+              "no_reuse": 811,
+              "victim_loss": 106,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoJoint": {
+              "remote": 982,
+              "copies": 172,
+              "cohort_admissions": 0,
+              "no_reuse": 2435,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "public_toolagent-74802",
+      "variants": {
+        "retained_event_prior": {
+          "stdout": "Full remote=967 copies=33 cohort_admissions=0 net_gain=44 no_reuse=2611 victim_loss=217\nNoHotspot remote=1002 copies=25 cohort_admissions=0 net_gain=20 no_reuse=2596 victim_loss=361\nNoAffinity remote=995 copies=21 cohort_admissions=0 net_gain=9 no_reuse=860 victim_loss=114\nNoJoint remote=987 copies=119 cohort_admissions=0 no_reuse=2611\n",
+          "arms": {
+            "Full": {
+              "remote": 967,
+              "copies": 33,
+              "cohort_admissions": 0,
+              "net_gain": 44,
+              "no_reuse": 2611,
+              "victim_loss": 217,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoHotspot": {
+              "remote": 1002,
+              "copies": 25,
+              "cohort_admissions": 0,
+              "net_gain": 20,
+              "no_reuse": 2596,
+              "victim_loss": 361,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoAffinity": {
+              "remote": 995,
+              "copies": 21,
+              "cohort_admissions": 0,
+              "net_gain": 9,
+              "no_reuse": 860,
+              "victim_loss": 114,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoJoint": {
+              "remote": 987,
+              "copies": 119,
+              "cohort_admissions": 0,
+              "no_reuse": 2611,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            }
+          }
+        },
+        "retained_object_prior": {
+          "stdout": "Full remote=967 copies=33 cohort_admissions=0 net_gain=44 no_reuse=2611 victim_loss=217\nNoHotspot remote=1002 copies=25 cohort_admissions=0 net_gain=20 no_reuse=2596 victim_loss=361\nNoAffinity remote=995 copies=21 cohort_admissions=0 net_gain=9 no_reuse=860 victim_loss=114\nNoJoint remote=987 copies=119 cohort_admissions=0 no_reuse=2611\n",
+          "arms": {
+            "Full": {
+              "remote": 967,
+              "copies": 33,
+              "cohort_admissions": 0,
+              "net_gain": 44,
+              "no_reuse": 2611,
+              "victim_loss": 217,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoHotspot": {
+              "remote": 1002,
+              "copies": 25,
+              "cohort_admissions": 0,
+              "net_gain": 20,
+              "no_reuse": 2596,
+              "victim_loss": 361,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoAffinity": {
+              "remote": 995,
+              "copies": 21,
+              "cohort_admissions": 0,
+              "net_gain": 9,
+              "no_reuse": 860,
+              "victim_loss": 114,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoJoint": {
+              "remote": 987,
+              "copies": 119,
+              "cohort_admissions": 0,
+              "no_reuse": 2611,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            }
+          }
+        },
+        "opportunity74_event_prior": {
+          "stdout": "Full remote=967 copies=33 cohort_admissions=0 net_gain=44 no_reuse=2611 victim_loss=217\nNoHotspot remote=1002 copies=25 cohort_admissions=0 net_gain=20 no_reuse=2596 victim_loss=361\nNoAffinity remote=995 copies=21 cohort_admissions=0 net_gain=9 no_reuse=860 victim_loss=114\nNoJoint remote=979 copies=111 cohort_admissions=0 no_reuse=2611\n",
+          "arms": {
+            "Full": {
+              "remote": 967,
+              "copies": 33,
+              "cohort_admissions": 0,
+              "net_gain": 44,
+              "no_reuse": 2611,
+              "victim_loss": 217,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoHotspot": {
+              "remote": 1002,
+              "copies": 25,
+              "cohort_admissions": 0,
+              "net_gain": 20,
+              "no_reuse": 2596,
+              "victim_loss": 361,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoAffinity": {
+              "remote": 995,
+              "copies": 21,
+              "cohort_admissions": 0,
+              "net_gain": 9,
+              "no_reuse": 860,
+              "victim_loss": 114,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoJoint": {
+              "remote": 979,
+              "copies": 111,
+              "cohort_admissions": 0,
+              "no_reuse": 2611,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            }
+          }
+        },
+        "opportunity74_object_prior": {
+          "stdout": "Full remote=967 copies=33 cohort_admissions=0 net_gain=44 no_reuse=2611 victim_loss=217\nNoHotspot remote=1002 copies=25 cohort_admissions=0 net_gain=20 no_reuse=2596 victim_loss=361\nNoAffinity remote=995 copies=21 cohort_admissions=0 net_gain=9 no_reuse=860 victim_loss=114\nNoJoint remote=979 copies=111 cohort_admissions=0 no_reuse=2611\n",
+          "arms": {
+            "Full": {
+              "remote": 967,
+              "copies": 33,
+              "cohort_admissions": 0,
+              "net_gain": 44,
+              "no_reuse": 2611,
+              "victim_loss": 217,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoHotspot": {
+              "remote": 1002,
+              "copies": 25,
+              "cohort_admissions": 0,
+              "net_gain": 20,
+              "no_reuse": 2596,
+              "victim_loss": 361,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoAffinity": {
+              "remote": 995,
+              "copies": 21,
+              "cohort_admissions": 0,
+              "net_gain": 9,
+              "no_reuse": 860,
+              "victim_loss": 114,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoJoint": {
+              "remote": 979,
+              "copies": 111,
+              "cohort_admissions": 0,
+              "no_reuse": 2611,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "stationary_shared-73701",
+      "variants": {
+        "retained_event_prior": {
+          "stdout": "Full remote=74 copies=53 cohort_admissions=40 copy_cost=16 net_gain=76 no_reuse=2 victim_loss=104\nNoHotspot remote=65 copies=12 cohort_admissions=0 no_reuse=171\nNoAffinity remote=84 copies=29 cohort_admissions=10 copy_cost=8 net_gain=14 no_reuse=2 victim_loss=45\nNoJoint remote=81 copies=79 cohort_admissions=59 copy_cost=16 no_reuse=2\n",
+          "arms": {
+            "Full": {
+              "remote": 74,
+              "copies": 53,
+              "cohort_admissions": 40,
+              "copy_cost": 16,
+              "net_gain": 76,
+              "no_reuse": 2,
+              "victim_loss": 104,
+              "cohort_positive_headroom": 6,
+              "cohort_positive_net_gain": 34
+            },
+            "NoHotspot": {
+              "remote": 65,
+              "copies": 12,
+              "cohort_admissions": 0,
+              "no_reuse": 171,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoAffinity": {
+              "remote": 84,
+              "copies": 29,
+              "cohort_admissions": 10,
+              "copy_cost": 8,
+              "net_gain": 14,
+              "no_reuse": 2,
+              "victim_loss": 45,
+              "cohort_positive_headroom": 4,
+              "cohort_positive_net_gain": 6
+            },
+            "NoJoint": {
+              "remote": 81,
+              "copies": 79,
+              "cohort_admissions": 59,
+              "copy_cost": 16,
+              "no_reuse": 2,
+              "cohort_positive_headroom": 6,
+              "cohort_positive_net_gain": 0
+            }
+          }
+        },
+        "retained_object_prior": {
+          "stdout": "Full remote=65 copies=12 cohort_admissions=6 copy_cost=169 no_reuse=2\nNoHotspot remote=65 copies=12 cohort_admissions=0 no_reuse=171\nNoAffinity remote=82 copies=21 cohort_admissions=4 copy_cost=57 net_gain=9 no_reuse=2 victim_loss=2\nNoJoint remote=65 copies=12 cohort_admissions=6 copy_cost=169 no_reuse=2\n",
+          "arms": {
+            "Full": {
+              "remote": 65,
+              "copies": 12,
+              "cohort_admissions": 6,
+              "copy_cost": 169,
+              "no_reuse": 2,
+              "cohort_positive_headroom": 6,
+              "cohort_positive_net_gain": 0
+            },
+            "NoHotspot": {
+              "remote": 65,
+              "copies": 12,
+              "cohort_admissions": 0,
+              "no_reuse": 171,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoAffinity": {
+              "remote": 82,
+              "copies": 21,
+              "cohort_admissions": 4,
+              "copy_cost": 57,
+              "net_gain": 9,
+              "no_reuse": 2,
+              "victim_loss": 2,
+              "cohort_positive_headroom": 4,
+              "cohort_positive_net_gain": 0
+            },
+            "NoJoint": {
+              "remote": 65,
+              "copies": 12,
+              "cohort_admissions": 6,
+              "copy_cost": 169,
+              "no_reuse": 2,
+              "cohort_positive_headroom": 6,
+              "cohort_positive_net_gain": 0
+            }
+          }
+        },
+        "opportunity74_event_prior": {
+          "stdout": "Full remote=65 copies=12 cohort_admissions=0 no_reuse=171\nNoHotspot remote=65 copies=12 cohort_admissions=0 no_reuse=171\nNoAffinity remote=86 copies=22 cohort_admissions=0 copy_cost=2 net_gain=9 no_reuse=56 victim_loss=6\nNoJoint remote=65 copies=12 cohort_admissions=0 no_reuse=171\n",
+          "arms": {
+            "Full": {
+              "remote": 65,
+              "copies": 12,
+              "cohort_admissions": 0,
+              "no_reuse": 171,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoHotspot": {
+              "remote": 65,
+              "copies": 12,
+              "cohort_admissions": 0,
+              "no_reuse": 171,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoAffinity": {
+              "remote": 86,
+              "copies": 22,
+              "cohort_admissions": 0,
+              "copy_cost": 2,
+              "net_gain": 9,
+              "no_reuse": 56,
+              "victim_loss": 6,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoJoint": {
+              "remote": 65,
+              "copies": 12,
+              "cohort_admissions": 0,
+              "no_reuse": 171,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            }
+          }
+        },
+        "opportunity74_object_prior": {
+          "stdout": "Full remote=65 copies=12 cohort_admissions=0 no_reuse=171\nNoHotspot remote=65 copies=12 cohort_admissions=0 no_reuse=171\nNoAffinity remote=86 copies=22 cohort_admissions=0 copy_cost=2 net_gain=9 no_reuse=56 victim_loss=6\nNoJoint remote=65 copies=12 cohort_admissions=0 no_reuse=171\n",
+          "arms": {
+            "Full": {
+              "remote": 65,
+              "copies": 12,
+              "cohort_admissions": 0,
+              "no_reuse": 171,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoHotspot": {
+              "remote": 65,
+              "copies": 12,
+              "cohort_admissions": 0,
+              "no_reuse": 171,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoAffinity": {
+              "remote": 86,
+              "copies": 22,
+              "cohort_admissions": 0,
+              "copy_cost": 2,
+              "net_gain": 9,
+              "no_reuse": 56,
+              "victim_loss": 6,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoJoint": {
+              "remote": 65,
+              "copies": 12,
+              "cohort_admissions": 0,
+              "no_reuse": 171,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "uniform-73702",
+      "variants": {
+        "retained_event_prior": {
+          "stdout": "Full remote=544 copies=45 cohort_admissions=2 copy_cost=29 net_gain=56 no_reuse=19 victim_loss=1495\nNoHotspot remote=546 copies=41 cohort_admissions=0 net_gain=36 no_reuse=48 victim_loss=1521\nNoAffinity remote=532 copies=41 cohort_admissions=1 copy_cost=10 net_gain=29 no_reuse=5 victim_loss=476\nNoJoint remote=576 copies=561 cohort_admissions=2 copy_cost=29 no_reuse=19\n",
+          "arms": {
+            "Full": {
+              "remote": 544,
+              "copies": 45,
+              "cohort_admissions": 2,
+              "copy_cost": 29,
+              "net_gain": 56,
+              "no_reuse": 19,
+              "victim_loss": 1495,
+              "cohort_positive_headroom": 2,
+              "cohort_positive_net_gain": 0
+            },
+            "NoHotspot": {
+              "remote": 546,
+              "copies": 41,
+              "cohort_admissions": 0,
+              "net_gain": 36,
+              "no_reuse": 48,
+              "victim_loss": 1521,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoAffinity": {
+              "remote": 532,
+              "copies": 41,
+              "cohort_admissions": 1,
+              "copy_cost": 10,
+              "net_gain": 29,
+              "no_reuse": 5,
+              "victim_loss": 476,
+              "cohort_positive_headroom": 1,
+              "cohort_positive_net_gain": 0
+            },
+            "NoJoint": {
+              "remote": 576,
+              "copies": 561,
+              "cohort_admissions": 2,
+              "copy_cost": 29,
+              "no_reuse": 19,
+              "cohort_positive_headroom": 2,
+              "cohort_positive_net_gain": 0
+            }
+          }
+        },
+        "retained_object_prior": {
+          "stdout": "Full remote=544 copies=45 cohort_admissions=2 copy_cost=29 net_gain=56 no_reuse=19 victim_loss=1495\nNoHotspot remote=546 copies=41 cohort_admissions=0 net_gain=36 no_reuse=48 victim_loss=1521\nNoAffinity remote=532 copies=41 cohort_admissions=1 copy_cost=10 net_gain=29 no_reuse=5 victim_loss=476\nNoJoint remote=576 copies=561 cohort_admissions=2 copy_cost=29 no_reuse=19\n",
+          "arms": {
+            "Full": {
+              "remote": 544,
+              "copies": 45,
+              "cohort_admissions": 2,
+              "copy_cost": 29,
+              "net_gain": 56,
+              "no_reuse": 19,
+              "victim_loss": 1495,
+              "cohort_positive_headroom": 2,
+              "cohort_positive_net_gain": 0
+            },
+            "NoHotspot": {
+              "remote": 546,
+              "copies": 41,
+              "cohort_admissions": 0,
+              "net_gain": 36,
+              "no_reuse": 48,
+              "victim_loss": 1521,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoAffinity": {
+              "remote": 532,
+              "copies": 41,
+              "cohort_admissions": 1,
+              "copy_cost": 10,
+              "net_gain": 29,
+              "no_reuse": 5,
+              "victim_loss": 476,
+              "cohort_positive_headroom": 1,
+              "cohort_positive_net_gain": 0
+            },
+            "NoJoint": {
+              "remote": 576,
+              "copies": 561,
+              "cohort_admissions": 2,
+              "copy_cost": 29,
+              "no_reuse": 19,
+              "cohort_positive_headroom": 2,
+              "cohort_positive_net_gain": 0
+            }
+          }
+        },
+        "opportunity74_event_prior": {
+          "stdout": "Full remote=529 copies=38 cohort_admissions=0 net_gain=42 no_reuse=48 victim_loss=1464\nNoHotspot remote=546 copies=41 cohort_admissions=0 net_gain=36 no_reuse=48 victim_loss=1521\nNoAffinity remote=532 copies=33 cohort_admissions=0 net_gain=21 no_reuse=15 victim_loss=484\nNoJoint remote=600 copies=585 cohort_admissions=0 no_reuse=48\n",
+          "arms": {
+            "Full": {
+              "remote": 529,
+              "copies": 38,
+              "cohort_admissions": 0,
+              "net_gain": 42,
+              "no_reuse": 48,
+              "victim_loss": 1464,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoHotspot": {
+              "remote": 546,
+              "copies": 41,
+              "cohort_admissions": 0,
+              "net_gain": 36,
+              "no_reuse": 48,
+              "victim_loss": 1521,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoAffinity": {
+              "remote": 532,
+              "copies": 33,
+              "cohort_admissions": 0,
+              "net_gain": 21,
+              "no_reuse": 15,
+              "victim_loss": 484,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoJoint": {
+              "remote": 600,
+              "copies": 585,
+              "cohort_admissions": 0,
+              "no_reuse": 48,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            }
+          }
+        },
+        "opportunity74_object_prior": {
+          "stdout": "Full remote=529 copies=38 cohort_admissions=0 net_gain=42 no_reuse=48 victim_loss=1464\nNoHotspot remote=546 copies=41 cohort_admissions=0 net_gain=36 no_reuse=48 victim_loss=1521\nNoAffinity remote=532 copies=33 cohort_admissions=0 net_gain=21 no_reuse=15 victim_loss=484\nNoJoint remote=600 copies=585 cohort_admissions=0 no_reuse=48\n",
+          "arms": {
+            "Full": {
+              "remote": 529,
+              "copies": 38,
+              "cohort_admissions": 0,
+              "net_gain": 42,
+              "no_reuse": 48,
+              "victim_loss": 1464,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoHotspot": {
+              "remote": 546,
+              "copies": 41,
+              "cohort_admissions": 0,
+              "net_gain": 36,
+              "no_reuse": 48,
+              "victim_loss": 1521,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoAffinity": {
+              "remote": 532,
+              "copies": 33,
+              "cohort_admissions": 0,
+              "net_gain": 21,
+              "no_reuse": 15,
+              "victim_loss": 484,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            },
+            "NoJoint": {
+              "remote": 600,
+              "copies": 585,
+              "cohort_admissions": 0,
+              "no_reuse": 48,
+              "cohort_positive_headroom": 0,
+              "cohort_positive_net_gain": 0
+            }
+          }
+        }
+      }
+    }
+  ]
+}
