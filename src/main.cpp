@@ -92,6 +92,7 @@ struct Config {
   bool batch_background_metrics = false;
   bool defer_background_submission_metrics = false;
   bool precheck_shared_submission = false;
+  bool indexed_shared_precheck = false;
   bool batch_policy_events = false;
   std::string request_trace_path;
   bool foreground_read_fill = false;
@@ -1065,6 +1066,35 @@ class MetadataStore {
     fs::path physical;
     uint64_t bytes;
   };
+  static constexpr const char* kReadyResidentBytesSql="SELECT gpu_id,physical_path,size_bytes FROM files WHERE tier='local' AND state='COMMITTED' UNION ALL SELECT r.gpu_id,r.physical_path,r.size_bytes FROM local_replicas r JOIN files f ON f.logical_path=r.logical_path WHERE r.state='READY' AND f.state='COMMITTED';";
+  bool CreateSharedPrecheckIndexes() {
+    std::lock_guard<std::mutex> lock(mu_);
+    if(!sqlite3_get_autocommit(db_))throw std::runtime_error("shared precheck index setup requires an idle transaction");
+    try {
+      Exec("BEGIN IMMEDIATE;");
+      auto ensure=[&](const char* name,const char* definition) {
+        Exec((std::string("CREATE INDEX IF NOT EXISTS ")+definition+";").c_str());
+        // IF NOT EXISTS alone also accepts a same-name, incompatible index.
+        // Confirm our exact definition; conservatively retain and fall back
+        // for foreign definitions rather than replacing persisted schema.
+        auto lease=CachedStatement("SELECT sql FROM sqlite_master WHERE type='index' AND name=?;");
+        sqlite3_bind_text(lease.get(),1,name,-1,SQLITE_TRANSIENT);
+        if(sqlite3_step(lease.get())!=SQLITE_ROW ||
+           ColumnText(lease.get(),0)!=std::string("CREATE INDEX ")+definition)
+          throw std::runtime_error("incompatible shared precheck index definition");
+      };
+      ensure("idx_files_shared_precheck_local","idx_files_shared_precheck_local ON files(gpu_id,physical_path,size_bytes) WHERE tier='local' AND state='COMMITTED'");
+      ensure("idx_replicas_shared_precheck_ready","idx_replicas_shared_precheck_ready ON local_replicas(logical_path,gpu_id,physical_path,size_bytes) WHERE state='READY'");
+      Exec("COMMIT;");return true;
+    } catch(...) {
+      // DDL is transactional: preserve existing schema but roll back all new
+      // indexes on ordinary failure. Never continue Init with a stuck write
+      // transaction if rollback itself failed.
+      if(!sqlite3_get_autocommit(db_))sqlite3_exec(db_,"ROLLBACK;",nullptr,nullptr,nullptr);
+      if(!sqlite3_get_autocommit(db_))throw std::runtime_error("shared precheck index rollback failed");
+      return false;
+    }
+  }
   bool TryEmptyResidentState() {
     std::unique_lock<std::mutex> lock(mu_,std::try_to_lock);
     if(!lock.owns_lock())return false;
@@ -1078,10 +1108,10 @@ class MetadataStore {
   bool TryReadyResidentBytes(std::vector<ReadyResidentBytes>& rows) {
     std::unique_lock<std::mutex> lock(mu_,std::try_to_lock);
     if(!lock.owns_lock())return false;
-    // Read only, no access-history join or filesystem traversal. This still
-    // scans the local-state predicates; a small result is not constant cost.
+    // The same read-only query serves indexed and unindexed prechecks. Without
+    // the optional partial indexes it still scans the local-state predicates.
     try {
-      auto lease=CachedStatement("SELECT gpu_id,physical_path,size_bytes FROM files WHERE tier='local' AND state='COMMITTED' UNION ALL SELECT r.gpu_id,r.physical_path,r.size_bytes FROM local_replicas r JOIN files f ON f.logical_path=r.logical_path WHERE r.state='READY' AND f.state='COMMITTED';");
+      auto lease=CachedStatement(kReadyResidentBytesSql);
       auto* stmt=lease.get();std::vector<ReadyResidentBytes> found;
       for(int rc;(rc=sqlite3_step(stmt))!=SQLITE_DONE;) {
         if(rc!=SQLITE_ROW || sqlite3_column_type(stmt,0)!=SQLITE_INTEGER ||
@@ -3136,6 +3166,12 @@ class TokenFS {
       submission_precheck_roots_=std::move(roots);submission_precheck_ready_=true;
       AddBufferedMetric("submission_precheck_enabled",1);
     } catch(const std::exception&) {return;}
+    // Build only after fresh-lifecycle eligibility succeeds. Unsupported
+    // SIEVE and disabled controls create no indexes in fresh databases. Existing
+    // indexes are never dropped. Keep this outside the eligibility catch so an
+    // unrecoverable SQLite transaction aborts Init rather than hiding corruption.
+    if(config_.indexed_shared_precheck)
+      AddBufferedMetric(metadata_.CreateSharedPrecheckIndexes()?"submission_precheck_index_enabled":"submission_precheck_index_fallback",1);
   }
 
   bool PrecheckSharedSubmission(const FileMeta& meta,int caller,const std::shared_ptr<ReadFillPool::Buffer>& fill) {
@@ -4484,6 +4520,7 @@ Config LoadConfig(const fs::path& path) {
   if(root["policy"] && root["policy"]["batch_background_metrics"]) config.batch_background_metrics=root["policy"]["batch_background_metrics"].as<bool>();
   if(root["policy"] && root["policy"]["defer_background_submission_metrics"]) config.defer_background_submission_metrics=root["policy"]["defer_background_submission_metrics"].as<bool>();
   if(root["policy"] && root["policy"]["precheck_shared_submission"]) config.precheck_shared_submission=root["policy"]["precheck_shared_submission"].as<bool>();
+  if(root["policy"] && root["policy"]["indexed_shared_precheck"]) config.indexed_shared_precheck=root["policy"]["indexed_shared_precheck"].as<bool>();
   if(root["policy"] && root["policy"]["batch_policy_events"]) config.batch_policy_events=root["policy"]["batch_policy_events"].as<bool>();
   if(root["policy"] && root["policy"]["request_trace_path"]) config.request_trace_path=root["policy"]["request_trace_path"].as<std::string>();
   if(root["policy"] && root["policy"]["recent_value_floor"]) config.recent_value_floor=root["policy"]["recent_value_floor"].as<bool>();

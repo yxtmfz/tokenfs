@@ -6,6 +6,7 @@
 #include <atomic>
 #include <future>
 #include <map>
+#include <tuple>
 
 namespace {
 struct TokenFSTestAccess {
@@ -52,14 +53,16 @@ struct TokenFSTestAccess {
   static void deferred_config_parse(const fs::path& root) {
     fs::create_directories(root);const auto path=root/"config.yaml";
     for(const char* value:{"false","true"}) {
-      std::ofstream(path)<<"filesystem: {}\nbackends: []\ngpus: []\npolicy:\n  batch_background_metrics: true\n  defer_background_submission_metrics: "<<value<<"\n  precheck_shared_submission: "<<value<<"\n";
+      std::ofstream(path)<<"filesystem: {}\nbackends: []\ngpus: []\npolicy:\n  batch_background_metrics: true\n  defer_background_submission_metrics: "<<value<<"\n  precheck_shared_submission: "<<value<<"\n  indexed_shared_precheck: "<<value<<"\n";
       const auto cfg=LoadConfig(path);
       assert(cfg.batch_background_metrics && cfg.defer_background_submission_metrics==(std::string(value)=="true"));
       assert(cfg.precheck_shared_submission==(std::string(value)=="true"));
+      assert(cfg.indexed_shared_precheck==(std::string(value)=="true"));
     }
     std::ofstream(path)<<"filesystem: {}\nbackends: []\ngpus: []\n";
     assert(!LoadConfig(path).defer_background_submission_metrics);
     assert(!LoadConfig(path).precheck_shared_submission);
+    assert(!LoadConfig(path).indexed_shared_precheck);
   }
   static void deferred_background_fence(const fs::path& root) {
     auto cfg=DeferredConfig(root);TokenFS filesystem(cfg);filesystem.Init();TelemetryProbe probe(cfg.metadata_db);
@@ -304,6 +307,127 @@ struct TokenFSTestAccess {
     TokenFS filesystem(cfg);filesystem.Init();assert(!filesystem.submission_precheck_ready_);
     FileMeta later;later.logical_path="/gpu0/later";later.gpu_id=0;later.tier="remote";later.state="COMMITTED";
     filesystem.metadata_.Upsert(later);assert(!filesystem.submission_precheck_ready_);
+  }
+  static int PrecheckIndexCount(MetadataStore& store) {
+    auto lease=store.CachedStatement("SELECT COUNT(*) FROM sqlite_master WHERE type='index' AND name IN ('idx_files_shared_precheck_local','idx_replicas_shared_precheck_ready');");
+    assert(sqlite3_step(lease.get())==SQLITE_ROW);return sqlite3_column_int(lease.get(),0);
+  }
+  using ResidentRow=std::tuple<int,std::string,uint64_t>;
+  static std::vector<ResidentRow> ResidentRows(MetadataStore& store) {
+    std::vector<MetadataStore::ReadyResidentBytes> found;assert(store.TryReadyResidentBytes(found));
+    std::vector<ResidentRow> rows;for(const auto& r:found)rows.emplace_back(r.location,r.physical.string(),r.bytes);
+    std::sort(rows.begin(),rows.end());return rows;
+  }
+  static void indexed_precheck_query(const fs::path& root) {
+    MetadataStore plain(root/"plain.db"),indexed(root/"indexed.db");plain.Open();indexed.Open();
+    assert(indexed.CreateSharedPrecheckIndexes() && indexed.CreateSharedPrecheckIndexes());
+    for(auto* store:{&plain,&indexed}) {
+      // Most canonical rows are remote; the resident query must not scan them.
+      store->Exec("WITH RECURSIVE n(x) AS (SELECT 1 UNION ALL SELECT x+1 FROM n WHERE x<4096) INSERT INTO files(logical_path,gpu_id,tier,backend_id,physical_path,size_bytes,state,created_at,updated_at) SELECT '/gpu0/remote-'||x,0,'remote','remote','/remote/'||x,4096,'COMMITTED',1,1 FROM n;");
+      auto file=[&](const char* key,const char* tier,const char* state) {
+        FileMeta m;m.logical_path=std::string("/gpu0/")+key;m.gpu_id=0;m.tier=tier;m.backend_id="remote";
+        m.physical_path=fs::path("/cache")/key;m.size_bytes=4096;m.state=state;store->Upsert(m);
+      };
+      file("a","local","COMMITTED");file("b","remote","COMMITTED");file("d","local","COPYING");
+      for(const char* key:{"a","b","c","d"}) {
+        LocalReplica r;r.logical_path=std::string("/gpu0/")+key;r.gpu_id=0;r.physical_path=fs::path("/cache")/key;
+        r.size_bytes=4096;r.state="READY";store->UpsertLocalReplica(r);
+      }
+    }
+    auto equal=[&](size_t count) {auto a=ResidentRows(plain),b=ResidentRows(indexed);assert(a==b && a.size()==count);};
+    equal(3); // a appears twice, b once; orphan c and noncommitted d are excluded.
+    auto rows=ResidentRows(indexed);assert(std::count(rows.begin(),rows.end(),ResidentRow{0,"/cache/a",4096})==2);
+    std::string plan;const auto explain=std::string("EXPLAIN QUERY PLAN ")+MetadataStore::kReadyResidentBytesSql;
+    {auto st=indexed.CachedStatement(explain.c_str());
+      int rc;while((rc=sqlite3_step(st.get()))==SQLITE_ROW)plan+=MetadataStore::ColumnText(st.get(),3)+"\n";
+      assert(rc==SQLITE_DONE);}
+    assert(plan.find("idx_files_shared_precheck_local")!=std::string::npos);
+    assert(plan.find("idx_replicas_shared_precheck_ready")!=std::string::npos);
+    auto scans=[](MetadataStore& store) {
+      auto st=store.CachedStatement(MetadataStore::kReadyResidentBytesSql);
+      sqlite3_stmt_status(st.get(),SQLITE_STMTSTATUS_FULLSCAN_STEP,1);
+      int rc;while((rc=sqlite3_step(st.get()))==SQLITE_ROW){}assert(rc==SQLITE_DONE);
+      return sqlite3_stmt_status(st.get(),SQLITE_STMTSTATUS_FULLSCAN_STEP,0);
+    };
+    const auto plain_scans=scans(plain),indexed_scans=scans(indexed);
+    assert(plain_scans>=4096 && indexed_scans<64);
+    std::cout<<"indexed precheck fullscan steps: "<<plain_scans<<" -> "<<indexed_scans<<"\n"<<plan;
+    auto mutate=[&](const char* sql,size_t count){plain.Exec(sql);indexed.Exec(sql);equal(count);};
+    mutate("UPDATE files SET state='DELETING' WHERE logical_path='/gpu0/a';",1);
+    mutate("UPDATE files SET tier='remote',state='COMMITTED' WHERE logical_path='/gpu0/a';",2);
+    mutate("UPDATE local_replicas SET state='CREATING' WHERE logical_path='/gpu0/b';",1);
+    mutate("UPDATE local_replicas SET state='READY' WHERE logical_path='/gpu0/b';",2);
+    mutate("INSERT INTO files(logical_path,gpu_id,tier,backend_id,physical_path,size_bytes,state,created_at,updated_at) VALUES('/gpu0/c',0,'remote','remote','/remote/c',4096,'COMMITTED',1,1);",3);
+    mutate("UPDATE files SET state='COMMITTED' WHERE logical_path='/gpu0/d';",5);
+    mutate("DELETE FROM local_replicas WHERE logical_path='/gpu0/c';",4);
+  }
+  static void indexed_precheck_eligibility(const fs::path& root) {
+    assert(!Config{}.indexed_shared_precheck);
+    for(int mode=0;mode<9;++mode) {
+      auto cfg=PrecheckConfig(root/std::to_string(mode));cfg.indexed_shared_precheck=true;
+      if(mode==1)cfg.measured_static_reuse_value=true;
+      if(mode==2)cfg.shared_caller_only=true;
+      if(mode==3)cfg.measured_joint_admission=false;
+      if(mode==4)cfg.indexed_shared_precheck=false;
+      if(mode==5)cfg.precheck_shared_submission=false;
+      if(mode==6) {cfg.measured_policy=false;cfg.shared_value_placement=false;cfg.shared_pool_cache=true;
+        cfg.adaptive_reuse_control=false;cfg.compact_measured_planning=false;cfg.measured_burst_reuse=false;}
+      if(mode==7) {fs::create_directories(cfg.gpus[0].local_root);std::ofstream(cfg.gpus[0].local_root/"old")<<'x';}
+      if(mode==8) {MetadataStore old(cfg.metadata_db);old.Open();LocalReplica r;r.logical_path="/gpu0/orphan";
+        r.gpu_id=0;r.physical_path=cfg.gpus[0].local_root/"absent";r.state="READY";old.UpsertLocalReplica(r);}
+      TokenFS filesystem(cfg);filesystem.Init();const bool enabled=mode<4;
+      assert(filesystem.submission_precheck_ready_==(mode<5));
+      assert(PrecheckIndexCount(filesystem.metadata_)==(enabled?2:0));
+      filesystem.FlushBufferedMetrics();TelemetryProbe probe(cfg.metadata_db);
+      assert(probe.Metric("submission_precheck_index_enabled")==uint64_t(enabled));
+      assert(probe.Metric("submission_precheck_index_fallback")==0);
+    }
+    // Disabling a flag is not a schema migration: old indexes and rows survive.
+    auto cfg=PrecheckConfig(root/"restart");cfg.indexed_shared_precheck=true;
+    {TokenFS filesystem(cfg);filesystem.Init();assert(PrecheckIndexCount(filesystem.metadata_)==2);
+      FileMeta m;m.logical_path="/gpu0/keep";m.gpu_id=0;m.tier="remote";m.state="COMMITTED";m.size_bytes=17;
+      filesystem.metadata_.Upsert(m);}
+    cfg.indexed_shared_precheck=false;cfg.precheck_shared_submission=false;
+    TokenFS restarted(cfg);restarted.Init();assert(!restarted.submission_precheck_ready_);
+    assert(PrecheckIndexCount(restarted.metadata_)==2 && restarted.metadata_.Get("/gpu0/keep")->size_bytes==17);
+  }
+  static void indexed_precheck_setup_failure(const fs::path& root) {
+    for(int mode=0;mode<3;++mode) {
+      auto cfg=PrecheckConfig(root/std::to_string(mode));cfg.indexed_shared_precheck=true;
+      {MetadataStore old(cfg.metadata_db);old.Open();
+        if(mode==0)old.Exec("CREATE TABLE idx_replicas_shared_precheck_ready(value TEXT);");
+        if(mode==1)old.Exec("CREATE INDEX idx_files_shared_precheck_local ON files(logical_path);");
+        if(mode==2) {
+          assert(old.CreateSharedPrecheckIndexes());
+          old.Exec("DROP INDEX idx_replicas_shared_precheck_ready;");
+          old.Exec("CREATE INDEX idx_replicas_shared_precheck_ready ON local_replicas(physical_path);");
+        }
+      }
+      TokenFS filesystem(cfg);filesystem.Init();assert(filesystem.submission_precheck_ready_);
+      assert(sqlite3_get_autocommit(filesystem.metadata_.db_));
+      assert(PrecheckIndexCount(filesystem.metadata_)==mode); // New first index rolls back; old schema is kept.
+      filesystem.FlushBufferedMetrics();TelemetryProbe probe(cfg.metadata_db);
+      assert(probe.Metric("submission_precheck_index_enabled")==0 && probe.Metric("submission_precheck_index_fallback")==1);
+      if(mode==0)probe.Exec("INSERT INTO idx_replicas_shared_precheck_ready VALUES('preserved');");
+      FileMeta m;m.logical_path="/gpu0/fallback";m.gpu_id=0;m.tier="local";m.state="COMMITTED";
+      m.physical_path=cfg.gpus[0].local_root/"fallback";m.size_bytes=4096;filesystem.metadata_.Upsert(m);
+      assert(ResidentRows(filesystem.metadata_).size()==1); // Original query and later transactions still work.
+    }
+    // A real authorizer fault can deny both a DDL and rollback. Such an
+    // unrecoverable transaction must escape InitializeSubmissionPrecheck.
+    auto cfg=PrecheckConfig(root/"rollback-denied");cfg.indexed_shared_precheck=true;
+    TokenFS filesystem(cfg);filesystem.Init();
+    filesystem.metadata_.Exec("DROP INDEX idx_files_shared_precheck_local;");
+    filesystem.metadata_.Exec("DROP INDEX idx_replicas_shared_precheck_ready;");
+    assert(sqlite3_set_authorizer(filesystem.metadata_.db_,[](void*,int action,const char* one,const char*,const char*,const char*) {
+      if(action==SQLITE_CREATE_INDEX && one && std::string(one)=="idx_replicas_shared_precheck_ready")return SQLITE_DENY;
+      if(action==SQLITE_TRANSACTION && one && std::string(one)=="ROLLBACK")return SQLITE_DENY;
+      return SQLITE_OK;
+    },nullptr)==SQLITE_OK);
+    bool failed=false;try{filesystem.InitializeSubmissionPrecheck();}catch(const std::runtime_error&){failed=true;}
+    assert(failed && !sqlite3_get_autocommit(filesystem.metadata_.db_));
+    assert(sqlite3_set_authorizer(filesystem.metadata_.db_,nullptr,nullptr)==SQLITE_OK);
+    filesystem.metadata_.Exec("ROLLBACK;");assert(PrecheckIndexCount(filesystem.metadata_)==0);
   }
   static void ram_first_routing(const fs::path& root,bool enabled,bool lean) {
     Config cfg;cfg.mount_point=root/"mnt";cfg.metadata_db=root/"state.db";
@@ -1079,6 +1203,9 @@ int main() {
   TokenFSTestAccess::submission_precheck_busy(root/"precheck-busy");
   TokenFSTestAccess::submission_precheck_metadata(root/"precheck-metadata");
   TokenFSTestAccess::submission_precheck_startup(root/"precheck-startup");
+  TokenFSTestAccess::indexed_precheck_query(root/"indexed-query");
+  TokenFSTestAccess::indexed_precheck_eligibility(root/"indexed-eligibility");
+  TokenFSTestAccess::indexed_precheck_setup_failure(root/"indexed-failure");
   TokenFSTestAccess::inflight_reads(root/"inflight-enabled",true);
   TokenFSTestAccess::inflight_reads(root/"inflight-disabled",false);
   TokenFSTestAccess::inflight_reads(root/"retained-after-ready",true,true);
