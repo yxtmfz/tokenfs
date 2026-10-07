@@ -14,7 +14,8 @@ class RequestTrace {
   struct Event {
     std::string op, path, tier;
     uint64_t handle=0,start_ns=0,end_ns=0,wait_ns=0,pread_ns=0,flush_ns=0;
-    uint64_t copy_ns=0,verify_ns=0,bytes=0;
+    uint64_t copy_ns=0,verify_ns=0,bytes=0,selected_ns=0;
+    int location=-1;
     int caller=-1;
   };
   static uint64_t Now() {
@@ -50,6 +51,7 @@ class RequestTrace {
       if(!first)f<<',';
       first=false;
       f<<"{\"op\":"<<Quote(e.op)<<",\"path\":"<<Quote(e.path)<<",\"tier\":"<<Quote(e.tier)
+       <<",\"location\":"<<e.location<<",\"selected_ns\":"<<e.selected_ns
        <<",\"handle\":"<<e.handle<<",\"caller\":"<<e.caller<<",\"start_ns\":"<<e.start_ns
        <<",\"end_ns\":"<<e.end_ns<<",\"wait_ns\":"<<e.wait_ns<<",\"pread_ns\":"<<e.pread_ns
        <<",\"flush_ns\":"<<e.flush_ns<<",\"copy_ns\":"<<e.copy_ns<<",\"verify_ns\":"<<e.verify_ns<<",\"bytes\":"<<e.bytes<<'}';
@@ -62,10 +64,12 @@ class RequestTrace {
     Span(RequestTrace& trace,const char* op):trace_(trace),enabled_(trace.Enabled()) {
       if(enabled_){e.op=op;e.start_ns=Now();}
     }
-    ~Span(){if(enabled_){e.end_ns=Now();trace_.Add(std::move(e));}}
+    ~Span(){Finish();}
+    // End a planning span before execution; all early returns still close it.
+    void Finish(){if(enabled_ && !finished_){e.end_ns=Now();trace_.Add(std::move(e));finished_=true;}}
     bool Enabled() const{return enabled_;}
     Span(const Span&)=delete;Span& operator=(const Span&)=delete;
-   private:RequestTrace& trace_;bool enabled_;
+   private:RequestTrace& trace_;bool enabled_;bool finished_=false;
   };
  private:
   std::string output_;size_t limit_;uint64_t dropped_=0;

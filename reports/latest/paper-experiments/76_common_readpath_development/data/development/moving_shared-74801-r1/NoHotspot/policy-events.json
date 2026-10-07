@@ -1,0 +1,902 @@
+[
+  {
+    "seq": 1,
+    "action": "SHARED_PLACE",
+    "logical_path": "/gpu0/shard-000001.tokens",
+    "gpu_id": 2,
+    "bytes": 2097152,
+    "reason": "caller=2;incoming=0;victim_loss=0;copy=23050;burst_remaining=0;uncertainty=0;explore=1;exploration_reads=1;cohort_disk_reuse=0",
+    "score": -23050.0
+  },
+  {
+    "seq": 2,
+    "action": "ADMIT",
+    "logical_path": "/gpu0/shard-000001.tokens",
+    "gpu_id": 2,
+    "bytes": 2097152,
+    "reason": "capacity_bounded_calibration;incoming=0;displaced=0;copy=23050;frequency=1;calibrated=0;affinity_count=1;affinity_adjusted_items=0;burst_remaining=0;uncertainty=0;explore=1;cohort_disk_reuse=0",
+    "score": -23050.0
+  },
+  {
+    "seq": 3,
+    "action": "REPLICATE_READY",
+    "logical_path": "/gpu0/shard-000001.tokens",
+    "gpu_id": 2,
+    "bytes": 2097152,
+    "reason": "cross_gpu",
+    "score": 0.0
+  },
+  {
+    "seq": 4,
+    "action": "SHARED_PLACE",
+    "logical_path": "/gpu0/shard-000002.tokens",
+    "gpu_id": 0,
+    "bytes": 2097152,
+    "reason": "caller=0;incoming=0;victim_loss=0;copy=6137;burst_remaining=0;uncertainty=0;explore=1;exploration_reads=4;cohort_disk_reuse=0",
+    "score": -6137.0
+  },
+  {
+    "seq": 5,
+    "action": "ADMIT",
+    "logical_path": "/gpu0/shard-000002.tokens",
+    "gpu_id": 0,
+    "bytes": 2097152,
+    "reason": "capacity_bounded_calibration;incoming=2804.94;displaced=0;copy=6137;frequency=2;calibrated=0;affinity_count=2;affinity_adjusted_items=0;burst_remaining=0;uncertainty=0;explore=1;cohort_disk_reuse=0",
+    "score": -3332.0625
+  },
+  {
+    "seq": 6,
+    "action": "PROMOTE_READY",
+    "logical_path": "/gpu0/shard-000002.tokens",
+    "gpu_id": 0,
+    "bytes": 2097152,
+    "reason": "promote",
+    "score": 0.0
+  },
+  {
+    "seq": 7,
+    "action": "SHARED_PLACE",
+    "logical_path": "/gpu0/shard-000000.tokens",
+    "gpu_id": 0,
+    "bytes": 2097152,
+    "reason": "caller=0;incoming=0;victim_loss=0;copy=7546;burst_remaining=0;uncertainty=0;explore=1;exploration_reads=6;cohort_disk_reuse=0",
+    "score": -7546.0
+  },
+  {
+    "seq": 8,
+    "action": "ADMIT",
+    "logical_path": "/gpu0/shard-000000.tokens",
+    "gpu_id": 0,
+    "bytes": 2097152,
+    "reason": "capacity_bounded_calibration;incoming=1861.81;displaced=0;copy=7546;frequency=2;calibrated=0;affinity_count=2;affinity_adjusted_items=1;burst_remaining=0;uncertainty=0;explore=1;cohort_disk_reuse=0",
+    "score": -5684.194444444444
+  },
+  {
+    "seq": 9,
+    "action": "PROMOTE_READY",
+    "logical_path": "/gpu0/shard-000000.tokens",
+    "gpu_id": 0,
+    "bytes": 2097152,
+    "reason": "promote",
+    "score": 0.0
+  },
+  {
+    "seq": 10,
+    "action": "SHARED_PLACE",
+    "logical_path": "/gpu0/shard-000007.tokens",
+    "gpu_id": 0,
+    "bytes": 2097152,
+    "reason": "caller=0;incoming=0;victim_loss=0;copy=7240;burst_remaining=0;uncertainty=0;explore=1;exploration_reads=6.66667;cohort_disk_reuse=0",
+    "score": -7240.0
+  },
+  {
+    "seq": 11,
+    "action": "ADMIT",
+    "logical_path": "/gpu0/shard-000007.tokens",
+    "gpu_id": 0,
+    "bytes": 2097152,
+    "reason": "capacity_bounded_calibration;incoming=1681.8;displaced=0;copy=7240;frequency=1;calibrated=0;affinity_count=2;affinity_adjusted_items=2;burst_remaining=0;uncertainty=0;explore=1;cohort_disk_reuse=0",
+    "score": -5558.2
+  },
+  {
+    "seq": 12,
+    "action": "PROMOTE_READY",
+    "logical_path": "/gpu0/shard-000007.tokens",
+    "gpu_id": 0,
+    "bytes": 2097152,
+    "reason": "promote",
+    "score": 0.0
+  },
+  {
+    "seq": 13,
+    "action": "SHARED_PLACE",
+    "logical_path": "/gpu0/shard-000072.tokens",
+    "gpu_id": 2,
+    "bytes": 2097152,
+    "reason": "caller=2;incoming=0;victim_loss=0;copy=7046.5;burst_remaining=0;uncertainty=0;explore=1;exploration_reads=5.33333;cohort_disk_reuse=0",
+    "score": -7046.5
+  },
+  {
+    "seq": 14,
+    "action": "ADMIT",
+    "logical_path": "/gpu0/shard-000072.tokens",
+    "gpu_id": 2,
+    "bytes": 2097152,
+    "reason": "capacity_bounded_calibration;incoming=797.888;displaced=0;copy=7046.5;frequency=1;calibrated=1;affinity_count=2;affinity_adjusted_items=2;burst_remaining=0;uncertainty=0;explore=1;cohort_disk_reuse=0",
+    "score": -6248.612499999999
+  },
+  {
+    "seq": 15,
+    "action": "REPLICATE_READY",
+    "logical_path": "/gpu0/shard-000072.tokens",
+    "gpu_id": 2,
+    "bytes": 2097152,
+    "reason": "cross_gpu",
+    "score": 0.0
+  },
+  {
+    "seq": 16,
+    "action": "SHARED_PLACE",
+    "logical_path": "/gpu0/shard-000005.tokens",
+    "gpu_id": 0,
+    "bytes": 2097152,
+    "reason": "caller=0;incoming=0;victim_loss=0;copy=6877.4;burst_remaining=0;uncertainty=0;explore=1;exploration_reads=5.14286;cohort_disk_reuse=0",
+    "score": -6877.400000000001
+  },
+  {
+    "seq": 17,
+    "action": "ADMIT",
+    "logical_path": "/gpu0/shard-000005.tokens",
+    "gpu_id": 0,
+    "bytes": 2097152,
+    "reason": "capacity_bounded_calibration;incoming=759.241;displaced=0;copy=6877.4;frequency=2;calibrated=1;affinity_count=2;affinity_adjusted_items=2;burst_remaining=0;uncertainty=0;explore=1;cohort_disk_reuse=0",
+    "score": -6118.15925925926
+  },
+  {
+    "seq": 18,
+    "action": "PROMOTE_READY",
+    "logical_path": "/gpu0/shard-000005.tokens",
+    "gpu_id": 0,
+    "bytes": 2097152,
+    "reason": "promote",
+    "score": 0.0
+  },
+  {
+    "seq": 19,
+    "action": "SHARED_PLACE",
+    "logical_path": "/gpu0/shard-000075.tokens",
+    "gpu_id": 1,
+    "bytes": 2097152,
+    "reason": "caller=0;incoming=0;victim_loss=0;copy=6778.83;burst_remaining=0;uncertainty=0;explore=1;exploration_reads=4.88889;cohort_disk_reuse=0",
+    "score": -6778.833333333334
+  },
+  {
+    "seq": 20,
+    "action": "ADMIT",
+    "logical_path": "/gpu0/shard-000075.tokens",
+    "gpu_id": 1,
+    "bytes": 2097152,
+    "reason": "capacity_bounded_calibration;incoming=1045.77;displaced=0;copy=6778.83;frequency=0;calibrated=1;affinity_count=2;affinity_adjusted_items=1;burst_remaining=0;uncertainty=0;explore=1;cohort_disk_reuse=0",
+    "score": -5733.065476190476
+  },
+  {
+    "seq": 21,
+    "action": "REPLICATE_READY",
+    "logical_path": "/gpu0/shard-000075.tokens",
+    "gpu_id": 1,
+    "bytes": 2097152,
+    "reason": "cross_gpu",
+    "score": 0.0
+  },
+  {
+    "seq": 22,
+    "action": "SHARED_PLACE",
+    "logical_path": "/gpu0/shard-000080.tokens",
+    "gpu_id": 1,
+    "bytes": 2097152,
+    "reason": "caller=0;incoming=0;victim_loss=0;copy=6893.86;burst_remaining=0;uncertainty=0;explore=1;exploration_reads=4.92308;cohort_disk_reuse=0",
+    "score": -6893.857142857144
+  },
+  {
+    "seq": 23,
+    "action": "ADMIT",
+    "logical_path": "/gpu0/shard-000080.tokens",
+    "gpu_id": 1,
+    "bytes": 2097152,
+    "reason": "capacity_bounded_calibration;incoming=1068.73;displaced=0;copy=6893.86;frequency=0;calibrated=1;affinity_count=2;affinity_adjusted_items=2;burst_remaining=0;uncertainty=0;explore=1;cohort_disk_reuse=0",
+    "score": -5825.123418898811
+  },
+  {
+    "seq": 24,
+    "action": "REPLICATE_READY",
+    "logical_path": "/gpu0/shard-000080.tokens",
+    "gpu_id": 1,
+    "bytes": 2097152,
+    "reason": "cross_gpu",
+    "score": 0.0
+  },
+  {
+    "seq": 25,
+    "action": "SHARED_PLACE",
+    "logical_path": "/gpu0/shard-000006.tokens",
+    "gpu_id": 1,
+    "bytes": 2097152,
+    "reason": "caller=1;incoming=0;victim_loss=0;copy=6810;burst_remaining=0;uncertainty=0;explore=1;exploration_reads=4.8;cohort_disk_reuse=0",
+    "score": -6810.000000000001
+  },
+  {
+    "seq": 26,
+    "action": "ADMIT",
+    "logical_path": "/gpu0/shard-000006.tokens",
+    "gpu_id": 1,
+    "bytes": 2097152,
+    "reason": "capacity_bounded_calibration;incoming=1510.73;displaced=0;copy=6810;frequency=1;calibrated=1;affinity_count=2;affinity_adjusted_items=3;burst_remaining=0;uncertainty=0;explore=1;cohort_disk_reuse=0",
+    "score": -5299.265046296297
+  },
+  {
+    "seq": 27,
+    "action": "REPLICATE_READY",
+    "logical_path": "/gpu0/shard-000006.tokens",
+    "gpu_id": 1,
+    "bytes": 2097152,
+    "reason": "cross_gpu",
+    "score": 0.0
+  },
+  {
+    "seq": 28,
+    "action": "SHARED_PLACE",
+    "logical_path": "/gpu0/shard-000083.tokens",
+    "gpu_id": 1,
+    "bytes": 2097152,
+    "reason": "caller=0;incoming=0;victim_loss=0;copy=6752.67;burst_remaining=0;uncertainty=0;explore=1;exploration_reads=4.75;cohort_disk_reuse=0",
+    "score": -6752.666666666667
+  },
+  {
+    "seq": 29,
+    "action": "ADMIT",
+    "logical_path": "/gpu0/shard-000083.tokens",
+    "gpu_id": 1,
+    "bytes": 2097152,
+    "reason": "capacity_bounded_calibration;incoming=1494.87;displaced=0;copy=6752.67;frequency=0;calibrated=1;affinity_count=2;affinity_adjusted_items=4;burst_remaining=0;uncertainty=0;explore=1;cohort_disk_reuse=0",
+    "score": -5257.7929824561415
+  },
+  {
+    "seq": 30,
+    "action": "REPLICATE_READY",
+    "logical_path": "/gpu0/shard-000083.tokens",
+    "gpu_id": 1,
+    "bytes": 2097152,
+    "reason": "cross_gpu",
+    "score": 0.0
+  },
+  {
+    "seq": 31,
+    "action": "SHARED_PLACE",
+    "logical_path": "/gpu0/shard-000003.tokens",
+    "gpu_id": 2,
+    "bytes": 2097152,
+    "reason": "caller=0;incoming=0;victim_loss=0;copy=6726.9;burst_remaining=0;uncertainty=0;explore=1;exploration_reads=4.63158;cohort_disk_reuse=0",
+    "score": -6726.900000000001
+  },
+  {
+    "seq": 32,
+    "action": "ADMIT",
+    "logical_path": "/gpu0/shard-000003.tokens",
+    "gpu_id": 2,
+    "bytes": 2097152,
+    "reason": "capacity_bounded_calibration;incoming=2097.38;displaced=0;copy=6726.9;frequency=0;calibrated=1;affinity_count=2;affinity_adjusted_items=3;burst_remaining=0;uncertainty=0;explore=1;cohort_disk_reuse=0",
+    "score": -4629.519834710745
+  },
+  {
+    "seq": 33,
+    "action": "REPLICATE_READY",
+    "logical_path": "/gpu0/shard-000003.tokens",
+    "gpu_id": 2,
+    "bytes": 2097152,
+    "reason": "cross_gpu",
+    "score": 0.0
+  },
+  {
+    "seq": 34,
+    "action": "SHARED_PLACE",
+    "logical_path": "/gpu0/shard-000004.tokens",
+    "gpu_id": 2,
+    "bytes": 2097152,
+    "reason": "caller=0;incoming=0;victim_loss=0;copy=6690.45;burst_remaining=0;uncertainty=0;explore=1;exploration_reads=4.57143;cohort_disk_reuse=0",
+    "score": -6690.454545454546
+  },
+  {
+    "seq": 35,
+    "action": "ADMIT",
+    "logical_path": "/gpu0/shard-000004.tokens",
+    "gpu_id": 2,
+    "bytes": 2097152,
+    "reason": "capacity_bounded_calibration;incoming=2194.27;displaced=0;copy=6690.45;frequency=0;calibrated=1;affinity_count=2;affinity_adjusted_items=4;burst_remaining=0;uncertainty=0;explore=1;cohort_disk_reuse=0",
+    "score": -4496.181107954547
+  },
+  {
+    "seq": 36,
+    "action": "REPLICATE_READY",
+    "logical_path": "/gpu0/shard-000004.tokens",
+    "gpu_id": 2,
+    "bytes": 2097152,
+    "reason": "cross_gpu",
+    "score": 0.0
+  },
+  {
+    "seq": 37,
+    "action": "SHARED_PLACE",
+    "logical_path": "/gpu0/shard-000012.tokens",
+    "gpu_id": 1,
+    "bytes": 2097152,
+    "reason": "caller=0;incoming=22825.9;victim_loss=0;copy=6710.67;burst_remaining=0;uncertainty=0;explore=0;exploration_reads=4.57143;cohort_disk_reuse=0",
+    "score": 16115.215675364292
+  },
+  {
+    "seq": 38,
+    "action": "ADMIT",
+    "logical_path": "/gpu0/shard-000012.tokens",
+    "gpu_id": 1,
+    "bytes": 2097152,
+    "reason": "net_gain;incoming=25679.1;displaced=0;copy=6710.67;frequency=0;calibrated=1;affinity_count=10;affinity_adjusted_items=3;burst_remaining=0;uncertainty=0;explore=0;cohort_disk_reuse=0",
+    "score": 18968.450968118163
+  },
+  {
+    "seq": 39,
+    "action": "EVICT",
+    "logical_path": "/gpu0/shard-000080.tokens",
+    "gpu_id": 1,
+    "bytes": 2097152,
+    "reason": "measured",
+    "score": 0.0
+  },
+  {
+    "seq": 40,
+    "action": "REPLICATE_READY",
+    "logical_path": "/gpu0/shard-000012.tokens",
+    "gpu_id": 1,
+    "bytes": 2097152,
+    "reason": "cross_gpu",
+    "score": 0.0
+  },
+  {
+    "seq": 41,
+    "action": "SHARED_PLACE",
+    "logical_path": "/gpu0/shard-000013.tokens",
+    "gpu_id": 1,
+    "bytes": 2097152,
+    "reason": "caller=0;incoming=11291.5;victim_loss=0;copy=6736.38;burst_remaining=0;uncertainty=0;explore=0;exploration_reads=4.57143;cohort_disk_reuse=0",
+    "score": 4555.082435558596
+  },
+  {
+    "seq": 42,
+    "action": "ADMIT",
+    "logical_path": "/gpu0/shard-000013.tokens",
+    "gpu_id": 1,
+    "bytes": 2097152,
+    "reason": "net_gain;incoming=14114.3;displaced=0;copy=6736.38;frequency=0;calibrated=1;affinity_count=6;affinity_adjusted_items=4;burst_remaining=0;uncertainty=0;explore=0;cohort_disk_reuse=0",
+    "score": 7377.949198294401
+  },
+  {
+    "seq": 43,
+    "action": "EVICT",
+    "logical_path": "/gpu0/shard-000083.tokens",
+    "gpu_id": 1,
+    "bytes": 2097152,
+    "reason": "measured",
+    "score": 0.0
+  },
+  {
+    "seq": 44,
+    "action": "REPLICATE_READY",
+    "logical_path": "/gpu0/shard-000013.tokens",
+    "gpu_id": 1,
+    "bytes": 2097152,
+    "reason": "cross_gpu",
+    "score": 0.0
+  },
+  {
+    "seq": 45,
+    "action": "SHARED_PLACE",
+    "logical_path": "/gpu0/shard-000011.tokens",
+    "gpu_id": 1,
+    "bytes": 2097152,
+    "reason": "caller=0;incoming=11612.1;victim_loss=0;copy=6977.14;burst_remaining=0;uncertainty=0;explore=0;exploration_reads=4.42857;cohort_disk_reuse=0",
+    "score": 4634.962096467168
+  },
+  {
+    "seq": 46,
+    "action": "ADMIT",
+    "logical_path": "/gpu0/shard-000011.tokens",
+    "gpu_id": 1,
+    "bytes": 2097152,
+    "reason": "net_gain;incoming=14515.1;displaced=0;copy=6977.14;frequency=1;calibrated=1;affinity_count=6;affinity_adjusted_items=5;burst_remaining=0;uncertainty=0;explore=0;cohort_disk_reuse=0",
+    "score": 7537.988334869672
+  },
+  {
+    "seq": 47,
+    "action": "EVICT",
+    "logical_path": "/gpu0/shard-000075.tokens",
+    "gpu_id": 1,
+    "bytes": 2097152,
+    "reason": "measured",
+    "score": 1.0
+  },
+  {
+    "seq": 48,
+    "action": "REPLICATE_READY",
+    "logical_path": "/gpu0/shard-000011.tokens",
+    "gpu_id": 1,
+    "bytes": 2097152,
+    "reason": "cross_gpu",
+    "score": 0.0
+  },
+  {
+    "seq": 49,
+    "action": "SHARED_PLACE",
+    "logical_path": "/gpu0/shard-000008.tokens",
+    "gpu_id": 2,
+    "bytes": 2097152,
+    "reason": "caller=2;incoming=11101.9;victim_loss=0;copy=6995.2;burst_remaining=0;uncertainty=0;explore=0;exploration_reads=4.41379;cohort_disk_reuse=0",
+    "score": 4106.676155837769
+  },
+  {
+    "seq": 50,
+    "action": "ADMIT",
+    "logical_path": "/gpu0/shard-000008.tokens",
+    "gpu_id": 2,
+    "bytes": 2097152,
+    "reason": "net_gain;incoming=13877.3;displaced=0;copy=6995.2;frequency=1;calibrated=1;affinity_count=6;affinity_adjusted_items=5;burst_remaining=0;uncertainty=0;explore=0;cohort_disk_reuse=0",
+    "score": 6882.145194797213
+  },
+  {
+    "seq": 51,
+    "action": "EVICT",
+    "logical_path": "/gpu0/shard-000072.tokens",
+    "gpu_id": 2,
+    "bytes": 2097152,
+    "reason": "measured",
+    "score": 1.0
+  },
+  {
+    "seq": 52,
+    "action": "REPLICATE_READY",
+    "logical_path": "/gpu0/shard-000008.tokens",
+    "gpu_id": 2,
+    "bytes": 2097152,
+    "reason": "cross_gpu",
+    "score": 0.0
+  },
+  {
+    "seq": 53,
+    "action": "SHARED_PLACE",
+    "logical_path": "/gpu0/shard-000015.tokens",
+    "gpu_id": 2,
+    "bytes": 2097152,
+    "reason": "caller=0;incoming=10651.7;victim_loss=0;copy=7014.94;burst_remaining=0;uncertainty=0;explore=0;exploration_reads=4.41379;cohort_disk_reuse=0",
+    "score": 3636.74328554588
+  },
+  {
+    "seq": 54,
+    "action": "ADMIT",
+    "logical_path": "/gpu0/shard-000015.tokens",
+    "gpu_id": 2,
+    "bytes": 2097152,
+    "reason": "net_gain;incoming=13314.6;displaced=0;copy=7014.94;frequency=0;calibrated=1;affinity_count=6;affinity_adjusted_items=5;burst_remaining=0;uncertainty=0;explore=0;cohort_disk_reuse=0",
+    "score": 6299.663481932351
+  },
+  {
+    "seq": 55,
+    "action": "EVICT",
+    "logical_path": "/gpu0/shard-000003.tokens",
+    "gpu_id": 2,
+    "bytes": 2097152,
+    "reason": "measured",
+    "score": 1.0
+  },
+  {
+    "seq": 56,
+    "action": "REPLICATE_READY",
+    "logical_path": "/gpu0/shard-000015.tokens",
+    "gpu_id": 2,
+    "bytes": 2097152,
+    "reason": "cross_gpu",
+    "score": 0.0
+  },
+  {
+    "seq": 57,
+    "action": "SHARED_PLACE",
+    "logical_path": "/gpu0/shard-000009.tokens",
+    "gpu_id": 0,
+    "bytes": 2097152,
+    "reason": "caller=0;incoming=10224.6;victim_loss=0;copy=7015.71;burst_remaining=0;uncertainty=0;explore=0;exploration_reads=4.41379;cohort_disk_reuse=0",
+    "score": 3208.8604080460345
+  },
+  {
+    "seq": 58,
+    "action": "ADMIT",
+    "logical_path": "/gpu0/shard-000009.tokens",
+    "gpu_id": 0,
+    "bytes": 2097152,
+    "reason": "net_gain;incoming=12780.7;displaced=0;copy=7015.71;frequency=5;calibrated=1;affinity_count=6;affinity_adjusted_items=4;burst_remaining=0;uncertainty=0;explore=0;cohort_disk_reuse=0",
+    "score": 5765.001980645779
+  },
+  {
+    "seq": 59,
+    "action": "EVICT",
+    "logical_path": "/gpu0/shard-000000.tokens",
+    "gpu_id": 0,
+    "bytes": 2097152,
+    "reason": "measured",
+    "score": 6.0
+  },
+  {
+    "seq": 60,
+    "action": "PROMOTE_READY",
+    "logical_path": "/gpu0/shard-000009.tokens",
+    "gpu_id": 0,
+    "bytes": 2097152,
+    "reason": "promote",
+    "score": 0.0
+  },
+  {
+    "seq": 61,
+    "action": "SHARED_PLACE",
+    "logical_path": "/gpu0/shard-000014.tokens",
+    "gpu_id": 0,
+    "bytes": 2097152,
+    "reason": "caller=0;incoming=10473.1;victim_loss=0;copy=7238.22;burst_remaining=0;uncertainty=0;explore=0;exploration_reads=4.41379;cohort_disk_reuse=0",
+    "score": 3234.8397681118067
+  },
+  {
+    "seq": 62,
+    "action": "ADMIT",
+    "logical_path": "/gpu0/shard-000014.tokens",
+    "gpu_id": 0,
+    "bytes": 2097152,
+    "reason": "net_gain;incoming=13091.3;displaced=0;copy=7238.22;frequency=4;calibrated=1;affinity_count=6;affinity_adjusted_items=2;burst_remaining=0;uncertainty=0;explore=0;cohort_disk_reuse=0",
+    "score": 5853.105265695313
+  },
+  {
+    "seq": 63,
+    "action": "EVICT",
+    "logical_path": "/gpu0/shard-000002.tokens",
+    "gpu_id": 0,
+    "bytes": 2097152,
+    "reason": "measured",
+    "score": 0.0
+  },
+  {
+    "seq": 64,
+    "action": "PROMOTE_READY",
+    "logical_path": "/gpu0/shard-000014.tokens",
+    "gpu_id": 0,
+    "bytes": 2097152,
+    "reason": "promote",
+    "score": 0.0
+  },
+  {
+    "seq": 65,
+    "action": "SHARED_PLACE",
+    "logical_path": "/gpu0/shard-000010.tokens",
+    "gpu_id": 0,
+    "bytes": 2097152,
+    "reason": "caller=0;incoming=11161.3;victim_loss=0;copy=7273;burst_remaining=0;uncertainty=0;explore=0;exploration_reads=4.57143;cohort_disk_reuse=0",
+    "score": 3888.310659850298
+  },
+  {
+    "seq": 66,
+    "action": "ADMIT",
+    "logical_path": "/gpu0/shard-000010.tokens",
+    "gpu_id": 0,
+    "bytes": 2097152,
+    "reason": "net_gain;incoming=13951.6;displaced=0;copy=7273;frequency=6;calibrated=1;affinity_count=6;affinity_adjusted_items=1;burst_remaining=0;uncertainty=0;explore=0;cohort_disk_reuse=0",
+    "score": 6678.638324812873
+  },
+  {
+    "seq": 67,
+    "action": "EVICT",
+    "logical_path": "/gpu0/shard-000005.tokens",
+    "gpu_id": 0,
+    "bytes": 2097152,
+    "reason": "measured",
+    "score": 0.0
+  },
+  {
+    "seq": 68,
+    "action": "PROMOTE_READY",
+    "logical_path": "/gpu0/shard-000010.tokens",
+    "gpu_id": 0,
+    "bytes": 2097152,
+    "reason": "promote",
+    "score": 0.0
+  },
+  {
+    "seq": 69,
+    "action": "SHARED_PLACE",
+    "logical_path": "/gpu0/shard-000019.tokens",
+    "gpu_id": 1,
+    "bytes": 2097152,
+    "reason": "caller=1;incoming=11904.9;victim_loss=0;copy=7306.15;burst_remaining=0;uncertainty=0;explore=0;exploration_reads=4.26667;cohort_disk_reuse=0",
+    "score": 4598.753807443665
+  },
+  {
+    "seq": 70,
+    "action": "ADMIT",
+    "logical_path": "/gpu0/shard-000019.tokens",
+    "gpu_id": 1,
+    "bytes": 2097152,
+    "reason": "net_gain;incoming=14881.1;displaced=0;copy=7306.15;frequency=6;calibrated=1;affinity_count=6;affinity_adjusted_items=4;burst_remaining=0;uncertainty=0;explore=0;cohort_disk_reuse=0",
+    "score": 7574.9797593045805
+  },
+  {
+    "seq": 71,
+    "action": "EVICT",
+    "logical_path": "/gpu0/shard-000006.tokens",
+    "gpu_id": 1,
+    "bytes": 2097152,
+    "reason": "measured",
+    "score": 3.0
+  },
+  {
+    "seq": 72,
+    "action": "REPLICATE_READY",
+    "logical_path": "/gpu0/shard-000019.tokens",
+    "gpu_id": 1,
+    "bytes": 2097152,
+    "reason": "cross_gpu",
+    "score": 0.0
+  },
+  {
+    "seq": 73,
+    "action": "SHARED_PLACE",
+    "logical_path": "/gpu0/shard-000018.tokens",
+    "gpu_id": 0,
+    "bytes": 2097152,
+    "reason": "caller=0;incoming=11901.3;victim_loss=0;copy=7319.19;burst_remaining=0;uncertainty=0;explore=0;exploration_reads=4.26667;cohort_disk_reuse=0",
+    "score": 4582.092607365438
+  },
+  {
+    "seq": 74,
+    "action": "ADMIT",
+    "logical_path": "/gpu0/shard-000018.tokens",
+    "gpu_id": 0,
+    "bytes": 2097152,
+    "reason": "net_gain;incoming=14876.6;displaced=0;copy=7319.19;frequency=1;calibrated=1;affinity_count=6;affinity_adjusted_items=4;burst_remaining=0;uncertainty=0;explore=0;cohort_disk_reuse=0",
+    "score": 7557.413884206798
+  },
+  {
+    "seq": 75,
+    "action": "EVICT",
+    "logical_path": "/gpu0/shard-000007.tokens",
+    "gpu_id": 0,
+    "bytes": 2097152,
+    "reason": "measured",
+    "score": 0.0
+  },
+  {
+    "seq": 76,
+    "action": "PROMOTE_READY",
+    "logical_path": "/gpu0/shard-000018.tokens",
+    "gpu_id": 0,
+    "bytes": 2097152,
+    "reason": "promote",
+    "score": 0.0
+  },
+  {
+    "seq": 77,
+    "action": "SHARED_PLACE",
+    "logical_path": "/gpu0/shard-000016.tokens",
+    "gpu_id": 1,
+    "bytes": 2097152,
+    "reason": "caller=1;incoming=11527.6;victim_loss=0;copy=7355.68;burst_remaining=0;uncertainty=0;explore=0;exploration_reads=4.41379;cohort_disk_reuse=0",
+    "score": 4171.92987304916
+  },
+  {
+    "seq": 78,
+    "action": "ADMIT",
+    "logical_path": "/gpu0/shard-000016.tokens",
+    "gpu_id": 1,
+    "bytes": 2097152,
+    "reason": "net_gain;incoming=14409.5;displaced=0;copy=7355.68;frequency=5;calibrated=1;affinity_count=6;affinity_adjusted_items=3;burst_remaining=0;uncertainty=0;explore=0;cohort_disk_reuse=0",
+    "score": 7053.833060061451
+  },
+  {
+    "seq": 79,
+    "action": "EVICT",
+    "logical_path": "/gpu0/shard-000012.tokens",
+    "gpu_id": 1,
+    "bytes": 2097152,
+    "reason": "measured",
+    "score": 0.0
+  },
+  {
+    "seq": 80,
+    "action": "REPLICATE_READY",
+    "logical_path": "/gpu0/shard-000016.tokens",
+    "gpu_id": 1,
+    "bytes": 2097152,
+    "reason": "cross_gpu",
+    "score": 0.0
+  },
+  {
+    "seq": 81,
+    "action": "SHARED_PLACE",
+    "logical_path": "/gpu0/shard-000020.tokens",
+    "gpu_id": 2,
+    "bytes": 2097152,
+    "reason": "caller=1;incoming=11771.9;victim_loss=0;copy=7353.55;burst_remaining=0;uncertainty=0;explore=0;exploration_reads=4.13793;cohort_disk_reuse=0",
+    "score": 4418.34218677315
+  },
+  {
+    "seq": 82,
+    "action": "ADMIT",
+    "logical_path": "/gpu0/shard-000020.tokens",
+    "gpu_id": 2,
+    "bytes": 2097152,
+    "reason": "net_gain;incoming=14714.9;displaced=0;copy=7353.55;frequency=2;calibrated=1;affinity_count=6;affinity_adjusted_items=5;burst_remaining=0;uncertainty=0;explore=0;cohort_disk_reuse=0",
+    "score": 7361.314916278936
+  },
+  {
+    "seq": 83,
+    "action": "EVICT",
+    "logical_path": "/gpu0/shard-000001.tokens",
+    "gpu_id": 2,
+    "bytes": 2097152,
+    "reason": "measured",
+    "score": 3.0
+  },
+  {
+    "seq": 84,
+    "action": "REPLICATE_READY",
+    "logical_path": "/gpu0/shard-000020.tokens",
+    "gpu_id": 2,
+    "bytes": 2097152,
+    "reason": "cross_gpu",
+    "score": 0.0
+  },
+  {
+    "seq": 85,
+    "action": "SHARED_PLACE",
+    "logical_path": "/gpu0/shard-000021.tokens",
+    "gpu_id": 2,
+    "bytes": 2097152,
+    "reason": "caller=1;incoming=23512.8;victim_loss=0;copy=7346.12;burst_remaining=0;uncertainty=0;explore=0;exploration_reads=4.13333;cohort_disk_reuse=0",
+    "score": 16166.692348685774
+  },
+  {
+    "seq": 86,
+    "action": "ADMIT",
+    "logical_path": "/gpu0/shard-000021.tokens",
+    "gpu_id": 2,
+    "bytes": 2097152,
+    "reason": "net_gain;incoming=26451.9;displaced=0;copy=7346.12;frequency=0;calibrated=1;affinity_count=10;affinity_adjusted_items=5;burst_remaining=0;uncertainty=0;explore=0;cohort_disk_reuse=0",
+    "score": 19105.794054107435
+  },
+  {
+    "seq": 87,
+    "action": "EVICT",
+    "logical_path": "/gpu0/shard-000004.tokens",
+    "gpu_id": 2,
+    "bytes": 2097152,
+    "reason": "measured",
+    "score": 2.0
+  },
+  {
+    "seq": 88,
+    "action": "REPLICATE_READY",
+    "logical_path": "/gpu0/shard-000021.tokens",
+    "gpu_id": 2,
+    "bytes": 2097152,
+    "reason": "cross_gpu",
+    "score": 0.0
+  },
+  {
+    "seq": 89,
+    "action": "SHARED_PLACE",
+    "logical_path": "/gpu0/shard-000023.tokens",
+    "gpu_id": 1,
+    "bytes": 2097152,
+    "reason": "caller=1;incoming=10686.7;victim_loss=0;copy=7342.47;burst_remaining=0;uncertainty=0;explore=0;exploration_reads=4.26667;cohort_disk_reuse=0",
+    "score": 3344.2706479595236
+  },
+  {
+    "seq": 90,
+    "action": "ADMIT",
+    "logical_path": "/gpu0/shard-000023.tokens",
+    "gpu_id": 1,
+    "bytes": 2097152,
+    "reason": "net_gain;incoming=13358.4;displaced=0;copy=7342.47;frequency=6;calibrated=1;affinity_count=6;affinity_adjusted_items=1;burst_remaining=0;uncertainty=0;explore=0;cohort_disk_reuse=0",
+    "score": 6015.954617437685
+  },
+  {
+    "seq": 91,
+    "action": "EVICT",
+    "logical_path": "/gpu0/shard-000013.tokens",
+    "gpu_id": 1,
+    "bytes": 2097152,
+    "reason": "measured",
+    "score": 0.0
+  },
+  {
+    "seq": 92,
+    "action": "REPLICATE_READY",
+    "logical_path": "/gpu0/shard-000023.tokens",
+    "gpu_id": 1,
+    "bytes": 2097152,
+    "reason": "cross_gpu",
+    "score": 0.0
+  },
+  {
+    "seq": 93,
+    "action": "SHARED_PLACE",
+    "logical_path": "/gpu0/shard-000017.tokens",
+    "gpu_id": 1,
+    "bytes": 2097152,
+    "reason": "caller=1;incoming=20167.7;victim_loss=0;copy=7348.44;burst_remaining=0;uncertainty=0;explore=0;exploration_reads=4.41379;cohort_disk_reuse=0",
+    "score": 12819.292093977427
+  },
+  {
+    "seq": 94,
+    "action": "ADMIT",
+    "logical_path": "/gpu0/shard-000017.tokens",
+    "gpu_id": 1,
+    "bytes": 2097152,
+    "reason": "net_gain;incoming=22688.7;displaced=0;copy=7348.44;frequency=10;calibrated=1;affinity_count=10;affinity_adjusted_items=2;burst_remaining=0;uncertainty=0;explore=0;cohort_disk_reuse=0",
+    "score": 15340.258851781535
+  },
+  {
+    "seq": 95,
+    "action": "EVICT",
+    "logical_path": "/gpu0/shard-000011.tokens",
+    "gpu_id": 1,
+    "bytes": 2097152,
+    "reason": "measured",
+    "score": 0.0
+  },
+  {
+    "seq": 96,
+    "action": "REPLICATE_READY",
+    "logical_path": "/gpu0/shard-000017.tokens",
+    "gpu_id": 1,
+    "bytes": 2097152,
+    "reason": "cross_gpu",
+    "score": 0.0
+  },
+  {
+    "seq": 97,
+    "action": "SHARED_PLACE",
+    "logical_path": "/gpu0/shard-000022.tokens",
+    "gpu_id": 0,
+    "bytes": 2097152,
+    "reason": "caller=1;incoming=9967.53;victim_loss=0;copy=7361.72;burst_remaining=0;uncertainty=0;explore=0;exploration_reads=4.57143;cohort_disk_reuse=0",
+    "score": 2605.8067118950976
+  },
+  {
+    "seq": 98,
+    "action": "ADMIT",
+    "logical_path": "/gpu0/shard-000022.tokens",
+    "gpu_id": 0,
+    "bytes": 2097152,
+    "reason": "net_gain;incoming=12459.4;displaced=0;copy=7361.72;frequency=1;calibrated=1;affinity_count=6;affinity_adjusted_items=5;burst_remaining=0;uncertainty=0;explore=0;cohort_disk_reuse=0",
+    "score": 5097.688357377044
+  },
+  {
+    "seq": 99,
+    "action": "EVICT",
+    "logical_path": "/gpu0/shard-000014.tokens",
+    "gpu_id": 0,
+    "bytes": 2097152,
+    "reason": "measured",
+    "score": 16.0
+  },
+  {
+    "seq": 100,
+    "action": "PROMOTE_READY",
+    "logical_path": "/gpu0/shard-000022.tokens",
+    "gpu_id": 0,
+    "bytes": 2097152,
+    "reason": "promote",
+    "score": 0.0
+  }
+]

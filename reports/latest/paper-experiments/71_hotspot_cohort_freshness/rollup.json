@@ -1,0 +1,293 @@
+{
+  "speed_runs": 12,
+  "timed_requests": 13824,
+  "comparisons": [
+    {
+      "scenario": "moving_shared",
+      "baseline": "NoHotspot",
+      "full": {
+        "mib_s": 339.68455908468394,
+        "p99_ms": 27.6094935,
+        "rates": [
+          338.4677942847571,
+          340.9101037930404
+        ],
+        "tails": [
+          27.79309,
+          27.425897000000003
+        ],
+        "remote_mib": 318.0,
+        "copies": 132,
+        "cpu_s": 6.34
+      },
+      "control": {
+        "mib_s": 346.0272893241268,
+        "p99_ms": 27.4333215,
+        "rates": [
+          344.1080215501669,
+          347.9680866705668
+        ],
+        "tails": [
+          27.403479,
+          27.463164000000003
+        ],
+        "remote_mib": 336.0,
+        "copies": 56,
+        "cpu_s": 5.67
+      },
+      "gain_pct": -1.8330144572792806,
+      "p99_change_pct": 0.6421825370289014,
+      "strict_passes": 0,
+      "pairs": [
+        {
+          "block": "moving_shared-74801-r1",
+          "scenario": "moving_shared",
+          "seed": 74801,
+          "treatment": "Full",
+          "baseline": "NoHotspot",
+          "n": 1,
+          "gain_pct": -1.6390862497192682,
+          "p99_change_pct": 1.4217574345213535,
+          "drain_gain_pct": -1.6392791245282479,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": false,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "hotspot-only development on report70 inputs, two reversed-order repeats, retained report70 binary control; not independent confirmation"
+        },
+        {
+          "block": "moving_shared-74801-r2",
+          "scenario": "moving_shared",
+          "seed": 74801,
+          "treatment": "Full",
+          "baseline": "NoHotspot",
+          "n": 1,
+          "gain_pct": -2.028342008331485,
+          "p99_change_pct": -0.1356981300479454,
+          "drain_gain_pct": -2.028938829854332,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": false,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "hotspot-only development on report70 inputs, two reversed-order repeats, retained report70 binary control; not independent confirmation"
+        }
+      ]
+    },
+    {
+      "scenario": "moving_shared",
+      "baseline": "OldFull",
+      "full": {
+        "mib_s": 339.68455908468394,
+        "p99_ms": 27.6094935,
+        "rates": [
+          338.4677942847571,
+          340.9101037930404
+        ],
+        "tails": [
+          27.79309,
+          27.425897000000003
+        ],
+        "remote_mib": 318.0,
+        "copies": 132,
+        "cpu_s": 6.34
+      },
+      "control": {
+        "mib_s": 338.14110397558045,
+        "p99_ms": 27.6302405,
+        "rates": [
+          333.8608573005712,
+          342.5325253435679
+        ],
+        "tails": [
+          27.571844000000002,
+          27.688637
+        ],
+        "remote_mib": 312.0,
+        "copies": 144,
+        "cpu_s": 6.4399999999999995
+      },
+      "gain_pct": 0.45645296917673495,
+      "p99_change_pct": -0.07508801814446464,
+      "strict_passes": 0,
+      "pairs": [
+        {
+          "block": "moving_shared-74801-r1",
+          "scenario": "moving_shared",
+          "seed": 74801,
+          "treatment": "Full",
+          "baseline": "OldFull",
+          "n": 1,
+          "gain_pct": 1.379897308548017,
+          "p99_change_pct": 0.8024345415562184,
+          "drain_gain_pct": 1.3806640081813093,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": false,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "hotspot-only development on report70 inputs, two reversed-order repeats, retained report70 binary control; not independent confirmation"
+        },
+        {
+          "block": "moving_shared-74801-r2",
+          "scenario": "moving_shared",
+          "seed": 74801,
+          "treatment": "Full",
+          "baseline": "OldFull",
+          "n": 1,
+          "gain_pct": -0.4736547423927706,
+          "p99_change_pct": -0.9489091138722316,
+          "drain_gain_pct": -0.4903879836533842,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": false,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "hotspot-only development on report70 inputs, two reversed-order repeats, retained report70 binary control; not independent confirmation"
+        }
+      ]
+    },
+    {
+      "scenario": "public_toolagent",
+      "baseline": "NoHotspot",
+      "full": {
+        "mib_s": 87.4059143257756,
+        "p99_ms": 28.6176205,
+        "rates": [
+          88.30972159971151,
+          86.52041969116092
+        ],
+        "tails": [
+          28.363406,
+          28.871834999999997
+        ],
+        "remote_mib": 3868.0,
+        "copies": 66,
+        "cpu_s": 9.16
+      },
+      "control": {
+        "mib_s": 85.0001847363173,
+        "p99_ms": 28.516184000000003,
+        "rates": [
+          84.80057680633894,
+          85.20073457810209
+        ],
+        "tails": [
+          28.407516,
+          28.624852
+        ],
+        "remote_mib": 4008.0,
+        "copies": 50,
+        "cpu_s": 9.49
+      },
+      "gain_pct": 2.8302639540387142,
+      "p99_change_pct": 0.355715547353741,
+      "strict_passes": 1,
+      "pairs": [
+        {
+          "block": "public_toolagent-74802-r1",
+          "scenario": "public_toolagent",
+          "seed": 74802,
+          "treatment": "Full",
+          "baseline": "NoHotspot",
+          "n": 1,
+          "gain_pct": 4.138114297720508,
+          "p99_change_pct": -0.15527580799391538,
+          "drain_gain_pct": 4.138381656437806,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": true,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "hotspot-only development on report70 inputs, two reversed-order repeats, retained report70 binary control; not independent confirmation"
+        },
+        {
+          "block": "public_toolagent-74802-r2",
+          "scenario": "public_toolagent",
+          "seed": 74802,
+          "treatment": "Full",
+          "baseline": "NoHotspot",
+          "n": 1,
+          "gain_pct": 1.548912834606031,
+          "p99_change_pct": 0.862827168503788,
+          "drain_gain_pct": 1.5445793832019827,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": false,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "hotspot-only development on report70 inputs, two reversed-order repeats, retained report70 binary control; not independent confirmation"
+        }
+      ]
+    },
+    {
+      "scenario": "public_toolagent",
+      "baseline": "OldFull",
+      "full": {
+        "mib_s": 87.4059143257756,
+        "p99_ms": 28.6176205,
+        "rates": [
+          88.30972159971151,
+          86.52041969116092
+        ],
+        "tails": [
+          28.363406,
+          28.871834999999997
+        ],
+        "remote_mib": 3868.0,
+        "copies": 66,
+        "cpu_s": 9.16
+      },
+      "control": {
+        "mib_s": 85.96767651541084,
+        "p99_ms": 28.648304,
+        "rates": [
+          86.86286508729212,
+          85.09075094152948
+        ],
+        "tails": [
+          28.363277999999998,
+          28.93333
+        ],
+        "remote_mib": 3928.0,
+        "copies": 56,
+        "cpu_s": 9.629999999999999
+      },
+      "gain_pct": 1.67299835084751,
+      "p99_change_pct": -0.10710407150105183,
+      "strict_passes": 1,
+      "pairs": [
+        {
+          "block": "public_toolagent-74802-r1",
+          "scenario": "public_toolagent",
+          "seed": 74802,
+          "treatment": "Full",
+          "baseline": "OldFull",
+          "n": 1,
+          "gain_pct": 1.6656790113535491,
+          "p99_change_pct": 0.0004512877531448467,
+          "drain_gain_pct": 1.6610027678866324,
+          "mechanism_active": false,
+          "executed_actions_changed": false,
+          "pilot_screen": false,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "hotspot-only development on report70 inputs, two reversed-order repeats, retained report70 binary control; not independent confirmation"
+        },
+        {
+          "block": "public_toolagent-74802-r2",
+          "scenario": "public_toolagent",
+          "seed": 74802,
+          "treatment": "Full",
+          "baseline": "OldFull",
+          "n": 1,
+          "gain_pct": 1.6801693883438107,
+          "p99_change_pct": -0.21254034706686964,
+          "drain_gain_pct": 1.7536001751658814,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": true,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "hotspot-only development on report70 inputs, two reversed-order repeats, retained report70 binary control; not independent confirmation"
+        }
+      ]
+    }
+  ],
+  "strict_hotspot_passes": 1,
+  "strict_retained_binary_passes": 1,
+  "development_inputs": true
+}

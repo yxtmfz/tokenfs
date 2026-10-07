@@ -1,0 +1,13 @@
+#!/bin/bash
+set -u
+. /home/wjxt/aura-kv-tools/env.sh
+cd /home/wjxt/projects/tokenfs-object-cohort77b-20261007
+root=/home/wjxt/tokenfs-object-cohort77-evidence
+python3 scripts/object_cohort_hpj_study.py run --spec study-configs/object-cohort-development.json --output "$root/development" --binary build-release/tokenfs --remote-root /srv/tokenfs/remote-cn7/object-cohort77-20261007 --freeze study-configs/object-cohort-freeze.json
+rc=$?
+printf '%s\n' "$rc" > "$root/development.exit"
+if [ "$rc" -ne 0 ]; then exit "$rc"; fi
+python3 scripts/disk_opportunity_correctness.py --study object_cohort_hpj_study --binary build-release/tokenfs --reference-binary /home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-lazy-20260930/build-release/tokenfs --freeze study-configs/object-cohort-freeze.json --output "$root/correctness" --remote-root /srv/tokenfs/remote-cn7/object-cohort77-20261007
+rc=$?
+printf '%s\n' "$rc" > "$root/correctness.exit"
+exit "$rc"

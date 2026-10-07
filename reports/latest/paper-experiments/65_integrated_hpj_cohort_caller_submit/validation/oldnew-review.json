@@ -1,0 +1,57 @@
+{
+  "passed": true,
+  "runs": 4,
+  "requests": 2304,
+  "order": [
+    "old",
+    "new",
+    "new",
+    "old"
+  ],
+  "summary": [
+    {
+      "index": 1,
+      "version": "old",
+      "mib_s": 337.2287881600771,
+      "p99_ms": 27.033077
+    },
+    {
+      "index": 2,
+      "version": "new",
+      "mib_s": 327.57736929389773,
+      "p99_ms": 27.340370999999998
+    },
+    {
+      "index": 3,
+      "version": "new",
+      "mib_s": 343.3694200892851,
+      "p99_ms": 26.412774
+    },
+    {
+      "index": 4,
+      "version": "old",
+      "mib_s": 323.7143258705982,
+      "p99_ms": 27.550841
+    }
+  ],
+  "comparisons": [
+    {
+      "old_case": 1,
+      "new_case": 2,
+      "old_p99_ms": 27.033077,
+      "new_p99_ms": 27.340370999999998,
+      "p99_reduction_pct": -1.136733343377827,
+      "throughput_gain_pct": -2.861979524001368
+    },
+    {
+      "old_case": 4,
+      "new_case": 3,
+      "old_p99_ms": 27.550841,
+      "new_p99_ms": 26.412774,
+      "p99_reduction_pct": 4.130788602787117,
+      "throughput_gain_pct": 6.071740620630983
+    }
+  ],
+  "both_metrics_improve_both_orders": false,
+  "statistical_confirmation": false
+}

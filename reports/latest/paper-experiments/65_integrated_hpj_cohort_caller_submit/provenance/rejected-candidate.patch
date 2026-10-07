@@ -1,0 +1,85 @@
+diff --git a/src/main.cpp b/src/main.cpp
+index ae60d76..3701628 100644
+--- a/src/main.cpp
++++ b/src/main.cpp
+@@ -1525,7 +1525,10 @@ class TokenFS {
+       metadata_.AddMetric("background_queue_rejected", 1);
+       return false;
+     }
+-    metadata_.AddMetric("background_submitted", 1);
++    // Persist submission before publishing the task, together with telemetry
++    // already produced by this read. Release need not fsync that batch again.
++    if(config_.batch_background_metrics)FlushBufferedMetrics(0,1);
++    else metadata_.AddMetric("background_submitted", 1);
+     background_tasks_.push_back(std::move(task));
+     background_cv_.notify_one();
+     return true;
+@@ -3912,7 +3915,7 @@ class TokenFS {
+     }
+   }
+ 
+-  void FlushBufferedMetrics(uint64_t completed_tasks=0) {
++  void FlushBufferedMetrics(uint64_t completed_tasks=0, uint64_t submitted_tasks=0) {
+     // A concurrent flush must finish before background_completed can advance.
+     std::lock_guard<std::mutex> flush_lock(flush_metrics_mu_);
+     std::unordered_map<std::string, uint64_t> pending;
+@@ -3920,7 +3923,7 @@ class TokenFS {
+     std::vector<PolicyEvent> events;
+     {
+       std::lock_guard<std::mutex> lock(buffered_metrics_mu_);
+-      if (!completed_tasks && buffered_metrics_.empty() && buffered_metric_max_.empty() && buffered_policy_events_.empty()) {
++      if (!completed_tasks && !submitted_tasks && buffered_metrics_.empty() && buffered_metric_max_.empty() && buffered_policy_events_.empty()) {
+         return;
+       }
+       pending.swap(buffered_metrics_);
+@@ -3931,12 +3934,14 @@ class TokenFS {
+     // completion delta is local to this flush, never visible in the buffer to
+     // an earlier foreground flush or retried after the worker's error path.
+     if(completed_tasks)pending["background_completed"]+=completed_tasks;
++    if(submitted_tasks)pending["background_submitted"]+=submitted_tasks;
+     try {metadata_.ApplyMetricBatch(pending, pending_max, events);}
+     catch (...) {
+       // The transaction rolled back. Retain observations for retry, ahead of
+       // newer events, without duplicating already durable data.
+       std::lock_guard<std::mutex> lock(buffered_metrics_mu_);
+       if(completed_tasks)pending["background_completed"]-=completed_tasks;
++      if(submitted_tasks)pending["background_submitted"]-=submitted_tasks;
+       for(const auto& [key,value]:pending)buffered_metrics_[key]+=value;
+       for(const auto& [key,value]:pending_max)buffered_metric_max_[key]=std::max(buffered_metric_max_[key],value);
+       events.insert(events.end(),buffered_policy_events_.begin(),buffered_policy_events_.end());
+diff --git a/tests/policy_metadata_test.cpp b/tests/policy_metadata_test.cpp
+index 5835ad0..9751d48 100644
+--- a/tests/policy_metadata_test.cpp
++++ b/tests/policy_metadata_test.cpp
+@@ -19,13 +19,17 @@ struct TokenFSTestAccess {
+       uint64_t value=rc==SQLITE_ROW?sqlite3_column_int64(stmt,0):0;sqlite3_finalize(stmt);return value;
+     };
+     for(int pass=1;pass<=3;++pass) {
++      if(batched)filesystem.AddBufferedMetric("submission_probe",5);
+       assert(filesystem.SubmitBackground([&]{filesystem.AddBackgroundMetric("fence_value",7);}));
++      assert(metric("background_submitted")==uint64_t(pass));
++      if(batched)assert(metric("submission_probe")==uint64_t(pass*5));
+       const auto limit=std::chrono::steady_clock::now()+std::chrono::seconds(3);
+       while(metric("background_completed")<uint64_t(pass)) {
+         assert(std::chrono::steady_clock::now()<limit);std::this_thread::yield();
+       }
+       // A durable completion must never get ahead of its batched counters.
+       assert(metric("fence_value")==uint64_t(pass*7));
++      assert(metric("background_submitted")==uint64_t(pass));
+     }
+     assert(metric("background_error_count")==0);sqlite3_close(db);
+   }
+@@ -46,11 +50,12 @@ struct TokenFSTestAccess {
+     filesystem.AddBufferedMetric("retry_delta",7);filesystem.SetBufferedMetricMax("retry_peak",9);
+     filesystem.RecordPolicyEvent("first","/gpu0/k",0,4096,"test",-3.5);
+     filesystem.RecordPolicyEvent("reject","/gpu0/k",0,4096,"test");
+-    bool failed=false;try{filesystem.FlushBufferedMetrics(1);}catch(const std::runtime_error&){failed=true;}
++    bool failed=false;try{filesystem.FlushBufferedMetrics(1,1);}catch(const std::runtime_error&){failed=true;}
+     assert(failed && events().empty());
+     assert(filesystem.buffered_metrics_.at("retry_delta")==7);
+     assert(filesystem.buffered_metric_max_.at("retry_peak")==9);
+     assert(filesystem.buffered_metrics_["background_completed"]==0);
++    assert(filesystem.buffered_metrics_["background_submitted"]==0);
+     filesystem.RecordPolicyEvent("newer","/gpu0/k",0,4096,"test");
+     exec("DROP TRIGGER reject_event;");filesystem.FlushBufferedMetrics();filesystem.FlushBufferedMetrics();
+     assert((events()==std::vector<std::string>{"first","reject","newer"}));

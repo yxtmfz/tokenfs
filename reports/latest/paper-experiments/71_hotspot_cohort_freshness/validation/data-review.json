@@ -1,0 +1,600 @@
+{
+  "pruning": [
+    {
+      "block": "moving_shared-74801-r1",
+      "variant": "Full",
+      "snapshots_avoided": 1,
+      "locations_pruned": 11,
+      "snapshots": 146
+    },
+    {
+      "block": "moving_shared-74801-r1",
+      "variant": "NoHotspot",
+      "snapshots_avoided": 56,
+      "locations_pruned": 176,
+      "snapshots": 56
+    },
+    {
+      "block": "moving_shared-74801-r1",
+      "variant": "OldFull",
+      "snapshots_avoided": 1,
+      "locations_pruned": 7,
+      "snapshots": 149
+    },
+    {
+      "block": "public_toolagent-74802-r1",
+      "variant": "Full",
+      "snapshots_avoided": 897,
+      "locations_pruned": 2703,
+      "snapshots": 103
+    },
+    {
+      "block": "public_toolagent-74802-r1",
+      "variant": "NoHotspot",
+      "snapshots_avoided": 931,
+      "locations_pruned": 2805,
+      "snapshots": 96
+    },
+    {
+      "block": "public_toolagent-74802-r1",
+      "variant": "OldFull",
+      "snapshots_avoided": 897,
+      "locations_pruned": 2703,
+      "snapshots": 103
+    },
+    {
+      "block": "moving_shared-74801-r2",
+      "variant": "Full",
+      "snapshots_avoided": 1,
+      "locations_pruned": 7,
+      "snapshots": 145
+    },
+    {
+      "block": "moving_shared-74801-r2",
+      "variant": "NoHotspot",
+      "snapshots_avoided": 56,
+      "locations_pruned": 176,
+      "snapshots": 56
+    },
+    {
+      "block": "moving_shared-74801-r2",
+      "variant": "OldFull",
+      "snapshots_avoided": 1,
+      "locations_pruned": 7,
+      "snapshots": 149
+    },
+    {
+      "block": "public_toolagent-74802-r2",
+      "variant": "Full",
+      "snapshots_avoided": 897,
+      "locations_pruned": 2703,
+      "snapshots": 103
+    },
+    {
+      "block": "public_toolagent-74802-r2",
+      "variant": "NoHotspot",
+      "snapshots_avoided": 931,
+      "locations_pruned": 2805,
+      "snapshots": 96
+    },
+    {
+      "block": "public_toolagent-74802-r2",
+      "variant": "OldFull",
+      "snapshots_avoided": 916,
+      "locations_pruned": 2760,
+      "snapshots": 104
+    }
+  ],
+  "passed": true,
+  "speed_evidence": true,
+  "source_files_verified": 126,
+  "batch": {
+    "passed": true,
+    "checked_runs": 12,
+    "expected_runs": 12,
+    "errors": []
+  },
+  "requests": 13824,
+  "mechanisms": [
+    {
+      "block": "moving_shared-74801-r1",
+      "seed": 74801,
+      "repeat": 1,
+      "strategy": "Full",
+      "copy_count": 66,
+      "reused_copy_count": 66,
+      "source_copy_count": 0,
+      "inflight_bytes": 1929379840,
+      "inflight_opens": 920,
+      "remote_bytes": 167772160,
+      "local_bytes": 318767104,
+      "rss_kib": 25984,
+      "staging_peak_bytes": 4194304,
+      "capture_us": 87458,
+      "committed_capture_us": 98003,
+      "capture_complete": 232,
+      "capture_unavailable": 0
+    },
+    {
+      "block": "moving_shared-74801-r1",
+      "seed": 74801,
+      "repeat": 1,
+      "strategy": "NoHotspot",
+      "copy_count": 28,
+      "reused_copy_count": 28,
+      "source_copy_count": 0,
+      "inflight_bytes": 1929379840,
+      "inflight_opens": 920,
+      "remote_bytes": 176160768,
+      "local_bytes": 310378496,
+      "rss_kib": 25140,
+      "staging_peak_bytes": 4194304,
+      "capture_us": 87941,
+      "committed_capture_us": 28888,
+      "capture_complete": 232,
+      "capture_unavailable": 0
+    },
+    {
+      "block": "moving_shared-74801-r1",
+      "seed": 74801,
+      "repeat": 1,
+      "strategy": "OldFull",
+      "copy_count": 72,
+      "reused_copy_count": 72,
+      "source_copy_count": 0,
+      "inflight_bytes": 1929379840,
+      "inflight_opens": 920,
+      "remote_bytes": 163577856,
+      "local_bytes": 322961408,
+      "rss_kib": 25724,
+      "staging_peak_bytes": 4194304,
+      "capture_us": 87355,
+      "committed_capture_us": 84333,
+      "capture_complete": 232,
+      "capture_unavailable": 0
+    },
+    {
+      "block": "public_toolagent-74802-r1",
+      "seed": 74802,
+      "repeat": 1,
+      "strategy": "Full",
+      "copy_count": 33,
+      "reused_copy_count": 33,
+      "source_copy_count": 0,
+      "inflight_bytes": 4194304,
+      "inflight_opens": 2,
+      "remote_bytes": 2027945984,
+      "local_bytes": 383778816,
+      "rss_kib": 24780,
+      "staging_peak_bytes": 4194304,
+      "capture_us": 358664,
+      "committed_capture_us": 25510,
+      "capture_complete": 1150,
+      "capture_unavailable": 0
+    },
+    {
+      "block": "public_toolagent-74802-r1",
+      "seed": 74802,
+      "repeat": 1,
+      "strategy": "NoHotspot",
+      "copy_count": 25,
+      "reused_copy_count": 25,
+      "source_copy_count": 0,
+      "inflight_bytes": 4194304,
+      "inflight_opens": 2,
+      "remote_bytes": 2101346304,
+      "local_bytes": 310378496,
+      "rss_kib": 24444,
+      "staging_peak_bytes": 4194304,
+      "capture_us": 398238,
+      "committed_capture_us": 23530,
+      "capture_complete": 1150,
+      "capture_unavailable": 0
+    },
+    {
+      "block": "public_toolagent-74802-r1",
+      "seed": 74802,
+      "repeat": 1,
+      "strategy": "OldFull",
+      "copy_count": 33,
+      "reused_copy_count": 33,
+      "source_copy_count": 0,
+      "inflight_bytes": 4194304,
+      "inflight_opens": 2,
+      "remote_bytes": 2027945984,
+      "local_bytes": 383778816,
+      "rss_kib": 24324,
+      "staging_peak_bytes": 4194304,
+      "capture_us": 396527,
+      "committed_capture_us": 29912,
+      "capture_complete": 1150,
+      "capture_unavailable": 0
+    },
+    {
+      "block": "moving_shared-74801-r2",
+      "seed": 74801,
+      "repeat": 2,
+      "strategy": "Full",
+      "copy_count": 66,
+      "reused_copy_count": 66,
+      "source_copy_count": 0,
+      "inflight_bytes": 1929379840,
+      "inflight_opens": 920,
+      "remote_bytes": 165675008,
+      "local_bytes": 320864256,
+      "rss_kib": 25708,
+      "staging_peak_bytes": 4194304,
+      "capture_us": 87402,
+      "committed_capture_us": 93137,
+      "capture_complete": 232,
+      "capture_unavailable": 0
+    },
+    {
+      "block": "moving_shared-74801-r2",
+      "seed": 74801,
+      "repeat": 2,
+      "strategy": "NoHotspot",
+      "copy_count": 28,
+      "reused_copy_count": 28,
+      "source_copy_count": 0,
+      "inflight_bytes": 1929379840,
+      "inflight_opens": 920,
+      "remote_bytes": 176160768,
+      "local_bytes": 310378496,
+      "rss_kib": 25680,
+      "staging_peak_bytes": 4194304,
+      "capture_us": 88587,
+      "committed_capture_us": 31903,
+      "capture_complete": 232,
+      "capture_unavailable": 0
+    },
+    {
+      "block": "moving_shared-74801-r2",
+      "seed": 74801,
+      "repeat": 2,
+      "strategy": "OldFull",
+      "copy_count": 72,
+      "reused_copy_count": 72,
+      "source_copy_count": 0,
+      "inflight_bytes": 1929379840,
+      "inflight_opens": 920,
+      "remote_bytes": 163577856,
+      "local_bytes": 322961408,
+      "rss_kib": 25572,
+      "staging_peak_bytes": 4194304,
+      "capture_us": 87273,
+      "committed_capture_us": 101358,
+      "capture_complete": 232,
+      "capture_unavailable": 0
+    },
+    {
+      "block": "public_toolagent-74802-r2",
+      "seed": 74802,
+      "repeat": 2,
+      "strategy": "Full",
+      "copy_count": 33,
+      "reused_copy_count": 33,
+      "source_copy_count": 0,
+      "inflight_bytes": 4194304,
+      "inflight_opens": 2,
+      "remote_bytes": 2027945984,
+      "local_bytes": 383778816,
+      "rss_kib": 23608,
+      "staging_peak_bytes": 4194304,
+      "capture_us": 405868,
+      "committed_capture_us": 25917,
+      "capture_complete": 1150,
+      "capture_unavailable": 0
+    },
+    {
+      "block": "public_toolagent-74802-r2",
+      "seed": 74802,
+      "repeat": 2,
+      "strategy": "NoHotspot",
+      "copy_count": 25,
+      "reused_copy_count": 25,
+      "source_copy_count": 0,
+      "inflight_bytes": 4194304,
+      "inflight_opens": 2,
+      "remote_bytes": 2101346304,
+      "local_bytes": 310378496,
+      "rss_kib": 24424,
+      "staging_peak_bytes": 4194304,
+      "capture_us": 395205,
+      "committed_capture_us": 20727,
+      "capture_complete": 1150,
+      "capture_unavailable": 0
+    },
+    {
+      "block": "public_toolagent-74802-r2",
+      "seed": 74802,
+      "repeat": 2,
+      "strategy": "OldFull",
+      "copy_count": 23,
+      "reused_copy_count": 23,
+      "source_copy_count": 0,
+      "inflight_bytes": 4194304,
+      "inflight_opens": 2,
+      "remote_bytes": 2090860544,
+      "local_bytes": 320864256,
+      "rss_kib": 23172,
+      "staging_peak_bytes": 4194304,
+      "capture_us": 405907,
+      "committed_capture_us": 19568,
+      "capture_complete": 1150,
+      "capture_unavailable": 0
+    }
+  ],
+  "pairs": [
+    {
+      "block": "moving_shared-74801-r1",
+      "scenario": "moving_shared",
+      "seed": 74801,
+      "treatment": "Full",
+      "baseline": "NoHotspot",
+      "n": 1,
+      "gain_pct": -1.6390862497192682,
+      "p99_change_pct": 1.4217574345213535,
+      "drain_gain_pct": -1.6392791245282479,
+      "mechanism_active": true,
+      "executed_actions_changed": true,
+      "pilot_screen": false,
+      "acceptance_version": "strict-dual-metric-v3",
+      "interpretation": "hotspot-only development on report70 inputs, two reversed-order repeats, retained report70 binary control; not independent confirmation"
+    },
+    {
+      "block": "moving_shared-74801-r1",
+      "scenario": "moving_shared",
+      "seed": 74801,
+      "treatment": "Full",
+      "baseline": "OldFull",
+      "n": 1,
+      "gain_pct": 1.379897308548017,
+      "p99_change_pct": 0.8024345415562184,
+      "drain_gain_pct": 1.3806640081813093,
+      "mechanism_active": true,
+      "executed_actions_changed": true,
+      "pilot_screen": false,
+      "acceptance_version": "strict-dual-metric-v3",
+      "interpretation": "hotspot-only development on report70 inputs, two reversed-order repeats, retained report70 binary control; not independent confirmation"
+    },
+    {
+      "block": "public_toolagent-74802-r1",
+      "scenario": "public_toolagent",
+      "seed": 74802,
+      "treatment": "Full",
+      "baseline": "NoHotspot",
+      "n": 1,
+      "gain_pct": 4.138114297720508,
+      "p99_change_pct": -0.15527580799391538,
+      "drain_gain_pct": 4.138381656437806,
+      "mechanism_active": true,
+      "executed_actions_changed": true,
+      "pilot_screen": true,
+      "acceptance_version": "strict-dual-metric-v3",
+      "interpretation": "hotspot-only development on report70 inputs, two reversed-order repeats, retained report70 binary control; not independent confirmation"
+    },
+    {
+      "block": "public_toolagent-74802-r1",
+      "scenario": "public_toolagent",
+      "seed": 74802,
+      "treatment": "Full",
+      "baseline": "OldFull",
+      "n": 1,
+      "gain_pct": 1.6656790113535491,
+      "p99_change_pct": 0.0004512877531448467,
+      "drain_gain_pct": 1.6610027678866324,
+      "mechanism_active": false,
+      "executed_actions_changed": false,
+      "pilot_screen": false,
+      "acceptance_version": "strict-dual-metric-v3",
+      "interpretation": "hotspot-only development on report70 inputs, two reversed-order repeats, retained report70 binary control; not independent confirmation"
+    },
+    {
+      "block": "moving_shared-74801-r2",
+      "scenario": "moving_shared",
+      "seed": 74801,
+      "treatment": "Full",
+      "baseline": "NoHotspot",
+      "n": 1,
+      "gain_pct": -2.028342008331485,
+      "p99_change_pct": -0.1356981300479454,
+      "drain_gain_pct": -2.028938829854332,
+      "mechanism_active": true,
+      "executed_actions_changed": true,
+      "pilot_screen": false,
+      "acceptance_version": "strict-dual-metric-v3",
+      "interpretation": "hotspot-only development on report70 inputs, two reversed-order repeats, retained report70 binary control; not independent confirmation"
+    },
+    {
+      "block": "moving_shared-74801-r2",
+      "scenario": "moving_shared",
+      "seed": 74801,
+      "treatment": "Full",
+      "baseline": "OldFull",
+      "n": 1,
+      "gain_pct": -0.4736547423927706,
+      "p99_change_pct": -0.9489091138722316,
+      "drain_gain_pct": -0.4903879836533842,
+      "mechanism_active": true,
+      "executed_actions_changed": true,
+      "pilot_screen": false,
+      "acceptance_version": "strict-dual-metric-v3",
+      "interpretation": "hotspot-only development on report70 inputs, two reversed-order repeats, retained report70 binary control; not independent confirmation"
+    },
+    {
+      "block": "public_toolagent-74802-r2",
+      "scenario": "public_toolagent",
+      "seed": 74802,
+      "treatment": "Full",
+      "baseline": "NoHotspot",
+      "n": 1,
+      "gain_pct": 1.548912834606031,
+      "p99_change_pct": 0.862827168503788,
+      "drain_gain_pct": 1.5445793832019827,
+      "mechanism_active": true,
+      "executed_actions_changed": true,
+      "pilot_screen": false,
+      "acceptance_version": "strict-dual-metric-v3",
+      "interpretation": "hotspot-only development on report70 inputs, two reversed-order repeats, retained report70 binary control; not independent confirmation"
+    },
+    {
+      "block": "public_toolagent-74802-r2",
+      "scenario": "public_toolagent",
+      "seed": 74802,
+      "treatment": "Full",
+      "baseline": "OldFull",
+      "n": 1,
+      "gain_pct": 1.6801693883438107,
+      "p99_change_pct": -0.21254034706686964,
+      "drain_gain_pct": 1.7536001751658814,
+      "mechanism_active": true,
+      "executed_actions_changed": true,
+      "pilot_screen": true,
+      "acceptance_version": "strict-dual-metric-v3",
+      "interpretation": "hotspot-only development on report70 inputs, two reversed-order repeats, retained report70 binary control; not independent confirmation"
+    }
+  ],
+  "rollup": [
+    {
+      "scenario": "moving_shared",
+      "seed": 74801,
+      "strategy": "Full",
+      "n": 2,
+      "rates": [
+        338.4677942847571,
+        340.9101037930404
+      ],
+      "mean_mib_s": 339.6889490388987,
+      "hot_evictions": [
+        null,
+        null
+      ],
+      "copies": [
+        66,
+        66
+      ],
+      "adjusted_plans": [
+        241,
+        239
+      ]
+    },
+    {
+      "scenario": "moving_shared",
+      "seed": 74801,
+      "strategy": "NoHotspot",
+      "n": 2,
+      "rates": [
+        344.1080215501669,
+        347.9680866705668
+      ],
+      "mean_mib_s": 346.03805411036683,
+      "hot_evictions": [
+        null,
+        null
+      ],
+      "copies": [
+        28,
+        28
+      ],
+      "adjusted_plans": [
+        0,
+        0
+      ]
+    },
+    {
+      "scenario": "moving_shared",
+      "seed": 74801,
+      "strategy": "OldFull",
+      "n": 2,
+      "rates": [
+        333.8608573005712,
+        342.5325253435679
+      ],
+      "mean_mib_s": 338.19669132206957,
+      "hot_evictions": [
+        null,
+        null
+      ],
+      "copies": [
+        72,
+        72
+      ],
+      "adjusted_plans": [
+        244,
+        245
+      ]
+    },
+    {
+      "scenario": "public_toolagent",
+      "seed": 74802,
+      "strategy": "Full",
+      "n": 2,
+      "rates": [
+        88.30972159971151,
+        86.52041969116092
+      ],
+      "mean_mib_s": 87.41507064543622,
+      "hot_evictions": [
+        null,
+        null
+      ],
+      "copies": [
+        33,
+        33
+      ],
+      "adjusted_plans": [
+        95,
+        95
+      ]
+    },
+    {
+      "scenario": "public_toolagent",
+      "seed": 74802,
+      "strategy": "NoHotspot",
+      "n": 2,
+      "rates": [
+        84.80057680633894,
+        85.20073457810209
+      ],
+      "mean_mib_s": 85.0006556922205,
+      "hot_evictions": [
+        null,
+        null
+      ],
+      "copies": [
+        25,
+        25
+      ],
+      "adjusted_plans": [
+        0,
+        0
+      ]
+    },
+    {
+      "scenario": "public_toolagent",
+      "seed": 74802,
+      "strategy": "OldFull",
+      "n": 2,
+      "rates": [
+        86.86286508729212,
+        85.09075094152948
+      ],
+      "mean_mib_s": 85.9768080144108,
+      "hot_evictions": [
+        null,
+        null
+      ],
+      "copies": [
+        33,
+        23
+      ],
+      "adjusted_plans": [
+        95,
+        93
+      ]
+    }
+  ],
+  "all_gates_passed": false,
+  "limits": "H-only development, report70 inputs reused, two reversed-order repeats and exact report70 binary control; P/J/SIEVE not revalidated"
+}

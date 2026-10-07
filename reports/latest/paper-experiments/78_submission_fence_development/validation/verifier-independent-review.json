@@ -1,0 +1,24 @@
+{
+  "passed": true,
+  "server_access": false,
+  "checks": [
+    {
+      "test": "SyncSubmission_unchanged_actions",
+      "passed": true,
+      "accepted": true,
+      "primary": false
+    },
+    {
+      "test": "NoHotspot_unchanged_actions",
+      "passed": true,
+      "accepted": false,
+      "primary": true
+    },
+    {
+      "test": "legacy_missing_release_fence_rejected",
+      "passed": true,
+      "error": "work/hotspot-object77/evidence/development/moving_shared-74801-r1/Full: release fence accounting"
+    }
+  ],
+  "scope": "Independent acceptance and readonly legacy-evidence rejection checks; no 78 results exist yet."
+}

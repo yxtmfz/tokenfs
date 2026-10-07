@@ -1,0 +1,91 @@
+-- The CXX compiler identification is GNU 13.3.0
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Found PkgConfig: /home/wjxt/aura-kv-tools/root/usr/bin/pkg-config (found version "1.8.1") 
+-- Checking for module 'fuse3'
+--   Found fuse3, version 3.14.0
+-- Found SQLite3: /home/wjxt/aura-kv-tools/root/usr/include (found version "3.45.1") 
+-- Configuring done (0.3s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/wjxt/projects/tokenfs-submission-precheck79-20261007/build-release
+[  3%] Building CXX object CMakeFiles/aligned_read_test.dir/tests/aligned_read_test.cpp.o
+[  7%] Building CXX object CMakeFiles/tokenfs.dir/src/main.cpp.o
+[ 11%] Linking CXX executable aligned_read_test
+[ 11%] Built target aligned_read_test
+[ 15%] Building CXX object CMakeFiles/disk_opportunity_test.dir/tests/disk_opportunity_test.cpp.o
+[ 19%] Linking CXX executable disk_opportunity_test
+[ 19%] Built target disk_opportunity_test
+[ 23%] Building CXX object CMakeFiles/run_reuse_test.dir/tests/run_reuse_test.cpp.o
+[ 26%] Linking CXX executable run_reuse_test
+[ 26%] Built target run_reuse_test
+[ 30%] Building CXX object CMakeFiles/burst_interval_test.dir/tests/burst_interval_test.cpp.o
+[ 34%] Linking CXX executable burst_interval_test
+[ 34%] Built target burst_interval_test
+[ 38%] Building CXX object CMakeFiles/planning_equivalence_test.dir/tests/planning_equivalence_test.cpp.o
+[ 42%] Linking CXX executable planning_equivalence_test
+[ 42%] Built target planning_equivalence_test
+[ 46%] Building CXX object CMakeFiles/copy_cost_test.dir/tests/copy_cost_test.cpp.o
+[ 50%] Linking CXX executable copy_cost_test
+[ 50%] Built target copy_cost_test
+[ 53%] Building CXX object CMakeFiles/request_read_cost_test.dir/tests/request_read_cost_test.cpp.o
+[ 57%] Linking CXX executable tokenfs
+[ 57%] Built target tokenfs
+[ 61%] Building CXX object CMakeFiles/read_fill_test.dir/tests/read_fill_test.cpp.o
+[ 65%] Linking CXX executable read_fill_test
+[ 65%] Built target read_fill_test
+[ 69%] Building CXX object CMakeFiles/request_trace_test.dir/tests/request_trace_test.cpp.o
+[ 73%] Linking CXX executable request_read_cost_test
+[ 73%] Built target request_read_cost_test
+[ 76%] Building CXX object CMakeFiles/policy_metadata_test.dir/tests/policy_metadata_test.cpp.o
+[ 80%] Linking CXX executable request_trace_test
+[ 80%] Built target request_trace_test
+[ 84%] Building CXX object CMakeFiles/measured_policy_test.dir/tests/measured_policy_test.cpp.o
+[ 88%] Linking CXX executable measured_policy_test
+[ 88%] Built target measured_policy_test
+[ 92%] Building CXX object CMakeFiles/sieve_policy_test.dir/tests/sieve_policy_test.cpp.o
+[ 96%] Linking CXX executable sieve_policy_test
+[ 96%] Built target sieve_policy_test
+[100%] Linking CXX executable policy_metadata_test
+[100%] Built target policy_metadata_test
+Internal ctest changing into directory: /home/wjxt/projects/tokenfs-submission-precheck79-20261007/build-release
+Test project /home/wjxt/projects/tokenfs-submission-precheck79-20261007/build-release
+      Start  1: aligned_read
+ 1/12 Test  #1: aligned_read .....................   Passed    0.25 sec
+      Start  2: disk_opportunity
+ 2/12 Test  #2: disk_opportunity .................   Passed    0.00 sec
+      Start  3: run_reuse
+ 3/12 Test  #3: run_reuse ........................   Passed    0.00 sec
+      Start  4: burst_interval
+ 4/12 Test  #4: burst_interval ...................   Passed    0.00 sec
+      Start  5: planning_equivalence
+ 5/12 Test  #5: planning_equivalence .............   Passed    0.34 sec
+      Start  6: copy_cost
+ 6/12 Test  #6: copy_cost ........................   Passed    0.00 sec
+      Start  7: request_read_cost
+ 7/12 Test  #7: request_read_cost ................   Passed    0.00 sec
+      Start  8: read_fill
+ 8/12 Test  #8: read_fill ........................   Passed    0.00 sec
+      Start  9: request_trace
+ 9/12 Test  #9: request_trace ....................   Passed    0.00 sec
+      Start 10: policy_metadata
+10/12 Test #10: policy_metadata ..................   Passed    1.21 sec
+      Start 11: measured_policy
+11/12 Test #11: measured_policy ..................   Passed    0.00 sec
+      Start 12: sieve_policy
+12/12 Test #12: sieve_policy .....................   Passed    0.05 sec
+
+100% tests passed, 0 tests failed out of 12
+
+Total Test time (real) =   1.88 sec
+{"strategy": "Full", "verified_requests": 96, "passed": true}
+{"strategy": "NoHotspot", "verified_requests": 96, "passed": true}
+{"strategy": "OldFull", "verified_requests": 96, "passed": true}
+FROZEN_BINARY fa02620a8982818ca6bf99067bc3a57166211fc056ab8cebdc223a27f5728e27
+...................................................................................................................................................................
+----------------------------------------------------------------------
+Ran 163 tests in 1.312s
+
+OK

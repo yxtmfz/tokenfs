@@ -49,5 +49,13 @@ int main(){
   isolated.Removed(0,"b");assert(isolated.Victim(0,{"missing"}).empty());
   assert(isolated.Victim(0,{"a"})=="a");
   isolated.Removed(0,"a");assert(isolated.Victim(0,{"a"}).empty());
+  SievePolicy upper_tier;
+  assert(!upper_tier.HitKnown(9,"never-published"));
+  assert(upper_tier.Victim(9,{"never-published"}).empty());
+  upper_tier.Ready(0,"a");upper_tier.Ready(0,"b");
+  assert(!upper_tier.HitKnown(1,"a"));
+  assert(upper_tier.HitKnown(0,"a"));
+  assert(upper_tier.Victim(0,{"a","b"})=="b");
+  upper_tier.Removed(0,"a");assert(!upper_tier.HitKnown(0,"a"));
   std::cout<<"SIEVE reference equivalence: 80000 accesses; isolation/pinning passed\n";
 }

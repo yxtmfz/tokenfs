@@ -1,0 +1,760 @@
+-- Configuring done (0.1s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/build-release
+[  4%] Building CXX object CMakeFiles/tokenfs.dir/src/main.cpp.o
+[  9%] Building CXX object CMakeFiles/run_reuse_test.dir/tests/run_reuse_test.cpp.o
+[ 13%] Linking CXX executable run_reuse_test
+[ 13%] Built target run_reuse_test
+[ 18%] Building CXX object CMakeFiles/burst_interval_test.dir/tests/burst_interval_test.cpp.o
+[ 22%] Linking CXX executable burst_interval_test
+[ 22%] Built target burst_interval_test
+[ 27%] Building CXX object CMakeFiles/planning_equivalence_test.dir/tests/planning_equivalence_test.cpp.o
+[ 31%] Linking CXX executable planning_equivalence_test
+[ 31%] Built target planning_equivalence_test
+[ 36%] Building CXX object CMakeFiles/copy_cost_test.dir/tests/copy_cost_test.cpp.o
+[ 40%] Linking CXX executable copy_cost_test
+[ 40%] Built target copy_cost_test
+[ 45%] Building CXX object CMakeFiles/request_read_cost_test.dir/tests/request_read_cost_test.cpp.o
+[ 50%] Linking CXX executable request_read_cost_test
+[ 50%] Built target request_read_cost_test
+[ 54%] Building CXX object CMakeFiles/read_fill_test.dir/tests/read_fill_test.cpp.o
+[ 59%] Linking CXX executable tokenfs
+[ 59%] Built target tokenfs
+[ 63%] Building CXX object CMakeFiles/request_trace_test.dir/tests/request_trace_test.cpp.o
+[ 68%] Linking CXX executable request_trace_test
+[ 68%] Built target request_trace_test
+[ 72%] Building CXX object CMakeFiles/policy_metadata_test.dir/tests/policy_metadata_test.cpp.o
+[ 77%] Linking CXX executable read_fill_test
+[ 77%] Built target read_fill_test
+[ 81%] Building CXX object CMakeFiles/measured_policy_test.dir/tests/measured_policy_test.cpp.o
+[ 86%] Linking CXX executable measured_policy_test
+[ 86%] Built target measured_policy_test
+[ 90%] Building CXX object CMakeFiles/sieve_policy_test.dir/tests/sieve_policy_test.cpp.o
+[ 95%] Linking CXX executable sieve_policy_test
+[ 95%] Built target sieve_policy_test
+[100%] Linking CXX executable policy_metadata_test
+[100%] Built target policy_metadata_test
+Internal ctest changing into directory: /home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/build-release
+Test project /home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/build-release
+      Start  1: run_reuse
+ 1/10 Test  #1: run_reuse ........................   Passed    0.00 sec
+      Start  2: burst_interval
+ 2/10 Test  #2: burst_interval ...................   Passed    0.00 sec
+      Start  3: planning_equivalence
+ 3/10 Test  #3: planning_equivalence .............   Passed    0.33 sec
+      Start  4: copy_cost
+ 4/10 Test  #4: copy_cost ........................   Passed    0.00 sec
+      Start  5: request_read_cost
+ 5/10 Test  #5: request_read_cost ................   Passed    0.00 sec
+      Start  6: read_fill
+ 6/10 Test  #6: read_fill ........................   Passed    0.00 sec
+      Start  7: request_trace
+ 7/10 Test  #7: request_trace ....................   Passed    0.00 sec
+      Start  8: policy_metadata
+ 8/10 Test  #8: policy_metadata ..................   Passed    0.90 sec
+      Start  9: measured_policy
+ 9/10 Test  #9: measured_policy ..................   Passed    0.00 sec
+      Start 10: sieve_policy
+10/10 Test #10: sieve_policy .....................   Passed    0.06 sec
+
+100% tests passed, 0 tests failed out of 10
+
+Total Test time (real) =   1.31 sec
+....EEE.EEEEEEEEEEEEEEEEEEEEEEEEEEEEEE
+======================================================================
+ERROR: adaptive_control_test (unittest.loader._FailedTest.adaptive_control_test)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: adaptive_control_test
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/unittest/loader.py", line 394, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/loader.py", line 337, in _get_module_from_name
+    __import__(name)
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/tests/adaptive_control_test.py", line 4, in <module>
+    import adaptive_control_study as s
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/adaptive_control_study.py", line 7, in <module>
+    from measured_study import check_mount,digest
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/measured_study.py", line 17, in <module>
+    from evidence_report import interval,paired_p,holm
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/evidence_report.py", line 13, in <module>
+    from evidence_audit import audit
+ModuleNotFoundError: No module named 'evidence_audit'
+
+
+======================================================================
+ERROR: burst_interval_study_test (unittest.loader._FailedTest.burst_interval_study_test)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: burst_interval_study_test
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/unittest/loader.py", line 394, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/loader.py", line 337, in _get_module_from_name
+    __import__(name)
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/tests/burst_interval_study_test.py", line 4, in <module>
+    import burst_interval_study as s
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/burst_interval_study.py", line 7, in <module>
+    from measured_study import check_mount,digest
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/measured_study.py", line 17, in <module>
+    from evidence_report import interval,paired_p,holm
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/evidence_report.py", line 13, in <module>
+    from evidence_audit import audit
+ModuleNotFoundError: No module named 'evidence_audit'
+
+
+======================================================================
+ERROR: component_ablation_test (unittest.loader._FailedTest.component_ablation_test)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: component_ablation_test
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/unittest/loader.py", line 394, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/loader.py", line 337, in _get_module_from_name
+    __import__(name)
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/tests/component_ablation_test.py", line 4, in <module>
+    import component_ablation_study as s
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/component_ablation_study.py", line 7, in <module>
+    from measured_study import check_mount,digest
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/measured_study.py", line 17, in <module>
+    from evidence_report import interval,paired_p,holm
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/evidence_report.py", line 13, in <module>
+    from evidence_audit import audit
+ModuleNotFoundError: No module named 'evidence_audit'
+
+
+======================================================================
+ERROR: headroom_exploration_test (unittest.loader._FailedTest.headroom_exploration_test)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: headroom_exploration_test
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/unittest/loader.py", line 394, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/loader.py", line 337, in _get_module_from_name
+    __import__(name)
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/tests/headroom_exploration_test.py", line 4, in <module>
+    import headroom_exploration_study as s
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/headroom_exploration_study.py", line 7, in <module>
+    from measured_study import check_mount,digest
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/measured_study.py", line 17, in <module>
+    from evidence_report import interval,paired_p,holm
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/evidence_report.py", line 13, in <module>
+    from evidence_audit import audit
+ModuleNotFoundError: No module named 'evidence_audit'
+
+
+======================================================================
+ERROR: hotspot_freshness_correctness_test (unittest.loader._FailedTest.hotspot_freshness_correctness_test)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: hotspot_freshness_correctness_test
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/unittest/loader.py", line 394, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/loader.py", line 337, in _get_module_from_name
+    __import__(name)
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/tests/hotspot_freshness_correctness_test.py", line 5, in <module>
+    import hotspot_freshness_correctness as d
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/hotspot_freshness_correctness.py", line 6, in <module>
+    from measured_study import check_mount
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/measured_study.py", line 17, in <module>
+    from evidence_report import interval,paired_p,holm
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/evidence_report.py", line 13, in <module>
+    from evidence_audit import audit
+ModuleNotFoundError: No module named 'evidence_audit'
+
+
+======================================================================
+ERROR: integrated_hpj_calibrated_test (unittest.loader._FailedTest.integrated_hpj_calibrated_test)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: integrated_hpj_calibrated_test
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/unittest/loader.py", line 394, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/loader.py", line 337, in _get_module_from_name
+    __import__(name)
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/tests/integrated_hpj_calibrated_test.py", line 4, in <module>
+    import integrated_hpj_calibrated_study as s
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/integrated_hpj_calibrated_study.py", line 7, in <module>
+    from measured_study import check_mount,digest
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/measured_study.py", line 17, in <module>
+    from evidence_report import interval,paired_p,holm
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/evidence_report.py", line 13, in <module>
+    from evidence_audit import audit
+ModuleNotFoundError: No module named 'evidence_audit'
+
+
+======================================================================
+ERROR: integrated_hpj_cohort_atomic_test (unittest.loader._FailedTest.integrated_hpj_cohort_atomic_test)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: integrated_hpj_cohort_atomic_test
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/unittest/loader.py", line 394, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/loader.py", line 337, in _get_module_from_name
+    __import__(name)
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/tests/integrated_hpj_cohort_atomic_test.py", line 4, in <module>
+    import integrated_hpj_cohort_atomic_study as s
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/integrated_hpj_cohort_atomic_study.py", line 7, in <module>
+    from measured_study import check_mount,digest
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/measured_study.py", line 17, in <module>
+    from evidence_report import interval,paired_p,holm
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/evidence_report.py", line 13, in <module>
+    from evidence_audit import audit
+ModuleNotFoundError: No module named 'evidence_audit'
+
+
+======================================================================
+ERROR: integrated_hpj_cohort_calibrated_test (unittest.loader._FailedTest.integrated_hpj_cohort_calibrated_test)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: integrated_hpj_cohort_calibrated_test
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/unittest/loader.py", line 394, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/loader.py", line 337, in _get_module_from_name
+    __import__(name)
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/tests/integrated_hpj_cohort_calibrated_test.py", line 4, in <module>
+    import integrated_hpj_cohort_calibrated_study as s
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/integrated_hpj_cohort_calibrated_study.py", line 7, in <module>
+    from measured_study import check_mount,digest
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/measured_study.py", line 17, in <module>
+    from evidence_report import interval,paired_p,holm
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/evidence_report.py", line 13, in <module>
+    from evidence_audit import audit
+ModuleNotFoundError: No module named 'evidence_audit'
+
+
+======================================================================
+ERROR: integrated_hpj_cohort_caller_final_test (unittest.loader._FailedTest.integrated_hpj_cohort_caller_final_test)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: integrated_hpj_cohort_caller_final_test
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/unittest/loader.py", line 394, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/loader.py", line 337, in _get_module_from_name
+    __import__(name)
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/tests/integrated_hpj_cohort_caller_final_test.py", line 4, in <module>
+    import integrated_hpj_cohort_caller_final_study as s
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/integrated_hpj_cohort_caller_final_study.py", line 7, in <module>
+    from measured_study import check_mount,digest
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/measured_study.py", line 17, in <module>
+    from evidence_report import interval,paired_p,holm
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/evidence_report.py", line 13, in <module>
+    from evidence_audit import audit
+ModuleNotFoundError: No module named 'evidence_audit'
+
+
+======================================================================
+ERROR: integrated_hpj_cohort_caller_freshness_test (unittest.loader._FailedTest.integrated_hpj_cohort_caller_freshness_test)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: integrated_hpj_cohort_caller_freshness_test
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/unittest/loader.py", line 394, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/loader.py", line 337, in _get_module_from_name
+    __import__(name)
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/tests/integrated_hpj_cohort_caller_freshness_test.py", line 4, in <module>
+    import integrated_hpj_cohort_caller_freshness_study as s
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/integrated_hpj_cohort_caller_freshness_study.py", line 7, in <module>
+    from measured_study import check_mount,digest
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/measured_study.py", line 17, in <module>
+    from evidence_report import interval,paired_p,holm
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/evidence_report.py", line 13, in <module>
+    from evidence_audit import audit
+ModuleNotFoundError: No module named 'evidence_audit'
+
+
+======================================================================
+ERROR: integrated_hpj_cohort_caller_independent_test (unittest.loader._FailedTest.integrated_hpj_cohort_caller_independent_test)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: integrated_hpj_cohort_caller_independent_test
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/unittest/loader.py", line 394, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/loader.py", line 337, in _get_module_from_name
+    __import__(name)
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/tests/integrated_hpj_cohort_caller_independent_test.py", line 4, in <module>
+    import integrated_hpj_cohort_caller_independent_study as s
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/integrated_hpj_cohort_caller_independent_study.py", line 7, in <module>
+    from measured_study import check_mount,digest
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/measured_study.py", line 17, in <module>
+    from evidence_report import interval,paired_p,holm
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/evidence_report.py", line 13, in <module>
+    from evidence_audit import audit
+ModuleNotFoundError: No module named 'evidence_audit'
+
+
+======================================================================
+ERROR: integrated_hpj_cohort_caller_lazy_test (unittest.loader._FailedTest.integrated_hpj_cohort_caller_lazy_test)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: integrated_hpj_cohort_caller_lazy_test
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/unittest/loader.py", line 394, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/loader.py", line 337, in _get_module_from_name
+    __import__(name)
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/tests/integrated_hpj_cohort_caller_lazy_test.py", line 4, in <module>
+    import integrated_hpj_cohort_caller_lazy_study as s
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/integrated_hpj_cohort_caller_lazy_study.py", line 7, in <module>
+    from measured_study import check_mount,digest
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/measured_study.py", line 17, in <module>
+    from evidence_report import interval,paired_p,holm
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/evidence_report.py", line 13, in <module>
+    from evidence_audit import audit
+ModuleNotFoundError: No module named 'evidence_audit'
+
+
+======================================================================
+ERROR: integrated_hpj_cohort_caller_object_test (unittest.loader._FailedTest.integrated_hpj_cohort_caller_object_test)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: integrated_hpj_cohort_caller_object_test
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/unittest/loader.py", line 394, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/loader.py", line 337, in _get_module_from_name
+    __import__(name)
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/tests/integrated_hpj_cohort_caller_object_test.py", line 4, in <module>
+    import integrated_hpj_cohort_caller_object_study as s
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/integrated_hpj_cohort_caller_object_study.py", line 7, in <module>
+    from measured_study import check_mount,digest
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/measured_study.py", line 17, in <module>
+    from evidence_report import interval,paired_p,holm
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/evidence_report.py", line 13, in <module>
+    from evidence_audit import audit
+ModuleNotFoundError: No module named 'evidence_audit'
+
+
+======================================================================
+ERROR: integrated_hpj_cohort_caller_support_test (unittest.loader._FailedTest.integrated_hpj_cohort_caller_support_test)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: integrated_hpj_cohort_caller_support_test
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/unittest/loader.py", line 394, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/loader.py", line 337, in _get_module_from_name
+    __import__(name)
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/tests/integrated_hpj_cohort_caller_support_test.py", line 4, in <module>
+    import integrated_hpj_cohort_caller_support_study as s
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/integrated_hpj_cohort_caller_support_study.py", line 7, in <module>
+    from measured_study import check_mount,digest
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/measured_study.py", line 17, in <module>
+    from evidence_report import interval,paired_p,holm
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/evidence_report.py", line 13, in <module>
+    from evidence_audit import audit
+ModuleNotFoundError: No module named 'evidence_audit'
+
+
+======================================================================
+ERROR: integrated_hpj_cohort_caller_test (unittest.loader._FailedTest.integrated_hpj_cohort_caller_test)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: integrated_hpj_cohort_caller_test
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/unittest/loader.py", line 394, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/loader.py", line 337, in _get_module_from_name
+    __import__(name)
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/tests/integrated_hpj_cohort_caller_test.py", line 4, in <module>
+    import integrated_hpj_cohort_caller_study as s
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/integrated_hpj_cohort_caller_study.py", line 7, in <module>
+    from measured_study import check_mount,digest
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/measured_study.py", line 17, in <module>
+    from evidence_report import interval,paired_p,holm
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/evidence_report.py", line 13, in <module>
+    from evidence_audit import audit
+ModuleNotFoundError: No module named 'evidence_audit'
+
+
+======================================================================
+ERROR: integrated_hpj_cohort_fence_test (unittest.loader._FailedTest.integrated_hpj_cohort_fence_test)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: integrated_hpj_cohort_fence_test
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/unittest/loader.py", line 394, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/loader.py", line 337, in _get_module_from_name
+    __import__(name)
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/tests/integrated_hpj_cohort_fence_test.py", line 4, in <module>
+    import integrated_hpj_cohort_fence_study as s
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/integrated_hpj_cohort_fence_study.py", line 7, in <module>
+    from measured_study import check_mount,digest
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/measured_study.py", line 17, in <module>
+    from evidence_report import interval,paired_p,holm
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/evidence_report.py", line 13, in <module>
+    from evidence_audit import audit
+ModuleNotFoundError: No module named 'evidence_audit'
+
+
+======================================================================
+ERROR: integrated_hpj_cohort_survival_test (unittest.loader._FailedTest.integrated_hpj_cohort_survival_test)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: integrated_hpj_cohort_survival_test
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/unittest/loader.py", line 394, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/loader.py", line 337, in _get_module_from_name
+    __import__(name)
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/tests/integrated_hpj_cohort_survival_test.py", line 4, in <module>
+    import integrated_hpj_cohort_survival_study as s
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/integrated_hpj_cohort_survival_study.py", line 7, in <module>
+    from measured_study import check_mount,digest
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/measured_study.py", line 17, in <module>
+    from evidence_report import interval,paired_p,holm
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/evidence_report.py", line 13, in <module>
+    from evidence_audit import audit
+ModuleNotFoundError: No module named 'evidence_audit'
+
+
+======================================================================
+ERROR: integrated_hpj_cohort_test (unittest.loader._FailedTest.integrated_hpj_cohort_test)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: integrated_hpj_cohort_test
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/unittest/loader.py", line 394, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/loader.py", line 337, in _get_module_from_name
+    __import__(name)
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/tests/integrated_hpj_cohort_test.py", line 4, in <module>
+    import integrated_hpj_cohort_study as s
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/integrated_hpj_cohort_study.py", line 7, in <module>
+    from measured_study import check_mount,digest
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/measured_study.py", line 17, in <module>
+    from evidence_report import interval,paired_p,holm
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/evidence_report.py", line 13, in <module>
+    from evidence_audit import audit
+ModuleNotFoundError: No module named 'evidence_audit'
+
+
+======================================================================
+ERROR: integrated_hpj_cohort_writepath_test (unittest.loader._FailedTest.integrated_hpj_cohort_writepath_test)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: integrated_hpj_cohort_writepath_test
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/unittest/loader.py", line 394, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/loader.py", line 337, in _get_module_from_name
+    __import__(name)
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/tests/integrated_hpj_cohort_writepath_test.py", line 4, in <module>
+    import integrated_hpj_cohort_writepath_study as s
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/integrated_hpj_cohort_writepath_study.py", line 7, in <module>
+    from measured_study import check_mount,digest
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/measured_study.py", line 17, in <module>
+    from evidence_report import interval,paired_p,holm
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/evidence_report.py", line 13, in <module>
+    from evidence_audit import audit
+ModuleNotFoundError: No module named 'evidence_audit'
+
+
+======================================================================
+ERROR: integrated_hpj_exactverify_test (unittest.loader._FailedTest.integrated_hpj_exactverify_test)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: integrated_hpj_exactverify_test
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/unittest/loader.py", line 394, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/loader.py", line 337, in _get_module_from_name
+    __import__(name)
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/tests/integrated_hpj_exactverify_test.py", line 4, in <module>
+    import integrated_hpj_exactverify_study as s
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/integrated_hpj_exactverify_study.py", line 7, in <module>
+    from measured_study import check_mount,digest
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/measured_study.py", line 17, in <module>
+    from evidence_report import interval,paired_p,holm
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/evidence_report.py", line 13, in <module>
+    from evidence_audit import audit
+ModuleNotFoundError: No module named 'evidence_audit'
+
+
+======================================================================
+ERROR: integrated_hpj_fast_study_test (unittest.loader._FailedTest.integrated_hpj_fast_study_test)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: integrated_hpj_fast_study_test
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/unittest/loader.py", line 394, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/loader.py", line 337, in _get_module_from_name
+    __import__(name)
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/tests/integrated_hpj_fast_study_test.py", line 4, in <module>
+    import integrated_hpj_fast_study as s
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/integrated_hpj_fast_study.py", line 7, in <module>
+    from measured_study import check_mount,digest
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/measured_study.py", line 17, in <module>
+    from evidence_report import interval,paired_p,holm
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/evidence_report.py", line 13, in <module>
+    from evidence_audit import audit
+ModuleNotFoundError: No module named 'evidence_audit'
+
+
+======================================================================
+ERROR: integrated_hpj_guarded_study_test (unittest.loader._FailedTest.integrated_hpj_guarded_study_test)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: integrated_hpj_guarded_study_test
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/unittest/loader.py", line 394, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/loader.py", line 337, in _get_module_from_name
+    __import__(name)
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/tests/integrated_hpj_guarded_study_test.py", line 4, in <module>
+    import integrated_hpj_guarded_study as s
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/integrated_hpj_guarded_study.py", line 7, in <module>
+    from measured_study import check_mount,digest
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/measured_study.py", line 17, in <module>
+    from evidence_report import interval,paired_p,holm
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/evidence_report.py", line 13, in <module>
+    from evidence_audit import audit
+ModuleNotFoundError: No module named 'evidence_audit'
+
+
+======================================================================
+ERROR: integrated_hpj_novel_study_test (unittest.loader._FailedTest.integrated_hpj_novel_study_test)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: integrated_hpj_novel_study_test
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/unittest/loader.py", line 394, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/loader.py", line 337, in _get_module_from_name
+    __import__(name)
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/tests/integrated_hpj_novel_study_test.py", line 4, in <module>
+    import integrated_hpj_novel_study as s
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/integrated_hpj_novel_study.py", line 7, in <module>
+    from measured_study import check_mount,digest
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/measured_study.py", line 17, in <module>
+    from evidence_report import interval,paired_p,holm
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/evidence_report.py", line 13, in <module>
+    from evidence_audit import audit
+ModuleNotFoundError: No module named 'evidence_audit'
+
+
+======================================================================
+ERROR: integrated_hpj_readpath_test (unittest.loader._FailedTest.integrated_hpj_readpath_test)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: integrated_hpj_readpath_test
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/unittest/loader.py", line 394, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/loader.py", line 337, in _get_module_from_name
+    __import__(name)
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/tests/integrated_hpj_readpath_test.py", line 4, in <module>
+    import integrated_hpj_readpath_study as s
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/integrated_hpj_readpath_study.py", line 7, in <module>
+    from measured_study import check_mount,digest
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/measured_study.py", line 17, in <module>
+    from evidence_report import interval,paired_p,holm
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/evidence_report.py", line 13, in <module>
+    from evidence_audit import audit
+ModuleNotFoundError: No module named 'evidence_audit'
+
+
+======================================================================
+ERROR: integrated_hpj_retained_test (unittest.loader._FailedTest.integrated_hpj_retained_test)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: integrated_hpj_retained_test
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/unittest/loader.py", line 394, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/loader.py", line 337, in _get_module_from_name
+    __import__(name)
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/tests/integrated_hpj_retained_test.py", line 4, in <module>
+    import integrated_hpj_retained_study as s
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/integrated_hpj_retained_study.py", line 7, in <module>
+    from measured_study import check_mount,digest
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/measured_study.py", line 17, in <module>
+    from evidence_report import interval,paired_p,holm
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/evidence_report.py", line 13, in <module>
+    from evidence_audit import audit
+ModuleNotFoundError: No module named 'evidence_audit'
+
+
+======================================================================
+ERROR: integrated_hpj_study_test (unittest.loader._FailedTest.integrated_hpj_study_test)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: integrated_hpj_study_test
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/unittest/loader.py", line 394, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/loader.py", line 337, in _get_module_from_name
+    __import__(name)
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/tests/integrated_hpj_study_test.py", line 4, in <module>
+    import integrated_hpj_study as s
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/integrated_hpj_study.py", line 7, in <module>
+    from measured_study import check_mount,digest
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/measured_study.py", line 17, in <module>
+    from evidence_report import interval,paired_p,holm
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/evidence_report.py", line 13, in <module>
+    from evidence_audit import audit
+ModuleNotFoundError: No module named 'evidence_audit'
+
+
+======================================================================
+ERROR: integrated_hpj_symmetric_test (unittest.loader._FailedTest.integrated_hpj_symmetric_test)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: integrated_hpj_symmetric_test
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/unittest/loader.py", line 394, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/loader.py", line 337, in _get_module_from_name
+    __import__(name)
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/tests/integrated_hpj_symmetric_test.py", line 4, in <module>
+    import integrated_hpj_symmetric_study as s
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/integrated_hpj_symmetric_study.py", line 7, in <module>
+    from measured_study import check_mount,digest
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/measured_study.py", line 17, in <module>
+    from evidence_report import interval,paired_p,holm
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/evidence_report.py", line 13, in <module>
+    from evidence_audit import audit
+ModuleNotFoundError: No module named 'evidence_audit'
+
+
+======================================================================
+ERROR: integrated_hpj_telemetry_test (unittest.loader._FailedTest.integrated_hpj_telemetry_test)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: integrated_hpj_telemetry_test
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/unittest/loader.py", line 394, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/loader.py", line 337, in _get_module_from_name
+    __import__(name)
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/tests/integrated_hpj_telemetry_test.py", line 4, in <module>
+    import integrated_hpj_telemetry_study as s
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/integrated_hpj_telemetry_study.py", line 7, in <module>
+    from measured_study import check_mount,digest
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/measured_study.py", line 17, in <module>
+    from evidence_report import interval,paired_p,holm
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/evidence_report.py", line 13, in <module>
+    from evidence_audit import audit
+ModuleNotFoundError: No module named 'evidence_audit'
+
+
+======================================================================
+ERROR: planning_efficiency_test (unittest.loader._FailedTest.planning_efficiency_test)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: planning_efficiency_test
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/unittest/loader.py", line 394, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/loader.py", line 337, in _get_module_from_name
+    __import__(name)
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/tests/planning_efficiency_test.py", line 5, in <module>
+    import planning_efficiency_study as s
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/planning_efficiency_study.py", line 7, in <module>
+    from measured_study import check_mount,digest
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/measured_study.py", line 17, in <module>
+    from evidence_report import interval,paired_p,holm
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/evidence_report.py", line 13, in <module>
+    from evidence_audit import audit
+ModuleNotFoundError: No module named 'evidence_audit'
+
+
+======================================================================
+ERROR: read_fill_study_test (unittest.loader._FailedTest.read_fill_study_test)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: read_fill_study_test
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/unittest/loader.py", line 394, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/loader.py", line 337, in _get_module_from_name
+    __import__(name)
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/tests/read_fill_study_test.py", line 4, in <module>
+    import read_fill_study as s
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/read_fill_study.py", line 7, in <module>
+    from measured_study import check_mount,digest
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/measured_study.py", line 17, in <module>
+    from evidence_report import interval,paired_p,holm
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/evidence_report.py", line 13, in <module>
+    from evidence_audit import audit
+ModuleNotFoundError: No module named 'evidence_audit'
+
+
+======================================================================
+ERROR: request_cost_study_test (unittest.loader._FailedTest.request_cost_study_test)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: request_cost_study_test
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/unittest/loader.py", line 394, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/loader.py", line 337, in _get_module_from_name
+    __import__(name)
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/tests/request_cost_study_test.py", line 4, in <module>
+    import request_cost_study as s
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/request_cost_study.py", line 7, in <module>
+    from measured_study import check_mount,digest
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/measured_study.py", line 17, in <module>
+    from evidence_report import interval,paired_p,holm
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/evidence_report.py", line 13, in <module>
+    from evidence_audit import audit
+ModuleNotFoundError: No module named 'evidence_audit'
+
+
+======================================================================
+ERROR: run_decay_study_test (unittest.loader._FailedTest.run_decay_study_test)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: run_decay_study_test
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/unittest/loader.py", line 394, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/loader.py", line 337, in _get_module_from_name
+    __import__(name)
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/tests/run_decay_study_test.py", line 4, in <module>
+    import run_decay_study as s
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/run_decay_study.py", line 7, in <module>
+    from measured_study import check_mount,digest
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/measured_study.py", line 17, in <module>
+    from evidence_report import interval,paired_p,holm
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/evidence_report.py", line 13, in <module>
+    from evidence_audit import audit
+ModuleNotFoundError: No module named 'evidence_audit'
+
+
+======================================================================
+ERROR: run_reuse_study_test (unittest.loader._FailedTest.run_reuse_study_test)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: run_reuse_study_test
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/unittest/loader.py", line 394, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/loader.py", line 337, in _get_module_from_name
+    __import__(name)
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/tests/run_reuse_study_test.py", line 4, in <module>
+    import run_reuse_study as s
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/run_reuse_study.py", line 7, in <module>
+    from measured_study import check_mount,digest
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/measured_study.py", line 17, in <module>
+    from evidence_report import interval,paired_p,holm
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-cohort-caller-support-20260930/scripts/evidence_report.py", line 13, in <module>
+    from evidence_audit import audit
+ModuleNotFoundError: No module named 'evidence_audit'
+
+
+----------------------------------------------------------------------
+Ran 38 tests in 0.007s
+
+FAILED (errors=33)

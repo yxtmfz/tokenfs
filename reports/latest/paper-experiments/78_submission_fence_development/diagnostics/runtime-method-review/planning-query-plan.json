@@ -1,0 +1,56 @@
+{
+  "diagnosis_only": true,
+  "case": "/Users/mafuze/Documents/Codex/2026-09-18/new-chat/work/hotspot-object77/evidence/development/public_toolagent-74802-r1/Full/state.db",
+  "file_rows": 864,
+  "ready_rows": 12,
+  "plan": [
+    [
+      1,
+      0,
+      0,
+      "COMPOUND QUERY"
+    ],
+    [
+      2,
+      1,
+      0,
+      "LEFT-MOST SUBQUERY"
+    ],
+    [
+      6,
+      2,
+      216,
+      "SCAN f"
+    ],
+    [
+      12,
+      2,
+      47,
+      "SEARCH a USING INDEX sqlite_autoindex_gpu_access_1 (logical_path=? AND gpu_id=?) LEFT-JOIN"
+    ],
+    [
+      35,
+      1,
+      0,
+      "UNION ALL"
+    ],
+    [
+      41,
+      35,
+      216,
+      "SCAN r"
+    ],
+    [
+      45,
+      35,
+      46,
+      "SEARCH f USING INDEX sqlite_autoindex_files_1 (logical_path=?)"
+    ],
+    [
+      52,
+      35,
+      47,
+      "SEARCH a USING INDEX sqlite_autoindex_gpu_access_1 (logical_path=? AND gpu_id=?) LEFT-JOIN"
+    ]
+  ]
+}

@@ -1,0 +1,7 @@
+# Buffer non-control caller counters at the existing durable fence
+
+Report63's complete two-order matrix passes seven of eight strict dual-metric comparisons; first-order Full versus SIEVE p99 still regresses ~0.263%. Preserve this failure, do not round it to a pass or repeat only that arm.
+
+Caller detection reads /proc environment afresh, then synchronously writes a diagnostic cross-domain counter for each non-owner Open. Neither routing nor admission consumes this counter. Use the existing buffered metrics fence for cross-domain, unreadable-env and invalid-env counters, just like other per-read telemetry. Keep file read counts and cache metadata transactional, caller detection and actual routing unchanged, with exact final durable counter audit. The same change applies to all five arms and reduces avoidable foreground fsyncs without caching process identity or weakening data durability. Retain prior atomic first-read and completion-fence changes; policy parameters are unchanged.
+
+Run the same ten-run moving3293 matrix:576x2MiB,24MiB total disk,4MiB shared captures,three serialized logical consumers on cn7 against cn13 NVMe/TCP. Reverse all five versions' order in round2. No trace/seed/capacity change, selective repeats or result replacement. Strict acceptance_v3 requires throughput>0, p99 change<0 for every pair, plus drain/mechanism checks. Verify exact cross-domain count against all request callers and SQLite, full content correctness separately, and no physical-GPU or statistical-significance claims.

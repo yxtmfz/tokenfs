@@ -1,0 +1,663 @@
+{
+  "passed": true,
+  "binary_sha256": "5351b1b3e2f52694d0184b71ea91348aab468b54f0874a9bc35afa8a8d19f3da",
+  "runs": 30,
+  "requests": 17280,
+  "rows": [
+    {
+      "block": "stationary_shared-3271-r1",
+      "scenario": "stationary_shared",
+      "strategy": "Full",
+      "n": 2,
+      "mib_s": 352.1463942501084,
+      "drain_mib_s": 351.9277457417421,
+      "pooled_p99_ms": 27.599585,
+      "per_run_mib_s": [
+        336.8860185526856,
+        368.8549073805984
+      ],
+      "per_run_p99_ms": [
+        29.050065,
+        27.467501
+      ],
+      "remote_mib": [
+        60.0,
+        60.0
+      ],
+      "inflight_mib": [
+        912.0,
+        912.0
+      ],
+      "copies": [
+        12,
+        12
+      ]
+    },
+    {
+      "block": "stationary_shared-3271-r1",
+      "scenario": "stationary_shared",
+      "strategy": "NoHotspot",
+      "n": 2,
+      "mib_s": 310.94623622404015,
+      "drain_mib_s": 310.78337022047157,
+      "pooled_p99_ms": 29.244558,
+      "per_run_mib_s": [
+        306.3979931214443,
+        315.6315443089262
+      ],
+      "per_run_p99_ms": [
+        29.244558,
+        29.849363
+      ],
+      "remote_mib": [
+        60.0,
+        60.0
+      ],
+      "inflight_mib": [
+        912.0,
+        912.0
+      ],
+      "copies": [
+        12,
+        12
+      ]
+    },
+    {
+      "block": "stationary_shared-3271-r1",
+      "scenario": "stationary_shared",
+      "strategy": "NoAffinity",
+      "n": 2,
+      "mib_s": 298.47354674270343,
+      "drain_mib_s": 298.3130347765239,
+      "pooled_p99_ms": 28.722463,
+      "per_run_mib_s": [
+        290.171096268583,
+        307.2650951346212
+      ],
+      "per_run_p99_ms": [
+        29.105174,
+        28.445907
+      ],
+      "remote_mib": [
+        90.0,
+        96.0
+      ],
+      "inflight_mib": [
+        912.0,
+        912.0
+      ],
+      "copies": [
+        16,
+        16
+      ]
+    },
+    {
+      "block": "stationary_shared-3271-r1",
+      "scenario": "stationary_shared",
+      "strategy": "NoJoint",
+      "n": 2,
+      "mib_s": 340.0763923961942,
+      "drain_mib_s": 339.9319350529133,
+      "pooled_p99_ms": 28.826101,
+      "per_run_mib_s": [
+        317.1518614924435,
+        366.5732231002763
+      ],
+      "per_run_p99_ms": [
+        29.012783,
+        27.482323
+      ],
+      "remote_mib": [
+        60.0,
+        60.0
+      ],
+      "inflight_mib": [
+        912.0,
+        912.0
+      ],
+      "copies": [
+        12,
+        12
+      ]
+    },
+    {
+      "block": "stationary_shared-3271-r1",
+      "scenario": "stationary_shared",
+      "strategy": "PoolSIEVE1",
+      "n": 2,
+      "mib_s": 330.51469564084226,
+      "drain_mib_s": 330.3178598501437,
+      "pooled_p99_ms": 28.500389000000002,
+      "per_run_mib_s": [
+        340.1639237428595,
+        321.3977951684395
+      ],
+      "per_run_p99_ms": [
+        28.070227,
+        29.109403999999998
+      ],
+      "remote_mib": [
+        60.0,
+        60.0
+      ],
+      "inflight_mib": [
+        912.0,
+        912.0
+      ],
+      "copies": [
+        30,
+        30
+      ]
+    },
+    {
+      "block": "moving_shared-3293-r1",
+      "scenario": "moving_shared",
+      "strategy": "Full",
+      "n": 2,
+      "mib_s": 267.9458476794654,
+      "drain_mib_s": 267.8522327615655,
+      "pooled_p99_ms": 28.908889,
+      "per_run_mib_s": [
+        276.31819308406835,
+        260.06593990869527
+      ],
+      "per_run_p99_ms": [
+        28.184801999999998,
+        29.396724
+      ],
+      "remote_mib": [
+        140.0,
+        140.0
+      ],
+      "inflight_mib": [
+        910.0,
+        910.0
+      ],
+      "copies": [
+        23,
+        24
+      ]
+    },
+    {
+      "block": "moving_shared-3293-r1",
+      "scenario": "moving_shared",
+      "strategy": "NoHotspot",
+      "n": 2,
+      "mib_s": 265.89699236932137,
+      "drain_mib_s": 265.8044630522193,
+      "pooled_p99_ms": 28.666406,
+      "per_run_mib_s": [
+        264.22627123528684,
+        267.5889761207839
+      ],
+      "per_run_p99_ms": [
+        28.666406,
+        28.753935000000002
+      ],
+      "remote_mib": [
+        144.0,
+        158.0
+      ],
+      "inflight_mib": [
+        910.0,
+        910.0
+      ],
+      "copies": [
+        26,
+        21
+      ]
+    },
+    {
+      "block": "moving_shared-3293-r1",
+      "scenario": "moving_shared",
+      "strategy": "NoAffinity",
+      "n": 2,
+      "mib_s": 262.7642756706369,
+      "drain_mib_s": 262.67269071488425,
+      "pooled_p99_ms": 28.730729,
+      "per_run_mib_s": [
+        258.3358108604694,
+        267.3472165200365
+      ],
+      "per_run_p99_ms": [
+        29.224902,
+        28.33759
+      ],
+      "remote_mib": [
+        154.0,
+        156.0
+      ],
+      "inflight_mib": [
+        910.0,
+        910.0
+      ],
+      "copies": [
+        27,
+        24
+      ]
+    },
+    {
+      "block": "moving_shared-3293-r1",
+      "scenario": "moving_shared",
+      "strategy": "NoJoint",
+      "n": 2,
+      "mib_s": 265.4548813555215,
+      "drain_mib_s": 265.36599605992734,
+      "pooled_p99_ms": 28.719860999999998,
+      "per_run_mib_s": [
+        257.46018745562264,
+        273.96199185975354
+      ],
+      "per_run_p99_ms": [
+        28.932261,
+        28.413853
+      ],
+      "remote_mib": [
+        140.0,
+        142.0
+      ],
+      "inflight_mib": [
+        910.0,
+        910.0
+      ],
+      "copies": [
+        24,
+        24
+      ]
+    },
+    {
+      "block": "moving_shared-3293-r1",
+      "scenario": "moving_shared",
+      "strategy": "PoolSIEVE1",
+      "n": 2,
+      "mib_s": 268.7181502876631,
+      "drain_mib_s": 268.58746962433224,
+      "pooled_p99_ms": 29.205417,
+      "per_run_mib_s": [
+        270.812663420647,
+        266.65578717227595
+      ],
+      "per_run_p99_ms": [
+        29.162428000000002,
+        29.603009999999998
+      ],
+      "remote_mib": [
+        110.0,
+        110.0
+      ],
+      "inflight_mib": [
+        910.0,
+        910.0
+      ],
+      "copies": [
+        55,
+        55
+      ]
+    },
+    {
+      "block": "uniform-3273-r1",
+      "scenario": "uniform",
+      "strategy": "Full",
+      "n": 2,
+      "mib_s": 104.93459918382123,
+      "drain_mib_s": 104.91939802916188,
+      "pooled_p99_ms": 31.032602,
+      "per_run_mib_s": [
+        107.97409539490333,
+        102.06154272274689
+      ],
+      "per_run_p99_ms": [
+        30.699989000000002,
+        31.49876
+      ],
+      "remote_mib": [
+        516.0,
+        532.0
+      ],
+      "inflight_mib": [
+        74.0,
+        74.0
+      ],
+      "copies": [
+        23,
+        24
+      ]
+    },
+    {
+      "block": "uniform-3273-r1",
+      "scenario": "uniform",
+      "strategy": "NoHotspot",
+      "n": 2,
+      "mib_s": 102.40889340677575,
+      "drain_mib_s": 102.29421769405415,
+      "pooled_p99_ms": 31.020697,
+      "per_run_mib_s": [
+        102.70210093209815,
+        102.11735529055933
+      ],
+      "per_run_p99_ms": [
+        30.871284,
+        31.596144
+      ],
+      "remote_mib": [
+        534.0,
+        534.0
+      ],
+      "inflight_mib": [
+        72.0,
+        72.0
+      ],
+      "copies": [
+        18,
+        18
+      ]
+    },
+    {
+      "block": "uniform-3273-r1",
+      "scenario": "uniform",
+      "strategy": "NoAffinity",
+      "n": 2,
+      "mib_s": 106.76168971088701,
+      "drain_mib_s": 106.74194987313525,
+      "pooled_p99_ms": 30.20357,
+      "per_run_mib_s": [
+        107.18121034202586,
+        106.34544038763538
+      ],
+      "per_run_p99_ms": [
+        30.088216000000003,
+        30.311276000000003
+      ],
+      "remote_mib": [
+        500.0,
+        500.0
+      ],
+      "inflight_mib": [
+        72.0,
+        72.0
+      ],
+      "copies": [
+        21,
+        21
+      ]
+    },
+    {
+      "block": "uniform-3273-r1",
+      "scenario": "uniform",
+      "strategy": "NoJoint",
+      "n": 2,
+      "mib_s": 95.82325938413167,
+      "drain_mib_s": 95.6455025976444,
+      "pooled_p99_ms": 31.919431,
+      "per_run_mib_s": [
+        97.4058221833002,
+        94.29129858263701
+      ],
+      "per_run_p99_ms": [
+        31.086758,
+        32.621702
+      ],
+      "remote_mib": [
+        552.0,
+        550.0
+      ],
+      "inflight_mib": [
+        76.0,
+        76.0
+      ],
+      "copies": [
+        242,
+        242
+      ]
+    },
+    {
+      "block": "uniform-3273-r1",
+      "scenario": "uniform",
+      "strategy": "PoolSIEVE1",
+      "n": 2,
+      "mib_s": 97.38076800394094,
+      "drain_mib_s": 97.02030892882755,
+      "pooled_p99_ms": 32.089615,
+      "per_run_mib_s": [
+        98.35217158647713,
+        96.42836544746646
+      ],
+      "per_run_p99_ms": [
+        32.206786,
+        32.089615
+      ],
+      "remote_mib": [
+        584.0,
+        562.0
+      ],
+      "inflight_mib": [
+        70.0,
+        70.0
+      ],
+      "copies": [
+        292,
+        281
+      ]
+    }
+  ],
+  "comparisons": [
+    {
+      "block": "stationary_shared-3271-r1",
+      "scenario": "stationary_shared",
+      "baseline": "NoHotspot",
+      "gain_pct": 13.249929803422056,
+      "drain_gain_pct": 13.23892442896235,
+      "pooled_p99_change_pct": -5.624885833460025,
+      "per_run_gain_pct": [
+        9.950465119122697,
+        16.862498071352316
+      ],
+      "per_run_p99_change_pct": [
+        -0.6650570680534873,
+        -7.979607471020412
+      ],
+      "passes_both_orders": false,
+      "mechanisms_active_both_orders": false
+    },
+    {
+      "block": "stationary_shared-3271-r1",
+      "scenario": "stationary_shared",
+      "baseline": "NoAffinity",
+      "gain_pct": 17.98244705205758,
+      "drain_gain_pct": 17.972634352160544,
+      "pooled_p99_change_pct": -3.9094070727848096,
+      "per_run_gain_pct": [
+        16.099095631793436,
+        20.044519609034328
+      ],
+      "per_run_p99_change_pct": [
+        -0.18934434131883116,
+        -3.4395317400144787
+      ],
+      "passes_both_orders": true,
+      "mechanisms_active_both_orders": true
+    },
+    {
+      "block": "stationary_shared-3271-r1",
+      "scenario": "stationary_shared",
+      "baseline": "NoJoint",
+      "gain_pct": 3.5492030978300004,
+      "drain_gain_pct": 3.5288860656653487,
+      "pooled_p99_change_pct": -4.254879978391801,
+      "per_run_gain_pct": [
+        6.222305291659858,
+        0.6224361564177716
+      ],
+      "per_run_p99_change_pct": [
+        0.1285019779040164,
+        -0.05393284985407698
+      ],
+      "passes_both_orders": false,
+      "mechanisms_active_both_orders": false
+    },
+    {
+      "block": "stationary_shared-3271-r1",
+      "scenario": "stationary_shared",
+      "baseline": "PoolSIEVE1",
+      "gain_pct": 6.544852284805058,
+      "drain_gain_pct": 6.542148796132996,
+      "pooled_p99_change_pct": -3.1606726490645443,
+      "per_run_gain_pct": [
+        -0.963625170508009,
+        14.765848716319718
+      ],
+      "per_run_p99_change_pct": [
+        3.4906664630820483,
+        -5.6404555723641785
+      ],
+      "passes_both_orders": false,
+      "mechanisms_active_both_orders": true
+    },
+    {
+      "block": "moving_shared-3293-r1",
+      "scenario": "moving_shared",
+      "baseline": "NoHotspot",
+      "gain_pct": 0.7705447481324734,
+      "drain_gain_pct": 0.7704045619971067,
+      "pooled_p99_change_pct": 0.8458786218265457,
+      "per_run_gain_pct": [
+        4.576351091907105,
+        -2.811414850174143
+      ],
+      "per_run_p99_change_pct": [
+        -1.680029230033231,
+        2.2354818566571844
+      ],
+      "passes_both_orders": false,
+      "mechanisms_active_both_orders": true
+    },
+    {
+      "block": "moving_shared-3293-r1",
+      "scenario": "moving_shared",
+      "baseline": "NoAffinity",
+      "gain_pct": 1.9719469077765117,
+      "drain_gain_pct": 1.9718616475069117,
+      "pooled_p99_change_pct": 0.6201026086041894,
+      "per_run_gain_pct": [
+        6.960855393490717,
+        -2.7235281167760195
+      ],
+      "per_run_p99_change_pct": [
+        -3.558951198536109,
+        3.737558486801462
+      ],
+      "passes_both_orders": false,
+      "mechanisms_active_both_orders": true
+    },
+    {
+      "block": "moving_shared-3293-r1",
+      "scenario": "moving_shared",
+      "baseline": "NoJoint",
+      "gain_pct": 0.9383765373701225,
+      "drain_gain_pct": 0.9369085484022266,
+      "pooled_p99_change_pct": 0.6581786729399575,
+      "per_run_gain_pct": [
+        7.324629805800997,
+        -5.072255409126947
+      ],
+      "per_run_p99_change_pct": [
+        -2.5834793900138098,
+        3.4591260819150316
+      ],
+      "passes_both_orders": false,
+      "mechanisms_active_both_orders": true
+    },
+    {
+      "block": "moving_shared-3293-r1",
+      "scenario": "moving_shared",
+      "baseline": "PoolSIEVE1",
+      "gain_pct": -0.2874024725799007,
+      "drain_gain_pct": -0.2737420564686399,
+      "pooled_p99_change_pct": -1.0153184938260007,
+      "per_run_gain_pct": [
+        2.032966107965817,
+        -2.4712935479338394
+      ],
+      "per_run_p99_change_pct": [
+        -3.352347753760432,
+        -0.6968413009352803
+      ],
+      "passes_both_orders": false,
+      "mechanisms_active_both_orders": true
+    },
+    {
+      "block": "uniform-3273-r1",
+      "scenario": "uniform",
+      "baseline": "NoHotspot",
+      "gain_pct": 2.466295350944958,
+      "drain_gain_pct": 2.566303740607534,
+      "pooled_p99_change_pct": 0.038377603185391074,
+      "per_run_gain_pct": [
+        5.133287844121881,
+        -0.05465532049240274
+      ],
+      "per_run_p99_change_pct": [
+        -0.5548684013272576,
+        -0.30821482520144716
+      ],
+      "passes_both_orders": false,
+      "mechanisms_active_both_orders": true
+    },
+    {
+      "block": "uniform-3273-r1",
+      "scenario": "uniform",
+      "baseline": "NoAffinity",
+      "gain_pct": -1.7113728079928059,
+      "drain_gain_pct": -1.707437278539048,
+      "pooled_p99_change_pct": 2.7448146030419673,
+      "per_run_gain_pct": [
+        0.7397612420566135,
+        -4.028285227155404
+      ],
+      "per_run_p99_change_pct": [
+        2.033264451438388,
+        3.9176311812145315
+      ],
+      "passes_both_orders": false,
+      "mechanisms_active_both_orders": true
+    },
+    {
+      "block": "uniform-3273-r1",
+      "scenario": "uniform",
+      "baseline": "NoJoint",
+      "gain_pct": 9.508484535225904,
+      "drain_gain_pct": 9.696112393836586,
+      "pooled_p99_change_pct": -2.7783358669520086,
+      "per_run_gain_pct": [
+        10.849734620293571,
+        8.240679953410579
+      ],
+      "per_run_p99_change_pct": [
+        -1.2441599731950137,
+        -3.4423157933329174
+      ],
+      "passes_both_orders": true,
+      "mechanisms_active_both_orders": true
+    },
+    {
+      "block": "uniform-3273-r1",
+      "scenario": "uniform",
+      "baseline": "PoolSIEVE1",
+      "gain_pct": 7.757005140455031,
+      "drain_gain_pct": 8.141686196988896,
+      "pooled_p99_change_pct": -3.2939410460362417,
+      "per_run_gain_pct": [
+        9.783133054633208,
+        5.841825949387625
+      ],
+      "per_run_p99_change_pct": [
+        -4.678507815092137,
+        -1.841265468594755
+      ],
+      "passes_both_orders": true,
+      "mechanisms_active_both_orders": true
+    }
+  ],
+  "all_gates_both_orders": false,
+  "limits": "Two orders of known development inputs; descriptive rates, no significance or physical GPU evidence. Includes ALL runs, not selected winners."
+}

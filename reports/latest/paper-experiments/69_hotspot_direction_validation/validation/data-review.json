@@ -1,0 +1,722 @@
+{
+  "pruning": [
+    {
+      "block": "moving_shared-73501-r1",
+      "variant": "Full",
+      "snapshots_avoided": 1,
+      "locations_pruned": 11,
+      "snapshots": 140
+    },
+    {
+      "block": "moving_shared-73501-r1",
+      "variant": "NoHotspot",
+      "snapshots_avoided": 49,
+      "locations_pruned": 159,
+      "snapshots": 58
+    },
+    {
+      "block": "moving_shared-73501-r1",
+      "variant": "NoAffinity",
+      "snapshots_avoided": 6,
+      "locations_pruned": 6,
+      "snapshots": 130
+    },
+    {
+      "block": "moving_shared-73501-r1",
+      "variant": "NoJoint",
+      "snapshots_avoided": 2,
+      "locations_pruned": 14,
+      "snapshots": 192
+    },
+    {
+      "block": "moving_shared-73501-r1",
+      "variant": "PoolSIEVE1",
+      "snapshots_avoided": 0,
+      "locations_pruned": 0,
+      "snapshots": 0
+    },
+    {
+      "block": "moving_shared-73501-r1",
+      "variant": "OldFull",
+      "snapshots_avoided": 0,
+      "locations_pruned": 0,
+      "snapshots": 138
+    },
+    {
+      "block": "public_toolagent-73602-r1",
+      "variant": "Full",
+      "snapshots_avoided": 771,
+      "locations_pruned": 2325,
+      "snapshots": 147
+    },
+    {
+      "block": "public_toolagent-73602-r1",
+      "variant": "NoHotspot",
+      "snapshots_avoided": 826,
+      "locations_pruned": 2490,
+      "snapshots": 80
+    },
+    {
+      "block": "public_toolagent-73602-r1",
+      "variant": "NoAffinity",
+      "snapshots_avoided": 770,
+      "locations_pruned": 770,
+      "snapshots": 165
+    },
+    {
+      "block": "public_toolagent-73602-r1",
+      "variant": "NoJoint",
+      "snapshots_avoided": 758,
+      "locations_pruned": 2286,
+      "snapshots": 290
+    },
+    {
+      "block": "public_toolagent-73602-r1",
+      "variant": "PoolSIEVE1",
+      "snapshots_avoided": 0,
+      "locations_pruned": 0,
+      "snapshots": 0
+    },
+    {
+      "block": "public_toolagent-73602-r1",
+      "variant": "OldFull",
+      "snapshots_avoided": 0,
+      "locations_pruned": 0,
+      "snapshots": 920
+    }
+  ],
+  "passed": true,
+  "speed_evidence": true,
+  "source_files_verified": 118,
+  "batch": {
+    "passed": true,
+    "checked_runs": 12,
+    "expected_runs": 12,
+    "errors": []
+  },
+  "requests": 13824,
+  "mechanisms": [
+    {
+      "block": "moving_shared-73501-r1",
+      "seed": 73501,
+      "repeat": 1,
+      "strategy": "Full",
+      "copy_count": 68,
+      "reused_copy_count": 68,
+      "source_copy_count": 0,
+      "inflight_bytes": 1914699776,
+      "inflight_opens": 913,
+      "remote_bytes": 153092096,
+      "local_bytes": 348127232,
+      "rss_kib": 26384,
+      "staging_peak_bytes": 4194304,
+      "capture_us": 75380,
+      "committed_capture_us": 53263,
+      "capture_complete": 239,
+      "capture_unavailable": 0
+    },
+    {
+      "block": "moving_shared-73501-r1",
+      "seed": 73501,
+      "repeat": 1,
+      "strategy": "NoHotspot",
+      "copy_count": 28,
+      "reused_copy_count": 28,
+      "source_copy_count": 0,
+      "inflight_bytes": 1914699776,
+      "inflight_opens": 913,
+      "remote_bytes": 165675008,
+      "local_bytes": 335544320,
+      "rss_kib": 25548,
+      "staging_peak_bytes": 4194304,
+      "capture_us": 90380,
+      "committed_capture_us": 34448,
+      "capture_complete": 239,
+      "capture_unavailable": 0
+    },
+    {
+      "block": "moving_shared-73501-r1",
+      "seed": 73501,
+      "repeat": 1,
+      "strategy": "NoAffinity",
+      "copy_count": 43,
+      "reused_copy_count": 43,
+      "source_copy_count": 0,
+      "inflight_bytes": 1914699776,
+      "inflight_opens": 913,
+      "remote_bytes": 195035136,
+      "local_bytes": 306184192,
+      "rss_kib": 27640,
+      "staging_peak_bytes": 4194304,
+      "capture_us": 89744,
+      "committed_capture_us": 44503,
+      "capture_complete": 239,
+      "capture_unavailable": 0
+    },
+    {
+      "block": "moving_shared-73501-r1",
+      "seed": 73501,
+      "repeat": 1,
+      "strategy": "NoJoint",
+      "copy_count": 96,
+      "reused_copy_count": 96,
+      "source_copy_count": 0,
+      "inflight_bytes": 1914699776,
+      "inflight_opens": 913,
+      "remote_bytes": 205520896,
+      "local_bytes": 295698432,
+      "rss_kib": 23756,
+      "staging_peak_bytes": 4194304,
+      "capture_us": 83010,
+      "committed_capture_us": 100669,
+      "capture_complete": 239,
+      "capture_unavailable": 0
+    },
+    {
+      "block": "moving_shared-73501-r1",
+      "seed": 73501,
+      "repeat": 1,
+      "strategy": "PoolSIEVE1",
+      "copy_count": 74,
+      "reused_copy_count": 74,
+      "source_copy_count": 0,
+      "inflight_bytes": 1914699776,
+      "inflight_opens": 913,
+      "remote_bytes": 155189248,
+      "local_bytes": 346030080,
+      "rss_kib": 25448,
+      "staging_peak_bytes": 4194304,
+      "capture_us": 90381,
+      "committed_capture_us": 79249,
+      "capture_complete": 239,
+      "capture_unavailable": 0
+    },
+    {
+      "block": "moving_shared-73501-r1",
+      "seed": 73501,
+      "repeat": 1,
+      "strategy": "OldFull",
+      "copy_count": 66,
+      "reused_copy_count": 66,
+      "source_copy_count": 0,
+      "inflight_bytes": 1914699776,
+      "inflight_opens": 913,
+      "remote_bytes": 150994944,
+      "local_bytes": 350224384,
+      "rss_kib": 28424,
+      "staging_peak_bytes": 4194304,
+      "capture_us": 89772,
+      "committed_capture_us": 62473,
+      "capture_complete": 239,
+      "capture_unavailable": 0
+    },
+    {
+      "block": "public_toolagent-73602-r1",
+      "seed": 73602,
+      "repeat": 1,
+      "strategy": "Full",
+      "copy_count": 40,
+      "reused_copy_count": 40,
+      "source_copy_count": 0,
+      "inflight_bytes": 4194304,
+      "inflight_opens": 2,
+      "remote_bytes": 1839202304,
+      "local_bytes": 572522496,
+      "rss_kib": 25164,
+      "staging_peak_bytes": 4194304,
+      "capture_us": 412122,
+      "committed_capture_us": 33147,
+      "capture_complete": 1150,
+      "capture_unavailable": 0
+    },
+    {
+      "block": "public_toolagent-73602-r1",
+      "seed": 73602,
+      "repeat": 1,
+      "strategy": "NoHotspot",
+      "copy_count": 28,
+      "reused_copy_count": 28,
+      "source_copy_count": 0,
+      "inflight_bytes": 4194304,
+      "inflight_opens": 2,
+      "remote_bytes": 1832910848,
+      "local_bytes": 578813952,
+      "rss_kib": 24336,
+      "staging_peak_bytes": 4194304,
+      "capture_us": 413250,
+      "committed_capture_us": 25250,
+      "capture_complete": 1150,
+      "capture_unavailable": 0
+    },
+    {
+      "block": "public_toolagent-73602-r1",
+      "seed": 73602,
+      "repeat": 1,
+      "strategy": "NoAffinity",
+      "copy_count": 34,
+      "reused_copy_count": 34,
+      "source_copy_count": 0,
+      "inflight_bytes": 4194304,
+      "inflight_opens": 2,
+      "remote_bytes": 1889533952,
+      "local_bytes": 522190848,
+      "rss_kib": 25928,
+      "staging_peak_bytes": 4194304,
+      "capture_us": 402625,
+      "committed_capture_us": 28976,
+      "capture_complete": 1150,
+      "capture_unavailable": 0
+    },
+    {
+      "block": "public_toolagent-73602-r1",
+      "seed": 73602,
+      "repeat": 1,
+      "strategy": "NoJoint",
+      "copy_count": 145,
+      "reused_copy_count": 145,
+      "source_copy_count": 0,
+      "inflight_bytes": 4194304,
+      "inflight_opens": 2,
+      "remote_bytes": 1893728256,
+      "local_bytes": 517996544,
+      "rss_kib": 25044,
+      "staging_peak_bytes": 4194304,
+      "capture_us": 403141,
+      "committed_capture_us": 108585,
+      "capture_complete": 1150,
+      "capture_unavailable": 0
+    },
+    {
+      "block": "public_toolagent-73602-r1",
+      "seed": 73602,
+      "repeat": 1,
+      "strategy": "PoolSIEVE1",
+      "copy_count": 1073,
+      "reused_copy_count": 1073,
+      "source_copy_count": 0,
+      "inflight_bytes": 4194304,
+      "inflight_opens": 2,
+      "remote_bytes": 2250244096,
+      "local_bytes": 161480704,
+      "rss_kib": 23520,
+      "staging_peak_bytes": 4194304,
+      "capture_us": 421087,
+      "committed_capture_us": 956106,
+      "capture_complete": 1150,
+      "capture_unavailable": 0
+    },
+    {
+      "block": "public_toolagent-73602-r1",
+      "seed": 73602,
+      "repeat": 1,
+      "strategy": "OldFull",
+      "copy_count": 42,
+      "reused_copy_count": 42,
+      "source_copy_count": 0,
+      "inflight_bytes": 4194304,
+      "inflight_opens": 2,
+      "remote_bytes": 1841299456,
+      "local_bytes": 570425344,
+      "rss_kib": 24268,
+      "staging_peak_bytes": 4194304,
+      "capture_us": 413436,
+      "committed_capture_us": 34057,
+      "capture_complete": 1150,
+      "capture_unavailable": 0
+    }
+  ],
+  "pairs": [
+    {
+      "block": "moving_shared-73501-r1",
+      "scenario": "moving_shared",
+      "seed": 73501,
+      "treatment": "Full",
+      "baseline": "NoHotspot",
+      "n": 1,
+      "gain_pct": 6.568254799760642,
+      "p99_change_pct": -5.778843948577239,
+      "drain_gain_pct": 6.561717824753854,
+      "mechanism_active": true,
+      "executed_actions_changed": true,
+      "pilot_screen": true,
+      "acceptance_version": "strict-dual-metric-v3",
+      "interpretation": "development screen on two previously inspected inputs, one fixed order each; no independent confirmation"
+    },
+    {
+      "block": "moving_shared-73501-r1",
+      "scenario": "moving_shared",
+      "seed": 73501,
+      "treatment": "Full",
+      "baseline": "NoAffinity",
+      "n": 1,
+      "gain_pct": 12.44426614114429,
+      "p99_change_pct": -2.6755498270733202,
+      "drain_gain_pct": 12.417925549406261,
+      "mechanism_active": true,
+      "executed_actions_changed": true,
+      "pilot_screen": true,
+      "acceptance_version": "strict-dual-metric-v3",
+      "interpretation": "development screen on two previously inspected inputs, one fixed order each; no independent confirmation"
+    },
+    {
+      "block": "moving_shared-73501-r1",
+      "scenario": "moving_shared",
+      "seed": 73501,
+      "treatment": "Full",
+      "baseline": "NoJoint",
+      "n": 1,
+      "gain_pct": 12.652874980337048,
+      "p99_change_pct": -2.2639318878138415,
+      "drain_gain_pct": 12.627471483536867,
+      "mechanism_active": true,
+      "executed_actions_changed": true,
+      "pilot_screen": true,
+      "acceptance_version": "strict-dual-metric-v3",
+      "interpretation": "development screen on two previously inspected inputs, one fixed order each; no independent confirmation"
+    },
+    {
+      "block": "moving_shared-73501-r1",
+      "scenario": "moving_shared",
+      "seed": 73501,
+      "treatment": "Full",
+      "baseline": "PoolSIEVE1",
+      "n": 1,
+      "gain_pct": 8.715531442038248,
+      "p99_change_pct": -4.369582021899054,
+      "drain_gain_pct": 8.7076596609859,
+      "mechanism_active": true,
+      "executed_actions_changed": true,
+      "pilot_screen": true,
+      "acceptance_version": "strict-dual-metric-v3",
+      "interpretation": "development screen on two previously inspected inputs, one fixed order each; no independent confirmation"
+    },
+    {
+      "block": "moving_shared-73501-r1",
+      "scenario": "moving_shared",
+      "seed": 73501,
+      "treatment": "Full",
+      "baseline": "OldFull",
+      "n": 1,
+      "gain_pct": 7.7961179506606415,
+      "p99_change_pct": -2.4899292428267383,
+      "drain_gain_pct": 7.771169562263713,
+      "mechanism_active": true,
+      "executed_actions_changed": true,
+      "pilot_screen": true,
+      "acceptance_version": "strict-dual-metric-v3",
+      "interpretation": "development screen on two previously inspected inputs, one fixed order each; no independent confirmation"
+    },
+    {
+      "block": "public_toolagent-73602-r1",
+      "scenario": "public_toolagent",
+      "seed": 73602,
+      "treatment": "Full",
+      "baseline": "NoHotspot",
+      "n": 1,
+      "gain_pct": -1.1096747778297278,
+      "p99_change_pct": 0.5767352886592247,
+      "drain_gain_pct": -1.1094539193409636,
+      "mechanism_active": true,
+      "executed_actions_changed": true,
+      "pilot_screen": false,
+      "acceptance_version": "strict-dual-metric-v3",
+      "interpretation": "development screen on two previously inspected inputs, one fixed order each; no independent confirmation"
+    },
+    {
+      "block": "public_toolagent-73602-r1",
+      "scenario": "public_toolagent",
+      "seed": 73602,
+      "treatment": "Full",
+      "baseline": "NoAffinity",
+      "n": 1,
+      "gain_pct": 0.2778309844568616,
+      "p99_change_pct": -1.1445559730022037,
+      "drain_gain_pct": 0.27778927940687037,
+      "mechanism_active": true,
+      "executed_actions_changed": true,
+      "pilot_screen": true,
+      "acceptance_version": "strict-dual-metric-v3",
+      "interpretation": "development screen on two previously inspected inputs, one fixed order each; no independent confirmation"
+    },
+    {
+      "block": "public_toolagent-73602-r1",
+      "scenario": "public_toolagent",
+      "seed": 73602,
+      "treatment": "Full",
+      "baseline": "NoJoint",
+      "n": 1,
+      "gain_pct": 2.3329992003324085,
+      "p99_change_pct": -1.5370480973191825,
+      "drain_gain_pct": 2.3328349043945096,
+      "mechanism_active": true,
+      "executed_actions_changed": true,
+      "pilot_screen": true,
+      "acceptance_version": "strict-dual-metric-v3",
+      "interpretation": "development screen on two previously inspected inputs, one fixed order each; no independent confirmation"
+    },
+    {
+      "block": "public_toolagent-73602-r1",
+      "scenario": "public_toolagent",
+      "seed": 73602,
+      "treatment": "Full",
+      "baseline": "PoolSIEVE1",
+      "n": 1,
+      "gain_pct": 23.98646519572136,
+      "p99_change_pct": -14.149611941454731,
+      "drain_gain_pct": 24.068442454567986,
+      "mechanism_active": true,
+      "executed_actions_changed": true,
+      "pilot_screen": true,
+      "acceptance_version": "strict-dual-metric-v3",
+      "interpretation": "development screen on two previously inspected inputs, one fixed order each; no independent confirmation"
+    },
+    {
+      "block": "public_toolagent-73602-r1",
+      "scenario": "public_toolagent",
+      "seed": 73602,
+      "treatment": "Full",
+      "baseline": "OldFull",
+      "n": 1,
+      "gain_pct": 0.2723056877977026,
+      "p99_change_pct": -0.81631654203419,
+      "drain_gain_pct": 0.27241037762308906,
+      "mechanism_active": true,
+      "executed_actions_changed": true,
+      "pilot_screen": true,
+      "acceptance_version": "strict-dual-metric-v3",
+      "interpretation": "development screen on two previously inspected inputs, one fixed order each; no independent confirmation"
+    }
+  ],
+  "rollup": [
+    {
+      "scenario": "moving_shared",
+      "seed": 73501,
+      "strategy": "Full",
+      "n": 1,
+      "rates": [
+        374.3843692045561
+      ],
+      "mean_mib_s": 374.3843692045561,
+      "hot_evictions": [
+        null
+      ],
+      "copies": [
+        68
+      ],
+      "adjusted_plans": [
+        218
+      ]
+    },
+    {
+      "scenario": "moving_shared",
+      "seed": 73501,
+      "strategy": "NoHotspot",
+      "n": 1,
+      "rates": [
+        351.30946819765035
+      ],
+      "mean_mib_s": 351.30946819765035,
+      "hot_evictions": [
+        null
+      ],
+      "copies": [
+        28
+      ],
+      "adjusted_plans": [
+        0
+      ]
+    },
+    {
+      "scenario": "moving_shared",
+      "seed": 73501,
+      "strategy": "NoAffinity",
+      "n": 1,
+      "rates": [
+        332.9510539333457
+      ],
+      "mean_mib_s": 332.9510539333457,
+      "hot_evictions": [
+        null
+      ],
+      "copies": [
+        43
+      ],
+      "adjusted_plans": [
+        119
+      ]
+    },
+    {
+      "scenario": "moving_shared",
+      "seed": 73501,
+      "strategy": "NoJoint",
+      "n": 1,
+      "rates": [
+        332.3345003577608
+      ],
+      "mean_mib_s": 332.3345003577608,
+      "hot_evictions": [
+        null
+      ],
+      "copies": [
+        96
+      ],
+      "adjusted_plans": [
+        162
+      ]
+    },
+    {
+      "scenario": "moving_shared",
+      "seed": 73501,
+      "strategy": "PoolSIEVE1",
+      "n": 1,
+      "rates": [
+        344.3706379747215
+      ],
+      "mean_mib_s": 344.3706379747215,
+      "hot_evictions": [
+        null
+      ],
+      "copies": [
+        74
+      ],
+      "adjusted_plans": [
+        0
+      ]
+    },
+    {
+      "scenario": "moving_shared",
+      "seed": 73501,
+      "strategy": "OldFull",
+      "n": 1,
+      "rates": [
+        347.30784032122153
+      ],
+      "mean_mib_s": 347.30784032122153,
+      "hot_evictions": [
+        null
+      ],
+      "copies": [
+        66
+      ],
+      "adjusted_plans": [
+        222
+      ]
+    },
+    {
+      "scenario": "public_toolagent",
+      "seed": 73602,
+      "strategy": "Full",
+      "n": 1,
+      "rates": [
+        90.01768848985353
+      ],
+      "mean_mib_s": 90.01768848985353,
+      "hot_evictions": [
+        null
+      ],
+      "copies": [
+        40
+      ],
+      "adjusted_plans": [
+        271
+      ]
+    },
+    {
+      "scenario": "public_toolagent",
+      "seed": 73602,
+      "strategy": "NoHotspot",
+      "n": 1,
+      "rates": [
+        91.02780103879405
+      ],
+      "mean_mib_s": 91.02780103879405,
+      "hot_evictions": [
+        null
+      ],
+      "copies": [
+        28
+      ],
+      "adjusted_plans": [
+        0
+      ]
+    },
+    {
+      "scenario": "public_toolagent",
+      "seed": 73602,
+      "strategy": "NoAffinity",
+      "n": 1,
+      "rates": [
+        89.76828438162602
+      ],
+      "mean_mib_s": 89.76828438162602,
+      "hot_evictions": [
+        null
+      ],
+      "copies": [
+        34
+      ],
+      "adjusted_plans": [
+        127
+      ]
+    },
+    {
+      "scenario": "public_toolagent",
+      "seed": 73602,
+      "strategy": "NoJoint",
+      "n": 1,
+      "rates": [
+        87.96545512521354
+      ],
+      "mean_mib_s": 87.96545512521354,
+      "hot_evictions": [
+        null
+      ],
+      "copies": [
+        145
+      ],
+      "adjusted_plans": [
+        216
+      ]
+    },
+    {
+      "scenario": "public_toolagent",
+      "seed": 73602,
+      "strategy": "PoolSIEVE1",
+      "n": 1,
+      "rates": [
+        72.60283479148653
+      ],
+      "mean_mib_s": 72.60283479148653,
+      "hot_evictions": [
+        null
+      ],
+      "copies": [
+        1073
+      ],
+      "adjusted_plans": [
+        0
+      ]
+    },
+    {
+      "scenario": "public_toolagent",
+      "seed": 73602,
+      "strategy": "OldFull",
+      "n": 1,
+      "rates": [
+        89.77323087605825
+      ],
+      "mean_mib_s": 89.77323087605825,
+      "hot_evictions": [
+        null
+      ],
+      "copies": [
+        42
+      ],
+      "adjusted_plans": [
+        1305
+      ]
+    }
+  ],
+  "all_gates_passed": false,
+  "limits": "development; two previously inspected inputs, one order per input, retained-binary Full control; no statistical confirmation or physical GPUs"
+}

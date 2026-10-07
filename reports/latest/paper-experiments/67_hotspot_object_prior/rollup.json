@@ -1,0 +1,719 @@
+{
+  "speed_runs": 24,
+  "timed_requests": 27648,
+  "comparisons": [
+    {
+      "scenario": "moving_shared",
+      "baseline": "NoHotspot",
+      "full": {
+        "mib_s": 356.06540431671004,
+        "p99_ms": 27.296107499999998,
+        "rates": [
+          346.9068875043711,
+          365.7206129711446
+        ],
+        "tails": [
+          27.212858,
+          27.379357
+        ],
+        "remote_mib": 312.0,
+        "copies": 58,
+        "cpu_s": 5.390000000000001
+      },
+      "control": {
+        "mib_s": 350.50696189037234,
+        "p99_ms": 27.0841155,
+        "rates": [
+          354.4533303585017,
+          346.6475009957551
+        ],
+        "tails": [
+          26.825781,
+          27.34245
+        ],
+        "remote_mib": 316.0,
+        "copies": 56,
+        "cpu_s": 5.64
+      },
+      "gain_pct": 1.5858293930481882,
+      "p99_change_pct": 0.7827170874382006,
+      "strict_passes": 0,
+      "pairs": [
+        {
+          "block": "moving_shared-73501-r1",
+          "scenario": "moving_shared",
+          "seed": 73501,
+          "treatment": "Full",
+          "baseline": "NoHotspot",
+          "n": 1,
+          "gain_pct": -2.1290370855023277,
+          "p99_change_pct": 1.4429290986905485,
+          "drain_gain_pct": -2.1328415097606412,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": false,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "development on two previously inspected inputs with reversed-order repeats; no independent confirmation"
+        },
+        {
+          "block": "moving_shared-73501-r2",
+          "scenario": "moving_shared",
+          "seed": 73501,
+          "treatment": "Full",
+          "baseline": "NoHotspot",
+          "n": 1,
+          "gain_pct": 5.502163414016081,
+          "p99_change_pct": 0.13498058879142238,
+          "drain_gain_pct": 5.500437130951497,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": false,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "development on two previously inspected inputs with reversed-order repeats; no independent confirmation"
+        }
+      ]
+    },
+    {
+      "scenario": "moving_shared",
+      "baseline": "NoAffinity",
+      "full": {
+        "mib_s": 356.06540431671004,
+        "p99_ms": 27.296107499999998,
+        "rates": [
+          346.9068875043711,
+          365.7206129711446
+        ],
+        "tails": [
+          27.212858,
+          27.379357
+        ],
+        "remote_mib": 312.0,
+        "copies": 58,
+        "cpu_s": 5.390000000000001
+      },
+      "control": {
+        "mib_s": 354.5858410920617,
+        "p99_ms": 25.810952999999998,
+        "rates": [
+          353.35144846380933,
+          355.82888837157515
+        ],
+        "tails": [
+          26.444935,
+          25.176970999999998
+        ],
+        "remote_mib": 376.0,
+        "copies": 70,
+        "cpu_s": 4.98
+      },
+      "gain_pct": 0.4172651733897581,
+      "p99_change_pct": 5.753970029700173,
+      "strict_passes": 0,
+      "pairs": [
+        {
+          "block": "moving_shared-73501-r1",
+          "scenario": "moving_shared",
+          "seed": 73501,
+          "treatment": "Full",
+          "baseline": "NoAffinity",
+          "n": 1,
+          "gain_pct": -1.8238388401847216,
+          "p99_change_pct": 2.9038566364409713,
+          "drain_gain_pct": -1.8384948880216134,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": false,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "development on two previously inspected inputs with reversed-order repeats; no independent confirmation"
+        },
+        {
+          "block": "moving_shared-73501-r2",
+          "scenario": "moving_shared",
+          "seed": 73501,
+          "treatment": "Full",
+          "baseline": "NoAffinity",
+          "n": 1,
+          "gain_pct": 2.779910491483184,
+          "p99_change_pct": 8.747620990626714,
+          "drain_gain_pct": 2.7790561803064717,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": false,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "development on two previously inspected inputs with reversed-order repeats; no independent confirmation"
+        }
+      ]
+    },
+    {
+      "scenario": "moving_shared",
+      "baseline": "NoJoint",
+      "full": {
+        "mib_s": 356.06540431671004,
+        "p99_ms": 27.296107499999998,
+        "rates": [
+          346.9068875043711,
+          365.7206129711446
+        ],
+        "tails": [
+          27.212858,
+          27.379357
+        ],
+        "remote_mib": 312.0,
+        "copies": 58,
+        "cpu_s": 5.390000000000001
+      },
+      "control": {
+        "mib_s": 345.1064997759594,
+        "p99_ms": 26.7712385,
+        "rates": [
+          345.8649062670542,
+          344.3514120484016
+        ],
+        "tails": [
+          26.4614,
+          27.081076999999997
+        ],
+        "remote_mib": 336.0,
+        "copies": 70,
+        "cpu_s": 5.699999999999999
+      },
+      "gain_pct": 3.1755138045400866,
+      "p99_change_pct": 1.9605704831324733,
+      "strict_passes": 0,
+      "pairs": [
+        {
+          "block": "moving_shared-73501-r1",
+          "scenario": "moving_shared",
+          "seed": 73501,
+          "treatment": "Full",
+          "baseline": "NoJoint",
+          "n": 1,
+          "gain_pct": 0.30126827510865706,
+          "p99_change_pct": 2.839827068862566,
+          "drain_gain_pct": 0.29775268211134076,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": false,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "development on two previously inspected inputs with reversed-order repeats; no independent confirmation"
+        },
+        {
+          "block": "moving_shared-73501-r2",
+          "scenario": "moving_shared",
+          "seed": 73501,
+          "treatment": "Full",
+          "baseline": "NoJoint",
+          "n": 1,
+          "gain_pct": 6.205637664044006,
+          "p99_change_pct": 1.1014332997169918,
+          "drain_gain_pct": 6.204348138803706,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": false,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "development on two previously inspected inputs with reversed-order repeats; no independent confirmation"
+        }
+      ]
+    },
+    {
+      "scenario": "moving_shared",
+      "baseline": "PoolSIEVE1",
+      "full": {
+        "mib_s": 356.06540431671004,
+        "p99_ms": 27.296107499999998,
+        "rates": [
+          346.9068875043711,
+          365.7206129711446
+        ],
+        "tails": [
+          27.212858,
+          27.379357
+        ],
+        "remote_mib": 312.0,
+        "copies": 58,
+        "cpu_s": 5.390000000000001
+      },
+      "control": {
+        "mib_s": 352.12881144577983,
+        "p99_ms": 26.5768245,
+        "rates": [
+          362.9326484580866,
+          341.9496011355815
+        ],
+        "tails": [
+          26.011934,
+          27.141715
+        ],
+        "remote_mib": 296.0,
+        "copies": 148,
+        "cpu_s": 5.779999999999999
+      },
+      "gain_pct": 1.1179411462433952,
+      "p99_change_pct": 2.7064294306492487,
+      "strict_passes": 0,
+      "pairs": [
+        {
+          "block": "moving_shared-73501-r1",
+          "scenario": "moving_shared",
+          "seed": 73501,
+          "treatment": "Full",
+          "baseline": "PoolSIEVE1",
+          "n": 1,
+          "gain_pct": -4.415629462326043,
+          "p99_change_pct": 4.616819341460721,
+          "drain_gain_pct": -4.431455120831429,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": false,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "development on two previously inspected inputs with reversed-order repeats; no independent confirmation"
+        },
+        {
+          "block": "moving_shared-73501-r2",
+          "scenario": "moving_shared",
+          "seed": 73501,
+          "treatment": "Full",
+          "baseline": "PoolSIEVE1",
+          "n": 1,
+          "gain_pct": 6.951612681114949,
+          "p99_change_pct": 0.8755600005379227,
+          "drain_gain_pct": 6.948943876350722,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": false,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "development on two previously inspected inputs with reversed-order repeats; no independent confirmation"
+        }
+      ]
+    },
+    {
+      "scenario": "moving_shared",
+      "baseline": "OldFull",
+      "full": {
+        "mib_s": 356.06540431671004,
+        "p99_ms": 27.296107499999998,
+        "rates": [
+          346.9068875043711,
+          365.7206129711446
+        ],
+        "tails": [
+          27.212858,
+          27.379357
+        ],
+        "remote_mib": 312.0,
+        "copies": 58,
+        "cpu_s": 5.390000000000001
+      },
+      "control": {
+        "mib_s": 352.37084830200087,
+        "p99_ms": 26.944858500000002,
+        "rates": [
+          344.7586718296424,
+          360.32676395862654
+        ],
+        "tails": [
+          27.146568,
+          26.743149000000003
+        ],
+        "remote_mib": 290.0,
+        "copies": 133,
+        "cpu_s": 5.83
+      },
+      "gain_pct": 1.0484851492433167,
+      "p99_change_pct": 1.3035845038859462,
+      "strict_passes": 0,
+      "pairs": [
+        {
+          "block": "moving_shared-73501-r1",
+          "scenario": "moving_shared",
+          "seed": 73501,
+          "treatment": "Full",
+          "baseline": "OldFull",
+          "n": 1,
+          "gain_pct": 0.6231070746757439,
+          "p99_change_pct": 0.24419293076016757,
+          "drain_gain_pct": 0.6206186848527029,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": false,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "development on two previously inspected inputs with reversed-order repeats; no independent confirmation"
+        },
+        {
+          "block": "moving_shared-73501-r2",
+          "scenario": "moving_shared",
+          "seed": 73501,
+          "treatment": "Full",
+          "baseline": "OldFull",
+          "n": 1,
+          "gain_pct": 1.4969326600278166,
+          "p99_change_pct": 2.3789569433277924,
+          "drain_gain_pct": 1.4967028280858496,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": false,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "development on two previously inspected inputs with reversed-order repeats; no independent confirmation"
+        }
+      ]
+    },
+    {
+      "scenario": "public_toolagent",
+      "baseline": "NoHotspot",
+      "full": {
+        "mib_s": 89.2483388513045,
+        "p99_ms": 28.703358,
+        "rates": [
+          89.442412232286,
+          89.05510585305214
+        ],
+        "tails": [
+          28.61575,
+          28.790966
+        ],
+        "remote_mib": 3508.0,
+        "copies": 80,
+        "cpu_s": 10.59
+      },
+      "control": {
+        "mib_s": 90.65543008349573,
+        "p99_ms": 28.309684500000003,
+        "rates": [
+          89.77567903977534,
+          91.55259389102596
+        ],
+        "tails": [
+          28.504304,
+          28.115065
+        ],
+        "remote_mib": 3496.0,
+        "copies": 56,
+        "cpu_s": 10.09
+      },
+      "gain_pct": -1.5521312191616898,
+      "p99_change_pct": 1.3905965642252216,
+      "strict_passes": 0,
+      "pairs": [
+        {
+          "block": "public_toolagent-73602-r1",
+          "scenario": "public_toolagent",
+          "seed": 73602,
+          "treatment": "Full",
+          "baseline": "NoHotspot",
+          "n": 1,
+          "gain_pct": -0.3712217062058487,
+          "p99_change_pct": 0.39097955171962795,
+          "drain_gain_pct": -0.3712188267670502,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": false,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "development on two previously inspected inputs with reversed-order repeats; no independent confirmation"
+        },
+        {
+          "block": "public_toolagent-73602-r2",
+          "scenario": "public_toolagent",
+          "seed": 73602,
+          "treatment": "Full",
+          "baseline": "NoHotspot",
+          "n": 1,
+          "gain_pct": -2.727927120171547,
+          "p99_change_pct": 2.404052773842058,
+          "drain_gain_pct": -2.7274717800890746,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": false,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "development on two previously inspected inputs with reversed-order repeats; no independent confirmation"
+        }
+      ]
+    },
+    {
+      "scenario": "public_toolagent",
+      "baseline": "NoAffinity",
+      "full": {
+        "mib_s": 89.2483388513045,
+        "p99_ms": 28.703358,
+        "rates": [
+          89.442412232286,
+          89.05510585305214
+        ],
+        "tails": [
+          28.61575,
+          28.790966
+        ],
+        "remote_mib": 3508.0,
+        "copies": 80,
+        "cpu_s": 10.59
+      },
+      "control": {
+        "mib_s": 88.21339558812399,
+        "p99_ms": 28.678435999999998,
+        "rates": [
+          88.44976712109187,
+          87.97828403788728
+        ],
+        "tails": [
+          28.570797,
+          28.786075
+        ],
+        "remote_mib": 3604.0,
+        "copies": 68,
+        "cpu_s": 10.34
+      },
+      "gain_pct": 1.1732268736289742,
+      "p99_change_pct": 0.08690153117136834,
+      "strict_passes": 0,
+      "pairs": [
+        {
+          "block": "public_toolagent-73602-r1",
+          "scenario": "public_toolagent",
+          "seed": 73602,
+          "treatment": "Full",
+          "baseline": "NoAffinity",
+          "n": 1,
+          "gain_pct": 1.1222698979355794,
+          "p99_change_pct": 0.15733897797811647,
+          "drain_gain_pct": 1.1219639531616865,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": false,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "development on two previously inspected inputs with reversed-order repeats; no independent confirmation"
+        },
+        {
+          "block": "public_toolagent-73602-r2",
+          "scenario": "public_toolagent",
+          "seed": 73602,
+          "treatment": "Full",
+          "baseline": "NoAffinity",
+          "n": 1,
+          "gain_pct": 1.223963193804889,
+          "p99_change_pct": 0.016990854084819595,
+          "drain_gain_pct": 1.299252413041696,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": false,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "development on two previously inspected inputs with reversed-order repeats; no independent confirmation"
+        }
+      ]
+    },
+    {
+      "scenario": "public_toolagent",
+      "baseline": "NoJoint",
+      "full": {
+        "mib_s": 89.2483388513045,
+        "p99_ms": 28.703358,
+        "rates": [
+          89.442412232286,
+          89.05510585305214
+        ],
+        "tails": [
+          28.61575,
+          28.790966
+        ],
+        "remote_mib": 3508.0,
+        "copies": 80,
+        "cpu_s": 10.59
+      },
+      "control": {
+        "mib_s": 86.32779948052558,
+        "p99_ms": 29.486848000000002,
+        "rates": [
+          86.80251620119988,
+          85.85824690076967
+        ],
+        "tails": [
+          29.227129,
+          29.746567000000002
+        ],
+        "remote_mib": 3636.0,
+        "copies": 302,
+        "cpu_s": 11.969999999999999
+      },
+      "gain_pct": 3.383080987066922,
+      "p99_change_pct": -2.6570829137112284,
+      "strict_passes": 2,
+      "pairs": [
+        {
+          "block": "public_toolagent-73602-r1",
+          "scenario": "public_toolagent",
+          "seed": 73602,
+          "treatment": "Full",
+          "baseline": "NoJoint",
+          "n": 1,
+          "gain_pct": 3.0412667127841075,
+          "p99_change_pct": -2.091820240024267,
+          "drain_gain_pct": 3.040847580361117,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": true,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "development on two previously inspected inputs with reversed-order repeats; no independent confirmation"
+        },
+        {
+          "block": "public_toolagent-73602-r2",
+          "scenario": "public_toolagent",
+          "seed": 73602,
+          "treatment": "Full",
+          "baseline": "NoJoint",
+          "n": 1,
+          "gain_pct": 3.723415126303742,
+          "p99_change_pct": -3.21247490508737,
+          "drain_gain_pct": 3.7227881534678264,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": true,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "development on two previously inspected inputs with reversed-order repeats; no independent confirmation"
+        }
+      ]
+    },
+    {
+      "scenario": "public_toolagent",
+      "baseline": "PoolSIEVE1",
+      "full": {
+        "mib_s": 89.2483388513045,
+        "p99_ms": 28.703358,
+        "rates": [
+          89.442412232286,
+          89.05510585305214
+        ],
+        "tails": [
+          28.61575,
+          28.790966
+        ],
+        "remote_mib": 3508.0,
+        "copies": 80,
+        "cpu_s": 10.59
+      },
+      "control": {
+        "mib_s": 73.84934133402817,
+        "p99_ms": 32.1505515,
+        "rates": [
+          73.88552440617265,
+          73.8131936835414
+        ],
+        "tails": [
+          32.348348,
+          31.952755
+        ],
+        "remote_mib": 4292.0,
+        "copies": 2146,
+        "cpu_s": 22.32
+      },
+      "gain_pct": 20.85190908829515,
+      "p99_change_pct": -10.722035359175708,
+      "strict_passes": 2,
+      "pairs": [
+        {
+          "block": "public_toolagent-73602-r1",
+          "scenario": "public_toolagent",
+          "seed": 73602,
+          "treatment": "Full",
+          "baseline": "PoolSIEVE1",
+          "n": 1,
+          "gain_pct": 21.055393395588705,
+          "p99_change_pct": -11.53875925905088,
+          "drain_gain_pct": 21.136514574190436,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": true,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "development on two previously inspected inputs with reversed-order repeats; no independent confirmation"
+        },
+        {
+          "block": "public_toolagent-73602-r2",
+          "scenario": "public_toolagent",
+          "seed": 73602,
+          "treatment": "Full",
+          "baseline": "PoolSIEVE1",
+          "n": 1,
+          "gain_pct": 20.649305915223295,
+          "p99_change_pct": -9.895199960066037,
+          "drain_gain_pct": 20.72850842185312,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": true,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "development on two previously inspected inputs with reversed-order repeats; no independent confirmation"
+        }
+      ]
+    },
+    {
+      "scenario": "public_toolagent",
+      "baseline": "OldFull",
+      "full": {
+        "mib_s": 89.2483388513045,
+        "p99_ms": 28.703358,
+        "rates": [
+          89.442412232286,
+          89.05510585305214
+        ],
+        "tails": [
+          28.61575,
+          28.790966
+        ],
+        "remote_mib": 3508.0,
+        "copies": 80,
+        "cpu_s": 10.59
+      },
+      "control": {
+        "mib_s": 89.41171242313227,
+        "p99_ms": 28.688817500000003,
+        "rates": [
+          88.8993568807651,
+          89.93000793852305
+        ],
+        "tails": [
+          28.848891000000002,
+          28.528744000000003
+        ],
+        "remote_mib": 3508.0,
+        "copies": 80,
+        "cpu_s": 10.59
+      },
+      "gain_pct": -0.18272054902005452,
+      "p99_change_pct": 0.05068351109278613,
+      "strict_passes": 0,
+      "pairs": [
+        {
+          "block": "public_toolagent-73602-r1",
+          "scenario": "public_toolagent",
+          "seed": 73602,
+          "treatment": "Full",
+          "baseline": "OldFull",
+          "n": 1,
+          "gain_pct": 0.6108653319610413,
+          "p99_change_pct": -0.8081454500278751,
+          "drain_gain_pct": 0.6107624633865605,
+          "mechanism_active": false,
+          "executed_actions_changed": false,
+          "pilot_screen": false,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "development on two previously inspected inputs with reversed-order repeats; no independent confirmation"
+        },
+        {
+          "block": "public_toolagent-73602-r2",
+          "scenario": "public_toolagent",
+          "seed": 73602,
+          "treatment": "Full",
+          "baseline": "OldFull",
+          "n": 1,
+          "gain_pct": -0.9728700191697914,
+          "p99_change_pct": 0.9191501735933416,
+          "drain_gain_pct": -0.8982649944832777,
+          "mechanism_active": false,
+          "executed_actions_changed": false,
+          "pilot_screen": false,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "development on two previously inspected inputs with reversed-order repeats; no independent confirmation"
+        }
+      ]
+    }
+  ],
+  "strict_ablation_and_sieve_passes": 4,
+  "strict_retained_binary_passes": 0,
+  "development_inputs": true
+}

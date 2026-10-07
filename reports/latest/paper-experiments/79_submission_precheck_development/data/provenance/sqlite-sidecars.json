@@ -1,0 +1,815 @@
+{
+  "format": 1,
+  "policy": "Preserve main database and every original sidecar. Accept only absent sidecars or a complete pair with zero-byte WAL and 32768-byte SHM; read main DB immutably, never checkpoint or delete.",
+  "checked_databases": 30,
+  "sidecar_files": 48,
+  "bundles": {
+    "correctness/Full/state.db": {
+      "files": {
+        "correctness/Full/state.db": {
+          "bytes": 81920,
+          "sha256": "790cd3ef7894c5e3e91bb76be1959d2eb21937486b895e1bceae31e6c5ff7009"
+        }
+      },
+      "sidecar_mode": "no_sidecars",
+      "immutable_sql_matches": true
+    },
+    "correctness/NoAffinity/state.db": {
+      "files": {
+        "correctness/NoAffinity/state.db": {
+          "bytes": 81920,
+          "sha256": "f5295aef0eae50ca69306a96be71dab6e26379eaf9772c51bab68f2c1bea5b3f"
+        }
+      },
+      "sidecar_mode": "no_sidecars",
+      "immutable_sql_matches": true
+    },
+    "correctness/NoHotspot/state.db": {
+      "files": {
+        "correctness/NoHotspot/state.db": {
+          "bytes": 81920,
+          "sha256": "a41111e3a9dc8bf21e9115efc1e8fe565aeb8ea38fcf242a106bac5b7202dfb9"
+        }
+      },
+      "sidecar_mode": "no_sidecars",
+      "immutable_sql_matches": true
+    },
+    "correctness/NoJoint/state.db": {
+      "files": {
+        "correctness/NoJoint/state.db": {
+          "bytes": 81920,
+          "sha256": "dd7d883bb7272263e9c4ee0e6a4930f6bd4f33f1f86e28ea861f136b230aff08"
+        }
+      },
+      "sidecar_mode": "no_sidecars",
+      "immutable_sql_matches": true
+    },
+    "correctness/NoSubmitPrecheck/state.db": {
+      "files": {
+        "correctness/NoSubmitPrecheck/state.db": {
+          "bytes": 81920,
+          "sha256": "7f21382d00e43a4aee42ed37f36dad57ad589fbcfb95b2637f4cb54092e1811b"
+        }
+      },
+      "sidecar_mode": "no_sidecars",
+      "immutable_sql_matches": true
+    },
+    "correctness/PoolSIEVE1/state.db": {
+      "files": {
+        "correctness/PoolSIEVE1/state.db": {
+          "bytes": 73728,
+          "sha256": "bf560a44c1b932c8a5025e826df09cbd9bbfe5c92f910548edfc9939fb8ae7ad"
+        }
+      },
+      "sidecar_mode": "no_sidecars",
+      "immutable_sql_matches": true
+    },
+    "development/moving_shared-74801-r1/Full/state.db": {
+      "files": {
+        "development/moving_shared-74801-r1/Full/state.db": {
+          "bytes": 135168,
+          "sha256": "ef6bc7dcb77fd64b3b98b23c0e301ca61dd8ff0dc0203d94a2ce1d7393144d1f"
+        },
+        "development/moving_shared-74801-r1/Full/state.db-shm": {
+          "bytes": 32768,
+          "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+        },
+        "development/moving_shared-74801-r1/Full/state.db-wal": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "sidecar_mode": "paired_empty_wal_preserved",
+      "immutable_sql_matches": true
+    },
+    "development/moving_shared-74801-r1/NoAffinity/state.db": {
+      "files": {
+        "development/moving_shared-74801-r1/NoAffinity/state.db": {
+          "bytes": 139264,
+          "sha256": "d9385a4aef71f5e9baed8406502b0b0f4b12805104397ea473126e6ba0336523"
+        },
+        "development/moving_shared-74801-r1/NoAffinity/state.db-shm": {
+          "bytes": 32768,
+          "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+        },
+        "development/moving_shared-74801-r1/NoAffinity/state.db-wal": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "sidecar_mode": "paired_empty_wal_preserved",
+      "immutable_sql_matches": true
+    },
+    "development/moving_shared-74801-r1/NoHotspot/state.db": {
+      "files": {
+        "development/moving_shared-74801-r1/NoHotspot/state.db": {
+          "bytes": 126976,
+          "sha256": "4448ba0a87b5f73b8d340fa3d15d9f6aa6b120c37c3b7999e75dc6872b6810ca"
+        },
+        "development/moving_shared-74801-r1/NoHotspot/state.db-shm": {
+          "bytes": 32768,
+          "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+        },
+        "development/moving_shared-74801-r1/NoHotspot/state.db-wal": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "sidecar_mode": "paired_empty_wal_preserved",
+      "immutable_sql_matches": true
+    },
+    "development/moving_shared-74801-r1/NoJoint/state.db": {
+      "files": {
+        "development/moving_shared-74801-r1/NoJoint/state.db": {
+          "bytes": 151552,
+          "sha256": "7f9ed43271ea0292665e36d3aed0d7cc9d59a01b997de82f4f26c9cc4ead6bfd"
+        },
+        "development/moving_shared-74801-r1/NoJoint/state.db-shm": {
+          "bytes": 32768,
+          "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+        },
+        "development/moving_shared-74801-r1/NoJoint/state.db-wal": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "sidecar_mode": "paired_empty_wal_preserved",
+      "immutable_sql_matches": true
+    },
+    "development/moving_shared-74801-r1/NoSubmitPrecheck/state.db": {
+      "files": {
+        "development/moving_shared-74801-r1/NoSubmitPrecheck/state.db": {
+          "bytes": 126976,
+          "sha256": "1fbcc95e7a0512855da296c42545881c98fc89920d7b7e21701d01aaaf23c047"
+        },
+        "development/moving_shared-74801-r1/NoSubmitPrecheck/state.db-shm": {
+          "bytes": 32768,
+          "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+        },
+        "development/moving_shared-74801-r1/NoSubmitPrecheck/state.db-wal": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "sidecar_mode": "paired_empty_wal_preserved",
+      "immutable_sql_matches": true
+    },
+    "development/moving_shared-74801-r1/PoolSIEVE1/state.db": {
+      "files": {
+        "development/moving_shared-74801-r1/PoolSIEVE1/state.db": {
+          "bytes": 110592,
+          "sha256": "ad681d45e7870732a09a9fb0348ff0a5e517dd43c950b25e8acc24a00323af8c"
+        },
+        "development/moving_shared-74801-r1/PoolSIEVE1/state.db-shm": {
+          "bytes": 32768,
+          "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+        },
+        "development/moving_shared-74801-r1/PoolSIEVE1/state.db-wal": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "sidecar_mode": "paired_empty_wal_preserved",
+      "immutable_sql_matches": true
+    },
+    "development/moving_shared-74801-r2/Full/state.db": {
+      "files": {
+        "development/moving_shared-74801-r2/Full/state.db": {
+          "bytes": 135168,
+          "sha256": "b524722e50bcd5e458359bc096b62515a1bae548a20ef09914c05a9414e794c2"
+        },
+        "development/moving_shared-74801-r2/Full/state.db-shm": {
+          "bytes": 32768,
+          "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+        },
+        "development/moving_shared-74801-r2/Full/state.db-wal": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "sidecar_mode": "paired_empty_wal_preserved",
+      "immutable_sql_matches": true
+    },
+    "development/moving_shared-74801-r2/NoAffinity/state.db": {
+      "files": {
+        "development/moving_shared-74801-r2/NoAffinity/state.db": {
+          "bytes": 143360,
+          "sha256": "c7754bcd16849f5143d21771f7d263cb3ea977115a4404fcdf5d947f9b63ecf1"
+        },
+        "development/moving_shared-74801-r2/NoAffinity/state.db-shm": {
+          "bytes": 32768,
+          "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+        },
+        "development/moving_shared-74801-r2/NoAffinity/state.db-wal": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "sidecar_mode": "paired_empty_wal_preserved",
+      "immutable_sql_matches": true
+    },
+    "development/moving_shared-74801-r2/NoHotspot/state.db": {
+      "files": {
+        "development/moving_shared-74801-r2/NoHotspot/state.db": {
+          "bytes": 126976,
+          "sha256": "276d141727e4200f7a2a750407595babbd366a3c45774db78ad948fcf51632ef"
+        },
+        "development/moving_shared-74801-r2/NoHotspot/state.db-shm": {
+          "bytes": 32768,
+          "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+        },
+        "development/moving_shared-74801-r2/NoHotspot/state.db-wal": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "sidecar_mode": "paired_empty_wal_preserved",
+      "immutable_sql_matches": true
+    },
+    "development/moving_shared-74801-r2/NoJoint/state.db": {
+      "files": {
+        "development/moving_shared-74801-r2/NoJoint/state.db": {
+          "bytes": 151552,
+          "sha256": "b115ef56e487e6fc94c70435e50337c5b43838830b02e9742f977ef7806824af"
+        },
+        "development/moving_shared-74801-r2/NoJoint/state.db-shm": {
+          "bytes": 32768,
+          "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+        },
+        "development/moving_shared-74801-r2/NoJoint/state.db-wal": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "sidecar_mode": "paired_empty_wal_preserved",
+      "immutable_sql_matches": true
+    },
+    "development/moving_shared-74801-r2/NoSubmitPrecheck/state.db": {
+      "files": {
+        "development/moving_shared-74801-r2/NoSubmitPrecheck/state.db": {
+          "bytes": 126976,
+          "sha256": "d3a0fd8b94259c53d6e46a69f2cee9dddb3837b92671dda045e9c0cc20c7def4"
+        },
+        "development/moving_shared-74801-r2/NoSubmitPrecheck/state.db-shm": {
+          "bytes": 32768,
+          "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+        },
+        "development/moving_shared-74801-r2/NoSubmitPrecheck/state.db-wal": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "sidecar_mode": "paired_empty_wal_preserved",
+      "immutable_sql_matches": true
+    },
+    "development/moving_shared-74801-r2/PoolSIEVE1/state.db": {
+      "files": {
+        "development/moving_shared-74801-r2/PoolSIEVE1/state.db": {
+          "bytes": 110592,
+          "sha256": "40273825638290b534e31bd81cd0d9837ebbb92e701c5648ba277bee7232df90"
+        },
+        "development/moving_shared-74801-r2/PoolSIEVE1/state.db-shm": {
+          "bytes": 32768,
+          "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+        },
+        "development/moving_shared-74801-r2/PoolSIEVE1/state.db-wal": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "sidecar_mode": "paired_empty_wal_preserved",
+      "immutable_sql_matches": true
+    },
+    "development/public_toolagent-74802-r1/Full/state.db": {
+      "files": {
+        "development/public_toolagent-74802-r1/Full/state.db": {
+          "bytes": 446464,
+          "sha256": "999d3be1f215d868c0f1d35c9e821543490e3afa74aafd0ed6de453cb7fd1e34"
+        },
+        "development/public_toolagent-74802-r1/Full/state.db-shm": {
+          "bytes": 32768,
+          "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+        },
+        "development/public_toolagent-74802-r1/Full/state.db-wal": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "sidecar_mode": "paired_empty_wal_preserved",
+      "immutable_sql_matches": true
+    },
+    "development/public_toolagent-74802-r1/NoAffinity/state.db": {
+      "files": {
+        "development/public_toolagent-74802-r1/NoAffinity/state.db": {
+          "bytes": 434176,
+          "sha256": "d5041546f5df23a4e1787d5e6d70ff37cd01e820dee04a327a926564b551eb46"
+        },
+        "development/public_toolagent-74802-r1/NoAffinity/state.db-shm": {
+          "bytes": 32768,
+          "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+        },
+        "development/public_toolagent-74802-r1/NoAffinity/state.db-wal": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "sidecar_mode": "paired_empty_wal_preserved",
+      "immutable_sql_matches": true
+    },
+    "development/public_toolagent-74802-r1/NoHotspot/state.db": {
+      "files": {
+        "development/public_toolagent-74802-r1/NoHotspot/state.db": {
+          "bytes": 446464,
+          "sha256": "1d6e37c19daa493ef13ed0b577c0400935c98e40d3eb18ec49843917baeb5459"
+        },
+        "development/public_toolagent-74802-r1/NoHotspot/state.db-shm": {
+          "bytes": 32768,
+          "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+        },
+        "development/public_toolagent-74802-r1/NoHotspot/state.db-wal": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "sidecar_mode": "paired_empty_wal_preserved",
+      "immutable_sql_matches": true
+    },
+    "development/public_toolagent-74802-r1/NoJoint/state.db": {
+      "files": {
+        "development/public_toolagent-74802-r1/NoJoint/state.db": {
+          "bytes": 499712,
+          "sha256": "1a06c2b9c71f43cf2bea6065e1a39e3f3e4a06a3d3b23f2efb14673563f00211"
+        },
+        "development/public_toolagent-74802-r1/NoJoint/state.db-shm": {
+          "bytes": 32768,
+          "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+        },
+        "development/public_toolagent-74802-r1/NoJoint/state.db-wal": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "sidecar_mode": "paired_empty_wal_preserved",
+      "immutable_sql_matches": true
+    },
+    "development/public_toolagent-74802-r1/NoSubmitPrecheck/state.db": {
+      "files": {
+        "development/public_toolagent-74802-r1/NoSubmitPrecheck/state.db": {
+          "bytes": 442368,
+          "sha256": "de988a6c50b7e237fab7997650a734811d8615f40d923aa20274ef5cecbec15b"
+        },
+        "development/public_toolagent-74802-r1/NoSubmitPrecheck/state.db-shm": {
+          "bytes": 32768,
+          "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+        },
+        "development/public_toolagent-74802-r1/NoSubmitPrecheck/state.db-wal": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "sidecar_mode": "paired_empty_wal_preserved",
+      "immutable_sql_matches": true
+    },
+    "development/public_toolagent-74802-r1/PoolSIEVE1/state.db": {
+      "files": {
+        "development/public_toolagent-74802-r1/PoolSIEVE1/state.db": {
+          "bytes": 548864,
+          "sha256": "1307c257267e9552bbd523979f70cc1adbebb119b50f8c7ba1509105047adf7a"
+        },
+        "development/public_toolagent-74802-r1/PoolSIEVE1/state.db-shm": {
+          "bytes": 32768,
+          "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+        },
+        "development/public_toolagent-74802-r1/PoolSIEVE1/state.db-wal": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "sidecar_mode": "paired_empty_wal_preserved",
+      "immutable_sql_matches": true
+    },
+    "development/public_toolagent-74802-r2/Full/state.db": {
+      "files": {
+        "development/public_toolagent-74802-r2/Full/state.db": {
+          "bytes": 450560,
+          "sha256": "cb6791ef1dfeb2713088b7f7dfbaef6109c379784c396e2be438e27a357bbd97"
+        },
+        "development/public_toolagent-74802-r2/Full/state.db-shm": {
+          "bytes": 32768,
+          "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+        },
+        "development/public_toolagent-74802-r2/Full/state.db-wal": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "sidecar_mode": "paired_empty_wal_preserved",
+      "immutable_sql_matches": true
+    },
+    "development/public_toolagent-74802-r2/NoAffinity/state.db": {
+      "files": {
+        "development/public_toolagent-74802-r2/NoAffinity/state.db": {
+          "bytes": 434176,
+          "sha256": "1899efdd77a6e3b974e786a06691c6ce6e5fcfa7fa6a53d1ad66842743c2cea6"
+        },
+        "development/public_toolagent-74802-r2/NoAffinity/state.db-shm": {
+          "bytes": 32768,
+          "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+        },
+        "development/public_toolagent-74802-r2/NoAffinity/state.db-wal": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "sidecar_mode": "paired_empty_wal_preserved",
+      "immutable_sql_matches": true
+    },
+    "development/public_toolagent-74802-r2/NoHotspot/state.db": {
+      "files": {
+        "development/public_toolagent-74802-r2/NoHotspot/state.db": {
+          "bytes": 438272,
+          "sha256": "3b5cf15b481c8bb1afa6aa713e62ed10afc75cbc8168b314493211f11d2d7565"
+        },
+        "development/public_toolagent-74802-r2/NoHotspot/state.db-shm": {
+          "bytes": 32768,
+          "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+        },
+        "development/public_toolagent-74802-r2/NoHotspot/state.db-wal": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "sidecar_mode": "paired_empty_wal_preserved",
+      "immutable_sql_matches": true
+    },
+    "development/public_toolagent-74802-r2/NoJoint/state.db": {
+      "files": {
+        "development/public_toolagent-74802-r2/NoJoint/state.db": {
+          "bytes": 499712,
+          "sha256": "89c48fd519b8563c7807c7ddc3f5ca26684cb9aee5291e71d5569f46c8637ac8"
+        },
+        "development/public_toolagent-74802-r2/NoJoint/state.db-shm": {
+          "bytes": 32768,
+          "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+        },
+        "development/public_toolagent-74802-r2/NoJoint/state.db-wal": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "sidecar_mode": "paired_empty_wal_preserved",
+      "immutable_sql_matches": true
+    },
+    "development/public_toolagent-74802-r2/NoSubmitPrecheck/state.db": {
+      "files": {
+        "development/public_toolagent-74802-r2/NoSubmitPrecheck/state.db": {
+          "bytes": 442368,
+          "sha256": "10324fadfce5c2543f465b1d92a99765068ef2656a5ab0b89e1c4bb39bdb437e"
+        },
+        "development/public_toolagent-74802-r2/NoSubmitPrecheck/state.db-shm": {
+          "bytes": 32768,
+          "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+        },
+        "development/public_toolagent-74802-r2/NoSubmitPrecheck/state.db-wal": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "sidecar_mode": "paired_empty_wal_preserved",
+      "immutable_sql_matches": true
+    },
+    "development/public_toolagent-74802-r2/PoolSIEVE1/state.db": {
+      "files": {
+        "development/public_toolagent-74802-r2/PoolSIEVE1/state.db": {
+          "bytes": 548864,
+          "sha256": "f730404ab5db993c7cd1646f132958151961f30c7269725220287cf64d93c77c"
+        },
+        "development/public_toolagent-74802-r2/PoolSIEVE1/state.db-shm": {
+          "bytes": 32768,
+          "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+        },
+        "development/public_toolagent-74802-r2/PoolSIEVE1/state.db-wal": {
+          "bytes": 0,
+          "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+        }
+      },
+      "sidecar_mode": "paired_empty_wal_preserved",
+      "immutable_sql_matches": true
+    }
+  },
+  "files": {
+    "correctness/Full/state.db": {
+      "bytes": 81920,
+      "sha256": "790cd3ef7894c5e3e91bb76be1959d2eb21937486b895e1bceae31e6c5ff7009"
+    },
+    "correctness/NoAffinity/state.db": {
+      "bytes": 81920,
+      "sha256": "f5295aef0eae50ca69306a96be71dab6e26379eaf9772c51bab68f2c1bea5b3f"
+    },
+    "correctness/NoHotspot/state.db": {
+      "bytes": 81920,
+      "sha256": "a41111e3a9dc8bf21e9115efc1e8fe565aeb8ea38fcf242a106bac5b7202dfb9"
+    },
+    "correctness/NoJoint/state.db": {
+      "bytes": 81920,
+      "sha256": "dd7d883bb7272263e9c4ee0e6a4930f6bd4f33f1f86e28ea861f136b230aff08"
+    },
+    "correctness/NoSubmitPrecheck/state.db": {
+      "bytes": 81920,
+      "sha256": "7f21382d00e43a4aee42ed37f36dad57ad589fbcfb95b2637f4cb54092e1811b"
+    },
+    "correctness/PoolSIEVE1/state.db": {
+      "bytes": 73728,
+      "sha256": "bf560a44c1b932c8a5025e826df09cbd9bbfe5c92f910548edfc9939fb8ae7ad"
+    },
+    "development/moving_shared-74801-r1/Full/state.db": {
+      "bytes": 135168,
+      "sha256": "ef6bc7dcb77fd64b3b98b23c0e301ca61dd8ff0dc0203d94a2ce1d7393144d1f"
+    },
+    "development/moving_shared-74801-r1/Full/state.db-shm": {
+      "bytes": 32768,
+      "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+    },
+    "development/moving_shared-74801-r1/Full/state.db-wal": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "development/moving_shared-74801-r1/NoAffinity/state.db": {
+      "bytes": 139264,
+      "sha256": "d9385a4aef71f5e9baed8406502b0b0f4b12805104397ea473126e6ba0336523"
+    },
+    "development/moving_shared-74801-r1/NoAffinity/state.db-shm": {
+      "bytes": 32768,
+      "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+    },
+    "development/moving_shared-74801-r1/NoAffinity/state.db-wal": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "development/moving_shared-74801-r1/NoHotspot/state.db": {
+      "bytes": 126976,
+      "sha256": "4448ba0a87b5f73b8d340fa3d15d9f6aa6b120c37c3b7999e75dc6872b6810ca"
+    },
+    "development/moving_shared-74801-r1/NoHotspot/state.db-shm": {
+      "bytes": 32768,
+      "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+    },
+    "development/moving_shared-74801-r1/NoHotspot/state.db-wal": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "development/moving_shared-74801-r1/NoJoint/state.db": {
+      "bytes": 151552,
+      "sha256": "7f9ed43271ea0292665e36d3aed0d7cc9d59a01b997de82f4f26c9cc4ead6bfd"
+    },
+    "development/moving_shared-74801-r1/NoJoint/state.db-shm": {
+      "bytes": 32768,
+      "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+    },
+    "development/moving_shared-74801-r1/NoJoint/state.db-wal": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "development/moving_shared-74801-r1/NoSubmitPrecheck/state.db": {
+      "bytes": 126976,
+      "sha256": "1fbcc95e7a0512855da296c42545881c98fc89920d7b7e21701d01aaaf23c047"
+    },
+    "development/moving_shared-74801-r1/NoSubmitPrecheck/state.db-shm": {
+      "bytes": 32768,
+      "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+    },
+    "development/moving_shared-74801-r1/NoSubmitPrecheck/state.db-wal": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "development/moving_shared-74801-r1/PoolSIEVE1/state.db": {
+      "bytes": 110592,
+      "sha256": "ad681d45e7870732a09a9fb0348ff0a5e517dd43c950b25e8acc24a00323af8c"
+    },
+    "development/moving_shared-74801-r1/PoolSIEVE1/state.db-shm": {
+      "bytes": 32768,
+      "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+    },
+    "development/moving_shared-74801-r1/PoolSIEVE1/state.db-wal": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "development/moving_shared-74801-r2/Full/state.db": {
+      "bytes": 135168,
+      "sha256": "b524722e50bcd5e458359bc096b62515a1bae548a20ef09914c05a9414e794c2"
+    },
+    "development/moving_shared-74801-r2/Full/state.db-shm": {
+      "bytes": 32768,
+      "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+    },
+    "development/moving_shared-74801-r2/Full/state.db-wal": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "development/moving_shared-74801-r2/NoAffinity/state.db": {
+      "bytes": 143360,
+      "sha256": "c7754bcd16849f5143d21771f7d263cb3ea977115a4404fcdf5d947f9b63ecf1"
+    },
+    "development/moving_shared-74801-r2/NoAffinity/state.db-shm": {
+      "bytes": 32768,
+      "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+    },
+    "development/moving_shared-74801-r2/NoAffinity/state.db-wal": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "development/moving_shared-74801-r2/NoHotspot/state.db": {
+      "bytes": 126976,
+      "sha256": "276d141727e4200f7a2a750407595babbd366a3c45774db78ad948fcf51632ef"
+    },
+    "development/moving_shared-74801-r2/NoHotspot/state.db-shm": {
+      "bytes": 32768,
+      "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+    },
+    "development/moving_shared-74801-r2/NoHotspot/state.db-wal": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "development/moving_shared-74801-r2/NoJoint/state.db": {
+      "bytes": 151552,
+      "sha256": "b115ef56e487e6fc94c70435e50337c5b43838830b02e9742f977ef7806824af"
+    },
+    "development/moving_shared-74801-r2/NoJoint/state.db-shm": {
+      "bytes": 32768,
+      "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+    },
+    "development/moving_shared-74801-r2/NoJoint/state.db-wal": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "development/moving_shared-74801-r2/NoSubmitPrecheck/state.db": {
+      "bytes": 126976,
+      "sha256": "d3a0fd8b94259c53d6e46a69f2cee9dddb3837b92671dda045e9c0cc20c7def4"
+    },
+    "development/moving_shared-74801-r2/NoSubmitPrecheck/state.db-shm": {
+      "bytes": 32768,
+      "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+    },
+    "development/moving_shared-74801-r2/NoSubmitPrecheck/state.db-wal": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "development/moving_shared-74801-r2/PoolSIEVE1/state.db": {
+      "bytes": 110592,
+      "sha256": "40273825638290b534e31bd81cd0d9837ebbb92e701c5648ba277bee7232df90"
+    },
+    "development/moving_shared-74801-r2/PoolSIEVE1/state.db-shm": {
+      "bytes": 32768,
+      "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+    },
+    "development/moving_shared-74801-r2/PoolSIEVE1/state.db-wal": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "development/public_toolagent-74802-r1/Full/state.db": {
+      "bytes": 446464,
+      "sha256": "999d3be1f215d868c0f1d35c9e821543490e3afa74aafd0ed6de453cb7fd1e34"
+    },
+    "development/public_toolagent-74802-r1/Full/state.db-shm": {
+      "bytes": 32768,
+      "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+    },
+    "development/public_toolagent-74802-r1/Full/state.db-wal": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "development/public_toolagent-74802-r1/NoAffinity/state.db": {
+      "bytes": 434176,
+      "sha256": "d5041546f5df23a4e1787d5e6d70ff37cd01e820dee04a327a926564b551eb46"
+    },
+    "development/public_toolagent-74802-r1/NoAffinity/state.db-shm": {
+      "bytes": 32768,
+      "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+    },
+    "development/public_toolagent-74802-r1/NoAffinity/state.db-wal": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "development/public_toolagent-74802-r1/NoHotspot/state.db": {
+      "bytes": 446464,
+      "sha256": "1d6e37c19daa493ef13ed0b577c0400935c98e40d3eb18ec49843917baeb5459"
+    },
+    "development/public_toolagent-74802-r1/NoHotspot/state.db-shm": {
+      "bytes": 32768,
+      "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+    },
+    "development/public_toolagent-74802-r1/NoHotspot/state.db-wal": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "development/public_toolagent-74802-r1/NoJoint/state.db": {
+      "bytes": 499712,
+      "sha256": "1a06c2b9c71f43cf2bea6065e1a39e3f3e4a06a3d3b23f2efb14673563f00211"
+    },
+    "development/public_toolagent-74802-r1/NoJoint/state.db-shm": {
+      "bytes": 32768,
+      "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+    },
+    "development/public_toolagent-74802-r1/NoJoint/state.db-wal": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "development/public_toolagent-74802-r1/NoSubmitPrecheck/state.db": {
+      "bytes": 442368,
+      "sha256": "de988a6c50b7e237fab7997650a734811d8615f40d923aa20274ef5cecbec15b"
+    },
+    "development/public_toolagent-74802-r1/NoSubmitPrecheck/state.db-shm": {
+      "bytes": 32768,
+      "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+    },
+    "development/public_toolagent-74802-r1/NoSubmitPrecheck/state.db-wal": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "development/public_toolagent-74802-r1/PoolSIEVE1/state.db": {
+      "bytes": 548864,
+      "sha256": "1307c257267e9552bbd523979f70cc1adbebb119b50f8c7ba1509105047adf7a"
+    },
+    "development/public_toolagent-74802-r1/PoolSIEVE1/state.db-shm": {
+      "bytes": 32768,
+      "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+    },
+    "development/public_toolagent-74802-r1/PoolSIEVE1/state.db-wal": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "development/public_toolagent-74802-r2/Full/state.db": {
+      "bytes": 450560,
+      "sha256": "cb6791ef1dfeb2713088b7f7dfbaef6109c379784c396e2be438e27a357bbd97"
+    },
+    "development/public_toolagent-74802-r2/Full/state.db-shm": {
+      "bytes": 32768,
+      "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+    },
+    "development/public_toolagent-74802-r2/Full/state.db-wal": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "development/public_toolagent-74802-r2/NoAffinity/state.db": {
+      "bytes": 434176,
+      "sha256": "1899efdd77a6e3b974e786a06691c6ce6e5fcfa7fa6a53d1ad66842743c2cea6"
+    },
+    "development/public_toolagent-74802-r2/NoAffinity/state.db-shm": {
+      "bytes": 32768,
+      "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+    },
+    "development/public_toolagent-74802-r2/NoAffinity/state.db-wal": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "development/public_toolagent-74802-r2/NoHotspot/state.db": {
+      "bytes": 438272,
+      "sha256": "3b5cf15b481c8bb1afa6aa713e62ed10afc75cbc8168b314493211f11d2d7565"
+    },
+    "development/public_toolagent-74802-r2/NoHotspot/state.db-shm": {
+      "bytes": 32768,
+      "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+    },
+    "development/public_toolagent-74802-r2/NoHotspot/state.db-wal": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "development/public_toolagent-74802-r2/NoJoint/state.db": {
+      "bytes": 499712,
+      "sha256": "89c48fd519b8563c7807c7ddc3f5ca26684cb9aee5291e71d5569f46c8637ac8"
+    },
+    "development/public_toolagent-74802-r2/NoJoint/state.db-shm": {
+      "bytes": 32768,
+      "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+    },
+    "development/public_toolagent-74802-r2/NoJoint/state.db-wal": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "development/public_toolagent-74802-r2/NoSubmitPrecheck/state.db": {
+      "bytes": 442368,
+      "sha256": "10324fadfce5c2543f465b1d92a99765068ef2656a5ab0b89e1c4bb39bdb437e"
+    },
+    "development/public_toolagent-74802-r2/NoSubmitPrecheck/state.db-shm": {
+      "bytes": 32768,
+      "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+    },
+    "development/public_toolagent-74802-r2/NoSubmitPrecheck/state.db-wal": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    "development/public_toolagent-74802-r2/PoolSIEVE1/state.db": {
+      "bytes": 548864,
+      "sha256": "f730404ab5db993c7cd1646f132958151961f30c7269725220287cf64d93c77c"
+    },
+    "development/public_toolagent-74802-r2/PoolSIEVE1/state.db-shm": {
+      "bytes": 32768,
+      "sha256": "fd4c9fda9cd3f9ae7c962b0ddf37232294d55580e1aa165aa06129b8549389eb"
+    },
+    "development/public_toolagent-74802-r2/PoolSIEVE1/state.db-wal": {
+      "bytes": 0,
+      "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  },
+  "original_sql_files_unchanged": true
+}

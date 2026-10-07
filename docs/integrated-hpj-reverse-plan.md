@@ -1,0 +1,5 @@
+# Frozen-binary reverse-order small repetition
+
+Repeat all fifteen guarded-development cases with identical inputs, quotas, configuration, binary, and acceptance gates. Reverse all five-arm orders within each workload. Do not select only failing or winning comparisons. This checks ordering sensitivity; it is n=2 per condition across two orders on known development traces, not independent workload confirmation or statistical significance.
+
+The build step copies the exact previously tested guarded binary, verifies SHA256 equality, and freezes the original source hashes plus this driver and plan. It does not rebuild C++ or change parameters. Preserve both individual repeats and aggregate total logical bytes / total measured wall time, with per-run tail results and pooled descriptive p99. Declare a comparison repeat-consistent only if all pre-existing per-run gates pass in both orders. All earlier failed candidates remain archived. After both speed matrices, run five 96-request content-check cases separately, excluding their hash-instrumented timings from speed evidence.

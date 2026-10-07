@@ -1,0 +1,1649 @@
+{
+  "speed_evidence": false,
+  "description": "Fixed 10 known inputs \u00d7 3 versions \u00d7 4 arms. Only completed newcomer copy residencies train discount; real disk hits exclude RAM. End residents right-censored. Beta(1,1) success or hit-count discount multiplies original cohort prior. Constant costs and immediate copies, not actual throughput/p99.",
+  "rows": [
+    {
+      "input": "moving_shared-73501",
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=77 copies=65 copy_cost=13 net_gain=113 victim_loss=80\nNoHotspot remote=79 copies=28 copy_cost=3 net_gain=3 no_reuse=155 victim_loss=15\nNoAffinity remote=95 copies=44 copy_cost=6 net_gain=32 victim_loss=45\nNoJoint remote=99 copies=97 copy_cost=13\n",
+          "arms": {
+            "Full": {
+              "remote": 77,
+              "copies": 65,
+              "copy_cost": 13,
+              "net_gain": 113,
+              "victim_loss": 80
+            },
+            "NoHotspot": {
+              "remote": 79,
+              "copies": 28,
+              "copy_cost": 3,
+              "net_gain": 3,
+              "no_reuse": 155,
+              "victim_loss": 15
+            },
+            "NoAffinity": {
+              "remote": 95,
+              "copies": 44,
+              "copy_cost": 6,
+              "net_gain": 32,
+              "victim_loss": 45
+            },
+            "NoJoint": {
+              "remote": 99,
+              "copies": 97,
+              "copy_cost": 13
+            }
+          }
+        },
+        "cohort_beta_outcome": {
+          "stdout": "Full remote=79 copies=29 copy_cost=161 net_gain=51 installed=29 newcopies=12 closed_all=17 closed_new=12 closed_success=8 closed_hits=61 censored_new=0 calibration_count=12\nNoHotspot remote=79 copies=28 copy_cost=3 net_gain=3 no_reuse=155 victim_loss=15 installed=0 newcopies=0 closed_all=0 closed_new=0 closed_success=0 closed_hits=0 censored_new=0 calibration_count=0\nNoAffinity remote=100 copies=39 copy_cost=31 net_gain=27 victim_loss=30 installed=39 newcopies=9 closed_all=27 closed_new=9 closed_success=6 closed_hits=28 censored_new=0 calibration_count=9\nNoJoint remote=89 copies=39 copy_cost=161 installed=39 newcopies=12 closed_all=27 closed_new=12 closed_success=8 closed_hits=61 censored_new=0 calibration_count=12\n",
+          "arms": {
+            "Full": {
+              "remote": 79,
+              "copies": 29,
+              "copy_cost": 161,
+              "net_gain": 51,
+              "installed": 29,
+              "newcopies": 12,
+              "closed_all": 17,
+              "closed_new": 12,
+              "closed_success": 8,
+              "closed_hits": 61,
+              "censored_new": 0,
+              "calibration_count": 12
+            },
+            "NoHotspot": {
+              "remote": 79,
+              "copies": 28,
+              "copy_cost": 3,
+              "net_gain": 3,
+              "no_reuse": 155,
+              "victim_loss": 15,
+              "installed": 0,
+              "newcopies": 0,
+              "closed_all": 0,
+              "closed_new": 0,
+              "closed_success": 0,
+              "closed_hits": 0,
+              "censored_new": 0,
+              "calibration_count": 0
+            },
+            "NoAffinity": {
+              "remote": 100,
+              "copies": 39,
+              "copy_cost": 31,
+              "net_gain": 27,
+              "victim_loss": 30,
+              "installed": 39,
+              "newcopies": 9,
+              "closed_all": 27,
+              "closed_new": 9,
+              "closed_success": 6,
+              "closed_hits": 28,
+              "censored_new": 0,
+              "calibration_count": 9
+            },
+            "NoJoint": {
+              "remote": 89,
+              "copies": 39,
+              "copy_cost": 161,
+              "installed": 39,
+              "newcopies": 12,
+              "closed_all": 27,
+              "closed_new": 12,
+              "closed_success": 8,
+              "closed_hits": 61,
+              "censored_new": 0,
+              "calibration_count": 12
+            }
+          }
+        },
+        "cohort_hit_outcome": {
+          "stdout": "Full remote=74 copies=50 copy_cost=71 net_gain=83 victim_loss=43 installed=50 newcopies=38 closed_all=38 closed_new=30 closed_success=11 closed_hits=72 censored_new=8 calibration_count=30\nNoHotspot remote=79 copies=28 copy_cost=3 net_gain=3 no_reuse=155 victim_loss=15 installed=0 newcopies=0 closed_all=0 closed_new=0 closed_success=0 closed_hits=0 censored_new=0 calibration_count=0\nNoAffinity remote=95 copies=44 copy_cost=7 net_gain=32 victim_loss=44 installed=44 newcopies=16 closed_all=32 closed_new=13 closed_success=5 closed_hits=25 censored_new=3 calibration_count=13\nNoJoint remote=96 copies=80 copy_cost=59 installed=80 newcopies=46 closed_all=68 closed_new=44 closed_success=10 closed_hits=64 censored_new=2 calibration_count=44\n",
+          "arms": {
+            "Full": {
+              "remote": 74,
+              "copies": 50,
+              "copy_cost": 71,
+              "net_gain": 83,
+              "victim_loss": 43,
+              "installed": 50,
+              "newcopies": 38,
+              "closed_all": 38,
+              "closed_new": 30,
+              "closed_success": 11,
+              "closed_hits": 72,
+              "censored_new": 8,
+              "calibration_count": 30
+            },
+            "NoHotspot": {
+              "remote": 79,
+              "copies": 28,
+              "copy_cost": 3,
+              "net_gain": 3,
+              "no_reuse": 155,
+              "victim_loss": 15,
+              "installed": 0,
+              "newcopies": 0,
+              "closed_all": 0,
+              "closed_new": 0,
+              "closed_success": 0,
+              "closed_hits": 0,
+              "censored_new": 0,
+              "calibration_count": 0
+            },
+            "NoAffinity": {
+              "remote": 95,
+              "copies": 44,
+              "copy_cost": 7,
+              "net_gain": 32,
+              "victim_loss": 44,
+              "installed": 44,
+              "newcopies": 16,
+              "closed_all": 32,
+              "closed_new": 13,
+              "closed_success": 5,
+              "closed_hits": 25,
+              "censored_new": 3,
+              "calibration_count": 13
+            },
+            "NoJoint": {
+              "remote": 96,
+              "copies": 80,
+              "copy_cost": 59,
+              "installed": 80,
+              "newcopies": 46,
+              "closed_all": 68,
+              "closed_new": 44,
+              "closed_success": 10,
+              "closed_hits": 64,
+              "censored_new": 2,
+              "calibration_count": 44
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "moving_shared-73502",
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=76 copies=64 copy_cost=15 net_gain=111 no_reuse=1 victim_loss=75\nNoHotspot remote=85 copies=28 copy_cost=6 net_gain=3 no_reuse=169 victim_loss=12\nNoAffinity remote=112 copies=55 copy_cost=7 net_gain=42 no_reuse=1 victim_loss=49\nNoJoint remote=88 copies=85 copy_cost=18 no_reuse=1\n",
+          "arms": {
+            "Full": {
+              "remote": 76,
+              "copies": 64,
+              "copy_cost": 15,
+              "net_gain": 111,
+              "no_reuse": 1,
+              "victim_loss": 75
+            },
+            "NoHotspot": {
+              "remote": 85,
+              "copies": 28,
+              "copy_cost": 6,
+              "net_gain": 3,
+              "no_reuse": 169,
+              "victim_loss": 12
+            },
+            "NoAffinity": {
+              "remote": 112,
+              "copies": 55,
+              "copy_cost": 7,
+              "net_gain": 42,
+              "no_reuse": 1,
+              "victim_loss": 49
+            },
+            "NoJoint": {
+              "remote": 88,
+              "copies": 85,
+              "copy_cost": 18,
+              "no_reuse": 1
+            }
+          }
+        },
+        "cohort_beta_outcome": {
+          "stdout": "Full remote=83 copies=28 copy_cost=174 net_gain=47 no_reuse=1 victim_loss=1 installed=28 newcopies=12 closed_all=16 closed_new=12 closed_success=8 closed_hits=59 censored_new=0 calibration_count=12\nNoHotspot remote=85 copies=28 copy_cost=6 net_gain=3 no_reuse=169 victim_loss=12 installed=0 newcopies=0 closed_all=0 closed_new=0 closed_success=0 closed_hits=0 censored_new=0 calibration_count=0\nNoAffinity remote=120 copies=51 copy_cost=57 net_gain=39 no_reuse=1 victim_loss=11 installed=51 newcopies=8 closed_all=39 closed_new=8 closed_success=4 closed_hits=11 censored_new=0 calibration_count=8\nNoJoint remote=101 copies=46 copy_cost=174 no_reuse=1 installed=46 newcopies=12 closed_all=34 closed_new=10 closed_success=6 closed_hits=44 censored_new=2 calibration_count=10\n",
+          "arms": {
+            "Full": {
+              "remote": 83,
+              "copies": 28,
+              "copy_cost": 174,
+              "net_gain": 47,
+              "no_reuse": 1,
+              "victim_loss": 1,
+              "installed": 28,
+              "newcopies": 12,
+              "closed_all": 16,
+              "closed_new": 12,
+              "closed_success": 8,
+              "closed_hits": 59,
+              "censored_new": 0,
+              "calibration_count": 12
+            },
+            "NoHotspot": {
+              "remote": 85,
+              "copies": 28,
+              "copy_cost": 6,
+              "net_gain": 3,
+              "no_reuse": 169,
+              "victim_loss": 12,
+              "installed": 0,
+              "newcopies": 0,
+              "closed_all": 0,
+              "closed_new": 0,
+              "closed_success": 0,
+              "closed_hits": 0,
+              "censored_new": 0,
+              "calibration_count": 0
+            },
+            "NoAffinity": {
+              "remote": 120,
+              "copies": 51,
+              "copy_cost": 57,
+              "net_gain": 39,
+              "no_reuse": 1,
+              "victim_loss": 11,
+              "installed": 51,
+              "newcopies": 8,
+              "closed_all": 39,
+              "closed_new": 8,
+              "closed_success": 4,
+              "closed_hits": 11,
+              "censored_new": 0,
+              "calibration_count": 8
+            },
+            "NoJoint": {
+              "remote": 101,
+              "copies": 46,
+              "copy_cost": 174,
+              "no_reuse": 1,
+              "installed": 46,
+              "newcopies": 12,
+              "closed_all": 34,
+              "closed_new": 10,
+              "closed_success": 6,
+              "closed_hits": 44,
+              "censored_new": 2,
+              "calibration_count": 10
+            }
+          }
+        },
+        "cohort_hit_outcome": {
+          "stdout": "Full remote=80 copies=50 copy_cost=87 net_gain=82 no_reuse=1 victim_loss=44 installed=50 newcopies=37 closed_all=38 closed_new=29 closed_success=9 closed_hits=60 censored_new=8 calibration_count=29\nNoHotspot remote=85 copies=28 copy_cost=6 net_gain=3 no_reuse=169 victim_loss=12 installed=0 newcopies=0 closed_all=0 closed_new=0 closed_success=0 closed_hits=0 censored_new=0 calibration_count=0\nNoAffinity remote=110 copies=49 copy_cost=8 net_gain=36 no_reuse=1 victim_loss=52 installed=49 newcopies=16 closed_all=37 closed_new=13 closed_success=6 closed_hits=27 censored_new=3 calibration_count=13\nNoJoint remote=89 copies=66 copy_cost=78 no_reuse=1 installed=66 newcopies=44 closed_all=54 closed_new=39 closed_success=9 closed_hits=57 censored_new=5 calibration_count=39\n",
+          "arms": {
+            "Full": {
+              "remote": 80,
+              "copies": 50,
+              "copy_cost": 87,
+              "net_gain": 82,
+              "no_reuse": 1,
+              "victim_loss": 44,
+              "installed": 50,
+              "newcopies": 37,
+              "closed_all": 38,
+              "closed_new": 29,
+              "closed_success": 9,
+              "closed_hits": 60,
+              "censored_new": 8,
+              "calibration_count": 29
+            },
+            "NoHotspot": {
+              "remote": 85,
+              "copies": 28,
+              "copy_cost": 6,
+              "net_gain": 3,
+              "no_reuse": 169,
+              "victim_loss": 12,
+              "installed": 0,
+              "newcopies": 0,
+              "closed_all": 0,
+              "closed_new": 0,
+              "closed_success": 0,
+              "closed_hits": 0,
+              "censored_new": 0,
+              "calibration_count": 0
+            },
+            "NoAffinity": {
+              "remote": 110,
+              "copies": 49,
+              "copy_cost": 8,
+              "net_gain": 36,
+              "no_reuse": 1,
+              "victim_loss": 52,
+              "installed": 49,
+              "newcopies": 16,
+              "closed_all": 37,
+              "closed_new": 13,
+              "closed_success": 6,
+              "closed_hits": 27,
+              "censored_new": 3,
+              "calibration_count": 13
+            },
+            "NoJoint": {
+              "remote": 89,
+              "copies": 66,
+              "copy_cost": 78,
+              "no_reuse": 1,
+              "installed": 66,
+              "newcopies": 44,
+              "closed_all": 54,
+              "closed_new": 39,
+              "closed_success": 9,
+              "closed_hits": 57,
+              "censored_new": 5,
+              "calibration_count": 39
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "moving_shared-73503",
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=78 copies=63 copy_cost=12 net_gain=105 victim_loss=93\nNoHotspot remote=79 copies=28 copy_cost=9 no_reuse=156 victim_loss=15\nNoAffinity remote=114 copies=53 copy_cost=6 net_gain=41 victim_loss=55\nNoJoint remote=107 copies=104 copy_cost=12\n",
+          "arms": {
+            "Full": {
+              "remote": 78,
+              "copies": 63,
+              "copy_cost": 12,
+              "net_gain": 105,
+              "victim_loss": 93
+            },
+            "NoHotspot": {
+              "remote": 79,
+              "copies": 28,
+              "copy_cost": 9,
+              "no_reuse": 156,
+              "victim_loss": 15
+            },
+            "NoAffinity": {
+              "remote": 114,
+              "copies": 53,
+              "copy_cost": 6,
+              "net_gain": 41,
+              "victim_loss": 55
+            },
+            "NoJoint": {
+              "remote": 107,
+              "copies": 104,
+              "copy_cost": 12
+            }
+          }
+        },
+        "cohort_beta_outcome": {
+          "stdout": "Full remote=78 copies=28 copy_cost=162 net_gain=48 installed=28 newcopies=12 closed_all=16 closed_new=12 closed_success=8 closed_hits=60 censored_new=0 calibration_count=12\nNoHotspot remote=79 copies=28 copy_cost=9 no_reuse=156 victim_loss=15 installed=0 newcopies=0 closed_all=0 closed_new=0 closed_success=0 closed_hits=0 censored_new=0 calibration_count=0\nNoAffinity remote=114 copies=45 copy_cost=55 net_gain=33 victim_loss=14 installed=45 newcopies=8 closed_all=33 closed_new=7 closed_success=5 closed_hits=22 censored_new=1 calibration_count=7\nNoJoint remote=97 copies=48 copy_cost=159 installed=48 newcopies=14 closed_all=36 closed_new=13 closed_success=9 closed_hits=66 censored_new=1 calibration_count=13\n",
+          "arms": {
+            "Full": {
+              "remote": 78,
+              "copies": 28,
+              "copy_cost": 162,
+              "net_gain": 48,
+              "installed": 28,
+              "newcopies": 12,
+              "closed_all": 16,
+              "closed_new": 12,
+              "closed_success": 8,
+              "closed_hits": 60,
+              "censored_new": 0,
+              "calibration_count": 12
+            },
+            "NoHotspot": {
+              "remote": 79,
+              "copies": 28,
+              "copy_cost": 9,
+              "no_reuse": 156,
+              "victim_loss": 15,
+              "installed": 0,
+              "newcopies": 0,
+              "closed_all": 0,
+              "closed_new": 0,
+              "closed_success": 0,
+              "closed_hits": 0,
+              "censored_new": 0,
+              "calibration_count": 0
+            },
+            "NoAffinity": {
+              "remote": 114,
+              "copies": 45,
+              "copy_cost": 55,
+              "net_gain": 33,
+              "victim_loss": 14,
+              "installed": 45,
+              "newcopies": 8,
+              "closed_all": 33,
+              "closed_new": 7,
+              "closed_success": 5,
+              "closed_hits": 22,
+              "censored_new": 1,
+              "calibration_count": 7
+            },
+            "NoJoint": {
+              "remote": 97,
+              "copies": 48,
+              "copy_cost": 159,
+              "installed": 48,
+              "newcopies": 14,
+              "closed_all": 36,
+              "closed_new": 13,
+              "closed_success": 9,
+              "closed_hits": 66,
+              "censored_new": 1,
+              "calibration_count": 13
+            }
+          }
+        },
+        "cohort_hit_outcome": {
+          "stdout": "Full remote=81 copies=49 copy_cost=87 net_gain=93 victim_loss=39 installed=49 newcopies=34 closed_all=37 closed_new=29 closed_success=9 closed_hits=65 censored_new=5 calibration_count=29\nNoHotspot remote=79 copies=28 copy_cost=9 no_reuse=156 victim_loss=15 installed=0 newcopies=0 closed_all=0 closed_new=0 closed_success=0 closed_hits=0 censored_new=0 calibration_count=0\nNoAffinity remote=113 copies=52 copy_cost=8 net_gain=40 victim_loss=53 installed=52 newcopies=16 closed_all=40 closed_new=13 closed_success=7 closed_hits=25 censored_new=3 calibration_count=13\nNoJoint remote=98 copies=80 copy_cost=66 installed=80 newcopies=45 closed_all=68 closed_new=43 closed_success=12 closed_hits=69 censored_new=2 calibration_count=43\n",
+          "arms": {
+            "Full": {
+              "remote": 81,
+              "copies": 49,
+              "copy_cost": 87,
+              "net_gain": 93,
+              "victim_loss": 39,
+              "installed": 49,
+              "newcopies": 34,
+              "closed_all": 37,
+              "closed_new": 29,
+              "closed_success": 9,
+              "closed_hits": 65,
+              "censored_new": 5,
+              "calibration_count": 29
+            },
+            "NoHotspot": {
+              "remote": 79,
+              "copies": 28,
+              "copy_cost": 9,
+              "no_reuse": 156,
+              "victim_loss": 15,
+              "installed": 0,
+              "newcopies": 0,
+              "closed_all": 0,
+              "closed_new": 0,
+              "closed_success": 0,
+              "closed_hits": 0,
+              "censored_new": 0,
+              "calibration_count": 0
+            },
+            "NoAffinity": {
+              "remote": 113,
+              "copies": 52,
+              "copy_cost": 8,
+              "net_gain": 40,
+              "victim_loss": 53,
+              "installed": 52,
+              "newcopies": 16,
+              "closed_all": 40,
+              "closed_new": 13,
+              "closed_success": 7,
+              "closed_hits": 25,
+              "censored_new": 3,
+              "calibration_count": 13
+            },
+            "NoJoint": {
+              "remote": 98,
+              "copies": 80,
+              "copy_cost": 66,
+              "installed": 80,
+              "newcopies": 45,
+              "closed_all": 68,
+              "closed_new": 43,
+              "closed_success": 12,
+              "closed_hits": 69,
+              "censored_new": 2,
+              "calibration_count": 43
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "moving_shared-74801",
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=79 copies=68 copy_cost=8 net_gain=110 victim_loss=90\nNoHotspot remote=84 copies=28 copy_cost=3 net_gain=1 no_reuse=172 victim_loss=7\nNoAffinity remote=105 copies=48 copy_cost=4 net_gain=36 victim_loss=53\nNoJoint remote=111 copies=111 copy_cost=5\n",
+          "arms": {
+            "Full": {
+              "remote": 79,
+              "copies": 68,
+              "copy_cost": 8,
+              "net_gain": 110,
+              "victim_loss": 90
+            },
+            "NoHotspot": {
+              "remote": 84,
+              "copies": 28,
+              "copy_cost": 3,
+              "net_gain": 1,
+              "no_reuse": 172,
+              "victim_loss": 7
+            },
+            "NoAffinity": {
+              "remote": 105,
+              "copies": 48,
+              "copy_cost": 4,
+              "net_gain": 36,
+              "victim_loss": 53
+            },
+            "NoJoint": {
+              "remote": 111,
+              "copies": 111,
+              "copy_cost": 5
+            }
+          }
+        },
+        "cohort_beta_outcome": {
+          "stdout": "Full remote=84 copies=28 copy_cost=175 net_gain=48 installed=28 newcopies=12 closed_all=16 closed_new=12 closed_success=8 closed_hits=56 censored_new=0 calibration_count=12\nNoHotspot remote=84 copies=28 copy_cost=3 net_gain=1 no_reuse=172 victim_loss=7 installed=0 newcopies=0 closed_all=0 closed_new=0 closed_success=0 closed_hits=0 censored_new=0 calibration_count=0\nNoAffinity remote=107 copies=36 copy_cost=59 net_gain=24 victim_loss=12 installed=36 newcopies=9 closed_all=24 closed_new=6 closed_success=4 closed_hits=18 censored_new=3 calibration_count=6\nNoJoint remote=110 copies=54 copy_cost=175 installed=54 newcopies=12 closed_all=42 closed_new=9 closed_success=5 closed_hits=37 censored_new=3 calibration_count=9\n",
+          "arms": {
+            "Full": {
+              "remote": 84,
+              "copies": 28,
+              "copy_cost": 175,
+              "net_gain": 48,
+              "installed": 28,
+              "newcopies": 12,
+              "closed_all": 16,
+              "closed_new": 12,
+              "closed_success": 8,
+              "closed_hits": 56,
+              "censored_new": 0,
+              "calibration_count": 12
+            },
+            "NoHotspot": {
+              "remote": 84,
+              "copies": 28,
+              "copy_cost": 3,
+              "net_gain": 1,
+              "no_reuse": 172,
+              "victim_loss": 7,
+              "installed": 0,
+              "newcopies": 0,
+              "closed_all": 0,
+              "closed_new": 0,
+              "closed_success": 0,
+              "closed_hits": 0,
+              "censored_new": 0,
+              "calibration_count": 0
+            },
+            "NoAffinity": {
+              "remote": 107,
+              "copies": 36,
+              "copy_cost": 59,
+              "net_gain": 24,
+              "victim_loss": 12,
+              "installed": 36,
+              "newcopies": 9,
+              "closed_all": 24,
+              "closed_new": 6,
+              "closed_success": 4,
+              "closed_hits": 18,
+              "censored_new": 3,
+              "calibration_count": 6
+            },
+            "NoJoint": {
+              "remote": 110,
+              "copies": 54,
+              "copy_cost": 175,
+              "installed": 54,
+              "newcopies": 12,
+              "closed_all": 42,
+              "closed_new": 9,
+              "closed_success": 5,
+              "closed_hits": 37,
+              "censored_new": 3,
+              "calibration_count": 9
+            }
+          }
+        },
+        "cohort_hit_outcome": {
+          "stdout": "Full remote=83 copies=60 copy_cost=52 net_gain=110 victim_loss=58 installed=60 newcopies=46 closed_all=48 closed_new=39 closed_success=11 closed_hits=70 censored_new=7 calibration_count=39\nNoHotspot remote=84 copies=28 copy_cost=3 net_gain=1 no_reuse=172 victim_loss=7 installed=0 newcopies=0 closed_all=0 closed_new=0 closed_success=0 closed_hits=0 censored_new=0 calibration_count=0\nNoAffinity remote=104 copies=47 copy_cost=6 net_gain=35 victim_loss=51 installed=47 newcopies=22 closed_all=35 closed_new=18 closed_success=9 closed_hits=44 censored_new=4 calibration_count=18\nNoJoint remote=112 copies=103 copy_cost=34 installed=103 newcopies=58 closed_all=91 closed_new=54 closed_success=9 closed_hits=64 censored_new=4 calibration_count=54\n",
+          "arms": {
+            "Full": {
+              "remote": 83,
+              "copies": 60,
+              "copy_cost": 52,
+              "net_gain": 110,
+              "victim_loss": 58,
+              "installed": 60,
+              "newcopies": 46,
+              "closed_all": 48,
+              "closed_new": 39,
+              "closed_success": 11,
+              "closed_hits": 70,
+              "censored_new": 7,
+              "calibration_count": 39
+            },
+            "NoHotspot": {
+              "remote": 84,
+              "copies": 28,
+              "copy_cost": 3,
+              "net_gain": 1,
+              "no_reuse": 172,
+              "victim_loss": 7,
+              "installed": 0,
+              "newcopies": 0,
+              "closed_all": 0,
+              "closed_new": 0,
+              "closed_success": 0,
+              "closed_hits": 0,
+              "censored_new": 0,
+              "calibration_count": 0
+            },
+            "NoAffinity": {
+              "remote": 104,
+              "copies": 47,
+              "copy_cost": 6,
+              "net_gain": 35,
+              "victim_loss": 51,
+              "installed": 47,
+              "newcopies": 22,
+              "closed_all": 35,
+              "closed_new": 18,
+              "closed_success": 9,
+              "closed_hits": 44,
+              "censored_new": 4,
+              "calibration_count": 18
+            },
+            "NoJoint": {
+              "remote": 112,
+              "copies": 103,
+              "copy_cost": 34,
+              "installed": 103,
+              "newcopies": 58,
+              "closed_all": 91,
+              "closed_new": 54,
+              "closed_success": 9,
+              "closed_hits": 64,
+              "censored_new": 4,
+              "calibration_count": 54
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "public_toolagent-73601",
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=865 copies=34 net_gain=45 no_reuse=2271 victim_loss=255\nNoHotspot remote=873 copies=25 net_gain=25 no_reuse=2271 victim_loss=299\nNoAffinity remote=921 copies=34 net_gain=22 no_reuse=761 victim_loss=126\nNoJoint remote=960 copies=196 no_reuse=2304\n",
+          "arms": {
+            "Full": {
+              "remote": 865,
+              "copies": 34,
+              "net_gain": 45,
+              "no_reuse": 2271,
+              "victim_loss": 255
+            },
+            "NoHotspot": {
+              "remote": 873,
+              "copies": 25,
+              "net_gain": 25,
+              "no_reuse": 2271,
+              "victim_loss": 299
+            },
+            "NoAffinity": {
+              "remote": 921,
+              "copies": 34,
+              "net_gain": 22,
+              "no_reuse": 761,
+              "victim_loss": 126
+            },
+            "NoJoint": {
+              "remote": 960,
+              "copies": 196,
+              "no_reuse": 2304
+            }
+          }
+        },
+        "cohort_beta_outcome": {
+          "stdout": "Full remote=865 copies=34 net_gain=45 no_reuse=2271 victim_loss=255 installed=34 newcopies=12 closed_all=22 closed_new=12 closed_success=1 closed_hits=18 censored_new=0 calibration_count=12\nNoHotspot remote=873 copies=25 net_gain=25 no_reuse=2271 victim_loss=299 installed=0 newcopies=0 closed_all=0 closed_new=0 closed_success=0 closed_hits=0 censored_new=0 calibration_count=0\nNoAffinity remote=921 copies=34 net_gain=22 no_reuse=761 victim_loss=126 installed=34 newcopies=12 closed_all=22 closed_new=12 closed_success=1 closed_hits=18 censored_new=0 calibration_count=12\nNoJoint remote=960 copies=196 no_reuse=2304 installed=196 newcopies=12 closed_all=184 closed_new=12 closed_success=1 closed_hits=15 censored_new=0 calibration_count=12\n",
+          "arms": {
+            "Full": {
+              "remote": 865,
+              "copies": 34,
+              "net_gain": 45,
+              "no_reuse": 2271,
+              "victim_loss": 255,
+              "installed": 34,
+              "newcopies": 12,
+              "closed_all": 22,
+              "closed_new": 12,
+              "closed_success": 1,
+              "closed_hits": 18,
+              "censored_new": 0,
+              "calibration_count": 12
+            },
+            "NoHotspot": {
+              "remote": 873,
+              "copies": 25,
+              "net_gain": 25,
+              "no_reuse": 2271,
+              "victim_loss": 299,
+              "installed": 0,
+              "newcopies": 0,
+              "closed_all": 0,
+              "closed_new": 0,
+              "closed_success": 0,
+              "closed_hits": 0,
+              "censored_new": 0,
+              "calibration_count": 0
+            },
+            "NoAffinity": {
+              "remote": 921,
+              "copies": 34,
+              "net_gain": 22,
+              "no_reuse": 761,
+              "victim_loss": 126,
+              "installed": 34,
+              "newcopies": 12,
+              "closed_all": 22,
+              "closed_new": 12,
+              "closed_success": 1,
+              "closed_hits": 18,
+              "censored_new": 0,
+              "calibration_count": 12
+            },
+            "NoJoint": {
+              "remote": 960,
+              "copies": 196,
+              "no_reuse": 2304,
+              "installed": 196,
+              "newcopies": 12,
+              "closed_all": 184,
+              "closed_new": 12,
+              "closed_success": 1,
+              "closed_hits": 15,
+              "censored_new": 0,
+              "calibration_count": 12
+            }
+          }
+        },
+        "cohort_hit_outcome": {
+          "stdout": "Full remote=865 copies=34 net_gain=45 no_reuse=2271 victim_loss=255 installed=34 newcopies=12 closed_all=22 closed_new=12 closed_success=1 closed_hits=18 censored_new=0 calibration_count=12\nNoHotspot remote=873 copies=25 net_gain=25 no_reuse=2271 victim_loss=299 installed=0 newcopies=0 closed_all=0 closed_new=0 closed_success=0 closed_hits=0 censored_new=0 calibration_count=0\nNoAffinity remote=921 copies=34 net_gain=22 no_reuse=761 victim_loss=126 installed=34 newcopies=12 closed_all=22 closed_new=12 closed_success=1 closed_hits=18 censored_new=0 calibration_count=12\nNoJoint remote=960 copies=196 no_reuse=2304 installed=196 newcopies=12 closed_all=184 closed_new=12 closed_success=1 closed_hits=15 censored_new=0 calibration_count=12\n",
+          "arms": {
+            "Full": {
+              "remote": 865,
+              "copies": 34,
+              "net_gain": 45,
+              "no_reuse": 2271,
+              "victim_loss": 255,
+              "installed": 34,
+              "newcopies": 12,
+              "closed_all": 22,
+              "closed_new": 12,
+              "closed_success": 1,
+              "closed_hits": 18,
+              "censored_new": 0,
+              "calibration_count": 12
+            },
+            "NoHotspot": {
+              "remote": 873,
+              "copies": 25,
+              "net_gain": 25,
+              "no_reuse": 2271,
+              "victim_loss": 299,
+              "installed": 0,
+              "newcopies": 0,
+              "closed_all": 0,
+              "closed_new": 0,
+              "closed_success": 0,
+              "closed_hits": 0,
+              "censored_new": 0,
+              "calibration_count": 0
+            },
+            "NoAffinity": {
+              "remote": 921,
+              "copies": 34,
+              "net_gain": 22,
+              "no_reuse": 761,
+              "victim_loss": 126,
+              "installed": 34,
+              "newcopies": 12,
+              "closed_all": 22,
+              "closed_new": 12,
+              "closed_success": 1,
+              "closed_hits": 18,
+              "censored_new": 0,
+              "calibration_count": 12
+            },
+            "NoJoint": {
+              "remote": 960,
+              "copies": 196,
+              "no_reuse": 2304,
+              "installed": 196,
+              "newcopies": 12,
+              "closed_all": 184,
+              "closed_new": 12,
+              "closed_success": 1,
+              "closed_hits": 15,
+              "censored_new": 0,
+              "calibration_count": 12
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "public_toolagent-73602",
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=879 copies=43 net_gain=56 no_reuse=2278 victim_loss=271\nNoHotspot remote=870 copies=28 net_gain=24 no_reuse=2278 victim_loss=276\nNoAffinity remote=904 copies=34 net_gain=22 no_reuse=758 victim_loss=112\nNoJoint remote=919 copies=161 no_reuse=2278\n",
+          "arms": {
+            "Full": {
+              "remote": 879,
+              "copies": 43,
+              "net_gain": 56,
+              "no_reuse": 2278,
+              "victim_loss": 271
+            },
+            "NoHotspot": {
+              "remote": 870,
+              "copies": 28,
+              "net_gain": 24,
+              "no_reuse": 2278,
+              "victim_loss": 276
+            },
+            "NoAffinity": {
+              "remote": 904,
+              "copies": 34,
+              "net_gain": 22,
+              "no_reuse": 758,
+              "victim_loss": 112
+            },
+            "NoJoint": {
+              "remote": 919,
+              "copies": 161,
+              "no_reuse": 2278
+            }
+          }
+        },
+        "cohort_beta_outcome": {
+          "stdout": "Full remote=879 copies=43 net_gain=56 no_reuse=2278 victim_loss=271 installed=43 newcopies=12 closed_all=31 closed_new=12 closed_success=6 closed_hits=30 censored_new=0 calibration_count=12\nNoHotspot remote=870 copies=28 net_gain=24 no_reuse=2278 victim_loss=276 installed=0 newcopies=0 closed_all=0 closed_new=0 closed_success=0 closed_hits=0 censored_new=0 calibration_count=0\nNoAffinity remote=904 copies=34 net_gain=22 no_reuse=758 victim_loss=112 installed=34 newcopies=11 closed_all=22 closed_new=11 closed_success=5 closed_hits=21 censored_new=0 calibration_count=11\nNoJoint remote=919 copies=161 no_reuse=2278 installed=161 newcopies=12 closed_all=149 closed_new=12 closed_success=6 closed_hits=23 censored_new=0 calibration_count=12\n",
+          "arms": {
+            "Full": {
+              "remote": 879,
+              "copies": 43,
+              "net_gain": 56,
+              "no_reuse": 2278,
+              "victim_loss": 271,
+              "installed": 43,
+              "newcopies": 12,
+              "closed_all": 31,
+              "closed_new": 12,
+              "closed_success": 6,
+              "closed_hits": 30,
+              "censored_new": 0,
+              "calibration_count": 12
+            },
+            "NoHotspot": {
+              "remote": 870,
+              "copies": 28,
+              "net_gain": 24,
+              "no_reuse": 2278,
+              "victim_loss": 276,
+              "installed": 0,
+              "newcopies": 0,
+              "closed_all": 0,
+              "closed_new": 0,
+              "closed_success": 0,
+              "closed_hits": 0,
+              "censored_new": 0,
+              "calibration_count": 0
+            },
+            "NoAffinity": {
+              "remote": 904,
+              "copies": 34,
+              "net_gain": 22,
+              "no_reuse": 758,
+              "victim_loss": 112,
+              "installed": 34,
+              "newcopies": 11,
+              "closed_all": 22,
+              "closed_new": 11,
+              "closed_success": 5,
+              "closed_hits": 21,
+              "censored_new": 0,
+              "calibration_count": 11
+            },
+            "NoJoint": {
+              "remote": 919,
+              "copies": 161,
+              "no_reuse": 2278,
+              "installed": 161,
+              "newcopies": 12,
+              "closed_all": 149,
+              "closed_new": 12,
+              "closed_success": 6,
+              "closed_hits": 23,
+              "censored_new": 0,
+              "calibration_count": 12
+            }
+          }
+        },
+        "cohort_hit_outcome": {
+          "stdout": "Full remote=879 copies=43 net_gain=56 no_reuse=2278 victim_loss=271 installed=43 newcopies=12 closed_all=31 closed_new=12 closed_success=6 closed_hits=30 censored_new=0 calibration_count=12\nNoHotspot remote=870 copies=28 net_gain=24 no_reuse=2278 victim_loss=276 installed=0 newcopies=0 closed_all=0 closed_new=0 closed_success=0 closed_hits=0 censored_new=0 calibration_count=0\nNoAffinity remote=904 copies=34 net_gain=22 no_reuse=758 victim_loss=112 installed=34 newcopies=11 closed_all=22 closed_new=11 closed_success=5 closed_hits=21 censored_new=0 calibration_count=11\nNoJoint remote=919 copies=161 no_reuse=2278 installed=161 newcopies=12 closed_all=149 closed_new=12 closed_success=6 closed_hits=23 censored_new=0 calibration_count=12\n",
+          "arms": {
+            "Full": {
+              "remote": 879,
+              "copies": 43,
+              "net_gain": 56,
+              "no_reuse": 2278,
+              "victim_loss": 271,
+              "installed": 43,
+              "newcopies": 12,
+              "closed_all": 31,
+              "closed_new": 12,
+              "closed_success": 6,
+              "closed_hits": 30,
+              "censored_new": 0,
+              "calibration_count": 12
+            },
+            "NoHotspot": {
+              "remote": 870,
+              "copies": 28,
+              "net_gain": 24,
+              "no_reuse": 2278,
+              "victim_loss": 276,
+              "installed": 0,
+              "newcopies": 0,
+              "closed_all": 0,
+              "closed_new": 0,
+              "closed_success": 0,
+              "closed_hits": 0,
+              "censored_new": 0,
+              "calibration_count": 0
+            },
+            "NoAffinity": {
+              "remote": 904,
+              "copies": 34,
+              "net_gain": 22,
+              "no_reuse": 758,
+              "victim_loss": 112,
+              "installed": 34,
+              "newcopies": 11,
+              "closed_all": 22,
+              "closed_new": 11,
+              "closed_success": 5,
+              "closed_hits": 21,
+              "censored_new": 0,
+              "calibration_count": 11
+            },
+            "NoJoint": {
+              "remote": 919,
+              "copies": 161,
+              "no_reuse": 2278,
+              "installed": 161,
+              "newcopies": 12,
+              "closed_all": 149,
+              "closed_new": 12,
+              "closed_success": 6,
+              "closed_hits": 23,
+              "censored_new": 0,
+              "calibration_count": 12
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "public_toolagent-73603",
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=920 copies=34 net_gain=58 no_reuse=2429 victim_loss=242\nNoHotspot remote=938 copies=21 net_gain=19 no_reuse=2459 victim_loss=305\nNoAffinity remote=940 copies=28 net_gain=16 no_reuse=810 victim_loss=102\nNoJoint remote=985 copies=175 no_reuse=2435\n",
+          "arms": {
+            "Full": {
+              "remote": 920,
+              "copies": 34,
+              "net_gain": 58,
+              "no_reuse": 2429,
+              "victim_loss": 242
+            },
+            "NoHotspot": {
+              "remote": 938,
+              "copies": 21,
+              "net_gain": 19,
+              "no_reuse": 2459,
+              "victim_loss": 305
+            },
+            "NoAffinity": {
+              "remote": 940,
+              "copies": 28,
+              "net_gain": 16,
+              "no_reuse": 810,
+              "victim_loss": 102
+            },
+            "NoJoint": {
+              "remote": 985,
+              "copies": 175,
+              "no_reuse": 2435
+            }
+          }
+        },
+        "cohort_beta_outcome": {
+          "stdout": "Full remote=920 copies=34 net_gain=58 no_reuse=2429 victim_loss=242 installed=34 newcopies=12 closed_all=22 closed_new=12 closed_success=4 closed_hits=15 censored_new=0 calibration_count=12\nNoHotspot remote=938 copies=21 net_gain=19 no_reuse=2459 victim_loss=305 installed=0 newcopies=0 closed_all=0 closed_new=0 closed_success=0 closed_hits=0 censored_new=0 calibration_count=0\nNoAffinity remote=940 copies=28 net_gain=16 no_reuse=810 victim_loss=102 installed=28 newcopies=11 closed_all=16 closed_new=11 closed_success=5 closed_hits=25 censored_new=0 calibration_count=11\nNoJoint remote=985 copies=175 no_reuse=2435 installed=175 newcopies=12 closed_all=163 closed_new=12 closed_success=4 closed_hits=7 censored_new=0 calibration_count=12\n",
+          "arms": {
+            "Full": {
+              "remote": 920,
+              "copies": 34,
+              "net_gain": 58,
+              "no_reuse": 2429,
+              "victim_loss": 242,
+              "installed": 34,
+              "newcopies": 12,
+              "closed_all": 22,
+              "closed_new": 12,
+              "closed_success": 4,
+              "closed_hits": 15,
+              "censored_new": 0,
+              "calibration_count": 12
+            },
+            "NoHotspot": {
+              "remote": 938,
+              "copies": 21,
+              "net_gain": 19,
+              "no_reuse": 2459,
+              "victim_loss": 305,
+              "installed": 0,
+              "newcopies": 0,
+              "closed_all": 0,
+              "closed_new": 0,
+              "closed_success": 0,
+              "closed_hits": 0,
+              "censored_new": 0,
+              "calibration_count": 0
+            },
+            "NoAffinity": {
+              "remote": 940,
+              "copies": 28,
+              "net_gain": 16,
+              "no_reuse": 810,
+              "victim_loss": 102,
+              "installed": 28,
+              "newcopies": 11,
+              "closed_all": 16,
+              "closed_new": 11,
+              "closed_success": 5,
+              "closed_hits": 25,
+              "censored_new": 0,
+              "calibration_count": 11
+            },
+            "NoJoint": {
+              "remote": 985,
+              "copies": 175,
+              "no_reuse": 2435,
+              "installed": 175,
+              "newcopies": 12,
+              "closed_all": 163,
+              "closed_new": 12,
+              "closed_success": 4,
+              "closed_hits": 7,
+              "censored_new": 0,
+              "calibration_count": 12
+            }
+          }
+        },
+        "cohort_hit_outcome": {
+          "stdout": "Full remote=920 copies=34 net_gain=58 no_reuse=2429 victim_loss=242 installed=34 newcopies=12 closed_all=22 closed_new=12 closed_success=4 closed_hits=15 censored_new=0 calibration_count=12\nNoHotspot remote=938 copies=21 net_gain=19 no_reuse=2459 victim_loss=305 installed=0 newcopies=0 closed_all=0 closed_new=0 closed_success=0 closed_hits=0 censored_new=0 calibration_count=0\nNoAffinity remote=940 copies=28 net_gain=16 no_reuse=810 victim_loss=102 installed=28 newcopies=11 closed_all=16 closed_new=11 closed_success=5 closed_hits=25 censored_new=0 calibration_count=11\nNoJoint remote=985 copies=175 no_reuse=2435 installed=175 newcopies=12 closed_all=163 closed_new=12 closed_success=4 closed_hits=7 censored_new=0 calibration_count=12\n",
+          "arms": {
+            "Full": {
+              "remote": 920,
+              "copies": 34,
+              "net_gain": 58,
+              "no_reuse": 2429,
+              "victim_loss": 242,
+              "installed": 34,
+              "newcopies": 12,
+              "closed_all": 22,
+              "closed_new": 12,
+              "closed_success": 4,
+              "closed_hits": 15,
+              "censored_new": 0,
+              "calibration_count": 12
+            },
+            "NoHotspot": {
+              "remote": 938,
+              "copies": 21,
+              "net_gain": 19,
+              "no_reuse": 2459,
+              "victim_loss": 305,
+              "installed": 0,
+              "newcopies": 0,
+              "closed_all": 0,
+              "closed_new": 0,
+              "closed_success": 0,
+              "closed_hits": 0,
+              "censored_new": 0,
+              "calibration_count": 0
+            },
+            "NoAffinity": {
+              "remote": 940,
+              "copies": 28,
+              "net_gain": 16,
+              "no_reuse": 810,
+              "victim_loss": 102,
+              "installed": 28,
+              "newcopies": 11,
+              "closed_all": 16,
+              "closed_new": 11,
+              "closed_success": 5,
+              "closed_hits": 25,
+              "censored_new": 0,
+              "calibration_count": 11
+            },
+            "NoJoint": {
+              "remote": 985,
+              "copies": 175,
+              "no_reuse": 2435,
+              "installed": 175,
+              "newcopies": 12,
+              "closed_all": 163,
+              "closed_new": 12,
+              "closed_success": 4,
+              "closed_hits": 7,
+              "censored_new": 0,
+              "calibration_count": 12
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "public_toolagent-74802",
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=967 copies=33 net_gain=44 no_reuse=2611 victim_loss=217\nNoHotspot remote=1002 copies=25 net_gain=20 no_reuse=2596 victim_loss=361\nNoAffinity remote=995 copies=21 net_gain=9 no_reuse=860 victim_loss=114\nNoJoint remote=987 copies=119 no_reuse=2611\n",
+          "arms": {
+            "Full": {
+              "remote": 967,
+              "copies": 33,
+              "net_gain": 44,
+              "no_reuse": 2611,
+              "victim_loss": 217
+            },
+            "NoHotspot": {
+              "remote": 1002,
+              "copies": 25,
+              "net_gain": 20,
+              "no_reuse": 2596,
+              "victim_loss": 361
+            },
+            "NoAffinity": {
+              "remote": 995,
+              "copies": 21,
+              "net_gain": 9,
+              "no_reuse": 860,
+              "victim_loss": 114
+            },
+            "NoJoint": {
+              "remote": 987,
+              "copies": 119,
+              "no_reuse": 2611
+            }
+          }
+        },
+        "cohort_beta_outcome": {
+          "stdout": "Full remote=967 copies=33 net_gain=44 no_reuse=2611 victim_loss=217 installed=33 newcopies=12 closed_all=21 closed_new=11 closed_success=0 closed_hits=0 censored_new=1 calibration_count=11\nNoHotspot remote=1002 copies=25 net_gain=20 no_reuse=2596 victim_loss=361 installed=0 newcopies=0 closed_all=0 closed_new=0 closed_success=0 closed_hits=0 censored_new=0 calibration_count=0\nNoAffinity remote=995 copies=21 net_gain=9 no_reuse=860 victim_loss=114 installed=21 newcopies=12 closed_all=9 closed_new=7 closed_success=0 closed_hits=0 censored_new=5 calibration_count=7\nNoJoint remote=987 copies=119 no_reuse=2611 installed=119 newcopies=12 closed_all=107 closed_new=12 closed_success=5 closed_hits=11 censored_new=0 calibration_count=12\n",
+          "arms": {
+            "Full": {
+              "remote": 967,
+              "copies": 33,
+              "net_gain": 44,
+              "no_reuse": 2611,
+              "victim_loss": 217,
+              "installed": 33,
+              "newcopies": 12,
+              "closed_all": 21,
+              "closed_new": 11,
+              "closed_success": 0,
+              "closed_hits": 0,
+              "censored_new": 1,
+              "calibration_count": 11
+            },
+            "NoHotspot": {
+              "remote": 1002,
+              "copies": 25,
+              "net_gain": 20,
+              "no_reuse": 2596,
+              "victim_loss": 361,
+              "installed": 0,
+              "newcopies": 0,
+              "closed_all": 0,
+              "closed_new": 0,
+              "closed_success": 0,
+              "closed_hits": 0,
+              "censored_new": 0,
+              "calibration_count": 0
+            },
+            "NoAffinity": {
+              "remote": 995,
+              "copies": 21,
+              "net_gain": 9,
+              "no_reuse": 860,
+              "victim_loss": 114,
+              "installed": 21,
+              "newcopies": 12,
+              "closed_all": 9,
+              "closed_new": 7,
+              "closed_success": 0,
+              "closed_hits": 0,
+              "censored_new": 5,
+              "calibration_count": 7
+            },
+            "NoJoint": {
+              "remote": 987,
+              "copies": 119,
+              "no_reuse": 2611,
+              "installed": 119,
+              "newcopies": 12,
+              "closed_all": 107,
+              "closed_new": 12,
+              "closed_success": 5,
+              "closed_hits": 11,
+              "censored_new": 0,
+              "calibration_count": 12
+            }
+          }
+        },
+        "cohort_hit_outcome": {
+          "stdout": "Full remote=967 copies=33 net_gain=44 no_reuse=2611 victim_loss=217 installed=33 newcopies=12 closed_all=21 closed_new=11 closed_success=0 closed_hits=0 censored_new=1 calibration_count=11\nNoHotspot remote=1002 copies=25 net_gain=20 no_reuse=2596 victim_loss=361 installed=0 newcopies=0 closed_all=0 closed_new=0 closed_success=0 closed_hits=0 censored_new=0 calibration_count=0\nNoAffinity remote=995 copies=21 net_gain=9 no_reuse=860 victim_loss=114 installed=21 newcopies=12 closed_all=9 closed_new=7 closed_success=0 closed_hits=0 censored_new=5 calibration_count=7\nNoJoint remote=987 copies=119 no_reuse=2611 installed=119 newcopies=12 closed_all=107 closed_new=12 closed_success=5 closed_hits=11 censored_new=0 calibration_count=12\n",
+          "arms": {
+            "Full": {
+              "remote": 967,
+              "copies": 33,
+              "net_gain": 44,
+              "no_reuse": 2611,
+              "victim_loss": 217,
+              "installed": 33,
+              "newcopies": 12,
+              "closed_all": 21,
+              "closed_new": 11,
+              "closed_success": 0,
+              "closed_hits": 0,
+              "censored_new": 1,
+              "calibration_count": 11
+            },
+            "NoHotspot": {
+              "remote": 1002,
+              "copies": 25,
+              "net_gain": 20,
+              "no_reuse": 2596,
+              "victim_loss": 361,
+              "installed": 0,
+              "newcopies": 0,
+              "closed_all": 0,
+              "closed_new": 0,
+              "closed_success": 0,
+              "closed_hits": 0,
+              "censored_new": 0,
+              "calibration_count": 0
+            },
+            "NoAffinity": {
+              "remote": 995,
+              "copies": 21,
+              "net_gain": 9,
+              "no_reuse": 860,
+              "victim_loss": 114,
+              "installed": 21,
+              "newcopies": 12,
+              "closed_all": 9,
+              "closed_new": 7,
+              "closed_success": 0,
+              "closed_hits": 0,
+              "censored_new": 5,
+              "calibration_count": 7
+            },
+            "NoJoint": {
+              "remote": 987,
+              "copies": 119,
+              "no_reuse": 2611,
+              "installed": 119,
+              "newcopies": 12,
+              "closed_all": 107,
+              "closed_new": 12,
+              "closed_success": 5,
+              "closed_hits": 11,
+              "censored_new": 0,
+              "calibration_count": 12
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "stationary_shared-73701",
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=74 copies=53 copy_cost=16 net_gain=76 no_reuse=2 victim_loss=104\nNoHotspot remote=65 copies=12 no_reuse=171\nNoAffinity remote=84 copies=29 copy_cost=8 net_gain=14 no_reuse=2 victim_loss=45\nNoJoint remote=81 copies=79 copy_cost=16 no_reuse=2\n",
+          "arms": {
+            "Full": {
+              "remote": 74,
+              "copies": 53,
+              "copy_cost": 16,
+              "net_gain": 76,
+              "no_reuse": 2,
+              "victim_loss": 104
+            },
+            "NoHotspot": {
+              "remote": 65,
+              "copies": 12,
+              "no_reuse": 171
+            },
+            "NoAffinity": {
+              "remote": 84,
+              "copies": 29,
+              "copy_cost": 8,
+              "net_gain": 14,
+              "no_reuse": 2,
+              "victim_loss": 45
+            },
+            "NoJoint": {
+              "remote": 81,
+              "copies": 79,
+              "copy_cost": 16,
+              "no_reuse": 2
+            }
+          }
+        },
+        "cohort_beta_outcome": {
+          "stdout": "Full remote=65 copies=12 copy_cost=169 no_reuse=2 installed=12 newcopies=12 closed_all=0 closed_new=0 closed_success=0 closed_hits=0 censored_new=12 calibration_count=0\nNoHotspot remote=65 copies=12 no_reuse=171 installed=0 newcopies=0 closed_all=0 closed_new=0 closed_success=0 closed_hits=0 censored_new=0 calibration_count=0\nNoAffinity remote=82 copies=21 copy_cost=57 net_gain=9 no_reuse=2 victim_loss=2 installed=21 newcopies=8 closed_all=9 closed_new=4 closed_success=1 closed_hits=4 censored_new=4 calibration_count=4\nNoJoint remote=65 copies=12 copy_cost=169 no_reuse=2 installed=12 newcopies=12 closed_all=0 closed_new=0 closed_success=0 closed_hits=0 censored_new=12 calibration_count=0\n",
+          "arms": {
+            "Full": {
+              "remote": 65,
+              "copies": 12,
+              "copy_cost": 169,
+              "no_reuse": 2,
+              "installed": 12,
+              "newcopies": 12,
+              "closed_all": 0,
+              "closed_new": 0,
+              "closed_success": 0,
+              "closed_hits": 0,
+              "censored_new": 12,
+              "calibration_count": 0
+            },
+            "NoHotspot": {
+              "remote": 65,
+              "copies": 12,
+              "no_reuse": 171,
+              "installed": 0,
+              "newcopies": 0,
+              "closed_all": 0,
+              "closed_new": 0,
+              "closed_success": 0,
+              "closed_hits": 0,
+              "censored_new": 0,
+              "calibration_count": 0
+            },
+            "NoAffinity": {
+              "remote": 82,
+              "copies": 21,
+              "copy_cost": 57,
+              "net_gain": 9,
+              "no_reuse": 2,
+              "victim_loss": 2,
+              "installed": 21,
+              "newcopies": 8,
+              "closed_all": 9,
+              "closed_new": 4,
+              "closed_success": 1,
+              "closed_hits": 4,
+              "censored_new": 4,
+              "calibration_count": 4
+            },
+            "NoJoint": {
+              "remote": 65,
+              "copies": 12,
+              "copy_cost": 169,
+              "no_reuse": 2,
+              "installed": 12,
+              "newcopies": 12,
+              "closed_all": 0,
+              "closed_new": 0,
+              "closed_success": 0,
+              "closed_hits": 0,
+              "censored_new": 12,
+              "calibration_count": 0
+            }
+          }
+        },
+        "cohort_hit_outcome": {
+          "stdout": "Full remote=65 copies=12 copy_cost=169 no_reuse=2 installed=12 newcopies=12 closed_all=0 closed_new=0 closed_success=0 closed_hits=0 censored_new=12 calibration_count=0\nNoHotspot remote=65 copies=12 no_reuse=171 installed=0 newcopies=0 closed_all=0 closed_new=0 closed_success=0 closed_hits=0 censored_new=0 calibration_count=0\nNoAffinity remote=82 copies=22 copy_cost=35 net_gain=9 no_reuse=2 victim_loss=23 installed=22 newcopies=9 closed_all=10 closed_new=5 closed_success=1 closed_hits=4 censored_new=4 calibration_count=5\nNoJoint remote=65 copies=12 copy_cost=169 no_reuse=2 installed=12 newcopies=12 closed_all=0 closed_new=0 closed_success=0 closed_hits=0 censored_new=12 calibration_count=0\n",
+          "arms": {
+            "Full": {
+              "remote": 65,
+              "copies": 12,
+              "copy_cost": 169,
+              "no_reuse": 2,
+              "installed": 12,
+              "newcopies": 12,
+              "closed_all": 0,
+              "closed_new": 0,
+              "closed_success": 0,
+              "closed_hits": 0,
+              "censored_new": 12,
+              "calibration_count": 0
+            },
+            "NoHotspot": {
+              "remote": 65,
+              "copies": 12,
+              "no_reuse": 171,
+              "installed": 0,
+              "newcopies": 0,
+              "closed_all": 0,
+              "closed_new": 0,
+              "closed_success": 0,
+              "closed_hits": 0,
+              "censored_new": 0,
+              "calibration_count": 0
+            },
+            "NoAffinity": {
+              "remote": 82,
+              "copies": 22,
+              "copy_cost": 35,
+              "net_gain": 9,
+              "no_reuse": 2,
+              "victim_loss": 23,
+              "installed": 22,
+              "newcopies": 9,
+              "closed_all": 10,
+              "closed_new": 5,
+              "closed_success": 1,
+              "closed_hits": 4,
+              "censored_new": 4,
+              "calibration_count": 5
+            },
+            "NoJoint": {
+              "remote": 65,
+              "copies": 12,
+              "copy_cost": 169,
+              "no_reuse": 2,
+              "installed": 12,
+              "newcopies": 12,
+              "closed_all": 0,
+              "closed_new": 0,
+              "closed_success": 0,
+              "closed_hits": 0,
+              "censored_new": 12,
+              "calibration_count": 0
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "uniform-73702",
+      "variants": {
+        "retained": {
+          "stdout": "Full remote=544 copies=45 copy_cost=29 net_gain=56 no_reuse=19 victim_loss=1495\nNoHotspot remote=546 copies=41 net_gain=36 no_reuse=48 victim_loss=1521\nNoAffinity remote=532 copies=41 copy_cost=10 net_gain=29 no_reuse=5 victim_loss=476\nNoJoint remote=576 copies=561 copy_cost=29 no_reuse=19\n",
+          "arms": {
+            "Full": {
+              "remote": 544,
+              "copies": 45,
+              "copy_cost": 29,
+              "net_gain": 56,
+              "no_reuse": 19,
+              "victim_loss": 1495
+            },
+            "NoHotspot": {
+              "remote": 546,
+              "copies": 41,
+              "net_gain": 36,
+              "no_reuse": 48,
+              "victim_loss": 1521
+            },
+            "NoAffinity": {
+              "remote": 532,
+              "copies": 41,
+              "copy_cost": 10,
+              "net_gain": 29,
+              "no_reuse": 5,
+              "victim_loss": 476
+            },
+            "NoJoint": {
+              "remote": 576,
+              "copies": 561,
+              "copy_cost": 29,
+              "no_reuse": 19
+            }
+          }
+        },
+        "cohort_beta_outcome": {
+          "stdout": "Full remote=544 copies=45 copy_cost=29 net_gain=56 no_reuse=19 victim_loss=1495 installed=45 newcopies=12 closed_all=33 closed_new=12 closed_success=8 closed_hits=138 censored_new=0 calibration_count=12\nNoHotspot remote=546 copies=41 net_gain=36 no_reuse=48 victim_loss=1521 installed=0 newcopies=0 closed_all=0 closed_new=0 closed_success=0 closed_hits=0 censored_new=0 calibration_count=0\nNoAffinity remote=532 copies=41 copy_cost=10 net_gain=29 no_reuse=5 victim_loss=476 installed=41 newcopies=12 closed_all=29 closed_new=11 closed_success=9 closed_hits=85 censored_new=1 calibration_count=11\nNoJoint remote=576 copies=561 copy_cost=29 no_reuse=19 installed=561 newcopies=12 closed_all=549 closed_new=12 closed_success=8 closed_hits=32 censored_new=0 calibration_count=12\n",
+          "arms": {
+            "Full": {
+              "remote": 544,
+              "copies": 45,
+              "copy_cost": 29,
+              "net_gain": 56,
+              "no_reuse": 19,
+              "victim_loss": 1495,
+              "installed": 45,
+              "newcopies": 12,
+              "closed_all": 33,
+              "closed_new": 12,
+              "closed_success": 8,
+              "closed_hits": 138,
+              "censored_new": 0,
+              "calibration_count": 12
+            },
+            "NoHotspot": {
+              "remote": 546,
+              "copies": 41,
+              "net_gain": 36,
+              "no_reuse": 48,
+              "victim_loss": 1521,
+              "installed": 0,
+              "newcopies": 0,
+              "closed_all": 0,
+              "closed_new": 0,
+              "closed_success": 0,
+              "closed_hits": 0,
+              "censored_new": 0,
+              "calibration_count": 0
+            },
+            "NoAffinity": {
+              "remote": 532,
+              "copies": 41,
+              "copy_cost": 10,
+              "net_gain": 29,
+              "no_reuse": 5,
+              "victim_loss": 476,
+              "installed": 41,
+              "newcopies": 12,
+              "closed_all": 29,
+              "closed_new": 11,
+              "closed_success": 9,
+              "closed_hits": 85,
+              "censored_new": 1,
+              "calibration_count": 11
+            },
+            "NoJoint": {
+              "remote": 576,
+              "copies": 561,
+              "copy_cost": 29,
+              "no_reuse": 19,
+              "installed": 561,
+              "newcopies": 12,
+              "closed_all": 549,
+              "closed_new": 12,
+              "closed_success": 8,
+              "closed_hits": 32,
+              "censored_new": 0,
+              "calibration_count": 12
+            }
+          }
+        },
+        "cohort_hit_outcome": {
+          "stdout": "Full remote=544 copies=45 copy_cost=29 net_gain=56 no_reuse=19 victim_loss=1495 installed=45 newcopies=12 closed_all=33 closed_new=12 closed_success=8 closed_hits=138 censored_new=0 calibration_count=12\nNoHotspot remote=546 copies=41 net_gain=36 no_reuse=48 victim_loss=1521 installed=0 newcopies=0 closed_all=0 closed_new=0 closed_success=0 closed_hits=0 censored_new=0 calibration_count=0\nNoAffinity remote=532 copies=41 copy_cost=10 net_gain=29 no_reuse=5 victim_loss=476 installed=41 newcopies=12 closed_all=29 closed_new=11 closed_success=9 closed_hits=85 censored_new=1 calibration_count=11\nNoJoint remote=576 copies=561 copy_cost=29 no_reuse=19 installed=561 newcopies=12 closed_all=549 closed_new=12 closed_success=8 closed_hits=32 censored_new=0 calibration_count=12\n",
+          "arms": {
+            "Full": {
+              "remote": 544,
+              "copies": 45,
+              "copy_cost": 29,
+              "net_gain": 56,
+              "no_reuse": 19,
+              "victim_loss": 1495,
+              "installed": 45,
+              "newcopies": 12,
+              "closed_all": 33,
+              "closed_new": 12,
+              "closed_success": 8,
+              "closed_hits": 138,
+              "censored_new": 0,
+              "calibration_count": 12
+            },
+            "NoHotspot": {
+              "remote": 546,
+              "copies": 41,
+              "net_gain": 36,
+              "no_reuse": 48,
+              "victim_loss": 1521,
+              "installed": 0,
+              "newcopies": 0,
+              "closed_all": 0,
+              "closed_new": 0,
+              "closed_success": 0,
+              "closed_hits": 0,
+              "censored_new": 0,
+              "calibration_count": 0
+            },
+            "NoAffinity": {
+              "remote": 532,
+              "copies": 41,
+              "copy_cost": 10,
+              "net_gain": 29,
+              "no_reuse": 5,
+              "victim_loss": 476,
+              "installed": 41,
+              "newcopies": 12,
+              "closed_all": 29,
+              "closed_new": 11,
+              "closed_success": 9,
+              "closed_hits": 85,
+              "censored_new": 1,
+              "calibration_count": 11
+            },
+            "NoJoint": {
+              "remote": 576,
+              "copies": 561,
+              "copy_cost": 29,
+              "no_reuse": 19,
+              "installed": 561,
+              "newcopies": 12,
+              "closed_all": 549,
+              "closed_new": 12,
+              "closed_success": 8,
+              "closed_hits": 32,
+              "censored_new": 0,
+              "calibration_count": 12
+            }
+          }
+        }
+      }
+    }
+  ]
+}

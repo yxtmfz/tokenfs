@@ -1,0 +1,30 @@
+# Submission-time optimistic precheck (optional development candidate)
+
+`policy.precheck_shared_submission` defaults to `false`. This candidate may skip a shared-placement task when the **current submission-time** state cannot justify placement even under the existing optimistic policy bound. It is a scheduling-policy change: the original queued task could observe later requests or different measured costs, so equivalent future background actions are not promised. Negative decisions are never cached across requests.
+
+The option is common to all compared configurations. It acts only in readonly canonical, measured shared-value placement with adaptive control, a causal shared history, and no location-dependent affinity gate. Pool SIEVE retains its original policy and does not enter this profitability precheck. NoHotspot keeps its static reuse value, NoJoint keeps its independent admission rule, and caller-only placement considers only the caller's domain. Unsupported configurations fall through to the original submission path.
+
+## Trusted lifecycle and conservative fallbacks
+
+The instance enables the precheck only when every cache directory is empty at initialization, cache roots resolve to distinct, non-overlapping directories, GPU identifiers are valid and unique, and metadata contains no local canonical rows or replica rows. Replica startup checks intentionally include orphan and non-READY rows: future discovery must not resurrect a stale occupancy claim. Nonempty restarts continue using the original path.
+
+The supported lifecycle assumes the cache directories and metadata are exclusively managed by this TokenFS instance, and canonical sources remain immutable. Readonly FUSE configuration does **not** prevent an external process from removing/truncating cache files, editing the SQLite database, inserting symlinks, or mutating sources; such concurrent external changes are outside this optimization's supported lifecycle. The precheck does not pretend that a READY row is an independently verified physical file on each access. Existing data-path source checks and background admission/identity checks remain in place.
+
+Only a complete capture that has just passed the existing source/anchor validation and whose captured size matches incoming metadata is eligible. No-capture, partial-capture, failed-validation and mismatched-size submissions fall through. Internal measured-cache deletions hold the layout mutex; physical copy publication occurs before READY metadata. Consequently, under the supported fresh lifecycle the current READY/COMMITTED byte sum is a conservative occupied-byte estimate. Unpublished copies and temporary files are omitted, which can only disable a potential precheck.
+
+## Decision and locks
+
+1. Try the layout mutex. If busy, submit normally.
+2. Try the metadata mutex. If busy or a read-only query fails, submit normally. The single statement reads READY/COMMITTED location, path and bytes, without the access-history joins or filesystem traversal used for victim snapshots. It still scans local-state predicates and is not claimed to be constant time. More than 4096 resident rows, invalid SQL types/sizes/domains, non-absolute or out-of-root paths, and conflicting duplicate metadata fall back.
+3. Deduplicate physical paths before summing occupied bytes. A duplicate with the same location and size contributes once; conflicting aliases are unknown. Pinned/protected residents remain occupied and are not removed from this capacity estimate.
+4. If any permitted domain could fit the object using the conservative free-space upper bound, submit normally so original headroom exploration remains possible.
+5. Otherwise invoke the original `PotentiallyProfitable` with the arm's unmodified Options. In the supported shared+causal/affinity-gate-free mode, incoming value and incoming uncertainty are location independent. A single call at `used=quota`, for an allowed domain large enough for the object, represents every non-oversize domain under one policy lock. This avoids mixing policy snapshots across a loop of calls. If all permitted domains are oversize, the validated size proves no placement is possible. Any positive optimistic result submits normally.
+6. Only the all-domain negative bound skips enqueueing. The precheck occurs before acquiring a shared-placement in-flight token. Tasks that are submitted retain the original background capacity, source identity, pin, and benefit rechecks.
+
+Lock acquisition is nonblocking for layout and metadata; the read-only SQL work and bounded policy computation still take time. Counters use the existing buffered telemetry path. `submission_precheck_attempts`, `submission_precheck_rejected`, fallback/headroom/possible counters, and `submission_precheck_us`/`submission_precheck_us_max` expose eligibility, outcomes and total added foreground cost. They do not replace actual throughput, p99, or wall-plus-drain measurement. A removed background task may have overlapped foreground I/O, so its elapsed time cannot simply be counted as saved job time.
+
+## Validation and interpretation
+
+Native tests cover default/config parsing, headroom exploration, cold rejection, the same key becoming hot later, unchanged NoHotspot/NoJoint Options, caller-only placement, busy layout and metadata locks, no-capture/partial/changed-source capture fallback, malformed and duplicate paths, unknown domains, overlapping roots, nonempty restart, and orphan READY startup state. Independent fixed-snapshot policy checks verify the representative-domain upper-bound property; they do not establish equivalence with a task consulting future state.
+
+This candidate is not evidence of an H-specific speedup. All eligible policy arms receive the same implementation. A future comparison should retain the same input, capacity and frozen protocol, include an otherwise identical disabled control, preserve all results, and report any changes in reads, copies and actions alongside speed. No workload, profitability threshold or reported metric changes are introduced here.

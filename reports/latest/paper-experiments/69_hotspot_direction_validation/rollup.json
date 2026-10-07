@@ -1,0 +1,519 @@
+{
+  "speed_runs": 12,
+  "timed_requests": 13824,
+  "comparisons": [
+    {
+      "scenario": "moving_shared",
+      "baseline": "NoHotspot",
+      "full": {
+        "mib_s": 374.3843692045561,
+        "p99_ms": 25.869452000000003,
+        "rates": [
+          374.3843692045561
+        ],
+        "tails": [
+          25.869452000000003
+        ],
+        "remote_mib": 146.0,
+        "copies": 68,
+        "cpu_s": 2.46
+      },
+      "control": {
+        "mib_s": 351.30946819765035,
+        "p99_ms": 27.456097,
+        "rates": [
+          351.30946819765035
+        ],
+        "tails": [
+          27.456097
+        ],
+        "remote_mib": 158.0,
+        "copies": 28,
+        "cpu_s": 2.79
+      },
+      "gain_pct": 6.568254799760642,
+      "p99_change_pct": -5.778843948577239,
+      "strict_passes": 1,
+      "pairs": [
+        {
+          "block": "moving_shared-73501-r1",
+          "scenario": "moving_shared",
+          "seed": 73501,
+          "treatment": "Full",
+          "baseline": "NoHotspot",
+          "n": 1,
+          "gain_pct": 6.568254799760642,
+          "p99_change_pct": -5.778843948577239,
+          "drain_gain_pct": 6.561717824753854,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": true,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "development screen on two previously inspected inputs, one fixed order each; no independent confirmation"
+        }
+      ]
+    },
+    {
+      "scenario": "moving_shared",
+      "baseline": "NoAffinity",
+      "full": {
+        "mib_s": 374.3843692045561,
+        "p99_ms": 25.869452000000003,
+        "rates": [
+          374.3843692045561
+        ],
+        "tails": [
+          25.869452000000003
+        ],
+        "remote_mib": 146.0,
+        "copies": 68,
+        "cpu_s": 2.46
+      },
+      "control": {
+        "mib_s": 332.9510539333457,
+        "p99_ms": 26.58063,
+        "rates": [
+          332.9510539333457
+        ],
+        "tails": [
+          26.58063
+        ],
+        "remote_mib": 186.0,
+        "copies": 43,
+        "cpu_s": 2.94
+      },
+      "gain_pct": 12.44426614114429,
+      "p99_change_pct": -2.675549827073309,
+      "strict_passes": 1,
+      "pairs": [
+        {
+          "block": "moving_shared-73501-r1",
+          "scenario": "moving_shared",
+          "seed": 73501,
+          "treatment": "Full",
+          "baseline": "NoAffinity",
+          "n": 1,
+          "gain_pct": 12.44426614114429,
+          "p99_change_pct": -2.6755498270733202,
+          "drain_gain_pct": 12.417925549406261,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": true,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "development screen on two previously inspected inputs, one fixed order each; no independent confirmation"
+        }
+      ]
+    },
+    {
+      "scenario": "moving_shared",
+      "baseline": "NoJoint",
+      "full": {
+        "mib_s": 374.3843692045561,
+        "p99_ms": 25.869452000000003,
+        "rates": [
+          374.3843692045561
+        ],
+        "tails": [
+          25.869452000000003
+        ],
+        "remote_mib": 146.0,
+        "copies": 68,
+        "cpu_s": 2.46
+      },
+      "control": {
+        "mib_s": 332.3345003577608,
+        "p99_ms": 26.468684999999997,
+        "rates": [
+          332.3345003577608
+        ],
+        "tails": [
+          26.468684999999997
+        ],
+        "remote_mib": 196.0,
+        "copies": 96,
+        "cpu_s": 3.02
+      },
+      "gain_pct": 12.652874980337048,
+      "p99_change_pct": -2.2639318878138193,
+      "strict_passes": 1,
+      "pairs": [
+        {
+          "block": "moving_shared-73501-r1",
+          "scenario": "moving_shared",
+          "seed": 73501,
+          "treatment": "Full",
+          "baseline": "NoJoint",
+          "n": 1,
+          "gain_pct": 12.652874980337048,
+          "p99_change_pct": -2.2639318878138415,
+          "drain_gain_pct": 12.627471483536867,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": true,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "development screen on two previously inspected inputs, one fixed order each; no independent confirmation"
+        }
+      ]
+    },
+    {
+      "scenario": "moving_shared",
+      "baseline": "PoolSIEVE1",
+      "full": {
+        "mib_s": 374.3843692045561,
+        "p99_ms": 25.869452000000003,
+        "rates": [
+          374.3843692045561
+        ],
+        "tails": [
+          25.869452000000003
+        ],
+        "remote_mib": 146.0,
+        "copies": 68,
+        "cpu_s": 2.46
+      },
+      "control": {
+        "mib_s": 344.3706379747215,
+        "p99_ms": 27.051489,
+        "rates": [
+          344.3706379747215
+        ],
+        "tails": [
+          27.051489
+        ],
+        "remote_mib": 148.0,
+        "copies": 74,
+        "cpu_s": 3.05
+      },
+      "gain_pct": 8.715531442038271,
+      "p99_change_pct": -4.369582021899044,
+      "strict_passes": 1,
+      "pairs": [
+        {
+          "block": "moving_shared-73501-r1",
+          "scenario": "moving_shared",
+          "seed": 73501,
+          "treatment": "Full",
+          "baseline": "PoolSIEVE1",
+          "n": 1,
+          "gain_pct": 8.715531442038248,
+          "p99_change_pct": -4.369582021899054,
+          "drain_gain_pct": 8.7076596609859,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": true,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "development screen on two previously inspected inputs, one fixed order each; no independent confirmation"
+        }
+      ]
+    },
+    {
+      "scenario": "moving_shared",
+      "baseline": "OldFull",
+      "full": {
+        "mib_s": 374.3843692045561,
+        "p99_ms": 25.869452000000003,
+        "rates": [
+          374.3843692045561
+        ],
+        "tails": [
+          25.869452000000003
+        ],
+        "remote_mib": 146.0,
+        "copies": 68,
+        "cpu_s": 2.46
+      },
+      "control": {
+        "mib_s": 347.30784032122153,
+        "p99_ms": 26.530030999999997,
+        "rates": [
+          347.30784032122153
+        ],
+        "tails": [
+          26.530030999999997
+        ],
+        "remote_mib": 144.0,
+        "copies": 66,
+        "cpu_s": 3.04
+      },
+      "gain_pct": 7.7961179506606415,
+      "p99_change_pct": -2.4899292428267272,
+      "strict_passes": 1,
+      "pairs": [
+        {
+          "block": "moving_shared-73501-r1",
+          "scenario": "moving_shared",
+          "seed": 73501,
+          "treatment": "Full",
+          "baseline": "OldFull",
+          "n": 1,
+          "gain_pct": 7.7961179506606415,
+          "p99_change_pct": -2.4899292428267383,
+          "drain_gain_pct": 7.771169562263713,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": true,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "development screen on two previously inspected inputs, one fixed order each; no independent confirmation"
+        }
+      ]
+    },
+    {
+      "scenario": "public_toolagent",
+      "baseline": "NoHotspot",
+      "full": {
+        "mib_s": 90.01768848985353,
+        "p99_ms": 28.3706,
+        "rates": [
+          90.01768848985353
+        ],
+        "tails": [
+          28.3706
+        ],
+        "remote_mib": 1754.0,
+        "copies": 40,
+        "cpu_s": 4.91
+      },
+      "control": {
+        "mib_s": 91.02780103879405,
+        "p99_ms": 28.207915,
+        "rates": [
+          91.02780103879405
+        ],
+        "tails": [
+          28.207915
+        ],
+        "remote_mib": 1748.0,
+        "copies": 28,
+        "cpu_s": 4.72
+      },
+      "gain_pct": -1.1096747778297278,
+      "p99_change_pct": 0.5767352886592247,
+      "strict_passes": 0,
+      "pairs": [
+        {
+          "block": "public_toolagent-73602-r1",
+          "scenario": "public_toolagent",
+          "seed": 73602,
+          "treatment": "Full",
+          "baseline": "NoHotspot",
+          "n": 1,
+          "gain_pct": -1.1096747778297278,
+          "p99_change_pct": 0.5767352886592247,
+          "drain_gain_pct": -1.1094539193409636,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": false,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "development screen on two previously inspected inputs, one fixed order each; no independent confirmation"
+        }
+      ]
+    },
+    {
+      "scenario": "public_toolagent",
+      "baseline": "NoAffinity",
+      "full": {
+        "mib_s": 90.01768848985353,
+        "p99_ms": 28.3706,
+        "rates": [
+          90.01768848985353
+        ],
+        "tails": [
+          28.3706
+        ],
+        "remote_mib": 1754.0,
+        "copies": 40,
+        "cpu_s": 4.91
+      },
+      "control": {
+        "mib_s": 89.76828438162602,
+        "p99_ms": 28.699077,
+        "rates": [
+          89.76828438162602
+        ],
+        "tails": [
+          28.699077
+        ],
+        "remote_mib": 1802.0,
+        "copies": 34,
+        "cpu_s": 4.63
+      },
+      "gain_pct": 0.2778309844568616,
+      "p99_change_pct": -1.1445559730021926,
+      "strict_passes": 1,
+      "pairs": [
+        {
+          "block": "public_toolagent-73602-r1",
+          "scenario": "public_toolagent",
+          "seed": 73602,
+          "treatment": "Full",
+          "baseline": "NoAffinity",
+          "n": 1,
+          "gain_pct": 0.2778309844568616,
+          "p99_change_pct": -1.1445559730022037,
+          "drain_gain_pct": 0.27778927940687037,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": true,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "development screen on two previously inspected inputs, one fixed order each; no independent confirmation"
+        }
+      ]
+    },
+    {
+      "scenario": "public_toolagent",
+      "baseline": "NoJoint",
+      "full": {
+        "mib_s": 90.01768848985353,
+        "p99_ms": 28.3706,
+        "rates": [
+          90.01768848985353
+        ],
+        "tails": [
+          28.3706
+        ],
+        "remote_mib": 1754.0,
+        "copies": 40,
+        "cpu_s": 4.91
+      },
+      "control": {
+        "mib_s": 87.96545512521354,
+        "p99_ms": 28.813477,
+        "rates": [
+          87.96545512521354
+        ],
+        "tails": [
+          28.813477
+        ],
+        "remote_mib": 1806.0,
+        "copies": 145,
+        "cpu_s": 5.45
+      },
+      "gain_pct": 2.3329992003324085,
+      "p99_change_pct": -1.5370480973191825,
+      "strict_passes": 1,
+      "pairs": [
+        {
+          "block": "public_toolagent-73602-r1",
+          "scenario": "public_toolagent",
+          "seed": 73602,
+          "treatment": "Full",
+          "baseline": "NoJoint",
+          "n": 1,
+          "gain_pct": 2.3329992003324085,
+          "p99_change_pct": -1.5370480973191825,
+          "drain_gain_pct": 2.3328349043945096,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": true,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "development screen on two previously inspected inputs, one fixed order each; no independent confirmation"
+        }
+      ]
+    },
+    {
+      "scenario": "public_toolagent",
+      "baseline": "PoolSIEVE1",
+      "full": {
+        "mib_s": 90.01768848985353,
+        "p99_ms": 28.3706,
+        "rates": [
+          90.01768848985353
+        ],
+        "tails": [
+          28.3706
+        ],
+        "remote_mib": 1754.0,
+        "copies": 40,
+        "cpu_s": 4.91
+      },
+      "control": {
+        "mib_s": 72.60283479148653,
+        "p99_ms": 33.04656,
+        "rates": [
+          72.60283479148653
+        ],
+        "tails": [
+          33.04656
+        ],
+        "remote_mib": 2146.0,
+        "copies": 1073,
+        "cpu_s": 11.62
+      },
+      "gain_pct": 23.98646519572136,
+      "p99_change_pct": -14.14961194145472,
+      "strict_passes": 1,
+      "pairs": [
+        {
+          "block": "public_toolagent-73602-r1",
+          "scenario": "public_toolagent",
+          "seed": 73602,
+          "treatment": "Full",
+          "baseline": "PoolSIEVE1",
+          "n": 1,
+          "gain_pct": 23.98646519572136,
+          "p99_change_pct": -14.149611941454731,
+          "drain_gain_pct": 24.068442454567986,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": true,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "development screen on two previously inspected inputs, one fixed order each; no independent confirmation"
+        }
+      ]
+    },
+    {
+      "scenario": "public_toolagent",
+      "baseline": "OldFull",
+      "full": {
+        "mib_s": 90.01768848985353,
+        "p99_ms": 28.3706,
+        "rates": [
+          90.01768848985353
+        ],
+        "tails": [
+          28.3706
+        ],
+        "remote_mib": 1754.0,
+        "copies": 40,
+        "cpu_s": 4.91
+      },
+      "control": {
+        "mib_s": 89.77323087605825,
+        "p99_ms": 28.6041,
+        "rates": [
+          89.77323087605825
+        ],
+        "tails": [
+          28.6041
+        ],
+        "remote_mib": 1756.0,
+        "copies": 42,
+        "cpu_s": 4.99
+      },
+      "gain_pct": 0.2723056877977026,
+      "p99_change_pct": -0.8163165420341789,
+      "strict_passes": 1,
+      "pairs": [
+        {
+          "block": "public_toolagent-73602-r1",
+          "scenario": "public_toolagent",
+          "seed": 73602,
+          "treatment": "Full",
+          "baseline": "OldFull",
+          "n": 1,
+          "gain_pct": 0.2723056877977026,
+          "p99_change_pct": -0.81631654203419,
+          "drain_gain_pct": 0.27241037762308906,
+          "mechanism_active": true,
+          "executed_actions_changed": true,
+          "pilot_screen": true,
+          "acceptance_version": "strict-dual-metric-v3",
+          "interpretation": "development screen on two previously inspected inputs, one fixed order each; no independent confirmation"
+        }
+      ]
+    }
+  ],
+  "strict_ablation_and_sieve_passes": 7,
+  "strict_retained_binary_passes": 2,
+  "development_inputs": true
+}

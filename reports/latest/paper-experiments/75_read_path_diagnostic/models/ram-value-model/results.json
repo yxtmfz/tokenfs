@@ -1,0 +1,2694 @@
+{
+  "speed_evidence": false,
+  "module_extension": true,
+  "description": "Fixed 10 inputs \u00d7 2 H algorithms \u00d7 3 RAM replacement choices \u00d7 4 arms = 240 model arms. LRU baseline vs original disk-value ranking vs retained_capture=false RAM-value ranking. RAM always captures incoming storage read; chooses victim only among previous 2 objects; exact 4MiB budget. All compared arms use same victim-selection code with existing H/P/J flags. No physical pinning/concurrency in serialized immediate-copy model; no throughput/p99 evidence. This extends H to RAM placement, not unchanged original H.",
+  "rows": [
+    {
+      "input": "moving_shared-73501",
+      "variants": {
+        "retained_lru": {
+          "stdout": "Full remote=77 copies=65 ram_hits=913 disk_hits=162 requests=1152 copy_cost=13 net_gain=113 victim_loss=80\nNoHotspot remote=79 copies=28 ram_hits=913 disk_hits=160 requests=1152 copy_cost=3 net_gain=3 no_reuse=155 victim_loss=15\nNoAffinity remote=95 copies=44 ram_hits=913 disk_hits=144 requests=1152 copy_cost=6 net_gain=32 victim_loss=45\nNoJoint remote=99 copies=97 ram_hits=913 disk_hits=140 requests=1152 copy_cost=13\n",
+          "arms": {
+            "Full": {
+              "remote": 77,
+              "copies": 65,
+              "ram_hits": 913,
+              "disk_hits": 162,
+              "requests": 1152,
+              "copy_cost": 13,
+              "net_gain": 113,
+              "victim_loss": 80
+            },
+            "NoHotspot": {
+              "remote": 79,
+              "copies": 28,
+              "ram_hits": 913,
+              "disk_hits": 160,
+              "requests": 1152,
+              "copy_cost": 3,
+              "net_gain": 3,
+              "no_reuse": 155,
+              "victim_loss": 15
+            },
+            "NoAffinity": {
+              "remote": 95,
+              "copies": 44,
+              "ram_hits": 913,
+              "disk_hits": 144,
+              "requests": 1152,
+              "copy_cost": 6,
+              "net_gain": 32,
+              "victim_loss": 45
+            },
+            "NoJoint": {
+              "remote": 99,
+              "copies": 97,
+              "ram_hits": 913,
+              "disk_hits": 140,
+              "requests": 1152,
+              "copy_cost": 13
+            }
+          }
+        },
+        "retained_disk_value": {
+          "stdout": "Full remote=77 copies=65 ram_hits=924 disk_hits=151 requests=1152 copy_cost=13 net_gain=113 victim_loss=80\nNoHotspot remote=79 copies=28 ram_hits=921 disk_hits=152 requests=1152 copy_cost=3 net_gain=3 no_reuse=155 victim_loss=15\nNoAffinity remote=95 copies=44 ram_hits=924 disk_hits=133 requests=1152 copy_cost=6 net_gain=32 victim_loss=45\nNoJoint remote=99 copies=97 ram_hits=924 disk_hits=129 requests=1152 copy_cost=13\n",
+          "arms": {
+            "Full": {
+              "remote": 77,
+              "copies": 65,
+              "ram_hits": 924,
+              "disk_hits": 151,
+              "requests": 1152,
+              "copy_cost": 13,
+              "net_gain": 113,
+              "victim_loss": 80
+            },
+            "NoHotspot": {
+              "remote": 79,
+              "copies": 28,
+              "ram_hits": 921,
+              "disk_hits": 152,
+              "requests": 1152,
+              "copy_cost": 3,
+              "net_gain": 3,
+              "no_reuse": 155,
+              "victim_loss": 15
+            },
+            "NoAffinity": {
+              "remote": 95,
+              "copies": 44,
+              "ram_hits": 924,
+              "disk_hits": 133,
+              "requests": 1152,
+              "copy_cost": 6,
+              "net_gain": 32,
+              "victim_loss": 45
+            },
+            "NoJoint": {
+              "remote": 99,
+              "copies": 97,
+              "ram_hits": 924,
+              "disk_hits": 129,
+              "requests": 1152,
+              "copy_cost": 13
+            }
+          }
+        },
+        "retained_ram_value": {
+          "stdout": "Full remote=77 copies=65 ram_hits=924 disk_hits=151 requests=1152 copy_cost=13 net_gain=113 victim_loss=80\nNoHotspot remote=79 copies=28 ram_hits=921 disk_hits=152 requests=1152 copy_cost=3 net_gain=3 no_reuse=155 victim_loss=15\nNoAffinity remote=95 copies=44 ram_hits=924 disk_hits=133 requests=1152 copy_cost=6 net_gain=32 victim_loss=45\nNoJoint remote=99 copies=97 ram_hits=924 disk_hits=129 requests=1152 copy_cost=13\n",
+          "arms": {
+            "Full": {
+              "remote": 77,
+              "copies": 65,
+              "ram_hits": 924,
+              "disk_hits": 151,
+              "requests": 1152,
+              "copy_cost": 13,
+              "net_gain": 113,
+              "victim_loss": 80
+            },
+            "NoHotspot": {
+              "remote": 79,
+              "copies": 28,
+              "ram_hits": 921,
+              "disk_hits": 152,
+              "requests": 1152,
+              "copy_cost": 3,
+              "net_gain": 3,
+              "no_reuse": 155,
+              "victim_loss": 15
+            },
+            "NoAffinity": {
+              "remote": 95,
+              "copies": 44,
+              "ram_hits": 924,
+              "disk_hits": 133,
+              "requests": 1152,
+              "copy_cost": 6,
+              "net_gain": 32,
+              "victim_loss": 45
+            },
+            "NoJoint": {
+              "remote": 99,
+              "copies": 97,
+              "ram_hits": 924,
+              "disk_hits": 129,
+              "requests": 1152,
+              "copy_cost": 13
+            }
+          }
+        },
+        "opportunity74_lru": {
+          "stdout": "Full remote=78 copies=29 ram_hits=913 disk_hits=161 requests=1152 copy_cost=3 net_gain=44 no_reuse=155\nNoHotspot remote=79 copies=28 ram_hits=913 disk_hits=160 requests=1152 copy_cost=3 net_gain=3 no_reuse=155 victim_loss=15\nNoAffinity remote=97 copies=36 ram_hits=913 disk_hits=142 requests=1152 copy_cost=1 net_gain=23 no_reuse=52 victim_loss=8\nNoJoint remote=85 copies=36 ram_hits=913 disk_hits=154 requests=1152 copy_cost=3 no_reuse=155\n",
+          "arms": {
+            "Full": {
+              "remote": 78,
+              "copies": 29,
+              "ram_hits": 913,
+              "disk_hits": 161,
+              "requests": 1152,
+              "copy_cost": 3,
+              "net_gain": 44,
+              "no_reuse": 155
+            },
+            "NoHotspot": {
+              "remote": 79,
+              "copies": 28,
+              "ram_hits": 913,
+              "disk_hits": 160,
+              "requests": 1152,
+              "copy_cost": 3,
+              "net_gain": 3,
+              "no_reuse": 155,
+              "victim_loss": 15
+            },
+            "NoAffinity": {
+              "remote": 97,
+              "copies": 36,
+              "ram_hits": 913,
+              "disk_hits": 142,
+              "requests": 1152,
+              "copy_cost": 1,
+              "net_gain": 23,
+              "no_reuse": 52,
+              "victim_loss": 8
+            },
+            "NoJoint": {
+              "remote": 85,
+              "copies": 36,
+              "ram_hits": 913,
+              "disk_hits": 154,
+              "requests": 1152,
+              "copy_cost": 3,
+              "no_reuse": 155
+            }
+          }
+        },
+        "opportunity74_disk_value": {
+          "stdout": "Full remote=78 copies=29 ram_hits=927 disk_hits=147 requests=1152 copy_cost=3 net_gain=44 no_reuse=155\nNoHotspot remote=79 copies=28 ram_hits=921 disk_hits=152 requests=1152 copy_cost=3 net_gain=3 no_reuse=155 victim_loss=15\nNoAffinity remote=97 copies=36 ram_hits=927 disk_hits=128 requests=1152 copy_cost=1 net_gain=23 no_reuse=52 victim_loss=8\nNoJoint remote=85 copies=36 ram_hits=927 disk_hits=140 requests=1152 copy_cost=3 no_reuse=155\n",
+          "arms": {
+            "Full": {
+              "remote": 78,
+              "copies": 29,
+              "ram_hits": 927,
+              "disk_hits": 147,
+              "requests": 1152,
+              "copy_cost": 3,
+              "net_gain": 44,
+              "no_reuse": 155
+            },
+            "NoHotspot": {
+              "remote": 79,
+              "copies": 28,
+              "ram_hits": 921,
+              "disk_hits": 152,
+              "requests": 1152,
+              "copy_cost": 3,
+              "net_gain": 3,
+              "no_reuse": 155,
+              "victim_loss": 15
+            },
+            "NoAffinity": {
+              "remote": 97,
+              "copies": 36,
+              "ram_hits": 927,
+              "disk_hits": 128,
+              "requests": 1152,
+              "copy_cost": 1,
+              "net_gain": 23,
+              "no_reuse": 52,
+              "victim_loss": 8
+            },
+            "NoJoint": {
+              "remote": 85,
+              "copies": 36,
+              "ram_hits": 927,
+              "disk_hits": 140,
+              "requests": 1152,
+              "copy_cost": 3,
+              "no_reuse": 155
+            }
+          }
+        },
+        "opportunity74_ram_value": {
+          "stdout": "Full remote=78 copies=29 ram_hits=924 disk_hits=150 requests=1152 copy_cost=3 net_gain=44 no_reuse=155\nNoHotspot remote=79 copies=28 ram_hits=921 disk_hits=152 requests=1152 copy_cost=3 net_gain=3 no_reuse=155 victim_loss=15\nNoAffinity remote=97 copies=36 ram_hits=924 disk_hits=131 requests=1152 copy_cost=1 net_gain=23 no_reuse=52 victim_loss=8\nNoJoint remote=85 copies=36 ram_hits=924 disk_hits=143 requests=1152 copy_cost=3 no_reuse=155\n",
+          "arms": {
+            "Full": {
+              "remote": 78,
+              "copies": 29,
+              "ram_hits": 924,
+              "disk_hits": 150,
+              "requests": 1152,
+              "copy_cost": 3,
+              "net_gain": 44,
+              "no_reuse": 155
+            },
+            "NoHotspot": {
+              "remote": 79,
+              "copies": 28,
+              "ram_hits": 921,
+              "disk_hits": 152,
+              "requests": 1152,
+              "copy_cost": 3,
+              "net_gain": 3,
+              "no_reuse": 155,
+              "victim_loss": 15
+            },
+            "NoAffinity": {
+              "remote": 97,
+              "copies": 36,
+              "ram_hits": 924,
+              "disk_hits": 131,
+              "requests": 1152,
+              "copy_cost": 1,
+              "net_gain": 23,
+              "no_reuse": 52,
+              "victim_loss": 8
+            },
+            "NoJoint": {
+              "remote": 85,
+              "copies": 36,
+              "ram_hits": 924,
+              "disk_hits": 143,
+              "requests": 1152,
+              "copy_cost": 3,
+              "no_reuse": 155
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "moving_shared-73502",
+      "variants": {
+        "retained_lru": {
+          "stdout": "Full remote=76 copies=64 ram_hits=907 disk_hits=169 requests=1152 copy_cost=15 net_gain=111 no_reuse=1 victim_loss=75\nNoHotspot remote=85 copies=28 ram_hits=907 disk_hits=160 requests=1152 copy_cost=6 net_gain=3 no_reuse=169 victim_loss=12\nNoAffinity remote=112 copies=55 ram_hits=907 disk_hits=133 requests=1152 copy_cost=7 net_gain=42 no_reuse=1 victim_loss=49\nNoJoint remote=88 copies=85 ram_hits=907 disk_hits=157 requests=1152 copy_cost=18 no_reuse=1\n",
+          "arms": {
+            "Full": {
+              "remote": 76,
+              "copies": 64,
+              "ram_hits": 907,
+              "disk_hits": 169,
+              "requests": 1152,
+              "copy_cost": 15,
+              "net_gain": 111,
+              "no_reuse": 1,
+              "victim_loss": 75
+            },
+            "NoHotspot": {
+              "remote": 85,
+              "copies": 28,
+              "ram_hits": 907,
+              "disk_hits": 160,
+              "requests": 1152,
+              "copy_cost": 6,
+              "net_gain": 3,
+              "no_reuse": 169,
+              "victim_loss": 12
+            },
+            "NoAffinity": {
+              "remote": 112,
+              "copies": 55,
+              "ram_hits": 907,
+              "disk_hits": 133,
+              "requests": 1152,
+              "copy_cost": 7,
+              "net_gain": 42,
+              "no_reuse": 1,
+              "victim_loss": 49
+            },
+            "NoJoint": {
+              "remote": 88,
+              "copies": 85,
+              "ram_hits": 907,
+              "disk_hits": 157,
+              "requests": 1152,
+              "copy_cost": 18,
+              "no_reuse": 1
+            }
+          }
+        },
+        "retained_disk_value": {
+          "stdout": "Full remote=76 copies=64 ram_hits=908 disk_hits=168 requests=1152 copy_cost=15 net_gain=112 no_reuse=1 victim_loss=74\nNoHotspot remote=85 copies=28 ram_hits=916 disk_hits=151 requests=1152 copy_cost=6 net_gain=3 no_reuse=169 victim_loss=12\nNoAffinity remote=112 copies=55 ram_hits=908 disk_hits=132 requests=1152 copy_cost=7 net_gain=42 no_reuse=1 victim_loss=49\nNoJoint remote=88 copies=85 ram_hits=908 disk_hits=156 requests=1152 copy_cost=18 no_reuse=1\n",
+          "arms": {
+            "Full": {
+              "remote": 76,
+              "copies": 64,
+              "ram_hits": 908,
+              "disk_hits": 168,
+              "requests": 1152,
+              "copy_cost": 15,
+              "net_gain": 112,
+              "no_reuse": 1,
+              "victim_loss": 74
+            },
+            "NoHotspot": {
+              "remote": 85,
+              "copies": 28,
+              "ram_hits": 916,
+              "disk_hits": 151,
+              "requests": 1152,
+              "copy_cost": 6,
+              "net_gain": 3,
+              "no_reuse": 169,
+              "victim_loss": 12
+            },
+            "NoAffinity": {
+              "remote": 112,
+              "copies": 55,
+              "ram_hits": 908,
+              "disk_hits": 132,
+              "requests": 1152,
+              "copy_cost": 7,
+              "net_gain": 42,
+              "no_reuse": 1,
+              "victim_loss": 49
+            },
+            "NoJoint": {
+              "remote": 88,
+              "copies": 85,
+              "ram_hits": 908,
+              "disk_hits": 156,
+              "requests": 1152,
+              "copy_cost": 18,
+              "no_reuse": 1
+            }
+          }
+        },
+        "retained_ram_value": {
+          "stdout": "Full remote=76 copies=64 ram_hits=909 disk_hits=167 requests=1152 copy_cost=15 net_gain=112 no_reuse=1 victim_loss=74\nNoHotspot remote=85 copies=28 ram_hits=916 disk_hits=151 requests=1152 copy_cost=6 net_gain=3 no_reuse=169 victim_loss=12\nNoAffinity remote=112 copies=55 ram_hits=909 disk_hits=131 requests=1152 copy_cost=7 net_gain=42 no_reuse=1 victim_loss=49\nNoJoint remote=88 copies=85 ram_hits=909 disk_hits=155 requests=1152 copy_cost=18 no_reuse=1\n",
+          "arms": {
+            "Full": {
+              "remote": 76,
+              "copies": 64,
+              "ram_hits": 909,
+              "disk_hits": 167,
+              "requests": 1152,
+              "copy_cost": 15,
+              "net_gain": 112,
+              "no_reuse": 1,
+              "victim_loss": 74
+            },
+            "NoHotspot": {
+              "remote": 85,
+              "copies": 28,
+              "ram_hits": 916,
+              "disk_hits": 151,
+              "requests": 1152,
+              "copy_cost": 6,
+              "net_gain": 3,
+              "no_reuse": 169,
+              "victim_loss": 12
+            },
+            "NoAffinity": {
+              "remote": 112,
+              "copies": 55,
+              "ram_hits": 909,
+              "disk_hits": 131,
+              "requests": 1152,
+              "copy_cost": 7,
+              "net_gain": 42,
+              "no_reuse": 1,
+              "victim_loss": 49
+            },
+            "NoJoint": {
+              "remote": 88,
+              "copies": 85,
+              "ram_hits": 909,
+              "disk_hits": 155,
+              "requests": 1152,
+              "copy_cost": 18,
+              "no_reuse": 1
+            }
+          }
+        },
+        "opportunity74_lru": {
+          "stdout": "Full remote=83 copies=28 ram_hits=907 disk_hits=162 requests=1152 copy_cost=6 net_gain=38 no_reuse=169 victim_loss=2\nNoHotspot remote=85 copies=28 ram_hits=907 disk_hits=160 requests=1152 copy_cost=6 net_gain=3 no_reuse=169 victim_loss=12\nNoAffinity remote=120 copies=43 ram_hits=907 disk_hits=125 requests=1152 copy_cost=1 net_gain=28 no_reuse=57 victim_loss=19\nNoJoint remote=104 copies=49 ram_hits=907 disk_hits=141 requests=1152 copy_cost=6 no_reuse=169\n",
+          "arms": {
+            "Full": {
+              "remote": 83,
+              "copies": 28,
+              "ram_hits": 907,
+              "disk_hits": 162,
+              "requests": 1152,
+              "copy_cost": 6,
+              "net_gain": 38,
+              "no_reuse": 169,
+              "victim_loss": 2
+            },
+            "NoHotspot": {
+              "remote": 85,
+              "copies": 28,
+              "ram_hits": 907,
+              "disk_hits": 160,
+              "requests": 1152,
+              "copy_cost": 6,
+              "net_gain": 3,
+              "no_reuse": 169,
+              "victim_loss": 12
+            },
+            "NoAffinity": {
+              "remote": 120,
+              "copies": 43,
+              "ram_hits": 907,
+              "disk_hits": 125,
+              "requests": 1152,
+              "copy_cost": 1,
+              "net_gain": 28,
+              "no_reuse": 57,
+              "victim_loss": 19
+            },
+            "NoJoint": {
+              "remote": 104,
+              "copies": 49,
+              "ram_hits": 907,
+              "disk_hits": 141,
+              "requests": 1152,
+              "copy_cost": 6,
+              "no_reuse": 169
+            }
+          }
+        },
+        "opportunity74_disk_value": {
+          "stdout": "Full remote=83 copies=28 ram_hits=914 disk_hits=155 requests=1152 copy_cost=6 net_gain=39 no_reuse=169 victim_loss=1\nNoHotspot remote=85 copies=28 ram_hits=916 disk_hits=151 requests=1152 copy_cost=6 net_gain=3 no_reuse=169 victim_loss=12\nNoAffinity remote=121 copies=43 ram_hits=914 disk_hits=117 requests=1152 copy_cost=1 net_gain=28 no_reuse=57 victim_loss=20\nNoJoint remote=107 copies=52 ram_hits=914 disk_hits=131 requests=1152 copy_cost=6 no_reuse=169\n",
+          "arms": {
+            "Full": {
+              "remote": 83,
+              "copies": 28,
+              "ram_hits": 914,
+              "disk_hits": 155,
+              "requests": 1152,
+              "copy_cost": 6,
+              "net_gain": 39,
+              "no_reuse": 169,
+              "victim_loss": 1
+            },
+            "NoHotspot": {
+              "remote": 85,
+              "copies": 28,
+              "ram_hits": 916,
+              "disk_hits": 151,
+              "requests": 1152,
+              "copy_cost": 6,
+              "net_gain": 3,
+              "no_reuse": 169,
+              "victim_loss": 12
+            },
+            "NoAffinity": {
+              "remote": 121,
+              "copies": 43,
+              "ram_hits": 914,
+              "disk_hits": 117,
+              "requests": 1152,
+              "copy_cost": 1,
+              "net_gain": 28,
+              "no_reuse": 57,
+              "victim_loss": 20
+            },
+            "NoJoint": {
+              "remote": 107,
+              "copies": 52,
+              "ram_hits": 914,
+              "disk_hits": 131,
+              "requests": 1152,
+              "copy_cost": 6,
+              "no_reuse": 169
+            }
+          }
+        },
+        "opportunity74_ram_value": {
+          "stdout": "Full remote=83 copies=28 ram_hits=909 disk_hits=160 requests=1152 copy_cost=6 net_gain=39 no_reuse=169 victim_loss=1\nNoHotspot remote=85 copies=28 ram_hits=916 disk_hits=151 requests=1152 copy_cost=6 net_gain=3 no_reuse=169 victim_loss=12\nNoAffinity remote=121 copies=43 ram_hits=909 disk_hits=122 requests=1152 copy_cost=1 net_gain=28 no_reuse=57 victim_loss=20\nNoJoint remote=107 copies=52 ram_hits=909 disk_hits=136 requests=1152 copy_cost=6 no_reuse=169\n",
+          "arms": {
+            "Full": {
+              "remote": 83,
+              "copies": 28,
+              "ram_hits": 909,
+              "disk_hits": 160,
+              "requests": 1152,
+              "copy_cost": 6,
+              "net_gain": 39,
+              "no_reuse": 169,
+              "victim_loss": 1
+            },
+            "NoHotspot": {
+              "remote": 85,
+              "copies": 28,
+              "ram_hits": 916,
+              "disk_hits": 151,
+              "requests": 1152,
+              "copy_cost": 6,
+              "net_gain": 3,
+              "no_reuse": 169,
+              "victim_loss": 12
+            },
+            "NoAffinity": {
+              "remote": 121,
+              "copies": 43,
+              "ram_hits": 909,
+              "disk_hits": 122,
+              "requests": 1152,
+              "copy_cost": 1,
+              "net_gain": 28,
+              "no_reuse": 57,
+              "victim_loss": 20
+            },
+            "NoJoint": {
+              "remote": 107,
+              "copies": 52,
+              "ram_hits": 909,
+              "disk_hits": 136,
+              "requests": 1152,
+              "copy_cost": 6,
+              "no_reuse": 169
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "moving_shared-73503",
+      "variants": {
+        "retained_lru": {
+          "stdout": "Full remote=78 copies=63 ram_hits=916 disk_hits=158 requests=1152 copy_cost=12 net_gain=105 victim_loss=93\nNoHotspot remote=79 copies=28 ram_hits=916 disk_hits=157 requests=1152 copy_cost=9 no_reuse=156 victim_loss=15\nNoAffinity remote=114 copies=53 ram_hits=916 disk_hits=122 requests=1152 copy_cost=6 net_gain=41 victim_loss=55\nNoJoint remote=107 copies=104 ram_hits=916 disk_hits=129 requests=1152 copy_cost=12\n",
+          "arms": {
+            "Full": {
+              "remote": 78,
+              "copies": 63,
+              "ram_hits": 916,
+              "disk_hits": 158,
+              "requests": 1152,
+              "copy_cost": 12,
+              "net_gain": 105,
+              "victim_loss": 93
+            },
+            "NoHotspot": {
+              "remote": 79,
+              "copies": 28,
+              "ram_hits": 916,
+              "disk_hits": 157,
+              "requests": 1152,
+              "copy_cost": 9,
+              "no_reuse": 156,
+              "victim_loss": 15
+            },
+            "NoAffinity": {
+              "remote": 114,
+              "copies": 53,
+              "ram_hits": 916,
+              "disk_hits": 122,
+              "requests": 1152,
+              "copy_cost": 6,
+              "net_gain": 41,
+              "victim_loss": 55
+            },
+            "NoJoint": {
+              "remote": 107,
+              "copies": 104,
+              "ram_hits": 916,
+              "disk_hits": 129,
+              "requests": 1152,
+              "copy_cost": 12
+            }
+          }
+        },
+        "retained_disk_value": {
+          "stdout": "Full remote=79 copies=64 ram_hits=920 disk_hits=153 requests=1152 copy_cost=12 net_gain=112 victim_loss=89\nNoHotspot remote=80 copies=28 ram_hits=918 disk_hits=154 requests=1152 copy_cost=6 no_reuse=156 victim_loss=21\nNoAffinity remote=116 copies=55 ram_hits=920 disk_hits=116 requests=1152 copy_cost=6 net_gain=43 victim_loss=55\nNoJoint remote=107 copies=104 ram_hits=920 disk_hits=125 requests=1152 copy_cost=12\n",
+          "arms": {
+            "Full": {
+              "remote": 79,
+              "copies": 64,
+              "ram_hits": 920,
+              "disk_hits": 153,
+              "requests": 1152,
+              "copy_cost": 12,
+              "net_gain": 112,
+              "victim_loss": 89
+            },
+            "NoHotspot": {
+              "remote": 80,
+              "copies": 28,
+              "ram_hits": 918,
+              "disk_hits": 154,
+              "requests": 1152,
+              "copy_cost": 6,
+              "no_reuse": 156,
+              "victim_loss": 21
+            },
+            "NoAffinity": {
+              "remote": 116,
+              "copies": 55,
+              "ram_hits": 920,
+              "disk_hits": 116,
+              "requests": 1152,
+              "copy_cost": 6,
+              "net_gain": 43,
+              "victim_loss": 55
+            },
+            "NoJoint": {
+              "remote": 107,
+              "copies": 104,
+              "ram_hits": 920,
+              "disk_hits": 125,
+              "requests": 1152,
+              "copy_cost": 12
+            }
+          }
+        },
+        "retained_ram_value": {
+          "stdout": "Full remote=79 copies=64 ram_hits=920 disk_hits=153 requests=1152 copy_cost=12 net_gain=112 victim_loss=89\nNoHotspot remote=80 copies=28 ram_hits=918 disk_hits=154 requests=1152 copy_cost=6 no_reuse=156 victim_loss=21\nNoAffinity remote=116 copies=55 ram_hits=920 disk_hits=116 requests=1152 copy_cost=6 net_gain=43 victim_loss=55\nNoJoint remote=107 copies=104 ram_hits=920 disk_hits=125 requests=1152 copy_cost=12\n",
+          "arms": {
+            "Full": {
+              "remote": 79,
+              "copies": 64,
+              "ram_hits": 920,
+              "disk_hits": 153,
+              "requests": 1152,
+              "copy_cost": 12,
+              "net_gain": 112,
+              "victim_loss": 89
+            },
+            "NoHotspot": {
+              "remote": 80,
+              "copies": 28,
+              "ram_hits": 918,
+              "disk_hits": 154,
+              "requests": 1152,
+              "copy_cost": 6,
+              "no_reuse": 156,
+              "victim_loss": 21
+            },
+            "NoAffinity": {
+              "remote": 116,
+              "copies": 55,
+              "ram_hits": 920,
+              "disk_hits": 116,
+              "requests": 1152,
+              "copy_cost": 6,
+              "net_gain": 43,
+              "victim_loss": 55
+            },
+            "NoJoint": {
+              "remote": 107,
+              "copies": 104,
+              "ram_hits": 920,
+              "disk_hits": 125,
+              "requests": 1152,
+              "copy_cost": 12
+            }
+          }
+        },
+        "opportunity74_lru": {
+          "stdout": "Full remote=78 copies=28 ram_hits=916 disk_hits=158 requests=1152 copy_cost=6 net_gain=44 no_reuse=156\nNoHotspot remote=79 copies=28 ram_hits=916 disk_hits=157 requests=1152 copy_cost=9 no_reuse=156 victim_loss=15\nNoAffinity remote=119 copies=42 ram_hits=916 disk_hits=117 requests=1152 copy_cost=2 net_gain=29 no_reuse=51 victim_loss=24\nNoJoint remote=99 copies=49 ram_hits=916 disk_hits=137 requests=1152 copy_cost=6 no_reuse=156\n",
+          "arms": {
+            "Full": {
+              "remote": 78,
+              "copies": 28,
+              "ram_hits": 916,
+              "disk_hits": 158,
+              "requests": 1152,
+              "copy_cost": 6,
+              "net_gain": 44,
+              "no_reuse": 156
+            },
+            "NoHotspot": {
+              "remote": 79,
+              "copies": 28,
+              "ram_hits": 916,
+              "disk_hits": 157,
+              "requests": 1152,
+              "copy_cost": 9,
+              "no_reuse": 156,
+              "victim_loss": 15
+            },
+            "NoAffinity": {
+              "remote": 119,
+              "copies": 42,
+              "ram_hits": 916,
+              "disk_hits": 117,
+              "requests": 1152,
+              "copy_cost": 2,
+              "net_gain": 29,
+              "no_reuse": 51,
+              "victim_loss": 24
+            },
+            "NoJoint": {
+              "remote": 99,
+              "copies": 49,
+              "ram_hits": 916,
+              "disk_hits": 137,
+              "requests": 1152,
+              "copy_cost": 6,
+              "no_reuse": 156
+            }
+          }
+        },
+        "opportunity74_disk_value": {
+          "stdout": "Full remote=78 copies=28 ram_hits=918 disk_hits=156 requests=1152 copy_cost=6 net_gain=44 no_reuse=156\nNoHotspot remote=80 copies=28 ram_hits=918 disk_hits=154 requests=1152 copy_cost=6 no_reuse=156 victim_loss=21\nNoAffinity remote=118 copies=43 ram_hits=918 disk_hits=116 requests=1152 copy_cost=2 net_gain=30 no_reuse=52 victim_loss=21\nNoJoint remote=100 copies=50 ram_hits=918 disk_hits=134 requests=1152 copy_cost=6 no_reuse=156\n",
+          "arms": {
+            "Full": {
+              "remote": 78,
+              "copies": 28,
+              "ram_hits": 918,
+              "disk_hits": 156,
+              "requests": 1152,
+              "copy_cost": 6,
+              "net_gain": 44,
+              "no_reuse": 156
+            },
+            "NoHotspot": {
+              "remote": 80,
+              "copies": 28,
+              "ram_hits": 918,
+              "disk_hits": 154,
+              "requests": 1152,
+              "copy_cost": 6,
+              "no_reuse": 156,
+              "victim_loss": 21
+            },
+            "NoAffinity": {
+              "remote": 118,
+              "copies": 43,
+              "ram_hits": 918,
+              "disk_hits": 116,
+              "requests": 1152,
+              "copy_cost": 2,
+              "net_gain": 30,
+              "no_reuse": 52,
+              "victim_loss": 21
+            },
+            "NoJoint": {
+              "remote": 100,
+              "copies": 50,
+              "ram_hits": 918,
+              "disk_hits": 134,
+              "requests": 1152,
+              "copy_cost": 6,
+              "no_reuse": 156
+            }
+          }
+        },
+        "opportunity74_ram_value": {
+          "stdout": "Full remote=78 copies=28 ram_hits=920 disk_hits=154 requests=1152 copy_cost=6 net_gain=44 no_reuse=156\nNoHotspot remote=80 copies=28 ram_hits=918 disk_hits=154 requests=1152 copy_cost=6 no_reuse=156 victim_loss=21\nNoAffinity remote=118 copies=43 ram_hits=920 disk_hits=114 requests=1152 copy_cost=2 net_gain=30 no_reuse=52 victim_loss=21\nNoJoint remote=100 copies=50 ram_hits=920 disk_hits=132 requests=1152 copy_cost=6 no_reuse=156\n",
+          "arms": {
+            "Full": {
+              "remote": 78,
+              "copies": 28,
+              "ram_hits": 920,
+              "disk_hits": 154,
+              "requests": 1152,
+              "copy_cost": 6,
+              "net_gain": 44,
+              "no_reuse": 156
+            },
+            "NoHotspot": {
+              "remote": 80,
+              "copies": 28,
+              "ram_hits": 918,
+              "disk_hits": 154,
+              "requests": 1152,
+              "copy_cost": 6,
+              "no_reuse": 156,
+              "victim_loss": 21
+            },
+            "NoAffinity": {
+              "remote": 118,
+              "copies": 43,
+              "ram_hits": 920,
+              "disk_hits": 114,
+              "requests": 1152,
+              "copy_cost": 2,
+              "net_gain": 30,
+              "no_reuse": 52,
+              "victim_loss": 21
+            },
+            "NoJoint": {
+              "remote": 100,
+              "copies": 50,
+              "ram_hits": 920,
+              "disk_hits": 132,
+              "requests": 1152,
+              "copy_cost": 6,
+              "no_reuse": 156
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "moving_shared-74801",
+      "variants": {
+        "retained_lru": {
+          "stdout": "Full remote=79 copies=68 ram_hits=920 disk_hits=153 requests=1152 copy_cost=8 net_gain=110 victim_loss=90\nNoHotspot remote=84 copies=28 ram_hits=920 disk_hits=148 requests=1152 copy_cost=3 net_gain=1 no_reuse=172 victim_loss=7\nNoAffinity remote=105 copies=48 ram_hits=920 disk_hits=127 requests=1152 copy_cost=4 net_gain=36 victim_loss=53\nNoJoint remote=111 copies=111 ram_hits=920 disk_hits=121 requests=1152 copy_cost=5\n",
+          "arms": {
+            "Full": {
+              "remote": 79,
+              "copies": 68,
+              "ram_hits": 920,
+              "disk_hits": 153,
+              "requests": 1152,
+              "copy_cost": 8,
+              "net_gain": 110,
+              "victim_loss": 90
+            },
+            "NoHotspot": {
+              "remote": 84,
+              "copies": 28,
+              "ram_hits": 920,
+              "disk_hits": 148,
+              "requests": 1152,
+              "copy_cost": 3,
+              "net_gain": 1,
+              "no_reuse": 172,
+              "victim_loss": 7
+            },
+            "NoAffinity": {
+              "remote": 105,
+              "copies": 48,
+              "ram_hits": 920,
+              "disk_hits": 127,
+              "requests": 1152,
+              "copy_cost": 4,
+              "net_gain": 36,
+              "victim_loss": 53
+            },
+            "NoJoint": {
+              "remote": 111,
+              "copies": 111,
+              "ram_hits": 920,
+              "disk_hits": 121,
+              "requests": 1152,
+              "copy_cost": 5
+            }
+          }
+        },
+        "retained_disk_value": {
+          "stdout": "Full remote=79 copies=68 ram_hits=917 disk_hits=156 requests=1152 copy_cost=8 net_gain=110 victim_loss=90\nNoHotspot remote=84 copies=28 ram_hits=919 disk_hits=149 requests=1152 copy_cost=3 net_gain=1 no_reuse=172 victim_loss=7\nNoAffinity remote=105 copies=49 ram_hits=917 disk_hits=130 requests=1152 copy_cost=4 net_gain=37 victim_loss=52\nNoJoint remote=113 copies=113 ram_hits=917 disk_hits=122 requests=1152 copy_cost=5\n",
+          "arms": {
+            "Full": {
+              "remote": 79,
+              "copies": 68,
+              "ram_hits": 917,
+              "disk_hits": 156,
+              "requests": 1152,
+              "copy_cost": 8,
+              "net_gain": 110,
+              "victim_loss": 90
+            },
+            "NoHotspot": {
+              "remote": 84,
+              "copies": 28,
+              "ram_hits": 919,
+              "disk_hits": 149,
+              "requests": 1152,
+              "copy_cost": 3,
+              "net_gain": 1,
+              "no_reuse": 172,
+              "victim_loss": 7
+            },
+            "NoAffinity": {
+              "remote": 105,
+              "copies": 49,
+              "ram_hits": 917,
+              "disk_hits": 130,
+              "requests": 1152,
+              "copy_cost": 4,
+              "net_gain": 37,
+              "victim_loss": 52
+            },
+            "NoJoint": {
+              "remote": 113,
+              "copies": 113,
+              "ram_hits": 917,
+              "disk_hits": 122,
+              "requests": 1152,
+              "copy_cost": 5
+            }
+          }
+        },
+        "retained_ram_value": {
+          "stdout": "Full remote=79 copies=68 ram_hits=917 disk_hits=156 requests=1152 copy_cost=8 net_gain=110 victim_loss=90\nNoHotspot remote=84 copies=28 ram_hits=919 disk_hits=149 requests=1152 copy_cost=3 net_gain=1 no_reuse=172 victim_loss=7\nNoAffinity remote=105 copies=49 ram_hits=917 disk_hits=130 requests=1152 copy_cost=4 net_gain=37 victim_loss=52\nNoJoint remote=113 copies=113 ram_hits=917 disk_hits=122 requests=1152 copy_cost=5\n",
+          "arms": {
+            "Full": {
+              "remote": 79,
+              "copies": 68,
+              "ram_hits": 917,
+              "disk_hits": 156,
+              "requests": 1152,
+              "copy_cost": 8,
+              "net_gain": 110,
+              "victim_loss": 90
+            },
+            "NoHotspot": {
+              "remote": 84,
+              "copies": 28,
+              "ram_hits": 919,
+              "disk_hits": 149,
+              "requests": 1152,
+              "copy_cost": 3,
+              "net_gain": 1,
+              "no_reuse": 172,
+              "victim_loss": 7
+            },
+            "NoAffinity": {
+              "remote": 105,
+              "copies": 49,
+              "ram_hits": 917,
+              "disk_hits": 130,
+              "requests": 1152,
+              "copy_cost": 4,
+              "net_gain": 37,
+              "victim_loss": 52
+            },
+            "NoJoint": {
+              "remote": 113,
+              "copies": 113,
+              "ram_hits": 917,
+              "disk_hits": 122,
+              "requests": 1152,
+              "copy_cost": 5
+            }
+          }
+        },
+        "opportunity74_lru": {
+          "stdout": "Full remote=84 copies=28 ram_hits=920 disk_hits=148 requests=1152 copy_cost=3 net_gain=39 no_reuse=172\nNoHotspot remote=84 copies=28 ram_hits=920 disk_hits=148 requests=1152 copy_cost=3 net_gain=1 no_reuse=172 victim_loss=7\nNoAffinity remote=103 copies=32 ram_hits=920 disk_hits=129 requests=1152 copy_cost=1 net_gain=19 no_reuse=57 victim_loss=13\nNoJoint remote=111 copies=55 ram_hits=920 disk_hits=121 requests=1152 copy_cost=3 no_reuse=172\n",
+          "arms": {
+            "Full": {
+              "remote": 84,
+              "copies": 28,
+              "ram_hits": 920,
+              "disk_hits": 148,
+              "requests": 1152,
+              "copy_cost": 3,
+              "net_gain": 39,
+              "no_reuse": 172
+            },
+            "NoHotspot": {
+              "remote": 84,
+              "copies": 28,
+              "ram_hits": 920,
+              "disk_hits": 148,
+              "requests": 1152,
+              "copy_cost": 3,
+              "net_gain": 1,
+              "no_reuse": 172,
+              "victim_loss": 7
+            },
+            "NoAffinity": {
+              "remote": 103,
+              "copies": 32,
+              "ram_hits": 920,
+              "disk_hits": 129,
+              "requests": 1152,
+              "copy_cost": 1,
+              "net_gain": 19,
+              "no_reuse": 57,
+              "victim_loss": 13
+            },
+            "NoJoint": {
+              "remote": 111,
+              "copies": 55,
+              "ram_hits": 920,
+              "disk_hits": 121,
+              "requests": 1152,
+              "copy_cost": 3,
+              "no_reuse": 172
+            }
+          }
+        },
+        "opportunity74_disk_value": {
+          "stdout": "Full remote=84 copies=28 ram_hits=916 disk_hits=152 requests=1152 copy_cost=3 net_gain=39 no_reuse=172\nNoHotspot remote=84 copies=28 ram_hits=919 disk_hits=149 requests=1152 copy_cost=3 net_gain=1 no_reuse=172 victim_loss=7\nNoAffinity remote=107 copies=35 ram_hits=916 disk_hits=129 requests=1152 copy_cost=1 net_gain=22 no_reuse=57 victim_loss=14\nNoJoint remote=113 copies=57 ram_hits=916 disk_hits=123 requests=1152 copy_cost=3 no_reuse=172\n",
+          "arms": {
+            "Full": {
+              "remote": 84,
+              "copies": 28,
+              "ram_hits": 916,
+              "disk_hits": 152,
+              "requests": 1152,
+              "copy_cost": 3,
+              "net_gain": 39,
+              "no_reuse": 172
+            },
+            "NoHotspot": {
+              "remote": 84,
+              "copies": 28,
+              "ram_hits": 919,
+              "disk_hits": 149,
+              "requests": 1152,
+              "copy_cost": 3,
+              "net_gain": 1,
+              "no_reuse": 172,
+              "victim_loss": 7
+            },
+            "NoAffinity": {
+              "remote": 107,
+              "copies": 35,
+              "ram_hits": 916,
+              "disk_hits": 129,
+              "requests": 1152,
+              "copy_cost": 1,
+              "net_gain": 22,
+              "no_reuse": 57,
+              "victim_loss": 14
+            },
+            "NoJoint": {
+              "remote": 113,
+              "copies": 57,
+              "ram_hits": 916,
+              "disk_hits": 123,
+              "requests": 1152,
+              "copy_cost": 3,
+              "no_reuse": 172
+            }
+          }
+        },
+        "opportunity74_ram_value": {
+          "stdout": "Full remote=84 copies=28 ram_hits=917 disk_hits=151 requests=1152 copy_cost=3 net_gain=39 no_reuse=172\nNoHotspot remote=84 copies=28 ram_hits=919 disk_hits=149 requests=1152 copy_cost=3 net_gain=1 no_reuse=172 victim_loss=7\nNoAffinity remote=107 copies=35 ram_hits=917 disk_hits=128 requests=1152 copy_cost=1 net_gain=22 no_reuse=57 victim_loss=14\nNoJoint remote=113 copies=57 ram_hits=917 disk_hits=122 requests=1152 copy_cost=3 no_reuse=172\n",
+          "arms": {
+            "Full": {
+              "remote": 84,
+              "copies": 28,
+              "ram_hits": 917,
+              "disk_hits": 151,
+              "requests": 1152,
+              "copy_cost": 3,
+              "net_gain": 39,
+              "no_reuse": 172
+            },
+            "NoHotspot": {
+              "remote": 84,
+              "copies": 28,
+              "ram_hits": 919,
+              "disk_hits": 149,
+              "requests": 1152,
+              "copy_cost": 3,
+              "net_gain": 1,
+              "no_reuse": 172,
+              "victim_loss": 7
+            },
+            "NoAffinity": {
+              "remote": 107,
+              "copies": 35,
+              "ram_hits": 917,
+              "disk_hits": 128,
+              "requests": 1152,
+              "copy_cost": 1,
+              "net_gain": 22,
+              "no_reuse": 57,
+              "victim_loss": 14
+            },
+            "NoJoint": {
+              "remote": 113,
+              "copies": 57,
+              "ram_hits": 917,
+              "disk_hits": 122,
+              "requests": 1152,
+              "copy_cost": 3,
+              "no_reuse": 172
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "public_toolagent-73601",
+      "variants": {
+        "retained_lru": {
+          "stdout": "Full remote=865 copies=34 ram_hits=1 disk_hits=286 requests=1152 net_gain=45 no_reuse=2271 victim_loss=255\nNoHotspot remote=873 copies=25 ram_hits=1 disk_hits=278 requests=1152 net_gain=25 no_reuse=2271 victim_loss=299\nNoAffinity remote=921 copies=34 ram_hits=1 disk_hits=230 requests=1152 net_gain=22 no_reuse=761 victim_loss=126\nNoJoint remote=960 copies=196 ram_hits=1 disk_hits=191 requests=1152 no_reuse=2304\n",
+          "arms": {
+            "Full": {
+              "remote": 865,
+              "copies": 34,
+              "ram_hits": 1,
+              "disk_hits": 286,
+              "requests": 1152,
+              "net_gain": 45,
+              "no_reuse": 2271,
+              "victim_loss": 255
+            },
+            "NoHotspot": {
+              "remote": 873,
+              "copies": 25,
+              "ram_hits": 1,
+              "disk_hits": 278,
+              "requests": 1152,
+              "net_gain": 25,
+              "no_reuse": 2271,
+              "victim_loss": 299
+            },
+            "NoAffinity": {
+              "remote": 921,
+              "copies": 34,
+              "ram_hits": 1,
+              "disk_hits": 230,
+              "requests": 1152,
+              "net_gain": 22,
+              "no_reuse": 761,
+              "victim_loss": 126
+            },
+            "NoJoint": {
+              "remote": 960,
+              "copies": 196,
+              "ram_hits": 1,
+              "disk_hits": 191,
+              "requests": 1152,
+              "no_reuse": 2304
+            }
+          }
+        },
+        "retained_disk_value": {
+          "stdout": "Full remote=859 copies=33 ram_hits=19 disk_hits=274 requests=1152 net_gain=42 no_reuse=2268 victim_loss=243\nNoHotspot remote=867 copies=24 ram_hits=19 disk_hits=266 requests=1152 net_gain=22 no_reuse=2268 victim_loss=287\nNoAffinity remote=914 copies=33 ram_hits=19 disk_hits=219 requests=1152 net_gain=21 no_reuse=760 victim_loss=121\nNoJoint remote=960 copies=196 ram_hits=19 disk_hits=173 requests=1152 no_reuse=2304\n",
+          "arms": {
+            "Full": {
+              "remote": 859,
+              "copies": 33,
+              "ram_hits": 19,
+              "disk_hits": 274,
+              "requests": 1152,
+              "net_gain": 42,
+              "no_reuse": 2268,
+              "victim_loss": 243
+            },
+            "NoHotspot": {
+              "remote": 867,
+              "copies": 24,
+              "ram_hits": 19,
+              "disk_hits": 266,
+              "requests": 1152,
+              "net_gain": 22,
+              "no_reuse": 2268,
+              "victim_loss": 287
+            },
+            "NoAffinity": {
+              "remote": 914,
+              "copies": 33,
+              "ram_hits": 19,
+              "disk_hits": 219,
+              "requests": 1152,
+              "net_gain": 21,
+              "no_reuse": 760,
+              "victim_loss": 121
+            },
+            "NoJoint": {
+              "remote": 960,
+              "copies": 196,
+              "ram_hits": 19,
+              "disk_hits": 173,
+              "requests": 1152,
+              "no_reuse": 2304
+            }
+          }
+        },
+        "retained_ram_value": {
+          "stdout": "Full remote=859 copies=33 ram_hits=19 disk_hits=274 requests=1152 net_gain=42 no_reuse=2268 victim_loss=243\nNoHotspot remote=867 copies=24 ram_hits=19 disk_hits=266 requests=1152 net_gain=22 no_reuse=2268 victim_loss=287\nNoAffinity remote=914 copies=33 ram_hits=19 disk_hits=219 requests=1152 net_gain=21 no_reuse=760 victim_loss=121\nNoJoint remote=960 copies=196 ram_hits=19 disk_hits=173 requests=1152 no_reuse=2304\n",
+          "arms": {
+            "Full": {
+              "remote": 859,
+              "copies": 33,
+              "ram_hits": 19,
+              "disk_hits": 274,
+              "requests": 1152,
+              "net_gain": 42,
+              "no_reuse": 2268,
+              "victim_loss": 243
+            },
+            "NoHotspot": {
+              "remote": 867,
+              "copies": 24,
+              "ram_hits": 19,
+              "disk_hits": 266,
+              "requests": 1152,
+              "net_gain": 22,
+              "no_reuse": 2268,
+              "victim_loss": 287
+            },
+            "NoAffinity": {
+              "remote": 914,
+              "copies": 33,
+              "ram_hits": 19,
+              "disk_hits": 219,
+              "requests": 1152,
+              "net_gain": 21,
+              "no_reuse": 760,
+              "victim_loss": 121
+            },
+            "NoJoint": {
+              "remote": 960,
+              "copies": 196,
+              "ram_hits": 19,
+              "disk_hits": 173,
+              "requests": 1152,
+              "no_reuse": 2304
+            }
+          }
+        },
+        "opportunity74_lru": {
+          "stdout": "Full remote=869 copies=34 ram_hits=1 disk_hits=282 requests=1152 net_gain=44 no_reuse=2271 victim_loss=268\nNoHotspot remote=873 copies=25 ram_hits=1 disk_hits=278 requests=1152 net_gain=25 no_reuse=2271 victim_loss=299\nNoAffinity remote=922 copies=33 ram_hits=1 disk_hits=229 requests=1152 net_gain=21 no_reuse=761 victim_loss=128\nNoJoint remote=969 copies=204 ram_hits=1 disk_hits=182 requests=1152 no_reuse=2307\n",
+          "arms": {
+            "Full": {
+              "remote": 869,
+              "copies": 34,
+              "ram_hits": 1,
+              "disk_hits": 282,
+              "requests": 1152,
+              "net_gain": 44,
+              "no_reuse": 2271,
+              "victim_loss": 268
+            },
+            "NoHotspot": {
+              "remote": 873,
+              "copies": 25,
+              "ram_hits": 1,
+              "disk_hits": 278,
+              "requests": 1152,
+              "net_gain": 25,
+              "no_reuse": 2271,
+              "victim_loss": 299
+            },
+            "NoAffinity": {
+              "remote": 922,
+              "copies": 33,
+              "ram_hits": 1,
+              "disk_hits": 229,
+              "requests": 1152,
+              "net_gain": 21,
+              "no_reuse": 761,
+              "victim_loss": 128
+            },
+            "NoJoint": {
+              "remote": 969,
+              "copies": 204,
+              "ram_hits": 1,
+              "disk_hits": 182,
+              "requests": 1152,
+              "no_reuse": 2307
+            }
+          }
+        },
+        "opportunity74_disk_value": {
+          "stdout": "Full remote=863 copies=33 ram_hits=20 disk_hits=269 requests=1152 net_gain=41 no_reuse=2268 victim_loss=256\nNoHotspot remote=867 copies=24 ram_hits=19 disk_hits=266 requests=1152 net_gain=22 no_reuse=2268 victim_loss=287\nNoAffinity remote=922 copies=33 ram_hits=20 disk_hits=210 requests=1152 net_gain=21 no_reuse=761 victim_loss=128\nNoJoint remote=969 copies=204 ram_hits=20 disk_hits=163 requests=1152 no_reuse=2307\n",
+          "arms": {
+            "Full": {
+              "remote": 863,
+              "copies": 33,
+              "ram_hits": 20,
+              "disk_hits": 269,
+              "requests": 1152,
+              "net_gain": 41,
+              "no_reuse": 2268,
+              "victim_loss": 256
+            },
+            "NoHotspot": {
+              "remote": 867,
+              "copies": 24,
+              "ram_hits": 19,
+              "disk_hits": 266,
+              "requests": 1152,
+              "net_gain": 22,
+              "no_reuse": 2268,
+              "victim_loss": 287
+            },
+            "NoAffinity": {
+              "remote": 922,
+              "copies": 33,
+              "ram_hits": 20,
+              "disk_hits": 210,
+              "requests": 1152,
+              "net_gain": 21,
+              "no_reuse": 761,
+              "victim_loss": 128
+            },
+            "NoJoint": {
+              "remote": 969,
+              "copies": 204,
+              "ram_hits": 20,
+              "disk_hits": 163,
+              "requests": 1152,
+              "no_reuse": 2307
+            }
+          }
+        },
+        "opportunity74_ram_value": {
+          "stdout": "Full remote=863 copies=33 ram_hits=19 disk_hits=270 requests=1152 net_gain=41 no_reuse=2268 victim_loss=256\nNoHotspot remote=867 copies=24 ram_hits=19 disk_hits=266 requests=1152 net_gain=22 no_reuse=2268 victim_loss=287\nNoAffinity remote=922 copies=33 ram_hits=19 disk_hits=211 requests=1152 net_gain=21 no_reuse=761 victim_loss=128\nNoJoint remote=969 copies=204 ram_hits=19 disk_hits=164 requests=1152 no_reuse=2307\n",
+          "arms": {
+            "Full": {
+              "remote": 863,
+              "copies": 33,
+              "ram_hits": 19,
+              "disk_hits": 270,
+              "requests": 1152,
+              "net_gain": 41,
+              "no_reuse": 2268,
+              "victim_loss": 256
+            },
+            "NoHotspot": {
+              "remote": 867,
+              "copies": 24,
+              "ram_hits": 19,
+              "disk_hits": 266,
+              "requests": 1152,
+              "net_gain": 22,
+              "no_reuse": 2268,
+              "victim_loss": 287
+            },
+            "NoAffinity": {
+              "remote": 922,
+              "copies": 33,
+              "ram_hits": 19,
+              "disk_hits": 211,
+              "requests": 1152,
+              "net_gain": 21,
+              "no_reuse": 761,
+              "victim_loss": 128
+            },
+            "NoJoint": {
+              "remote": 969,
+              "copies": 204,
+              "ram_hits": 19,
+              "disk_hits": 164,
+              "requests": 1152,
+              "no_reuse": 2307
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "public_toolagent-73602",
+      "variants": {
+        "retained_lru": {
+          "stdout": "Full remote=879 copies=43 ram_hits=2 disk_hits=271 requests=1152 net_gain=56 no_reuse=2278 victim_loss=271\nNoHotspot remote=870 copies=28 ram_hits=2 disk_hits=280 requests=1152 net_gain=24 no_reuse=2278 victim_loss=276\nNoAffinity remote=904 copies=34 ram_hits=2 disk_hits=246 requests=1152 net_gain=22 no_reuse=758 victim_loss=112\nNoJoint remote=919 copies=161 ram_hits=2 disk_hits=231 requests=1152 no_reuse=2278\n",
+          "arms": {
+            "Full": {
+              "remote": 879,
+              "copies": 43,
+              "ram_hits": 2,
+              "disk_hits": 271,
+              "requests": 1152,
+              "net_gain": 56,
+              "no_reuse": 2278,
+              "victim_loss": 271
+            },
+            "NoHotspot": {
+              "remote": 870,
+              "copies": 28,
+              "ram_hits": 2,
+              "disk_hits": 280,
+              "requests": 1152,
+              "net_gain": 24,
+              "no_reuse": 2278,
+              "victim_loss": 276
+            },
+            "NoAffinity": {
+              "remote": 904,
+              "copies": 34,
+              "ram_hits": 2,
+              "disk_hits": 246,
+              "requests": 1152,
+              "net_gain": 22,
+              "no_reuse": 758,
+              "victim_loss": 112
+            },
+            "NoJoint": {
+              "remote": 919,
+              "copies": 161,
+              "ram_hits": 2,
+              "disk_hits": 231,
+              "requests": 1152,
+              "no_reuse": 2278
+            }
+          }
+        },
+        "retained_disk_value": {
+          "stdout": "Full remote=866 copies=34 ram_hits=17 disk_hits=269 requests=1152 net_gain=38 no_reuse=2275 victim_loss=253\nNoHotspot remote=854 copies=24 ram_hits=17 disk_hits=281 requests=1152 net_gain=16 no_reuse=2275 victim_loss=239\nNoAffinity remote=896 copies=33 ram_hits=17 disk_hits=239 requests=1152 net_gain=21 no_reuse=758 victim_loss=105\nNoJoint remote=919 copies=161 ram_hits=17 disk_hits=216 requests=1152 no_reuse=2278\n",
+          "arms": {
+            "Full": {
+              "remote": 866,
+              "copies": 34,
+              "ram_hits": 17,
+              "disk_hits": 269,
+              "requests": 1152,
+              "net_gain": 38,
+              "no_reuse": 2275,
+              "victim_loss": 253
+            },
+            "NoHotspot": {
+              "remote": 854,
+              "copies": 24,
+              "ram_hits": 17,
+              "disk_hits": 281,
+              "requests": 1152,
+              "net_gain": 16,
+              "no_reuse": 2275,
+              "victim_loss": 239
+            },
+            "NoAffinity": {
+              "remote": 896,
+              "copies": 33,
+              "ram_hits": 17,
+              "disk_hits": 239,
+              "requests": 1152,
+              "net_gain": 21,
+              "no_reuse": 758,
+              "victim_loss": 105
+            },
+            "NoJoint": {
+              "remote": 919,
+              "copies": 161,
+              "ram_hits": 17,
+              "disk_hits": 216,
+              "requests": 1152,
+              "no_reuse": 2278
+            }
+          }
+        },
+        "retained_ram_value": {
+          "stdout": "Full remote=866 copies=34 ram_hits=17 disk_hits=269 requests=1152 net_gain=38 no_reuse=2275 victim_loss=253\nNoHotspot remote=854 copies=24 ram_hits=17 disk_hits=281 requests=1152 net_gain=16 no_reuse=2275 victim_loss=239\nNoAffinity remote=896 copies=33 ram_hits=17 disk_hits=239 requests=1152 net_gain=21 no_reuse=758 victim_loss=105\nNoJoint remote=919 copies=161 ram_hits=17 disk_hits=216 requests=1152 no_reuse=2278\n",
+          "arms": {
+            "Full": {
+              "remote": 866,
+              "copies": 34,
+              "ram_hits": 17,
+              "disk_hits": 269,
+              "requests": 1152,
+              "net_gain": 38,
+              "no_reuse": 2275,
+              "victim_loss": 253
+            },
+            "NoHotspot": {
+              "remote": 854,
+              "copies": 24,
+              "ram_hits": 17,
+              "disk_hits": 281,
+              "requests": 1152,
+              "net_gain": 16,
+              "no_reuse": 2275,
+              "victim_loss": 239
+            },
+            "NoAffinity": {
+              "remote": 896,
+              "copies": 33,
+              "ram_hits": 17,
+              "disk_hits": 239,
+              "requests": 1152,
+              "net_gain": 21,
+              "no_reuse": 758,
+              "victim_loss": 105
+            },
+            "NoJoint": {
+              "remote": 919,
+              "copies": 161,
+              "ram_hits": 17,
+              "disk_hits": 216,
+              "requests": 1152,
+              "no_reuse": 2278
+            }
+          }
+        },
+        "opportunity74_lru": {
+          "stdout": "Full remote=879 copies=43 ram_hits=2 disk_hits=271 requests=1152 net_gain=56 no_reuse=2278 victim_loss=271\nNoHotspot remote=870 copies=28 ram_hits=2 disk_hits=280 requests=1152 net_gain=24 no_reuse=2278 victim_loss=276\nNoAffinity remote=904 copies=33 ram_hits=2 disk_hits=246 requests=1152 net_gain=21 no_reuse=758 victim_loss=113\nNoJoint remote=916 copies=158 ram_hits=2 disk_hits=234 requests=1152 no_reuse=2278\n",
+          "arms": {
+            "Full": {
+              "remote": 879,
+              "copies": 43,
+              "ram_hits": 2,
+              "disk_hits": 271,
+              "requests": 1152,
+              "net_gain": 56,
+              "no_reuse": 2278,
+              "victim_loss": 271
+            },
+            "NoHotspot": {
+              "remote": 870,
+              "copies": 28,
+              "ram_hits": 2,
+              "disk_hits": 280,
+              "requests": 1152,
+              "net_gain": 24,
+              "no_reuse": 2278,
+              "victim_loss": 276
+            },
+            "NoAffinity": {
+              "remote": 904,
+              "copies": 33,
+              "ram_hits": 2,
+              "disk_hits": 246,
+              "requests": 1152,
+              "net_gain": 21,
+              "no_reuse": 758,
+              "victim_loss": 113
+            },
+            "NoJoint": {
+              "remote": 916,
+              "copies": 158,
+              "ram_hits": 2,
+              "disk_hits": 234,
+              "requests": 1152,
+              "no_reuse": 2278
+            }
+          }
+        },
+        "opportunity74_disk_value": {
+          "stdout": "Full remote=866 copies=34 ram_hits=15 disk_hits=271 requests=1152 net_gain=38 no_reuse=2275 victim_loss=253\nNoHotspot remote=854 copies=24 ram_hits=17 disk_hits=281 requests=1152 net_gain=16 no_reuse=2275 victim_loss=239\nNoAffinity remote=897 copies=32 ram_hits=15 disk_hits=240 requests=1152 net_gain=20 no_reuse=758 victim_loss=107\nNoJoint remote=916 copies=158 ram_hits=15 disk_hits=221 requests=1152 no_reuse=2278\n",
+          "arms": {
+            "Full": {
+              "remote": 866,
+              "copies": 34,
+              "ram_hits": 15,
+              "disk_hits": 271,
+              "requests": 1152,
+              "net_gain": 38,
+              "no_reuse": 2275,
+              "victim_loss": 253
+            },
+            "NoHotspot": {
+              "remote": 854,
+              "copies": 24,
+              "ram_hits": 17,
+              "disk_hits": 281,
+              "requests": 1152,
+              "net_gain": 16,
+              "no_reuse": 2275,
+              "victim_loss": 239
+            },
+            "NoAffinity": {
+              "remote": 897,
+              "copies": 32,
+              "ram_hits": 15,
+              "disk_hits": 240,
+              "requests": 1152,
+              "net_gain": 20,
+              "no_reuse": 758,
+              "victim_loss": 107
+            },
+            "NoJoint": {
+              "remote": 916,
+              "copies": 158,
+              "ram_hits": 15,
+              "disk_hits": 221,
+              "requests": 1152,
+              "no_reuse": 2278
+            }
+          }
+        },
+        "opportunity74_ram_value": {
+          "stdout": "Full remote=866 copies=34 ram_hits=17 disk_hits=269 requests=1152 net_gain=38 no_reuse=2275 victim_loss=253\nNoHotspot remote=854 copies=24 ram_hits=17 disk_hits=281 requests=1152 net_gain=16 no_reuse=2275 victim_loss=239\nNoAffinity remote=896 copies=32 ram_hits=17 disk_hits=239 requests=1152 net_gain=20 no_reuse=758 victim_loss=106\nNoJoint remote=916 copies=158 ram_hits=17 disk_hits=219 requests=1152 no_reuse=2278\n",
+          "arms": {
+            "Full": {
+              "remote": 866,
+              "copies": 34,
+              "ram_hits": 17,
+              "disk_hits": 269,
+              "requests": 1152,
+              "net_gain": 38,
+              "no_reuse": 2275,
+              "victim_loss": 253
+            },
+            "NoHotspot": {
+              "remote": 854,
+              "copies": 24,
+              "ram_hits": 17,
+              "disk_hits": 281,
+              "requests": 1152,
+              "net_gain": 16,
+              "no_reuse": 2275,
+              "victim_loss": 239
+            },
+            "NoAffinity": {
+              "remote": 896,
+              "copies": 32,
+              "ram_hits": 17,
+              "disk_hits": 239,
+              "requests": 1152,
+              "net_gain": 20,
+              "no_reuse": 758,
+              "victim_loss": 106
+            },
+            "NoJoint": {
+              "remote": 916,
+              "copies": 158,
+              "ram_hits": 17,
+              "disk_hits": 219,
+              "requests": 1152,
+              "no_reuse": 2278
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "public_toolagent-73603",
+      "variants": {
+        "retained_lru": {
+          "stdout": "Full remote=920 copies=34 ram_hits=2 disk_hits=230 requests=1152 net_gain=58 no_reuse=2429 victim_loss=242\nNoHotspot remote=938 copies=21 ram_hits=2 disk_hits=212 requests=1152 net_gain=19 no_reuse=2459 victim_loss=305\nNoAffinity remote=940 copies=28 ram_hits=2 disk_hits=210 requests=1152 net_gain=16 no_reuse=810 victim_loss=102\nNoJoint remote=985 copies=175 ram_hits=2 disk_hits=165 requests=1152 no_reuse=2435\n",
+          "arms": {
+            "Full": {
+              "remote": 920,
+              "copies": 34,
+              "ram_hits": 2,
+              "disk_hits": 230,
+              "requests": 1152,
+              "net_gain": 58,
+              "no_reuse": 2429,
+              "victim_loss": 242
+            },
+            "NoHotspot": {
+              "remote": 938,
+              "copies": 21,
+              "ram_hits": 2,
+              "disk_hits": 212,
+              "requests": 1152,
+              "net_gain": 19,
+              "no_reuse": 2459,
+              "victim_loss": 305
+            },
+            "NoAffinity": {
+              "remote": 940,
+              "copies": 28,
+              "ram_hits": 2,
+              "disk_hits": 210,
+              "requests": 1152,
+              "net_gain": 16,
+              "no_reuse": 810,
+              "victim_loss": 102
+            },
+            "NoJoint": {
+              "remote": 985,
+              "copies": 175,
+              "ram_hits": 2,
+              "disk_hits": 165,
+              "requests": 1152,
+              "no_reuse": 2435
+            }
+          }
+        },
+        "retained_disk_value": {
+          "stdout": "Full remote=913 copies=28 ram_hits=23 disk_hits=216 requests=1152 net_gain=42 no_reuse=2423 victim_loss=243\nNoHotspot remote=936 copies=21 ram_hits=21 disk_hits=195 requests=1152 net_gain=19 no_reuse=2459 victim_loss=299\nNoAffinity remote=940 copies=28 ram_hits=23 disk_hits=189 requests=1152 net_gain=16 no_reuse=810 victim_loss=102\nNoJoint remote=985 copies=175 ram_hits=23 disk_hits=144 requests=1152 no_reuse=2435\n",
+          "arms": {
+            "Full": {
+              "remote": 913,
+              "copies": 28,
+              "ram_hits": 23,
+              "disk_hits": 216,
+              "requests": 1152,
+              "net_gain": 42,
+              "no_reuse": 2423,
+              "victim_loss": 243
+            },
+            "NoHotspot": {
+              "remote": 936,
+              "copies": 21,
+              "ram_hits": 21,
+              "disk_hits": 195,
+              "requests": 1152,
+              "net_gain": 19,
+              "no_reuse": 2459,
+              "victim_loss": 299
+            },
+            "NoAffinity": {
+              "remote": 940,
+              "copies": 28,
+              "ram_hits": 23,
+              "disk_hits": 189,
+              "requests": 1152,
+              "net_gain": 16,
+              "no_reuse": 810,
+              "victim_loss": 102
+            },
+            "NoJoint": {
+              "remote": 985,
+              "copies": 175,
+              "ram_hits": 23,
+              "disk_hits": 144,
+              "requests": 1152,
+              "no_reuse": 2435
+            }
+          }
+        },
+        "retained_ram_value": {
+          "stdout": "Full remote=913 copies=28 ram_hits=23 disk_hits=216 requests=1152 net_gain=42 no_reuse=2423 victim_loss=243\nNoHotspot remote=936 copies=21 ram_hits=21 disk_hits=195 requests=1152 net_gain=19 no_reuse=2459 victim_loss=299\nNoAffinity remote=940 copies=28 ram_hits=23 disk_hits=189 requests=1152 net_gain=16 no_reuse=810 victim_loss=102\nNoJoint remote=985 copies=175 ram_hits=23 disk_hits=144 requests=1152 no_reuse=2435\n",
+          "arms": {
+            "Full": {
+              "remote": 913,
+              "copies": 28,
+              "ram_hits": 23,
+              "disk_hits": 216,
+              "requests": 1152,
+              "net_gain": 42,
+              "no_reuse": 2423,
+              "victim_loss": 243
+            },
+            "NoHotspot": {
+              "remote": 936,
+              "copies": 21,
+              "ram_hits": 21,
+              "disk_hits": 195,
+              "requests": 1152,
+              "net_gain": 19,
+              "no_reuse": 2459,
+              "victim_loss": 299
+            },
+            "NoAffinity": {
+              "remote": 940,
+              "copies": 28,
+              "ram_hits": 23,
+              "disk_hits": 189,
+              "requests": 1152,
+              "net_gain": 16,
+              "no_reuse": 810,
+              "victim_loss": 102
+            },
+            "NoJoint": {
+              "remote": 985,
+              "copies": 175,
+              "ram_hits": 23,
+              "disk_hits": 144,
+              "requests": 1152,
+              "no_reuse": 2435
+            }
+          }
+        },
+        "opportunity74_lru": {
+          "stdout": "Full remote=913 copies=28 ram_hits=2 disk_hits=237 requests=1152 net_gain=37 no_reuse=2429 victim_loss=242\nNoHotspot remote=938 copies=21 ram_hits=2 disk_hits=212 requests=1152 net_gain=19 no_reuse=2459 victim_loss=305\nNoAffinity remote=943 copies=26 ram_hits=2 disk_hits=207 requests=1152 net_gain=14 no_reuse=811 victim_loss=106\nNoJoint remote=982 copies=172 ram_hits=2 disk_hits=168 requests=1152 no_reuse=2435\n",
+          "arms": {
+            "Full": {
+              "remote": 913,
+              "copies": 28,
+              "ram_hits": 2,
+              "disk_hits": 237,
+              "requests": 1152,
+              "net_gain": 37,
+              "no_reuse": 2429,
+              "victim_loss": 242
+            },
+            "NoHotspot": {
+              "remote": 938,
+              "copies": 21,
+              "ram_hits": 2,
+              "disk_hits": 212,
+              "requests": 1152,
+              "net_gain": 19,
+              "no_reuse": 2459,
+              "victim_loss": 305
+            },
+            "NoAffinity": {
+              "remote": 943,
+              "copies": 26,
+              "ram_hits": 2,
+              "disk_hits": 207,
+              "requests": 1152,
+              "net_gain": 14,
+              "no_reuse": 811,
+              "victim_loss": 106
+            },
+            "NoJoint": {
+              "remote": 982,
+              "copies": 172,
+              "ram_hits": 2,
+              "disk_hits": 168,
+              "requests": 1152,
+              "no_reuse": 2435
+            }
+          }
+        },
+        "opportunity74_disk_value": {
+          "stdout": "Full remote=911 copies=28 ram_hits=24 disk_hits=217 requests=1152 net_gain=37 no_reuse=2429 victim_loss=236\nNoHotspot remote=936 copies=21 ram_hits=21 disk_hits=195 requests=1152 net_gain=19 no_reuse=2459 victim_loss=299\nNoAffinity remote=935 copies=25 ram_hits=24 disk_hits=193 requests=1152 net_gain=13 no_reuse=810 victim_loss=100\nNoJoint remote=982 copies=172 ram_hits=24 disk_hits=146 requests=1152 no_reuse=2435\n",
+          "arms": {
+            "Full": {
+              "remote": 911,
+              "copies": 28,
+              "ram_hits": 24,
+              "disk_hits": 217,
+              "requests": 1152,
+              "net_gain": 37,
+              "no_reuse": 2429,
+              "victim_loss": 236
+            },
+            "NoHotspot": {
+              "remote": 936,
+              "copies": 21,
+              "ram_hits": 21,
+              "disk_hits": 195,
+              "requests": 1152,
+              "net_gain": 19,
+              "no_reuse": 2459,
+              "victim_loss": 299
+            },
+            "NoAffinity": {
+              "remote": 935,
+              "copies": 25,
+              "ram_hits": 24,
+              "disk_hits": 193,
+              "requests": 1152,
+              "net_gain": 13,
+              "no_reuse": 810,
+              "victim_loss": 100
+            },
+            "NoJoint": {
+              "remote": 982,
+              "copies": 172,
+              "ram_hits": 24,
+              "disk_hits": 146,
+              "requests": 1152,
+              "no_reuse": 2435
+            }
+          }
+        },
+        "opportunity74_ram_value": {
+          "stdout": "Full remote=911 copies=28 ram_hits=23 disk_hits=218 requests=1152 net_gain=37 no_reuse=2429 victim_loss=236\nNoHotspot remote=936 copies=21 ram_hits=21 disk_hits=195 requests=1152 net_gain=19 no_reuse=2459 victim_loss=299\nNoAffinity remote=937 copies=25 ram_hits=23 disk_hits=192 requests=1152 net_gain=13 no_reuse=810 victim_loss=102\nNoJoint remote=982 copies=172 ram_hits=23 disk_hits=147 requests=1152 no_reuse=2435\n",
+          "arms": {
+            "Full": {
+              "remote": 911,
+              "copies": 28,
+              "ram_hits": 23,
+              "disk_hits": 218,
+              "requests": 1152,
+              "net_gain": 37,
+              "no_reuse": 2429,
+              "victim_loss": 236
+            },
+            "NoHotspot": {
+              "remote": 936,
+              "copies": 21,
+              "ram_hits": 21,
+              "disk_hits": 195,
+              "requests": 1152,
+              "net_gain": 19,
+              "no_reuse": 2459,
+              "victim_loss": 299
+            },
+            "NoAffinity": {
+              "remote": 937,
+              "copies": 25,
+              "ram_hits": 23,
+              "disk_hits": 192,
+              "requests": 1152,
+              "net_gain": 13,
+              "no_reuse": 810,
+              "victim_loss": 102
+            },
+            "NoJoint": {
+              "remote": 982,
+              "copies": 172,
+              "ram_hits": 23,
+              "disk_hits": 147,
+              "requests": 1152,
+              "no_reuse": 2435
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "public_toolagent-74802",
+      "variants": {
+        "retained_lru": {
+          "stdout": "Full remote=967 copies=33 ram_hits=2 disk_hits=183 requests=1152 net_gain=44 no_reuse=2611 victim_loss=217\nNoHotspot remote=1002 copies=25 ram_hits=2 disk_hits=148 requests=1152 net_gain=20 no_reuse=2596 victim_loss=361\nNoAffinity remote=995 copies=21 ram_hits=2 disk_hits=155 requests=1152 net_gain=9 no_reuse=860 victim_loss=114\nNoJoint remote=987 copies=119 ram_hits=2 disk_hits=163 requests=1152 no_reuse=2611\n",
+          "arms": {
+            "Full": {
+              "remote": 967,
+              "copies": 33,
+              "ram_hits": 2,
+              "disk_hits": 183,
+              "requests": 1152,
+              "net_gain": 44,
+              "no_reuse": 2611,
+              "victim_loss": 217
+            },
+            "NoHotspot": {
+              "remote": 1002,
+              "copies": 25,
+              "ram_hits": 2,
+              "disk_hits": 148,
+              "requests": 1152,
+              "net_gain": 20,
+              "no_reuse": 2596,
+              "victim_loss": 361
+            },
+            "NoAffinity": {
+              "remote": 995,
+              "copies": 21,
+              "ram_hits": 2,
+              "disk_hits": 155,
+              "requests": 1152,
+              "net_gain": 9,
+              "no_reuse": 860,
+              "victim_loss": 114
+            },
+            "NoJoint": {
+              "remote": 987,
+              "copies": 119,
+              "ram_hits": 2,
+              "disk_hits": 163,
+              "requests": 1152,
+              "no_reuse": 2611
+            }
+          }
+        },
+        "retained_disk_value": {
+          "stdout": "Full remote=967 copies=33 ram_hits=30 disk_hits=155 requests=1152 net_gain=44 no_reuse=2611 victim_loss=217\nNoHotspot remote=998 copies=24 ram_hits=31 disk_hits=123 requests=1152 net_gain=18 no_reuse=2593 victim_loss=354\nNoAffinity remote=995 copies=21 ram_hits=30 disk_hits=127 requests=1152 net_gain=9 no_reuse=860 victim_loss=114\nNoJoint remote=987 copies=119 ram_hits=30 disk_hits=135 requests=1152 no_reuse=2611\n",
+          "arms": {
+            "Full": {
+              "remote": 967,
+              "copies": 33,
+              "ram_hits": 30,
+              "disk_hits": 155,
+              "requests": 1152,
+              "net_gain": 44,
+              "no_reuse": 2611,
+              "victim_loss": 217
+            },
+            "NoHotspot": {
+              "remote": 998,
+              "copies": 24,
+              "ram_hits": 31,
+              "disk_hits": 123,
+              "requests": 1152,
+              "net_gain": 18,
+              "no_reuse": 2593,
+              "victim_loss": 354
+            },
+            "NoAffinity": {
+              "remote": 995,
+              "copies": 21,
+              "ram_hits": 30,
+              "disk_hits": 127,
+              "requests": 1152,
+              "net_gain": 9,
+              "no_reuse": 860,
+              "victim_loss": 114
+            },
+            "NoJoint": {
+              "remote": 987,
+              "copies": 119,
+              "ram_hits": 30,
+              "disk_hits": 135,
+              "requests": 1152,
+              "no_reuse": 2611
+            }
+          }
+        },
+        "retained_ram_value": {
+          "stdout": "Full remote=967 copies=33 ram_hits=30 disk_hits=155 requests=1152 net_gain=44 no_reuse=2611 victim_loss=217\nNoHotspot remote=998 copies=24 ram_hits=31 disk_hits=123 requests=1152 net_gain=18 no_reuse=2593 victim_loss=354\nNoAffinity remote=995 copies=21 ram_hits=30 disk_hits=127 requests=1152 net_gain=9 no_reuse=860 victim_loss=114\nNoJoint remote=987 copies=119 ram_hits=30 disk_hits=135 requests=1152 no_reuse=2611\n",
+          "arms": {
+            "Full": {
+              "remote": 967,
+              "copies": 33,
+              "ram_hits": 30,
+              "disk_hits": 155,
+              "requests": 1152,
+              "net_gain": 44,
+              "no_reuse": 2611,
+              "victim_loss": 217
+            },
+            "NoHotspot": {
+              "remote": 998,
+              "copies": 24,
+              "ram_hits": 31,
+              "disk_hits": 123,
+              "requests": 1152,
+              "net_gain": 18,
+              "no_reuse": 2593,
+              "victim_loss": 354
+            },
+            "NoAffinity": {
+              "remote": 995,
+              "copies": 21,
+              "ram_hits": 30,
+              "disk_hits": 127,
+              "requests": 1152,
+              "net_gain": 9,
+              "no_reuse": 860,
+              "victim_loss": 114
+            },
+            "NoJoint": {
+              "remote": 987,
+              "copies": 119,
+              "ram_hits": 30,
+              "disk_hits": 135,
+              "requests": 1152,
+              "no_reuse": 2611
+            }
+          }
+        },
+        "opportunity74_lru": {
+          "stdout": "Full remote=967 copies=33 ram_hits=2 disk_hits=183 requests=1152 net_gain=44 no_reuse=2611 victim_loss=217\nNoHotspot remote=1002 copies=25 ram_hits=2 disk_hits=148 requests=1152 net_gain=20 no_reuse=2596 victim_loss=361\nNoAffinity remote=995 copies=21 ram_hits=2 disk_hits=155 requests=1152 net_gain=9 no_reuse=860 victim_loss=114\nNoJoint remote=979 copies=111 ram_hits=2 disk_hits=171 requests=1152 no_reuse=2611\n",
+          "arms": {
+            "Full": {
+              "remote": 967,
+              "copies": 33,
+              "ram_hits": 2,
+              "disk_hits": 183,
+              "requests": 1152,
+              "net_gain": 44,
+              "no_reuse": 2611,
+              "victim_loss": 217
+            },
+            "NoHotspot": {
+              "remote": 1002,
+              "copies": 25,
+              "ram_hits": 2,
+              "disk_hits": 148,
+              "requests": 1152,
+              "net_gain": 20,
+              "no_reuse": 2596,
+              "victim_loss": 361
+            },
+            "NoAffinity": {
+              "remote": 995,
+              "copies": 21,
+              "ram_hits": 2,
+              "disk_hits": 155,
+              "requests": 1152,
+              "net_gain": 9,
+              "no_reuse": 860,
+              "victim_loss": 114
+            },
+            "NoJoint": {
+              "remote": 979,
+              "copies": 111,
+              "ram_hits": 2,
+              "disk_hits": 171,
+              "requests": 1152,
+              "no_reuse": 2611
+            }
+          }
+        },
+        "opportunity74_disk_value": {
+          "stdout": "Full remote=967 copies=33 ram_hits=30 disk_hits=155 requests=1152 net_gain=44 no_reuse=2611 victim_loss=217\nNoHotspot remote=998 copies=24 ram_hits=31 disk_hits=123 requests=1152 net_gain=18 no_reuse=2593 victim_loss=354\nNoAffinity remote=995 copies=21 ram_hits=30 disk_hits=127 requests=1152 net_gain=9 no_reuse=860 victim_loss=114\nNoJoint remote=979 copies=111 ram_hits=30 disk_hits=143 requests=1152 no_reuse=2611\n",
+          "arms": {
+            "Full": {
+              "remote": 967,
+              "copies": 33,
+              "ram_hits": 30,
+              "disk_hits": 155,
+              "requests": 1152,
+              "net_gain": 44,
+              "no_reuse": 2611,
+              "victim_loss": 217
+            },
+            "NoHotspot": {
+              "remote": 998,
+              "copies": 24,
+              "ram_hits": 31,
+              "disk_hits": 123,
+              "requests": 1152,
+              "net_gain": 18,
+              "no_reuse": 2593,
+              "victim_loss": 354
+            },
+            "NoAffinity": {
+              "remote": 995,
+              "copies": 21,
+              "ram_hits": 30,
+              "disk_hits": 127,
+              "requests": 1152,
+              "net_gain": 9,
+              "no_reuse": 860,
+              "victim_loss": 114
+            },
+            "NoJoint": {
+              "remote": 979,
+              "copies": 111,
+              "ram_hits": 30,
+              "disk_hits": 143,
+              "requests": 1152,
+              "no_reuse": 2611
+            }
+          }
+        },
+        "opportunity74_ram_value": {
+          "stdout": "Full remote=967 copies=33 ram_hits=30 disk_hits=155 requests=1152 net_gain=44 no_reuse=2611 victim_loss=217\nNoHotspot remote=998 copies=24 ram_hits=31 disk_hits=123 requests=1152 net_gain=18 no_reuse=2593 victim_loss=354\nNoAffinity remote=995 copies=21 ram_hits=30 disk_hits=127 requests=1152 net_gain=9 no_reuse=860 victim_loss=114\nNoJoint remote=979 copies=111 ram_hits=30 disk_hits=143 requests=1152 no_reuse=2611\n",
+          "arms": {
+            "Full": {
+              "remote": 967,
+              "copies": 33,
+              "ram_hits": 30,
+              "disk_hits": 155,
+              "requests": 1152,
+              "net_gain": 44,
+              "no_reuse": 2611,
+              "victim_loss": 217
+            },
+            "NoHotspot": {
+              "remote": 998,
+              "copies": 24,
+              "ram_hits": 31,
+              "disk_hits": 123,
+              "requests": 1152,
+              "net_gain": 18,
+              "no_reuse": 2593,
+              "victim_loss": 354
+            },
+            "NoAffinity": {
+              "remote": 995,
+              "copies": 21,
+              "ram_hits": 30,
+              "disk_hits": 127,
+              "requests": 1152,
+              "net_gain": 9,
+              "no_reuse": 860,
+              "victim_loss": 114
+            },
+            "NoJoint": {
+              "remote": 979,
+              "copies": 111,
+              "ram_hits": 30,
+              "disk_hits": 143,
+              "requests": 1152,
+              "no_reuse": 2611
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "stationary_shared-73701",
+      "variants": {
+        "retained_lru": {
+          "stdout": "Full remote=74 copies=53 ram_hits=903 disk_hits=175 requests=1152 copy_cost=16 net_gain=76 no_reuse=2 victim_loss=104\nNoHotspot remote=65 copies=12 ram_hits=903 disk_hits=184 requests=1152 no_reuse=171\nNoAffinity remote=84 copies=29 ram_hits=903 disk_hits=165 requests=1152 copy_cost=8 net_gain=14 no_reuse=2 victim_loss=45\nNoJoint remote=81 copies=79 ram_hits=903 disk_hits=168 requests=1152 copy_cost=16 no_reuse=2\n",
+          "arms": {
+            "Full": {
+              "remote": 74,
+              "copies": 53,
+              "ram_hits": 903,
+              "disk_hits": 175,
+              "requests": 1152,
+              "copy_cost": 16,
+              "net_gain": 76,
+              "no_reuse": 2,
+              "victim_loss": 104
+            },
+            "NoHotspot": {
+              "remote": 65,
+              "copies": 12,
+              "ram_hits": 903,
+              "disk_hits": 184,
+              "requests": 1152,
+              "no_reuse": 171
+            },
+            "NoAffinity": {
+              "remote": 84,
+              "copies": 29,
+              "ram_hits": 903,
+              "disk_hits": 165,
+              "requests": 1152,
+              "copy_cost": 8,
+              "net_gain": 14,
+              "no_reuse": 2,
+              "victim_loss": 45
+            },
+            "NoJoint": {
+              "remote": 81,
+              "copies": 79,
+              "ram_hits": 903,
+              "disk_hits": 168,
+              "requests": 1152,
+              "copy_cost": 16,
+              "no_reuse": 2
+            }
+          }
+        },
+        "retained_disk_value": {
+          "stdout": "Full remote=74 copies=53 ram_hits=914 disk_hits=164 requests=1152 copy_cost=16 net_gain=76 no_reuse=2 victim_loss=104\nNoHotspot remote=65 copies=12 ram_hits=913 disk_hits=174 requests=1152 no_reuse=171\nNoAffinity remote=84 copies=29 ram_hits=914 disk_hits=154 requests=1152 copy_cost=8 net_gain=14 no_reuse=2 victim_loss=45\nNoJoint remote=81 copies=79 ram_hits=914 disk_hits=157 requests=1152 copy_cost=16 no_reuse=2\n",
+          "arms": {
+            "Full": {
+              "remote": 74,
+              "copies": 53,
+              "ram_hits": 914,
+              "disk_hits": 164,
+              "requests": 1152,
+              "copy_cost": 16,
+              "net_gain": 76,
+              "no_reuse": 2,
+              "victim_loss": 104
+            },
+            "NoHotspot": {
+              "remote": 65,
+              "copies": 12,
+              "ram_hits": 913,
+              "disk_hits": 174,
+              "requests": 1152,
+              "no_reuse": 171
+            },
+            "NoAffinity": {
+              "remote": 84,
+              "copies": 29,
+              "ram_hits": 914,
+              "disk_hits": 154,
+              "requests": 1152,
+              "copy_cost": 8,
+              "net_gain": 14,
+              "no_reuse": 2,
+              "victim_loss": 45
+            },
+            "NoJoint": {
+              "remote": 81,
+              "copies": 79,
+              "ram_hits": 914,
+              "disk_hits": 157,
+              "requests": 1152,
+              "copy_cost": 16,
+              "no_reuse": 2
+            }
+          }
+        },
+        "retained_ram_value": {
+          "stdout": "Full remote=74 copies=53 ram_hits=914 disk_hits=164 requests=1152 copy_cost=16 net_gain=76 no_reuse=2 victim_loss=104\nNoHotspot remote=65 copies=12 ram_hits=913 disk_hits=174 requests=1152 no_reuse=171\nNoAffinity remote=84 copies=29 ram_hits=914 disk_hits=154 requests=1152 copy_cost=8 net_gain=14 no_reuse=2 victim_loss=45\nNoJoint remote=81 copies=79 ram_hits=914 disk_hits=157 requests=1152 copy_cost=16 no_reuse=2\n",
+          "arms": {
+            "Full": {
+              "remote": 74,
+              "copies": 53,
+              "ram_hits": 914,
+              "disk_hits": 164,
+              "requests": 1152,
+              "copy_cost": 16,
+              "net_gain": 76,
+              "no_reuse": 2,
+              "victim_loss": 104
+            },
+            "NoHotspot": {
+              "remote": 65,
+              "copies": 12,
+              "ram_hits": 913,
+              "disk_hits": 174,
+              "requests": 1152,
+              "no_reuse": 171
+            },
+            "NoAffinity": {
+              "remote": 84,
+              "copies": 29,
+              "ram_hits": 914,
+              "disk_hits": 154,
+              "requests": 1152,
+              "copy_cost": 8,
+              "net_gain": 14,
+              "no_reuse": 2,
+              "victim_loss": 45
+            },
+            "NoJoint": {
+              "remote": 81,
+              "copies": 79,
+              "ram_hits": 914,
+              "disk_hits": 157,
+              "requests": 1152,
+              "copy_cost": 16,
+              "no_reuse": 2
+            }
+          }
+        },
+        "opportunity74_lru": {
+          "stdout": "Full remote=65 copies=12 ram_hits=903 disk_hits=184 requests=1152 no_reuse=171\nNoHotspot remote=65 copies=12 ram_hits=903 disk_hits=184 requests=1152 no_reuse=171\nNoAffinity remote=86 copies=22 ram_hits=903 disk_hits=163 requests=1152 copy_cost=2 net_gain=9 no_reuse=56 victim_loss=6\nNoJoint remote=65 copies=12 ram_hits=903 disk_hits=184 requests=1152 no_reuse=171\n",
+          "arms": {
+            "Full": {
+              "remote": 65,
+              "copies": 12,
+              "ram_hits": 903,
+              "disk_hits": 184,
+              "requests": 1152,
+              "no_reuse": 171
+            },
+            "NoHotspot": {
+              "remote": 65,
+              "copies": 12,
+              "ram_hits": 903,
+              "disk_hits": 184,
+              "requests": 1152,
+              "no_reuse": 171
+            },
+            "NoAffinity": {
+              "remote": 86,
+              "copies": 22,
+              "ram_hits": 903,
+              "disk_hits": 163,
+              "requests": 1152,
+              "copy_cost": 2,
+              "net_gain": 9,
+              "no_reuse": 56,
+              "victim_loss": 6
+            },
+            "NoJoint": {
+              "remote": 65,
+              "copies": 12,
+              "ram_hits": 903,
+              "disk_hits": 184,
+              "requests": 1152,
+              "no_reuse": 171
+            }
+          }
+        },
+        "opportunity74_disk_value": {
+          "stdout": "Full remote=65 copies=12 ram_hits=915 disk_hits=172 requests=1152 no_reuse=171\nNoHotspot remote=65 copies=12 ram_hits=913 disk_hits=174 requests=1152 no_reuse=171\nNoAffinity remote=86 copies=22 ram_hits=915 disk_hits=151 requests=1152 copy_cost=2 net_gain=9 no_reuse=56 victim_loss=6\nNoJoint remote=65 copies=12 ram_hits=915 disk_hits=172 requests=1152 no_reuse=171\n",
+          "arms": {
+            "Full": {
+              "remote": 65,
+              "copies": 12,
+              "ram_hits": 915,
+              "disk_hits": 172,
+              "requests": 1152,
+              "no_reuse": 171
+            },
+            "NoHotspot": {
+              "remote": 65,
+              "copies": 12,
+              "ram_hits": 913,
+              "disk_hits": 174,
+              "requests": 1152,
+              "no_reuse": 171
+            },
+            "NoAffinity": {
+              "remote": 86,
+              "copies": 22,
+              "ram_hits": 915,
+              "disk_hits": 151,
+              "requests": 1152,
+              "copy_cost": 2,
+              "net_gain": 9,
+              "no_reuse": 56,
+              "victim_loss": 6
+            },
+            "NoJoint": {
+              "remote": 65,
+              "copies": 12,
+              "ram_hits": 915,
+              "disk_hits": 172,
+              "requests": 1152,
+              "no_reuse": 171
+            }
+          }
+        },
+        "opportunity74_ram_value": {
+          "stdout": "Full remote=65 copies=12 ram_hits=914 disk_hits=173 requests=1152 no_reuse=171\nNoHotspot remote=65 copies=12 ram_hits=913 disk_hits=174 requests=1152 no_reuse=171\nNoAffinity remote=86 copies=22 ram_hits=914 disk_hits=152 requests=1152 copy_cost=2 net_gain=9 no_reuse=56 victim_loss=6\nNoJoint remote=65 copies=12 ram_hits=914 disk_hits=173 requests=1152 no_reuse=171\n",
+          "arms": {
+            "Full": {
+              "remote": 65,
+              "copies": 12,
+              "ram_hits": 914,
+              "disk_hits": 173,
+              "requests": 1152,
+              "no_reuse": 171
+            },
+            "NoHotspot": {
+              "remote": 65,
+              "copies": 12,
+              "ram_hits": 913,
+              "disk_hits": 174,
+              "requests": 1152,
+              "no_reuse": 171
+            },
+            "NoAffinity": {
+              "remote": 86,
+              "copies": 22,
+              "ram_hits": 914,
+              "disk_hits": 152,
+              "requests": 1152,
+              "copy_cost": 2,
+              "net_gain": 9,
+              "no_reuse": 56,
+              "victim_loss": 6
+            },
+            "NoJoint": {
+              "remote": 65,
+              "copies": 12,
+              "ram_hits": 914,
+              "disk_hits": 173,
+              "requests": 1152,
+              "no_reuse": 171
+            }
+          }
+        }
+      }
+    },
+    {
+      "input": "uniform-73702",
+      "variants": {
+        "retained_lru": {
+          "stdout": "Full remote=544 copies=45 ram_hits=99 disk_hits=509 requests=1152 copy_cost=29 net_gain=56 no_reuse=19 victim_loss=1495\nNoHotspot remote=546 copies=41 ram_hits=99 disk_hits=507 requests=1152 net_gain=36 no_reuse=48 victim_loss=1521\nNoAffinity remote=532 copies=41 ram_hits=99 disk_hits=521 requests=1152 copy_cost=10 net_gain=29 no_reuse=5 victim_loss=476\nNoJoint remote=576 copies=561 ram_hits=99 disk_hits=477 requests=1152 copy_cost=29 no_reuse=19\n",
+          "arms": {
+            "Full": {
+              "remote": 544,
+              "copies": 45,
+              "ram_hits": 99,
+              "disk_hits": 509,
+              "requests": 1152,
+              "copy_cost": 29,
+              "net_gain": 56,
+              "no_reuse": 19,
+              "victim_loss": 1495
+            },
+            "NoHotspot": {
+              "remote": 546,
+              "copies": 41,
+              "ram_hits": 99,
+              "disk_hits": 507,
+              "requests": 1152,
+              "net_gain": 36,
+              "no_reuse": 48,
+              "victim_loss": 1521
+            },
+            "NoAffinity": {
+              "remote": 532,
+              "copies": 41,
+              "ram_hits": 99,
+              "disk_hits": 521,
+              "requests": 1152,
+              "copy_cost": 10,
+              "net_gain": 29,
+              "no_reuse": 5,
+              "victim_loss": 476
+            },
+            "NoJoint": {
+              "remote": 576,
+              "copies": 561,
+              "ram_hits": 99,
+              "disk_hits": 477,
+              "requests": 1152,
+              "copy_cost": 29,
+              "no_reuse": 19
+            }
+          }
+        },
+        "retained_disk_value": {
+          "stdout": "Full remote=550 copies=44 ram_hits=97 disk_hits=505 requests=1152 copy_cost=29 net_gain=53 no_reuse=19 victim_loss=1516\nNoHotspot remote=563 copies=38 ram_hits=101 disk_hits=488 requests=1152 net_gain=31 no_reuse=48 victim_loss=1577\nNoAffinity remote=563 copies=42 ram_hits=97 disk_hits=492 requests=1152 copy_cost=10 net_gain=30 no_reuse=6 victim_loss=505\nNoJoint remote=593 copies=578 ram_hits=97 disk_hits=462 requests=1152 copy_cost=29 no_reuse=19\n",
+          "arms": {
+            "Full": {
+              "remote": 550,
+              "copies": 44,
+              "ram_hits": 97,
+              "disk_hits": 505,
+              "requests": 1152,
+              "copy_cost": 29,
+              "net_gain": 53,
+              "no_reuse": 19,
+              "victim_loss": 1516
+            },
+            "NoHotspot": {
+              "remote": 563,
+              "copies": 38,
+              "ram_hits": 101,
+              "disk_hits": 488,
+              "requests": 1152,
+              "net_gain": 31,
+              "no_reuse": 48,
+              "victim_loss": 1577
+            },
+            "NoAffinity": {
+              "remote": 563,
+              "copies": 42,
+              "ram_hits": 97,
+              "disk_hits": 492,
+              "requests": 1152,
+              "copy_cost": 10,
+              "net_gain": 30,
+              "no_reuse": 6,
+              "victim_loss": 505
+            },
+            "NoJoint": {
+              "remote": 593,
+              "copies": 578,
+              "ram_hits": 97,
+              "disk_hits": 462,
+              "requests": 1152,
+              "copy_cost": 29,
+              "no_reuse": 19
+            }
+          }
+        },
+        "retained_ram_value": {
+          "stdout": "Full remote=550 copies=44 ram_hits=97 disk_hits=505 requests=1152 copy_cost=29 net_gain=53 no_reuse=19 victim_loss=1516\nNoHotspot remote=563 copies=38 ram_hits=101 disk_hits=488 requests=1152 net_gain=31 no_reuse=48 victim_loss=1577\nNoAffinity remote=563 copies=42 ram_hits=97 disk_hits=492 requests=1152 copy_cost=10 net_gain=30 no_reuse=6 victim_loss=505\nNoJoint remote=593 copies=578 ram_hits=97 disk_hits=462 requests=1152 copy_cost=29 no_reuse=19\n",
+          "arms": {
+            "Full": {
+              "remote": 550,
+              "copies": 44,
+              "ram_hits": 97,
+              "disk_hits": 505,
+              "requests": 1152,
+              "copy_cost": 29,
+              "net_gain": 53,
+              "no_reuse": 19,
+              "victim_loss": 1516
+            },
+            "NoHotspot": {
+              "remote": 563,
+              "copies": 38,
+              "ram_hits": 101,
+              "disk_hits": 488,
+              "requests": 1152,
+              "net_gain": 31,
+              "no_reuse": 48,
+              "victim_loss": 1577
+            },
+            "NoAffinity": {
+              "remote": 563,
+              "copies": 42,
+              "ram_hits": 97,
+              "disk_hits": 492,
+              "requests": 1152,
+              "copy_cost": 10,
+              "net_gain": 30,
+              "no_reuse": 6,
+              "victim_loss": 505
+            },
+            "NoJoint": {
+              "remote": 593,
+              "copies": 578,
+              "ram_hits": 97,
+              "disk_hits": 462,
+              "requests": 1152,
+              "copy_cost": 29,
+              "no_reuse": 19
+            }
+          }
+        },
+        "opportunity74_lru": {
+          "stdout": "Full remote=529 copies=38 ram_hits=99 disk_hits=524 requests=1152 net_gain=42 no_reuse=48 victim_loss=1464\nNoHotspot remote=546 copies=41 ram_hits=99 disk_hits=507 requests=1152 net_gain=36 no_reuse=48 victim_loss=1521\nNoAffinity remote=532 copies=33 ram_hits=99 disk_hits=521 requests=1152 net_gain=21 no_reuse=15 victim_loss=484\nNoJoint remote=600 copies=585 ram_hits=99 disk_hits=453 requests=1152 no_reuse=48\n",
+          "arms": {
+            "Full": {
+              "remote": 529,
+              "copies": 38,
+              "ram_hits": 99,
+              "disk_hits": 524,
+              "requests": 1152,
+              "net_gain": 42,
+              "no_reuse": 48,
+              "victim_loss": 1464
+            },
+            "NoHotspot": {
+              "remote": 546,
+              "copies": 41,
+              "ram_hits": 99,
+              "disk_hits": 507,
+              "requests": 1152,
+              "net_gain": 36,
+              "no_reuse": 48,
+              "victim_loss": 1521
+            },
+            "NoAffinity": {
+              "remote": 532,
+              "copies": 33,
+              "ram_hits": 99,
+              "disk_hits": 521,
+              "requests": 1152,
+              "net_gain": 21,
+              "no_reuse": 15,
+              "victim_loss": 484
+            },
+            "NoJoint": {
+              "remote": 600,
+              "copies": 585,
+              "ram_hits": 99,
+              "disk_hits": 453,
+              "requests": 1152,
+              "no_reuse": 48
+            }
+          }
+        },
+        "opportunity74_disk_value": {
+          "stdout": "Full remote=551 copies=42 ram_hits=98 disk_hits=503 requests=1152 net_gain=50 no_reuse=48 victim_loss=1522\nNoHotspot remote=563 copies=38 ram_hits=101 disk_hits=488 requests=1152 net_gain=31 no_reuse=48 victim_loss=1577\nNoAffinity remote=546 copies=33 ram_hits=98 disk_hits=508 requests=1152 net_gain=21 no_reuse=16 victim_loss=497\nNoJoint remote=595 copies=580 ram_hits=98 disk_hits=459 requests=1152 no_reuse=48\n",
+          "arms": {
+            "Full": {
+              "remote": 551,
+              "copies": 42,
+              "ram_hits": 98,
+              "disk_hits": 503,
+              "requests": 1152,
+              "net_gain": 50,
+              "no_reuse": 48,
+              "victim_loss": 1522
+            },
+            "NoHotspot": {
+              "remote": 563,
+              "copies": 38,
+              "ram_hits": 101,
+              "disk_hits": 488,
+              "requests": 1152,
+              "net_gain": 31,
+              "no_reuse": 48,
+              "victim_loss": 1577
+            },
+            "NoAffinity": {
+              "remote": 546,
+              "copies": 33,
+              "ram_hits": 98,
+              "disk_hits": 508,
+              "requests": 1152,
+              "net_gain": 21,
+              "no_reuse": 16,
+              "victim_loss": 497
+            },
+            "NoJoint": {
+              "remote": 595,
+              "copies": 580,
+              "ram_hits": 98,
+              "disk_hits": 459,
+              "requests": 1152,
+              "no_reuse": 48
+            }
+          }
+        },
+        "opportunity74_ram_value": {
+          "stdout": "Full remote=543 copies=40 ram_hits=97 disk_hits=512 requests=1152 net_gain=45 no_reuse=48 victim_loss=1503\nNoHotspot remote=563 copies=38 ram_hits=101 disk_hits=488 requests=1152 net_gain=31 no_reuse=48 victim_loss=1577\nNoAffinity remote=535 copies=30 ram_hits=97 disk_hits=520 requests=1152 net_gain=18 no_reuse=16 victim_loss=489\nNoJoint remote=595 copies=580 ram_hits=97 disk_hits=460 requests=1152 no_reuse=48\n",
+          "arms": {
+            "Full": {
+              "remote": 543,
+              "copies": 40,
+              "ram_hits": 97,
+              "disk_hits": 512,
+              "requests": 1152,
+              "net_gain": 45,
+              "no_reuse": 48,
+              "victim_loss": 1503
+            },
+            "NoHotspot": {
+              "remote": 563,
+              "copies": 38,
+              "ram_hits": 101,
+              "disk_hits": 488,
+              "requests": 1152,
+              "net_gain": 31,
+              "no_reuse": 48,
+              "victim_loss": 1577
+            },
+            "NoAffinity": {
+              "remote": 535,
+              "copies": 30,
+              "ram_hits": 97,
+              "disk_hits": 520,
+              "requests": 1152,
+              "net_gain": 18,
+              "no_reuse": 16,
+              "victim_loss": 489
+            },
+            "NoJoint": {
+              "remote": 595,
+              "copies": 580,
+              "ram_hits": 97,
+              "disk_hits": 460,
+              "requests": 1152,
+              "no_reuse": 48
+            }
+          }
+        }
+      }
+    }
+  ]
+}

@@ -1,0 +1,1026 @@
+{
+  "speed_evidence": false,
+  "description": "Single counterfactual original global scale versus per-key recent/persistent logical-run units; object-weighted original H, RAM LRU, 24MiB disk, original10inputs, fourarms each, fixed costs21remote/10.5disk/8copy ms, no asynchronous timing or online cost samples simulated.",
+  "rows": [
+    {
+      "input": "moving_shared-73501",
+      "variants": {
+        "original": {
+          "Full": {
+            "remote": 79,
+            "copies": 29,
+            "ram_hits": 913,
+            "disk_hits": 160,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "copy_cost": 161,
+            "net_gain": 51,
+            "fixed_storage_cost_ms": 3571.0
+          },
+          "NoHotspot": {
+            "remote": 79,
+            "copies": 28,
+            "ram_hits": 913,
+            "disk_hits": 160,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "copy_cost": 3,
+            "net_gain": 3,
+            "no_reuse": 155,
+            "victim_loss": 15,
+            "fixed_storage_cost_ms": 3563.0
+          },
+          "NoAffinity": {
+            "remote": 101,
+            "copies": 38,
+            "ram_hits": 913,
+            "disk_hits": 138,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "copy_cost": 54,
+            "net_gain": 26,
+            "victim_loss": 9,
+            "fixed_storage_cost_ms": 3874.0
+          },
+          "NoJoint": {
+            "remote": 89,
+            "copies": 39,
+            "ram_hits": 913,
+            "disk_hits": 150,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "copy_cost": 161,
+            "fixed_storage_cost_ms": 3756.0
+          }
+        },
+        "run_units": {
+          "Full": {
+            "remote": 78,
+            "copies": 29,
+            "ram_hits": 913,
+            "disk_hits": 161,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "copy_cost": 158,
+            "net_gain": 51,
+            "fixed_storage_cost_ms": 3560.5
+          },
+          "NoHotspot": {
+            "remote": 79,
+            "copies": 28,
+            "ram_hits": 913,
+            "disk_hits": 160,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "copy_cost": 3,
+            "net_gain": 3,
+            "no_reuse": 155,
+            "victim_loss": 15,
+            "fixed_storage_cost_ms": 3563.0
+          },
+          "NoAffinity": {
+            "remote": 96,
+            "copies": 39,
+            "ram_hits": 913,
+            "disk_hits": 143,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "copy_cost": 53,
+            "net_gain": 27,
+            "victim_loss": 4,
+            "fixed_storage_cost_ms": 3829.5
+          },
+          "NoJoint": {
+            "remote": 85,
+            "copies": 36,
+            "ram_hits": 913,
+            "disk_hits": 154,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "copy_cost": 158,
+            "fixed_storage_cost_ms": 3690.0
+          }
+        }
+      }
+    },
+    {
+      "input": "moving_shared-73502",
+      "variants": {
+        "original": {
+          "Full": {
+            "remote": 83,
+            "copies": 28,
+            "ram_hits": 907,
+            "disk_hits": 162,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "copy_cost": 174,
+            "net_gain": 47,
+            "no_reuse": 1,
+            "victim_loss": 1,
+            "fixed_storage_cost_ms": 3668.0
+          },
+          "NoHotspot": {
+            "remote": 85,
+            "copies": 28,
+            "ram_hits": 907,
+            "disk_hits": 160,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "copy_cost": 6,
+            "net_gain": 3,
+            "no_reuse": 169,
+            "victim_loss": 12,
+            "fixed_storage_cost_ms": 3689.0
+          },
+          "NoAffinity": {
+            "remote": 120,
+            "copies": 51,
+            "ram_hits": 907,
+            "disk_hits": 125,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "copy_cost": 57,
+            "net_gain": 39,
+            "no_reuse": 1,
+            "victim_loss": 11,
+            "fixed_storage_cost_ms": 4240.5
+          },
+          "NoJoint": {
+            "remote": 101,
+            "copies": 46,
+            "ram_hits": 907,
+            "disk_hits": 144,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "copy_cost": 174,
+            "no_reuse": 1,
+            "fixed_storage_cost_ms": 4001.0
+          }
+        },
+        "run_units": {
+          "Full": {
+            "remote": 83,
+            "copies": 28,
+            "ram_hits": 907,
+            "disk_hits": 162,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "copy_cost": 174,
+            "net_gain": 47,
+            "no_reuse": 1,
+            "victim_loss": 1,
+            "fixed_storage_cost_ms": 3668.0
+          },
+          "NoHotspot": {
+            "remote": 85,
+            "copies": 28,
+            "ram_hits": 907,
+            "disk_hits": 160,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "copy_cost": 6,
+            "net_gain": 3,
+            "no_reuse": 169,
+            "victim_loss": 12,
+            "fixed_storage_cost_ms": 3689.0
+          },
+          "NoAffinity": {
+            "remote": 124,
+            "copies": 55,
+            "ram_hits": 907,
+            "disk_hits": 121,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "copy_cost": 57,
+            "net_gain": 43,
+            "no_reuse": 1,
+            "victim_loss": 11,
+            "fixed_storage_cost_ms": 4314.5
+          },
+          "NoJoint": {
+            "remote": 105,
+            "copies": 50,
+            "ram_hits": 907,
+            "disk_hits": 140,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "copy_cost": 174,
+            "no_reuse": 1,
+            "fixed_storage_cost_ms": 4075.0
+          }
+        }
+      }
+    },
+    {
+      "input": "moving_shared-73503",
+      "variants": {
+        "original": {
+          "Full": {
+            "remote": 78,
+            "copies": 28,
+            "ram_hits": 916,
+            "disk_hits": 158,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "copy_cost": 162,
+            "net_gain": 48,
+            "fixed_storage_cost_ms": 3521.0
+          },
+          "NoHotspot": {
+            "remote": 79,
+            "copies": 28,
+            "ram_hits": 916,
+            "disk_hits": 157,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "copy_cost": 9,
+            "no_reuse": 156,
+            "victim_loss": 15,
+            "fixed_storage_cost_ms": 3531.5
+          },
+          "NoAffinity": {
+            "remote": 114,
+            "copies": 45,
+            "ram_hits": 916,
+            "disk_hits": 122,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "copy_cost": 55,
+            "net_gain": 33,
+            "victim_loss": 14,
+            "fixed_storage_cost_ms": 4035.0
+          },
+          "NoJoint": {
+            "remote": 98,
+            "copies": 47,
+            "ram_hits": 916,
+            "disk_hits": 138,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "copy_cost": 165,
+            "fixed_storage_cost_ms": 3883.0
+          }
+        },
+        "run_units": {
+          "Full": {
+            "remote": 78,
+            "copies": 28,
+            "ram_hits": 916,
+            "disk_hits": 158,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "copy_cost": 162,
+            "net_gain": 48,
+            "fixed_storage_cost_ms": 3521.0
+          },
+          "NoHotspot": {
+            "remote": 79,
+            "copies": 28,
+            "ram_hits": 916,
+            "disk_hits": 157,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "copy_cost": 9,
+            "no_reuse": 156,
+            "victim_loss": 15,
+            "fixed_storage_cost_ms": 3531.5
+          },
+          "NoAffinity": {
+            "remote": 115,
+            "copies": 47,
+            "ram_hits": 916,
+            "disk_hits": 121,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "copy_cost": 54,
+            "net_gain": 35,
+            "victim_loss": 14,
+            "fixed_storage_cost_ms": 4061.5
+          },
+          "NoJoint": {
+            "remote": 98,
+            "copies": 48,
+            "ram_hits": 916,
+            "disk_hits": 138,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "copy_cost": 162,
+            "fixed_storage_cost_ms": 3891.0
+          }
+        }
+      }
+    },
+    {
+      "input": "moving_shared-74801",
+      "variants": {
+        "original": {
+          "Full": {
+            "remote": 84,
+            "copies": 28,
+            "ram_hits": 920,
+            "disk_hits": 148,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "copy_cost": 175,
+            "net_gain": 48,
+            "fixed_storage_cost_ms": 3542.0
+          },
+          "NoHotspot": {
+            "remote": 84,
+            "copies": 28,
+            "ram_hits": 920,
+            "disk_hits": 148,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "copy_cost": 3,
+            "net_gain": 1,
+            "no_reuse": 172,
+            "victim_loss": 7,
+            "fixed_storage_cost_ms": 3542.0
+          },
+          "NoAffinity": {
+            "remote": 107,
+            "copies": 36,
+            "ram_hits": 920,
+            "disk_hits": 125,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "copy_cost": 59,
+            "net_gain": 24,
+            "victim_loss": 12,
+            "fixed_storage_cost_ms": 3847.5
+          },
+          "NoJoint": {
+            "remote": 110,
+            "copies": 54,
+            "ram_hits": 920,
+            "disk_hits": 122,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "copy_cost": 175,
+            "fixed_storage_cost_ms": 4023.0
+          }
+        },
+        "run_units": {
+          "Full": {
+            "remote": 84,
+            "copies": 28,
+            "ram_hits": 920,
+            "disk_hits": 148,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "copy_cost": 175,
+            "net_gain": 48,
+            "fixed_storage_cost_ms": 3542.0
+          },
+          "NoHotspot": {
+            "remote": 84,
+            "copies": 28,
+            "ram_hits": 920,
+            "disk_hits": 148,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "copy_cost": 3,
+            "net_gain": 1,
+            "no_reuse": 172,
+            "victim_loss": 7,
+            "fixed_storage_cost_ms": 3542.0
+          },
+          "NoAffinity": {
+            "remote": 109,
+            "copies": 42,
+            "ram_hits": 920,
+            "disk_hits": 123,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "copy_cost": 58,
+            "net_gain": 30,
+            "victim_loss": 9,
+            "fixed_storage_cost_ms": 3916.5
+          },
+          "NoJoint": {
+            "remote": 112,
+            "copies": 56,
+            "ram_hits": 920,
+            "disk_hits": 120,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "copy_cost": 175,
+            "fixed_storage_cost_ms": 4060.0
+          }
+        }
+      }
+    },
+    {
+      "input": "public_toolagent-73601",
+      "variants": {
+        "original": {
+          "Full": {
+            "remote": 865,
+            "copies": 34,
+            "ram_hits": 1,
+            "disk_hits": 286,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "net_gain": 45,
+            "no_reuse": 2271,
+            "victim_loss": 255,
+            "fixed_storage_cost_ms": 21440.0
+          },
+          "NoHotspot": {
+            "remote": 873,
+            "copies": 25,
+            "ram_hits": 1,
+            "disk_hits": 278,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "net_gain": 25,
+            "no_reuse": 2271,
+            "victim_loss": 299,
+            "fixed_storage_cost_ms": 21452.0
+          },
+          "NoAffinity": {
+            "remote": 921,
+            "copies": 34,
+            "ram_hits": 1,
+            "disk_hits": 230,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "net_gain": 22,
+            "no_reuse": 761,
+            "victim_loss": 126,
+            "fixed_storage_cost_ms": 22028.0
+          },
+          "NoJoint": {
+            "remote": 960,
+            "copies": 196,
+            "ram_hits": 1,
+            "disk_hits": 191,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "no_reuse": 2304,
+            "fixed_storage_cost_ms": 23733.5
+          }
+        },
+        "run_units": {
+          "Full": {
+            "remote": 865,
+            "copies": 34,
+            "ram_hits": 1,
+            "disk_hits": 286,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "net_gain": 45,
+            "no_reuse": 2271,
+            "victim_loss": 255,
+            "fixed_storage_cost_ms": 21440.0
+          },
+          "NoHotspot": {
+            "remote": 873,
+            "copies": 25,
+            "ram_hits": 1,
+            "disk_hits": 278,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "net_gain": 25,
+            "no_reuse": 2271,
+            "victim_loss": 299,
+            "fixed_storage_cost_ms": 21452.0
+          },
+          "NoAffinity": {
+            "remote": 921,
+            "copies": 34,
+            "ram_hits": 1,
+            "disk_hits": 230,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "net_gain": 22,
+            "no_reuse": 761,
+            "victim_loss": 126,
+            "fixed_storage_cost_ms": 22028.0
+          },
+          "NoJoint": {
+            "remote": 960,
+            "copies": 196,
+            "ram_hits": 1,
+            "disk_hits": 191,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "no_reuse": 2304,
+            "fixed_storage_cost_ms": 23733.5
+          }
+        }
+      }
+    },
+    {
+      "input": "public_toolagent-73602",
+      "variants": {
+        "original": {
+          "Full": {
+            "remote": 879,
+            "copies": 43,
+            "ram_hits": 2,
+            "disk_hits": 271,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "net_gain": 56,
+            "no_reuse": 2278,
+            "victim_loss": 271,
+            "fixed_storage_cost_ms": 21648.5
+          },
+          "NoHotspot": {
+            "remote": 870,
+            "copies": 28,
+            "ram_hits": 2,
+            "disk_hits": 280,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "net_gain": 24,
+            "no_reuse": 2278,
+            "victim_loss": 276,
+            "fixed_storage_cost_ms": 21434.0
+          },
+          "NoAffinity": {
+            "remote": 904,
+            "copies": 34,
+            "ram_hits": 2,
+            "disk_hits": 246,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "net_gain": 22,
+            "no_reuse": 758,
+            "victim_loss": 112,
+            "fixed_storage_cost_ms": 21839.0
+          },
+          "NoJoint": {
+            "remote": 919,
+            "copies": 161,
+            "ram_hits": 2,
+            "disk_hits": 231,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "no_reuse": 2278,
+            "fixed_storage_cost_ms": 23012.5
+          }
+        },
+        "run_units": {
+          "Full": {
+            "remote": 879,
+            "copies": 43,
+            "ram_hits": 2,
+            "disk_hits": 271,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "net_gain": 56,
+            "no_reuse": 2278,
+            "victim_loss": 271,
+            "fixed_storage_cost_ms": 21648.5
+          },
+          "NoHotspot": {
+            "remote": 870,
+            "copies": 28,
+            "ram_hits": 2,
+            "disk_hits": 280,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "net_gain": 24,
+            "no_reuse": 2278,
+            "victim_loss": 276,
+            "fixed_storage_cost_ms": 21434.0
+          },
+          "NoAffinity": {
+            "remote": 904,
+            "copies": 34,
+            "ram_hits": 2,
+            "disk_hits": 246,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "net_gain": 22,
+            "no_reuse": 758,
+            "victim_loss": 112,
+            "fixed_storage_cost_ms": 21839.0
+          },
+          "NoJoint": {
+            "remote": 919,
+            "copies": 161,
+            "ram_hits": 2,
+            "disk_hits": 231,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "no_reuse": 2278,
+            "fixed_storage_cost_ms": 23012.5
+          }
+        }
+      }
+    },
+    {
+      "input": "public_toolagent-73603",
+      "variants": {
+        "original": {
+          "Full": {
+            "remote": 920,
+            "copies": 34,
+            "ram_hits": 2,
+            "disk_hits": 230,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "net_gain": 58,
+            "no_reuse": 2429,
+            "victim_loss": 242,
+            "fixed_storage_cost_ms": 22007.0
+          },
+          "NoHotspot": {
+            "remote": 938,
+            "copies": 21,
+            "ram_hits": 2,
+            "disk_hits": 212,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "net_gain": 19,
+            "no_reuse": 2459,
+            "victim_loss": 305,
+            "fixed_storage_cost_ms": 22092.0
+          },
+          "NoAffinity": {
+            "remote": 940,
+            "copies": 28,
+            "ram_hits": 2,
+            "disk_hits": 210,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "net_gain": 16,
+            "no_reuse": 810,
+            "victim_loss": 102,
+            "fixed_storage_cost_ms": 22169.0
+          },
+          "NoJoint": {
+            "remote": 985,
+            "copies": 175,
+            "ram_hits": 2,
+            "disk_hits": 165,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "no_reuse": 2435,
+            "fixed_storage_cost_ms": 23817.5
+          }
+        },
+        "run_units": {
+          "Full": {
+            "remote": 920,
+            "copies": 34,
+            "ram_hits": 2,
+            "disk_hits": 230,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "net_gain": 58,
+            "no_reuse": 2429,
+            "victim_loss": 242,
+            "fixed_storage_cost_ms": 22007.0
+          },
+          "NoHotspot": {
+            "remote": 938,
+            "copies": 21,
+            "ram_hits": 2,
+            "disk_hits": 212,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "net_gain": 19,
+            "no_reuse": 2459,
+            "victim_loss": 305,
+            "fixed_storage_cost_ms": 22092.0
+          },
+          "NoAffinity": {
+            "remote": 940,
+            "copies": 28,
+            "ram_hits": 2,
+            "disk_hits": 210,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "net_gain": 16,
+            "no_reuse": 810,
+            "victim_loss": 102,
+            "fixed_storage_cost_ms": 22169.0
+          },
+          "NoJoint": {
+            "remote": 985,
+            "copies": 175,
+            "ram_hits": 2,
+            "disk_hits": 165,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "no_reuse": 2435,
+            "fixed_storage_cost_ms": 23817.5
+          }
+        }
+      }
+    },
+    {
+      "input": "public_toolagent-74802",
+      "variants": {
+        "original": {
+          "Full": {
+            "remote": 967,
+            "copies": 33,
+            "ram_hits": 2,
+            "disk_hits": 183,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "net_gain": 44,
+            "no_reuse": 2611,
+            "victim_loss": 217,
+            "fixed_storage_cost_ms": 22492.5
+          },
+          "NoHotspot": {
+            "remote": 1002,
+            "copies": 25,
+            "ram_hits": 2,
+            "disk_hits": 148,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "net_gain": 20,
+            "no_reuse": 2596,
+            "victim_loss": 361,
+            "fixed_storage_cost_ms": 22796.0
+          },
+          "NoAffinity": {
+            "remote": 995,
+            "copies": 21,
+            "ram_hits": 2,
+            "disk_hits": 155,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "net_gain": 9,
+            "no_reuse": 860,
+            "victim_loss": 114,
+            "fixed_storage_cost_ms": 22690.5
+          },
+          "NoJoint": {
+            "remote": 987,
+            "copies": 119,
+            "ram_hits": 2,
+            "disk_hits": 163,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "no_reuse": 2611,
+            "fixed_storage_cost_ms": 23390.5
+          }
+        },
+        "run_units": {
+          "Full": {
+            "remote": 967,
+            "copies": 33,
+            "ram_hits": 2,
+            "disk_hits": 183,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "net_gain": 44,
+            "no_reuse": 2611,
+            "victim_loss": 217,
+            "fixed_storage_cost_ms": 22492.5
+          },
+          "NoHotspot": {
+            "remote": 1002,
+            "copies": 25,
+            "ram_hits": 2,
+            "disk_hits": 148,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "net_gain": 20,
+            "no_reuse": 2596,
+            "victim_loss": 361,
+            "fixed_storage_cost_ms": 22796.0
+          },
+          "NoAffinity": {
+            "remote": 995,
+            "copies": 21,
+            "ram_hits": 2,
+            "disk_hits": 155,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "net_gain": 9,
+            "no_reuse": 860,
+            "victim_loss": 114,
+            "fixed_storage_cost_ms": 22690.5
+          },
+          "NoJoint": {
+            "remote": 987,
+            "copies": 119,
+            "ram_hits": 2,
+            "disk_hits": 163,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "no_reuse": 2611,
+            "fixed_storage_cost_ms": 23390.5
+          }
+        }
+      }
+    },
+    {
+      "input": "stationary_shared-73701",
+      "variants": {
+        "original": {
+          "Full": {
+            "remote": 65,
+            "copies": 12,
+            "ram_hits": 903,
+            "disk_hits": 184,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "copy_cost": 169,
+            "no_reuse": 2,
+            "fixed_storage_cost_ms": 3393.0
+          },
+          "NoHotspot": {
+            "remote": 65,
+            "copies": 12,
+            "ram_hits": 903,
+            "disk_hits": 184,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "no_reuse": 171,
+            "fixed_storage_cost_ms": 3393.0
+          },
+          "NoAffinity": {
+            "remote": 82,
+            "copies": 21,
+            "ram_hits": 903,
+            "disk_hits": 167,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "copy_cost": 57,
+            "net_gain": 9,
+            "no_reuse": 2,
+            "victim_loss": 2,
+            "fixed_storage_cost_ms": 3643.5
+          },
+          "NoJoint": {
+            "remote": 65,
+            "copies": 12,
+            "ram_hits": 903,
+            "disk_hits": 184,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "copy_cost": 169,
+            "no_reuse": 2,
+            "fixed_storage_cost_ms": 3393.0
+          }
+        },
+        "run_units": {
+          "Full": {
+            "remote": 65,
+            "copies": 12,
+            "ram_hits": 903,
+            "disk_hits": 184,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "copy_cost": 169,
+            "no_reuse": 2,
+            "fixed_storage_cost_ms": 3393.0
+          },
+          "NoHotspot": {
+            "remote": 65,
+            "copies": 12,
+            "ram_hits": 903,
+            "disk_hits": 184,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "no_reuse": 171,
+            "fixed_storage_cost_ms": 3393.0
+          },
+          "NoAffinity": {
+            "remote": 86,
+            "copies": 25,
+            "ram_hits": 903,
+            "disk_hits": 163,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "copy_cost": 56,
+            "net_gain": 13,
+            "no_reuse": 2,
+            "victim_loss": 3,
+            "fixed_storage_cost_ms": 3717.5
+          },
+          "NoJoint": {
+            "remote": 65,
+            "copies": 12,
+            "ram_hits": 903,
+            "disk_hits": 184,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "copy_cost": 169,
+            "no_reuse": 2,
+            "fixed_storage_cost_ms": 3393.0
+          }
+        }
+      }
+    },
+    {
+      "input": "uniform-73702",
+      "variants": {
+        "original": {
+          "Full": {
+            "remote": 544,
+            "copies": 45,
+            "ram_hits": 99,
+            "disk_hits": 509,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "copy_cost": 29,
+            "net_gain": 56,
+            "no_reuse": 19,
+            "victim_loss": 1495,
+            "fixed_storage_cost_ms": 17128.5
+          },
+          "NoHotspot": {
+            "remote": 546,
+            "copies": 41,
+            "ram_hits": 99,
+            "disk_hits": 507,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "net_gain": 36,
+            "no_reuse": 48,
+            "victim_loss": 1521,
+            "fixed_storage_cost_ms": 17117.5
+          },
+          "NoAffinity": {
+            "remote": 532,
+            "copies": 41,
+            "ram_hits": 99,
+            "disk_hits": 521,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "copy_cost": 10,
+            "net_gain": 29,
+            "no_reuse": 5,
+            "victim_loss": 476,
+            "fixed_storage_cost_ms": 16970.5
+          },
+          "NoJoint": {
+            "remote": 576,
+            "copies": 561,
+            "ram_hits": 99,
+            "disk_hits": 477,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "copy_cost": 29,
+            "no_reuse": 19,
+            "fixed_storage_cost_ms": 21592.5
+          }
+        },
+        "run_units": {
+          "Full": {
+            "remote": 533,
+            "copies": 41,
+            "ram_hits": 99,
+            "disk_hits": 520,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "copy_cost": 29,
+            "net_gain": 50,
+            "no_reuse": 19,
+            "victim_loss": 1468,
+            "fixed_storage_cost_ms": 16981.0
+          },
+          "NoHotspot": {
+            "remote": 546,
+            "copies": 41,
+            "ram_hits": 99,
+            "disk_hits": 507,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "net_gain": 36,
+            "no_reuse": 48,
+            "victim_loss": 1521,
+            "fixed_storage_cost_ms": 17117.5
+          },
+          "NoAffinity": {
+            "remote": 531,
+            "copies": 36,
+            "ram_hits": 99,
+            "disk_hits": 522,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "copy_cost": 10,
+            "net_gain": 24,
+            "no_reuse": 5,
+            "victim_loss": 480,
+            "fixed_storage_cost_ms": 16920.0
+          },
+          "NoJoint": {
+            "remote": 591,
+            "copies": 576,
+            "ram_hits": 99,
+            "disk_hits": 462,
+            "requests": 1152,
+            "ram_rank_evictions": 0,
+            "copy_cost": 29,
+            "no_reuse": 19,
+            "fixed_storage_cost_ms": 21870.0
+          }
+        }
+      }
+    }
+  ]
+}

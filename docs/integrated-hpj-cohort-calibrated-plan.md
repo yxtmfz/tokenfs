@@ -1,0 +1,9 @@
+# Calibrate lifetime and preserve direct recent evidence
+
+After complete negative cohort/writepath matrices, inspect the causal replay before allocating more server runs. The survival-only intermediate passed native/Python checks but is NOT speed-tested: continue directly with the following coherent correction to reduce experiment count. Preserve its source/build provenance as a non-speed prototype.
+
+(1) Newcomers borrow a bounded already-observed between-run interval instead of within-burst spacing; credit remains at most one disk read and zero without temporal clustering. (2) Novel-cohort competition discounts only the persistent extrapolation; already age-discounted recent observations form a lower bound. This prevents counting both evidence aging and competitor novelty against the same direct observations. Arrivals and victims share the exact value function. Static NoHotspot bypasses both prior and temporal models with its single existing flag. No new object identifiers, phase labels, future events, measured gain target, capacity or weakened SIEVE.
+
+A constant-cost synchronous mechanism replay moves from53 misses/53copies to51misses/45copies; this is diagnosis, not speed evidence or an optimality proof. Native tests assert fresh-newcomer decay on between-run intervals, no repeated prior once own recurrence exists, recent-value floor, symmetric valuations, cold/IID zero-evidence, rollback and capacity invariants.
+
+Freeze the same two-order ten-run moving3293 matrix,576x2MiB requests,24MiB disk and4MiB shared capture. Full, NoH, NoP, NoJ, equal-capability SIEVE receive common execution optimizations. All prior results stay archived; do not rerun or replace a negative arm selectively. Target is all eight actual throughput gains positive, with p99/drained/mechanism flags still reported. Independent content check and raw replay required before delivery. No broad sweep or physical-GPU claim.

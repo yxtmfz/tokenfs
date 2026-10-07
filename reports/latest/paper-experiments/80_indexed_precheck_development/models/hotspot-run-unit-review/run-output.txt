@@ -1,0 +1,22 @@
+|Input|Mode|Full R/D/RAM/copy|NoH R/D/RAM/copy|Full saving vs NoH ms|Full saving vs original ms|
+|---|---|---:|---:|---:|---:|
+|moving_shared-73501|original|79/160/913/29|79/160/913/28|-8.0|0.0|
+|moving_shared-73501|run_units|78/161/913/29|79/160/913/28|2.5|10.5|
+|moving_shared-73502|original|83/162/907/28|85/160/907/28|21.0|0.0|
+|moving_shared-73502|run_units|83/162/907/28|85/160/907/28|21.0|0.0|
+|moving_shared-73503|original|78/158/916/28|79/157/916/28|10.5|0.0|
+|moving_shared-73503|run_units|78/158/916/28|79/157/916/28|10.5|0.0|
+|moving_shared-74801|original|84/148/920/28|84/148/920/28|0.0|0.0|
+|moving_shared-74801|run_units|84/148/920/28|84/148/920/28|0.0|0.0|
+|public_toolagent-73601|original|865/286/1/34|873/278/1/25|12.0|0.0|
+|public_toolagent-73601|run_units|865/286/1/34|873/278/1/25|12.0|0.0|
+|public_toolagent-73602|original|879/271/2/43|870/280/2/28|-214.5|0.0|
+|public_toolagent-73602|run_units|879/271/2/43|870/280/2/28|-214.5|0.0|
+|public_toolagent-73603|original|920/230/2/34|938/212/2/21|85.0|0.0|
+|public_toolagent-73603|run_units|920/230/2/34|938/212/2/21|85.0|0.0|
+|public_toolagent-74802|original|967/183/2/33|1002/148/2/25|303.5|0.0|
+|public_toolagent-74802|run_units|967/183/2/33|1002/148/2/25|303.5|0.0|
+|stationary_shared-73701|original|65/184/903/12|65/184/903/12|0.0|0.0|
+|stationary_shared-73701|run_units|65/184/903/12|65/184/903/12|0.0|0.0|
+|uniform-73702|original|544/509/99/45|546/507/99/41|-11.0|0.0|
+|uniform-73702|run_units|533/520/99/41|546/507/99/41|136.5|147.5|

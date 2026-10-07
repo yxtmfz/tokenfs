@@ -1,0 +1,66 @@
+{
+  "passed": true,
+  "tests": [
+    {
+      "variant": "disk_clock_raw",
+      "test": "verify.cpp",
+      "stdout": "causal RAM exclusion, hit parity, value symmetry, bounded state, clock semantics and H isolation passed"
+    },
+    {
+      "variant": "disk_clock_matched",
+      "test": "verify.cpp",
+      "stdout": "causal RAM exclusion, hit parity, value symmetry, bounded state, clock semantics and H isolation passed"
+    },
+    {
+      "variant": "logical_clock_raw",
+      "test": "verify.cpp",
+      "stdout": "causal RAM exclusion, hit parity, value symmetry, bounded state, clock semantics and H isolation passed"
+    },
+    {
+      "variant": "logical_clock_matched",
+      "test": "verify.cpp",
+      "stdout": "causal RAM exclusion, hit parity, value symmetry, bounded state, clock semantics and H isolation passed"
+    },
+    {
+      "variant": "disk_clock_persistent_raw",
+      "test": "verify.cpp",
+      "stdout": "causal RAM exclusion, hit parity, value symmetry, bounded state, clock semantics and H isolation passed"
+    },
+    {
+      "variant": "disk_clock_persistent_raw",
+      "test": "verify-persistent.cpp",
+      "stdout": "completed gaps only, consecutive storage events retained, RAM excludes training, persistent forecast decay and bounds passed"
+    },
+    {
+      "variant": "disk_clock_persistent_matched",
+      "test": "verify.cpp",
+      "stdout": "causal RAM exclusion, hit parity, value symmetry, bounded state, clock semantics and H isolation passed"
+    },
+    {
+      "variant": "disk_clock_persistent_matched",
+      "test": "verify-persistent.cpp",
+      "stdout": "completed gaps only, consecutive storage events retained, RAM excludes training, persistent forecast decay and bounds passed"
+    },
+    {
+      "variant": "logical_clock_persistent_raw",
+      "test": "verify.cpp",
+      "stdout": "causal RAM exclusion, hit parity, value symmetry, bounded state, clock semantics and H isolation passed"
+    },
+    {
+      "variant": "logical_clock_persistent_raw",
+      "test": "verify-persistent.cpp",
+      "stdout": "completed gaps only, consecutive storage events retained, RAM excludes training, persistent forecast decay and bounds passed"
+    },
+    {
+      "variant": "logical_clock_persistent_matched",
+      "test": "verify.cpp",
+      "stdout": "causal RAM exclusion, hit parity, value symmetry, bounded state, clock semantics and H isolation passed"
+    },
+    {
+      "variant": "logical_clock_persistent_matched",
+      "test": "verify-persistent.cpp",
+      "stdout": "completed gaps only, consecutive storage events retained, RAM excludes training, persistent forecast decay and bounds passed"
+    }
+  ],
+  "baseline_header_sha256": "997f9eefe45879434d87faea59a82840bf1bde6d6b4910ea1d2e7dcdbc1260fd"
+}

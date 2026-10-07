@@ -1,0 +1,32 @@
+-- The CXX compiler identification is GNU 13.3.0
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Found PkgConfig: /home/wjxt/aura-kv-tools/root/usr/bin/pkg-config (found version "1.8.1") 
+-- Checking for module 'fuse3'
+--   Found fuse3, version 3.14.0
+-- Found SQLite3: /home/wjxt/aura-kv-tools/root/usr/include (found version "3.45.1") 
+-- Configuring done (0.4s)
+CMake Error at CMakeLists.txt:54 (add_executable):
+  Cannot find source file:
+
+    tests/request_trace_test.cpp
+
+
+CMake Error at CMakeLists.txt:65 (add_executable):
+  Cannot find source file:
+
+    tests/sieve_policy_test.cpp
+
+
+CMake Error at CMakeLists.txt:54 (add_executable):
+  No SOURCES given to target: request_trace_test
+
+
+CMake Error at CMakeLists.txt:65 (add_executable):
+  No SOURCES given to target: sieve_policy_test
+
+
+CMake Generate step failed.  Build files cannot be regenerated correctly.

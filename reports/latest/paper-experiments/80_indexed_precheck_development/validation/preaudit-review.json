@@ -1,0 +1,273 @@
+{
+  "preexecution_checks_passed": true,
+  "performance_results_reviewed": false,
+  "server_access": false,
+  "source_files": 355,
+  "source_archive_sha256": "f6691da87b5cf91edc594cad618562f77f0de5fb8a6060fb395f69fc64bfbd45",
+  "source_hashes_exact": true,
+  "source_is_frozen": true,
+  "frozen_spec_sha256": "7a2c63d95e2eda12b82084a1417058c541f94fc9efdb3bc404f4a0eaedbaa987",
+  "orders": {
+    "moving_shared-74801-r1": [
+      "NoHotspot",
+      "NoJoint",
+      "NoIndexedPrecheck",
+      "NoAffinity",
+      "PoolSIEVE1",
+      "Full"
+    ],
+    "public_toolagent-74802-r1": [
+      "NoHotspot",
+      "NoIndexedPrecheck",
+      "NoAffinity",
+      "PoolSIEVE1",
+      "Full",
+      "NoJoint"
+    ],
+    "moving_shared-74801-r2": [
+      "Full",
+      "PoolSIEVE1",
+      "NoAffinity",
+      "NoIndexedPrecheck",
+      "NoJoint",
+      "NoHotspot"
+    ],
+    "public_toolagent-74802-r2": [
+      "NoJoint",
+      "Full",
+      "PoolSIEVE1",
+      "NoAffinity",
+      "NoIndexedPrecheck",
+      "NoHotspot"
+    ]
+  },
+  "policy_differences": {
+    "Full": [],
+    "NoHotspot": [
+      "measured_static_reuse_value"
+    ],
+    "NoAffinity": [
+      "shared_caller_only"
+    ],
+    "NoJoint": [
+      "measured_joint_admission"
+    ],
+    "PoolSIEVE1": [
+      "local_eviction_policy",
+      "read_through_cache",
+      "read_through_min_reads",
+      "measured_shift_reset",
+      "measured_policy",
+      "measured_admission",
+      "measured_cost",
+      "measured_value_victim",
+      "measured_size_aware",
+      "measured_frequency_admission",
+      "measured_causal_window",
+      "compact_measured_planning",
+      "shared_value_placement",
+      "shared_pool_cache",
+      "measured_burst_reuse",
+      "adaptive_reuse_control",
+      "efficient_measured_planning",
+      "burst_interval_survival",
+      "reuse_scaled_exploration",
+      "persistent_run_reuse",
+      "persistent_reuse_immediate_decay",
+      "novel_reuse_decay",
+      "cohort_reuse_prior",
+      "recent_value_floor"
+    ],
+    "NoIndexedPrecheck": [
+      "indexed_shared_precheck"
+    ]
+  },
+  "cpu_affinity": {
+    "cpus": [
+      0,
+      2,
+      4,
+      6
+    ],
+    "independent_before_after_receipt_check": true,
+    "process_inheritance": "Linux subprocess inheritance; no per-thread live receipt",
+    "only_within_batch_implementation_control": true
+  },
+  "checks": [
+    {
+      "name": "valid_affinity",
+      "passed": true
+    },
+    {
+      "name": "before_wrong_affinity",
+      "rejection": "fixture: before CPU affinity receipt mismatch"
+    },
+    {
+      "name": "after_wrong_affinity",
+      "rejection": "fixture: after CPU affinity receipt mismatch"
+    },
+    {
+      "name": "overlapping_case",
+      "rejection": "fixture: execution order/overlap differs from frozen order"
+    },
+    {
+      "name": "Full_submission_precheck_index_enabled",
+      "rejection": "Full: precheck index activation"
+    },
+    {
+      "name": "Full_submission_precheck_index_fallback",
+      "rejection": "Full: precheck index fallback"
+    },
+    {
+      "name": "Full_speed_no_attempts",
+      "rejection": "Full: precheck not exercised"
+    },
+    {
+      "name": "Full_content_not_activated",
+      "rejection": "Full: precheck activation"
+    },
+    {
+      "name": "NoHotspot_submission_precheck_index_enabled",
+      "rejection": "NoHotspot: precheck index activation"
+    },
+    {
+      "name": "NoHotspot_submission_precheck_index_fallback",
+      "rejection": "NoHotspot: precheck index fallback"
+    },
+    {
+      "name": "NoHotspot_speed_no_attempts",
+      "rejection": "NoHotspot: precheck not exercised"
+    },
+    {
+      "name": "NoHotspot_content_not_activated",
+      "rejection": "NoHotspot: precheck activation"
+    },
+    {
+      "name": "NoAffinity_submission_precheck_index_enabled",
+      "rejection": "NoAffinity: precheck index activation"
+    },
+    {
+      "name": "NoAffinity_submission_precheck_index_fallback",
+      "rejection": "NoAffinity: precheck index fallback"
+    },
+    {
+      "name": "NoAffinity_speed_no_attempts",
+      "rejection": "NoAffinity: precheck not exercised"
+    },
+    {
+      "name": "NoAffinity_content_not_activated",
+      "rejection": "NoAffinity: precheck activation"
+    },
+    {
+      "name": "NoJoint_submission_precheck_index_enabled",
+      "rejection": "NoJoint: precheck index activation"
+    },
+    {
+      "name": "NoJoint_submission_precheck_index_fallback",
+      "rejection": "NoJoint: precheck index fallback"
+    },
+    {
+      "name": "NoJoint_speed_no_attempts",
+      "rejection": "NoJoint: precheck not exercised"
+    },
+    {
+      "name": "NoJoint_content_not_activated",
+      "rejection": "NoJoint: precheck activation"
+    },
+    {
+      "name": "PoolSIEVE1_submission_precheck_index_enabled",
+      "rejection": "PoolSIEVE1: precheck index activation"
+    },
+    {
+      "name": "PoolSIEVE1_submission_precheck_index_fallback",
+      "rejection": "PoolSIEVE1: precheck index fallback"
+    },
+    {
+      "name": "PoolSIEVE1_inactive_attempt",
+      "rejection": "PoolSIEVE1: inactive precheck ran"
+    },
+    {
+      "name": "NoIndexedPrecheck_submission_precheck_index_enabled",
+      "rejection": "NoIndexedPrecheck: precheck index activation"
+    },
+    {
+      "name": "NoIndexedPrecheck_submission_precheck_index_fallback",
+      "rejection": "NoIndexedPrecheck: precheck index fallback"
+    },
+    {
+      "name": "NoIndexedPrecheck_speed_no_attempts",
+      "rejection": "NoIndexedPrecheck: precheck not exercised"
+    },
+    {
+      "name": "NoIndexedPrecheck_content_not_activated",
+      "rejection": "NoIndexedPrecheck: precheck activation"
+    },
+    {
+      "name": "content_zero_attempts_all_arms_accepted",
+      "passed": true
+    },
+    {
+      "name": "rejections_exceed_attempts",
+      "rejection": "fixture: invalid precheck attempt/rejection accounting"
+    },
+    {
+      "name": "NoIndexedPrecheck_flag_mutation",
+      "rejection": "/private/var/folders/7w/1p_0183x2q94dh28z82q5n980000gn/T/tokenfs-preaudit80-vzozeoik/wrong-control: config mismatch"
+    },
+    {
+      "name": "enabled_indexes_missing",
+      "rejection": "/private/var/folders/7w/1p_0183x2q94dh28z82q5n980000gn/T/tokenfs-preaudit80-vzozeoik/schema-fixture: precheck index presence mismatch"
+    },
+    {
+      "name": "real_partial_covering_indexes_accepted",
+      "passed": true
+    },
+    {
+      "name": "NoIndexedPrecheck_unexpected_real_index",
+      "rejection": "/private/var/folders/7w/1p_0183x2q94dh28z82q5n980000gn/T/tokenfs-preaudit80-vzozeoik/schema-fixture: precheck index presence mismatch"
+    },
+    {
+      "name": "PoolSIEVE1_unexpected_real_index",
+      "rejection": "/private/var/folders/7w/1p_0183x2q94dh28z82q5n980000gn/T/tokenfs-preaudit80-vzozeoik/schema-fixture: precheck index presence mismatch"
+    },
+    {
+      "name": "case_sensitive_predicate_mutation",
+      "rejection": "/private/var/folders/7w/1p_0183x2q94dh28z82q5n980000gn/T/tokenfs-preaudit80-vzozeoik/schema-fixture: precheck index definition mismatch: idx_files_shared_precheck_local"
+    },
+    {
+      "name": "covering_column_order_mutation",
+      "rejection": "/private/var/folders/7w/1p_0183x2q94dh28z82q5n980000gn/T/tokenfs-preaudit80-vzozeoik/schema-fixture: precheck index definition mismatch: idx_files_shared_precheck_local"
+    },
+    {
+      "name": "synthetic_repeat_and_separate_control_gate",
+      "passed": true,
+      "not_performance_evidence": true
+    }
+  ],
+  "content_prefix_zero_attempts_allowed": true,
+  "content_activation_required": true,
+  "index_activation_and_zero_fallback_checked": true,
+  "NoIndexedPrecheck_retains_original_precheck": true,
+  "actual_sqlite_index_schema_mutations_checked": true,
+  "all_arms_require_release_fence": true,
+  "collection_preserves_empty_wal_pairs": true,
+  "targeted_python_tests": 7,
+  "full_frozen_python_tests": 166,
+  "synthetic_fixture": {
+    "primary_passes": 8,
+    "total_primary": 16,
+    "implementation_passes": 2,
+    "total_implementation": 4,
+    "positive_aggregate_does_not_override_failed_repeat": true,
+    "not_performance_evidence": true
+  },
+  "tested_source_unchanged": true,
+  "tools": {
+    "verify80.py": "bee7a8cff6f6fb448ec65ed469e8cf131ddc416b2145df1a8e54abb8c448fd4d",
+    "preaudit80.py": "3e849338b58095ddc60ee2b7eae83076eea65b87570b0fcf7fc4627164f02a7c",
+    "build.sh": "ebc4bac709414b1cc67f800d6b7b9044e042a6d9871586b9ef2da111905c6ae2",
+    "launch.sh": "9adb39dc2b2550a7a64b2a7fc5516e33a8779498279de330d486e70fd7b6e2ec",
+    "collect.sh": "8263f6d4c66454baaa7c6f8623dde5dc3ef9455f6061366579ccbb6912c28ee7",
+    "package.py": "19f6f82cc2005a1aa944c7c23b3710591fd0a2cdafbf9cca3fdb984b62e77150"
+  }
+}

@@ -161,11 +161,19 @@ def metrics(db):
         return dict(con.execute("SELECT name,value FROM metrics"))
 
 
-def drain(db, timeout=120):
+def drain(db, timeout=120, expected_releases=None):
     start = time.monotonic()
     while time.monotonic() - start < timeout:
         m = metrics(db)
-        if m.get("background_submitted", 0) == m.get("background_completed", 0):
+        # A deferred submission counter can still be in memory while old
+        # durable submitted/completed values match. The final readonly Release
+        # publishes this fence only after every request-side submission. Check
+        # both conditions in the same SQLite snapshot and charge all waiting.
+        released = m.get("read_release_count", 0)
+        if expected_releases is not None and released > expected_releases:
+            raise RuntimeError("duplicate read release accounting")
+        release_fenced = expected_releases is None or released == expected_releases
+        if release_fenced and m.get("background_submitted", 0) == m.get("background_completed", 0):
             if m.get("background_error_count", 0): raise RuntimeError("background task error")
             return time.monotonic() - start
         time.sleep(.02)
@@ -175,7 +183,7 @@ def drain(db, timeout=120):
 def finalize_case_metrics(case, result, returncode):
     if returncode != 0: raise RuntimeError("daemon exit failed")
     final_metrics=metrics(case / "state.db")
-    for key in ["read_bytes","read_open_count","read_local_bytes","read_remote_bytes","read_inflight_bytes","background_submitted","background_completed"]:
+    for key in ["read_bytes","read_open_count","read_local_bytes","read_remote_bytes","read_inflight_bytes","background_submitted","background_completed","read_release_count"]:
         if final_metrics.get(key,0)!=result["metrics"].get(key,0):
             raise RuntimeError("final I/O accounting changed: "+key)
     result["metrics"]=final_metrics
@@ -233,7 +241,12 @@ def run_case(binary, case, remote, strategy, events, expected, quota_mib, verify
                              issued_s=(request_start-outer_start)/1e9,
                              completed_s=(time.monotonic_ns()-outer_start)/1e9))
         wall = (time.monotonic_ns() - outer_start) / 1e9
-        drain_seconds = drain(case / "state.db")
+        # Presence of the new option identifies binaries publishing the release
+        # fence. Require it in the enabled and disabled implementation controls;
+        # older frozen binaries/configurations retain their original protocol.
+        release_fence_required = bool(configuration is not None and
+            "defer_background_submission_metrics" in configuration.get("policy", {}))
+        drain_seconds = drain(case / "state.db", expected_releases=len(events) if release_fence_required else None)
         daemon_cpu_s=cpu_seconds()-cpu_start
         status_text=Path(f"/proc/{proc.pid}/status").read_text()
         rss_match=re.search(r"^VmHWM:\s+(\d+) kB",status_text,re.MULTILINE)

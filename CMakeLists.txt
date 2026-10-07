@@ -33,6 +33,12 @@ target_link_libraries(tokenfs PRIVATE
 
 include(CTest)
 if(BUILD_TESTING)
+  add_executable(aligned_read_test tests/aligned_read_test.cpp)
+  target_compile_options(aligned_read_test PRIVATE -UNDEBUG)
+  add_test(NAME aligned_read COMMAND aligned_read_test)
+  add_executable(disk_opportunity_test tests/disk_opportunity_test.cpp)
+  target_compile_options(disk_opportunity_test PRIVATE -UNDEBUG)
+  add_test(NAME disk_opportunity COMMAND disk_opportunity_test)
   add_executable(run_reuse_test tests/run_reuse_test.cpp)
   target_compile_options(run_reuse_test PRIVATE -UNDEBUG)
   add_test(NAME run_reuse COMMAND run_reuse_test)

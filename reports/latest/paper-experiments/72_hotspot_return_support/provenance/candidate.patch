@@ -1,0 +1,101 @@
+diff --git a/src/main.cpp b/src/main.cpp
+index 255fdb1..ff3a21f 100644
+--- a/src/main.cpp
++++ b/src/main.cpp
+@@ -96,6 +96,7 @@ struct Config {
+   bool bounded_cost_warmup = false;
+   bool cohort_reuse_prior = false;
+   bool recent_value_floor = false;
++  bool empirical_return_support = false;
+   bool request_read_costs = false;
+   uint64_t read_fill_buffer_bytes = 4*1024*1024;
+   bool compact_measured_planning = false;
+@@ -2500,7 +2501,7 @@ class TokenFS {
+     return {static_cast<size_t>(config_.measured_window),config_.measured_aging,
+             config_.measured_admission,config_.measured_cost,
+             config_.measured_value_victim,config_.measured_size_aware,config_.measured_frequency_admission,config_.measured_shift_reset,static_cast<size_t>(config_.measured_shift_window),
+-            config_.measured_track_affinity,config_.measured_affinity_gate,config_.measured_joint_admission,static_cast<size_t>(config_.measured_affinity_window),config_.measured_affinity_recent_demand,config_.measured_affinity_handover_epoch,config_.shared_value_placement,config_.measured_causal_window,config_.measured_burst_reuse,config_.adaptive_reuse_control,config_.efficient_measured_planning,config_.burst_interval_survival,config_.reuse_scaled_exploration,config_.persistent_run_reuse,config_.persistent_reuse_immediate_decay,config_.measured_static_reuse_value,config_.novel_reuse_decay,config_.retain_read_fill && config_.capture_local_reads,config_.bounded_cost_warmup,config_.cohort_reuse_prior,config_.recent_value_floor};
++            config_.measured_track_affinity,config_.measured_affinity_gate,config_.measured_joint_admission,static_cast<size_t>(config_.measured_affinity_window),config_.measured_affinity_recent_demand,config_.measured_affinity_handover_epoch,config_.shared_value_placement,config_.measured_causal_window,config_.measured_burst_reuse,config_.adaptive_reuse_control,config_.efficient_measured_planning,config_.burst_interval_survival,config_.reuse_scaled_exploration,config_.persistent_run_reuse,config_.persistent_reuse_immediate_decay,config_.measured_static_reuse_value,config_.novel_reuse_decay,config_.retain_read_fill && config_.capture_local_reads,config_.bounded_cost_warmup,config_.cohort_reuse_prior,config_.recent_value_floor,config_.empirical_return_support};
+   }
+ 
+   double MarginalCoverage(const FileMeta& meta, int location) {
+@@ -4194,6 +4195,7 @@ Config LoadConfig(const fs::path& path) {
+   if(root["policy"] && root["policy"]["batch_policy_events"]) config.batch_policy_events=root["policy"]["batch_policy_events"].as<bool>();
+   if(root["policy"] && root["policy"]["request_trace_path"]) config.request_trace_path=root["policy"]["request_trace_path"].as<std::string>();
+   if(root["policy"] && root["policy"]["recent_value_floor"]) config.recent_value_floor=root["policy"]["recent_value_floor"].as<bool>();
++  if(root["policy"] && root["policy"]["empirical_return_support"]) config.empirical_return_support=root["policy"]["empirical_return_support"].as<bool>();
+   if(root["policy"] && root["policy"]["cohort_reuse_prior"]) config.cohort_reuse_prior=root["policy"]["cohort_reuse_prior"].as<bool>();
+   if(root["policy"] && root["policy"]["bounded_cost_warmup"]) config.bounded_cost_warmup=root["policy"]["bounded_cost_warmup"].as<bool>();
+   if(root["policy"] && root["policy"]["capture_local_reads"]) config.capture_local_reads=root["policy"]["capture_local_reads"].as<bool>();
+diff --git a/src/measured_policy.h b/src/measured_policy.h
+index 5b222e4..7a22dc6 100644
+--- a/src/measured_policy.h
++++ b/src/measured_policy.h
+@@ -46,6 +46,7 @@ struct Options {
+   bool bounded_cost_warmup=false;
+   bool cohort_reuse_prior=false;
+   bool recent_value_floor=false;
++  bool empirical_return_support=false;
+ };
+ struct Decision {
+   bool allowed=false;
+@@ -410,6 +411,21 @@ class MeasuredPolicy {
+     }
+     return std::exp2(-(o.adaptive_control?temporal_strength_:1.0)*double(observations_-positions->back())/std::max(4.0,gap));
+   }
++  // Empirical support for a still-active reuse episode, not a confidence bound.
++  // Adjacent reads are already captured and do not count as return intervals.
++  // One supporting pseudo-interval keeps sparse evidence from erasing value.
++  double ReturnSupport(int gpu,const std::string& key,const Options& o) const {
++    if(!o.empirical_return_support || !o.retained_capture || !o.persistent_run_reuse ||
++       !o.causal_window || !o.shared_value || !o.burst_reuse)return 1.0;
++    const auto* positions=RecentPositions(gpu,key,o);
++    if(!positions)return 1.0;
++    const auto age=observations_-positions->back();double all=1,live=1;
++    for(size_t i=1;i<positions->size();++i) {
++      const auto gap=(*positions)[i]-(*positions)[i-1];
++      if(gap>1){++all;live+=gap>=age;}
++    }
++    return 1-(o.adaptive_control?temporal_strength_:1.0)*(1-live/all);
++  }
+   double DiskReuseScale(const Options& o) const {
+     // A completed run contributes one potential disk miss when its retained
+     // capture is gone. Adjacent reads are already served by the shared RAM tier.
+@@ -463,7 +479,7 @@ class MeasuredPolicy {
+     }
+     // These are overlapping estimates, not independent demand to add together.
+     // Use the same value for incoming and resident copies of the current key.
+-    return std::max({past*DiskReuseScale(o),BurstRemaining(item.key,o),CohortDiskReuse(gpu,item.key,o)})*(o.cost?SavingRate()*item.bytes:1.0)*item.coverage;
++    return std::max({past*ReturnSupport(gpu,item.key,o)*DiskReuseScale(o),BurstRemaining(item.key,o),CohortDiskReuse(gpu,item.key,o)})*(o.cost?SavingRate()*item.bytes:1.0)*item.coverage;
+   }
+   void Sort(int gpu,std::vector<Item>& items,const Options& o) const {
+     if(o.efficient_planning && o.value_victim) {
+diff --git a/tests/run_reuse_test.cpp b/tests/run_reuse_test.cpp
+index 4827143..8e8bace 100644
+--- a/tests/run_reuse_test.cpp
++++ b/tests/run_reuse_test.cpp
+@@ -3,6 +3,24 @@
+ #include <iostream>
+ using namespace tokenfs_policy;
+ int main() {
++  {
++    Options o;o.causal_window=o.shared_value=o.burst_reuse=o.retained_capture=true;
++    o.persistent_run_reuse=true;o.shift_reset=true;o.admission=false;
++    MeasuredPolicy p;
++    auto run=[&](const std::string& k,int n){for(int i=0;i<n;++i)p.Observe(0,k,o);};
++    run("a",4);run("b",4);run("a",4);run("scan",12);
++    auto value=[&](Options x){return p.Plan(0,{"a",100,0},{{"a",100,0}},100,100,x);};
++    auto supported=o;supported.empirical_return_support=true;
++    const auto old=value(o),aged=value(supported);
++    assert(old.incoming_us>0 && aged.incoming_us==old.incoming_us/2);
++    assert(aged.incoming_us==aged.displaced_us); // Same forecast on both sides.
++    auto static_old=o;static_old.static_reuse_value=true;
++    auto static_new=static_old;static_new.empirical_return_support=true;
++    assert(value(static_old).incoming_us==value(static_new).incoming_us);
++    run("a",1);assert(value(o).incoming_us==value(supported).incoming_us);
++    run("scan",140);assert(value(o).incoming_us==value(supported).incoming_us);
++  }
++
+   {
+     RunReuse summary;uint64_t at=0;
+     auto run=[&](const std::string& k,int n){for(int i=0;i<n;++i)summary.Observe(k,++at,128);};

@@ -1,0 +1,78 @@
+{
+  "passed": true,
+  "speed_runs": 10,
+  "requests": 5760,
+  "correctness_requests": 480,
+  "binary_sha256": "7b1ce7aa63a1eb6405461cf1bcd16caf481f3f5eea37d5a95b7180076abd45fa",
+  "comparisons": [
+    {
+      "baseline": "NoHotspot",
+      "full_mib_s": 281.65292565474743,
+      "baseline_mib_s": 299.6762076227113,
+      "gain_pct": -6.0142518857069005,
+      "per_run_gain_pct": [
+        -9.548264041739484,
+        -2.4407393022265467
+      ],
+      "per_run_p99_change_pct": [
+        4.370718199002144,
+        0.931848795076462
+      ],
+      "mechanism_active_both": true,
+      "passes_both": false
+    },
+    {
+      "baseline": "NoAffinity",
+      "full_mib_s": 281.65292565474743,
+      "baseline_mib_s": 270.68064063932735,
+      "gain_pct": 4.0535906038586145,
+      "per_run_gain_pct": [
+        0.39222414067692224,
+        7.7558809614563184
+      ],
+      "per_run_p99_change_pct": [
+        1.4736786314713202,
+        -3.4454853437807964
+      ],
+      "mechanism_active_both": true,
+      "passes_both": false
+    },
+    {
+      "baseline": "NoJoint",
+      "full_mib_s": 281.65292565474743,
+      "baseline_mib_s": 276.2073919328812,
+      "gain_pct": 1.9715380112598657,
+      "per_run_gain_pct": [
+        2.7579296188305014,
+        1.176356732553696
+      ],
+      "per_run_p99_change_pct": [
+        0.4962445911929292,
+        -1.7505894755961982
+      ],
+      "mechanism_active_both": true,
+      "passes_both": false
+    },
+    {
+      "baseline": "PoolSIEVE1",
+      "full_mib_s": 281.65292565474743,
+      "baseline_mib_s": 284.7048791113303,
+      "gain_pct": -1.07197090057225,
+      "per_run_gain_pct": [
+        0.7617092049181595,
+        -2.9261464499863
+      ],
+      "per_run_p99_change_pct": [
+        0.9474867523705521,
+        0.43341375180345754
+      ],
+      "mechanism_active_both": true,
+      "passes_both": false
+    }
+  ],
+  "all_gates_both_orders": false,
+  "scenarios_tested": [
+    "moving_shared"
+  ],
+  "limits": "Two execution orders of one known input; no statistical confirmation or physical GPU evidence."
+}

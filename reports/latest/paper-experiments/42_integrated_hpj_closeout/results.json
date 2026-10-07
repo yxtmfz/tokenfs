@@ -1,0 +1,663 @@
+{
+  "passed": true,
+  "binary_sha256": "4b3f260efb36cebd0ae2803f067e5c228b601192acc36198ea640516a8244285",
+  "runs": 30,
+  "requests": 17280,
+  "rows": [
+    {
+      "block": "stationary_shared-3271-r1",
+      "scenario": "stationary_shared",
+      "strategy": "Full",
+      "n": 2,
+      "mib_s": 186.70920029315326,
+      "drain_mib_s": 186.6454897889437,
+      "pooled_p99_ms": 26.816494,
+      "per_run_mib_s": [
+        190.26180681946477,
+        183.286831894264
+      ],
+      "per_run_p99_ms": [
+        26.359816000000002,
+        26.911747
+      ],
+      "remote_mib": [
+        60.0,
+        60.0
+      ],
+      "inflight_mib": [
+        186.0,
+        186.0
+      ],
+      "copies": [
+        30,
+        30
+      ]
+    },
+    {
+      "block": "stationary_shared-3271-r1",
+      "scenario": "stationary_shared",
+      "strategy": "StaticValue",
+      "n": 2,
+      "mib_s": 161.35254760191154,
+      "drain_mib_s": 161.30586051542178,
+      "pooled_p99_ms": 27.823335,
+      "per_run_mib_s": [
+        168.9603314731367,
+        154.40035633661518
+      ],
+      "per_run_p99_ms": [
+        26.520182,
+        28.012625999999997
+      ],
+      "remote_mib": [
+        160.0,
+        160.0
+      ],
+      "inflight_mib": [
+        106.0,
+        100.0
+      ],
+      "copies": [
+        24,
+        24
+      ]
+    },
+    {
+      "block": "stationary_shared-3271-r1",
+      "scenario": "stationary_shared",
+      "strategy": "CallerOnly",
+      "n": 2,
+      "mib_s": 156.14858829248342,
+      "drain_mib_s": 156.10429119976362,
+      "pooled_p99_ms": 28.168855,
+      "per_run_mib_s": [
+        154.95824446720135,
+        157.35736143124993
+      ],
+      "per_run_p99_ms": [
+        28.360454,
+        27.954916
+      ],
+      "remote_mib": [
+        186.0,
+        194.0
+      ],
+      "inflight_mib": [
+        132.0,
+        140.0
+      ],
+      "copies": [
+        25,
+        26
+      ]
+    },
+    {
+      "block": "stationary_shared-3271-r1",
+      "scenario": "stationary_shared",
+      "strategy": "Independent",
+      "n": 2,
+      "mib_s": 180.65855920467465,
+      "drain_mib_s": 180.60175929632658,
+      "pooled_p99_ms": 28.007769,
+      "per_run_mib_s": [
+        183.1800385271031,
+        178.20555382954677
+      ],
+      "per_run_p99_ms": [
+        27.597104,
+        28.177572
+      ],
+      "remote_mib": [
+        88.0,
+        94.0
+      ],
+      "inflight_mib": [
+        274.0,
+        270.0
+      ],
+      "copies": [
+        44,
+        44
+      ]
+    },
+    {
+      "block": "stationary_shared-3271-r1",
+      "scenario": "stationary_shared",
+      "strategy": "PoolSIEVE1",
+      "n": 2,
+      "mib_s": 181.67851163079538,
+      "drain_mib_s": 181.61933610933943,
+      "pooled_p99_ms": 28.063098,
+      "per_run_mib_s": [
+        181.56153315750123,
+        181.79564093764017
+      ],
+      "per_run_p99_ms": [
+        27.824148,
+        28.23298
+      ],
+      "remote_mib": [
+        76.0,
+        60.0
+      ],
+      "inflight_mib": [
+        156.0,
+        182.0
+      ],
+      "copies": [
+        30,
+        30
+      ]
+    },
+    {
+      "block": "moving_shared-3293-r1",
+      "scenario": "moving_shared",
+      "strategy": "Full",
+      "n": 2,
+      "mib_s": 180.658077278487,
+      "drain_mib_s": 180.59441354594833,
+      "pooled_p99_ms": 29.077154,
+      "per_run_mib_s": [
+        183.44309226918668,
+        177.95636129793726
+      ],
+      "per_run_p99_ms": [
+        28.321888,
+        29.907256
+      ],
+      "remote_mib": [
+        112.0,
+        106.0
+      ],
+      "inflight_mib": [
+        304.0,
+        318.0
+      ],
+      "copies": [
+        51,
+        53
+      ]
+    },
+    {
+      "block": "moving_shared-3293-r1",
+      "scenario": "moving_shared",
+      "strategy": "StaticValue",
+      "n": 2,
+      "mib_s": 131.4344799525032,
+      "drain_mib_s": 131.4037506431471,
+      "pooled_p99_ms": 29.003924,
+      "per_run_mib_s": [
+        135.69779515163347,
+        127.43089199391257
+      ],
+      "per_run_p99_ms": [
+        28.267194999999997,
+        29.306746
+      ],
+      "remote_mib": [
+        302.0,
+        344.0
+      ],
+      "inflight_mib": [
+        156.0,
+        116.0
+      ],
+      "copies": [
+        36,
+        36
+      ]
+    },
+    {
+      "block": "moving_shared-3293-r1",
+      "scenario": "moving_shared",
+      "strategy": "CallerOnly",
+      "n": 2,
+      "mib_s": 153.25941348539354,
+      "drain_mib_s": 153.21852874698138,
+      "pooled_p99_ms": 28.633437,
+      "per_run_mib_s": [
+        158.6586694632108,
+        148.215543753448
+      ],
+      "per_run_p99_ms": [
+        27.555807,
+        30.146352
+      ],
+      "remote_mib": [
+        260.0,
+        276.0
+      ],
+      "inflight_mib": [
+        340.0,
+        318.0
+      ],
+      "copies": [
+        64,
+        59
+      ]
+    },
+    {
+      "block": "moving_shared-3293-r1",
+      "scenario": "moving_shared",
+      "strategy": "Independent",
+      "n": 2,
+      "mib_s": 185.4498889658874,
+      "drain_mib_s": 185.38928610285302,
+      "pooled_p99_ms": 28.486794,
+      "per_run_mib_s": [
+        191.18481138439634,
+        180.0490045283483
+      ],
+      "per_run_p99_ms": [
+        28.486794,
+        28.682153
+      ],
+      "remote_mib": [
+        144.0,
+        140.0
+      ],
+      "inflight_mib": [
+        418.0,
+        418.0
+      ],
+      "copies": [
+        70,
+        70
+      ]
+    },
+    {
+      "block": "moving_shared-3293-r1",
+      "scenario": "moving_shared",
+      "strategy": "PoolSIEVE1",
+      "n": 2,
+      "mib_s": 180.64295072684297,
+      "drain_mib_s": 180.58315361970577,
+      "pooled_p99_ms": 29.332753999999998,
+      "per_run_mib_s": [
+        190.58136674866668,
+        171.68969548724388
+      ],
+      "per_run_p99_ms": [
+        28.673349,
+        29.752343
+      ],
+      "remote_mib": [
+        112.0,
+        134.0
+      ],
+      "inflight_mib": [
+        328.0,
+        294.0
+      ],
+      "copies": [
+        55,
+        54
+      ]
+    },
+    {
+      "block": "uniform-3273-r1",
+      "scenario": "uniform",
+      "strategy": "Full",
+      "n": 2,
+      "mib_s": 106.53597573982515,
+      "drain_mib_s": 106.52112397812665,
+      "pooled_p99_ms": 31.224821,
+      "per_run_mib_s": [
+        107.87506374317151,
+        105.22972517836759
+      ],
+      "per_run_p99_ms": [
+        31.224821,
+        31.345597
+      ],
+      "remote_mib": [
+        520.0,
+        546.0
+      ],
+      "inflight_mib": [
+        4.0,
+        4.0
+      ],
+      "copies": [
+        22,
+        24
+      ]
+    },
+    {
+      "block": "uniform-3273-r1",
+      "scenario": "uniform",
+      "strategy": "StaticValue",
+      "n": 2,
+      "mib_s": 104.42874710487372,
+      "drain_mib_s": 104.40921084396349,
+      "pooled_p99_ms": 30.881005,
+      "per_run_mib_s": [
+        104.85444705432818,
+        104.00648978828261
+      ],
+      "per_run_p99_ms": [
+        30.932209,
+        30.881005
+      ],
+      "remote_mib": [
+        552.0,
+        552.0
+      ],
+      "inflight_mib": [
+        2.0,
+        2.0
+      ],
+      "copies": [
+        21,
+        21
+      ]
+    },
+    {
+      "block": "uniform-3273-r1",
+      "scenario": "uniform",
+      "strategy": "CallerOnly",
+      "n": 2,
+      "mib_s": 107.28852570388453,
+      "drain_mib_s": 107.26804735222963,
+      "pooled_p99_ms": 31.328437,
+      "per_run_mib_s": [
+        107.02909076394386,
+        107.5492214231645
+      ],
+      "per_run_p99_ms": [
+        31.376825999999998,
+        31.328437
+      ],
+      "remote_mib": [
+        528.0,
+        526.0
+      ],
+      "inflight_mib": [
+        6.0,
+        4.0
+      ],
+      "copies": [
+        20,
+        19
+      ]
+    },
+    {
+      "block": "uniform-3273-r1",
+      "scenario": "uniform",
+      "strategy": "Independent",
+      "n": 2,
+      "mib_s": 94.94069382863435,
+      "drain_mib_s": 94.76522914375951,
+      "pooled_p99_ms": 32.233844999999995,
+      "per_run_mib_s": [
+        95.18776450301094,
+        94.69490243384209
+      ],
+      "per_run_p99_ms": [
+        31.935937,
+        32.805138
+      ],
+      "remote_mib": [
+        558.0,
+        556.0
+      ],
+      "inflight_mib": [
+        28.0,
+        30.0
+      ],
+      "copies": [
+        253,
+        247
+      ]
+    },
+    {
+      "block": "uniform-3273-r1",
+      "scenario": "uniform",
+      "strategy": "PoolSIEVE1",
+      "n": 2,
+      "mib_s": 96.56031041669463,
+      "drain_mib_s": 96.38093320340586,
+      "pooled_p99_ms": 32.437414999999994,
+      "per_run_mib_s": [
+        97.46223229551508,
+        95.67492836546329
+      ],
+      "per_run_p99_ms": [
+        32.437414999999994,
+        32.44432
+      ],
+      "remote_mib": [
+        554.0,
+        586.0
+      ],
+      "inflight_mib": [
+        28.0,
+        28.0
+      ],
+      "copies": [
+        276,
+        293
+      ]
+    }
+  ],
+  "comparisons": [
+    {
+      "block": "stationary_shared-3271-r1",
+      "scenario": "stationary_shared",
+      "baseline": "StaticValue",
+      "gain_pct": 15.715061874202064,
+      "drain_gain_pct": 15.709056814522437,
+      "pooled_p99_change_pct": -3.618692726806483,
+      "per_run_gain_pct": [
+        12.607382549858936,
+        18.70881404876561
+      ],
+      "per_run_p99_change_pct": [
+        -0.6046941910127113,
+        -3.9299385926903074
+      ],
+      "passes_both_orders": true,
+      "mechanisms_active_both_orders": true
+    },
+    {
+      "block": "stationary_shared-3271-r1",
+      "scenario": "stationary_shared",
+      "baseline": "CallerOnly",
+      "gain_pct": 19.571494263801135,
+      "drain_gain_pct": 19.564611808202702,
+      "pooled_p99_change_pct": -4.800908663131686,
+      "per_run_gain_pct": [
+        22.782629264837716,
+        16.47807908519281
+      ],
+      "per_run_p99_change_pct": [
+        -7.054322896241361,
+        -3.7316119998357378
+      ],
+      "passes_both_orders": true,
+      "mechanisms_active_both_orders": true
+    },
+    {
+      "block": "stationary_shared-3271-r1",
+      "scenario": "stationary_shared",
+      "baseline": "Independent",
+      "gain_pct": 3.349213629908121,
+      "drain_gain_pct": 3.3464405419776355,
+      "pooled_p99_change_pct": -4.25337341221288,
+      "per_run_gain_pct": [
+        3.8660152870935605,
+        2.851357859237913
+      ],
+      "per_run_p99_change_pct": [
+        -4.4833979681346285,
+        -4.4923139580656635
+      ],
+      "passes_both_orders": true,
+      "mechanisms_active_both_orders": true
+    },
+    {
+      "block": "stationary_shared-3271-r1",
+      "scenario": "stationary_shared",
+      "baseline": "PoolSIEVE1",
+      "gain_pct": 2.769005875929431,
+      "drain_gain_pct": 2.767411106809914,
+      "pooled_p99_change_pct": -4.4421467651219455,
+      "per_run_gain_pct": [
+        4.791914625669191,
+        0.8202567173408282
+      ],
+      "per_run_p99_change_pct": [
+        -5.262809844168448,
+        -4.679750419544804
+      ],
+      "passes_both_orders": true,
+      "mechanisms_active_both_orders": true
+    },
+    {
+      "block": "moving_shared-3293-r1",
+      "scenario": "moving_shared",
+      "baseline": "StaticValue",
+      "gain_pct": 37.45105344029349,
+      "drain_gain_pct": 37.43474799009976,
+      "pooled_p99_change_pct": 0.2524830778069864,
+      "per_run_gain_pct": [
+        35.18502055556682,
+        39.64930992277629
+      ],
+      "per_run_p99_change_pct": [
+        0.19348577034261627,
+        2.049050413171072
+      ],
+      "passes_both_orders": false,
+      "mechanisms_active_both_orders": true
+    },
+    {
+      "block": "moving_shared-3293-r1",
+      "scenario": "moving_shared",
+      "baseline": "CallerOnly",
+      "gain_pct": 17.87731217939492,
+      "drain_gain_pct": 17.867215553397166,
+      "pooled_p99_change_pct": 1.5496463103608527,
+      "per_run_gain_pct": [
+        15.621221890886194,
+        20.065923445898637
+      ],
+      "per_run_p99_change_pct": [
+        2.7801072928112625,
+        -0.7931175221466358
+      ],
+      "passes_both_orders": false,
+      "mechanisms_active_both_orders": true
+    },
+    {
+      "block": "moving_shared-3293-r1",
+      "scenario": "moving_shared",
+      "baseline": "Independent",
+      "gain_pct": -2.5838849050385915,
+      "drain_gain_pct": -2.5863806143816337,
+      "pooled_p99_change_pct": 2.0723988806883753,
+      "per_run_gain_pct": [
+        -4.049337946435583,
+        -1.162263149353615
+      ],
+      "per_run_p99_change_pct": [
+        -0.5788857812500714,
+        4.271307666478186
+      ],
+      "passes_both_orders": false,
+      "mechanisms_active_both_orders": true
+    },
+    {
+      "block": "moving_shared-3293-r1",
+      "scenario": "moving_shared",
+      "baseline": "PoolSIEVE1",
+      "gain_pct": 0.008373729272670438,
+      "drain_gain_pct": 0.006235313769220596,
+      "pooled_p99_change_pct": -0.871380846135339,
+      "per_run_gain_pct": [
+        -3.7455259143428066,
+        3.649995296985664
+      ],
+      "per_run_p99_change_pct": [
+        -1.2257410182535788,
+        0.5206749599518945
+      ],
+      "passes_both_orders": false,
+      "mechanisms_active_both_orders": true
+    },
+    {
+      "block": "uniform-3273-r1",
+      "scenario": "uniform",
+      "baseline": "StaticValue",
+      "gain_pct": 2.0178626033262814,
+      "drain_gain_pct": 2.0227268428638423,
+      "pooled_p99_change_pct": 1.1133575477870528,
+      "per_run_gain_pct": [
+        2.880771177285646,
+        1.1761144834087078
+      ],
+      "per_run_p99_change_pct": [
+        0.9459783489759843,
+        1.5044588089021094
+      ],
+      "passes_both_orders": false,
+      "mechanisms_active_both_orders": true
+    },
+    {
+      "block": "uniform-3273-r1",
+      "scenario": "uniform",
+      "baseline": "CallerOnly",
+      "gain_pct": -0.7014263259953912,
+      "drain_gain_pct": -0.6963148789782214,
+      "pooled_p99_change_pct": -0.33074104526824577,
+      "per_run_gain_pct": [
+        0.7904140577008834,
+        -2.1566834367592436
+      ],
+      "per_run_p99_change_pct": [
+        -0.48444989305163055,
+        0.05477451683912893
+      ],
+      "passes_both_orders": false,
+      "mechanisms_active_both_orders": true
+    },
+    {
+      "block": "uniform-3273-r1",
+      "scenario": "uniform",
+      "baseline": "Independent",
+      "gain_pct": 12.213184298105094,
+      "drain_gain_pct": 12.405282972020636,
+      "pooled_p99_change_pct": -3.130324663408901,
+      "per_run_gain_pct": [
+        13.328708060750017,
+        11.125015680633489
+      ],
+      "per_run_p99_change_pct": [
+        -2.2266952743550283,
+        -4.4491231830818485
+      ],
+      "passes_both_orders": true,
+      "mechanisms_active_both_orders": true
+    },
+    {
+      "block": "uniform-3273-r1",
+      "scenario": "uniform",
+      "baseline": "PoolSIEVE1",
+      "gain_pct": 10.331020354099628,
+      "drain_gain_pct": 10.520951019762958,
+      "pooled_p99_change_pct": -3.7382571946623866,
+      "per_run_gain_pct": [
+        10.683965678195918,
+        9.98673004113102
+      ],
+      "per_run_p99_change_pct": [
+        -3.7382571946623866,
+        -3.3864879892689825
+      ],
+      "passes_both_orders": true,
+      "mechanisms_active_both_orders": true
+    }
+  ],
+  "all_gates_both_orders": false,
+  "limits": "Two orders of known development inputs; descriptive rates, no significance or physical GPU evidence. Includes ALL runs, not selected winners."
+}

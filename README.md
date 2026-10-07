@@ -1,3 +1,19 @@
+> **最新完整开发批次：[报告80](reports/latest/paper-experiments/80_indexed_precheck_development/README.md)。** 24次冻结测速、576次内容校验及两次独立复算完成；主比较11/16通过，公开负载8项全通过，移动负载仍有5项退化。索引减少局部扫描工作，但单独实现对照0/4同时改善吞吐和p99，不能宣称稳定全局提速。全部正负结果保留，尚非全部达标的最终四表，也不替换报告70的独立确认。
+
+> 开发诊断链：[79提交预筛](reports/latest/paper-experiments/79_submission_precheck_development/README.md)、[78提交统计合并](reports/latest/paper-experiments/78_submission_fence_development/README.md)、[75读取路径](reports/latest/paper-experiments/75_read_path_diagnostic/README.md)、[76公共路径](reports/latest/paper-experiments/76_common_readpath_development/README.md)、[77对象先验](reports/latest/paper-experiments/77_object_cohort_development/README.md)。76发现的SIEVE逻辑命中维护缺陷已在77修复，76不能作为公平的整体比较。以下历次“最新”均是历史记录，不能拼接最佳值作为当前结果。
+
+> **最新热点专项诊断：[报告72](reports/latest/paper-experiments/72_hotspot_return_support/README.md)。** 18次固定测速与288次内容校验完成。H汇总吞吐变化为移动+4.697%、公开+1.421%、均匀−0.903%，但严格门槛仅1/6通过；候选未采用，原生实现恢复报告70，正式四表不变。
+
+> **上一轮热点专项诊断：[报告71](reports/latest/paper-experiments/71_hotspot_cohort_freshness/README.md)。** 12次固定测速及288次内容校验完成；候选H严格通过1/4，移动吞吐仍慢于基础频率对照，候选已撤回，生产实现恢复报告70。公开吞吐改善但尾延迟未稳定改善，不替换下列正式四表。
+
+> **当前最终小规模确认：[报告70](reports/latest/paper-experiments/70_final_confirmation/README.md)。** 固定20次新输入/正反顺序测速及480次内容校验已完成，严格门槛通过10/16。采用报告69同源同二进制；每类一个新输入、两轮重复，正负结果完整保留。四表按本批同版本结果解释，不能拼接历史最佳值，也不能将实验完成写为三个创新全部稳定提速。
+
+> **最新方向验证：[报告69](reports/latest/paper-experiments/69_hotspot_direction_validation/README.md)。** 12次测速与480次内容校验完成，规划剪枝保留为开发候选。移动热点H消融吞吐+6.57%、p99−5.78%；公开H仍−1.11%、p99+0.58%。P/J与SIEVE比较本轮均正向，但每输入仅一次、非独立确认。创新1尚未闭环，报告66仍是最新独立证据，历史报告67/68的未采纳状态不变。
+
+> **最新热点修复试验：[报告67](reports/latest/paper-experiments/67_hotspot_object_prior/README.md)。** 24次测速及480次内容校验完成。减少复制的候选在移动输入相对旧版吞吐+1.05%，但p99+1.30%；公开热点消融仍退化。候选未采纳，生产实现保留原版，报告66的独立结论不变。
+
+> **当前最终独立验证：[四表与完整原始证据](reports/latest/paper-experiments/66_independent_final/README.md)。** 冻结保留版本，34次新输入测速及480次逐请求内容校验完成。公开回放整体吞吐+20.50%，移动热点仅+0.25%且方向混合；热点消融移动−0.51%，尚未确认独立收益。亲和仅指逻辑域放置，联合仅指现有准入损失项。严格检查18/26通过，不能写成三项均稳定获益。以下历次“最新”条目均为历史版本记录，不能拼接为当前证明。
+
 > 固定热点稳定性复测：[同程序、同输入、均衡顺序18次结果](reports/latest/paper-experiments/34_stationary_stability/README.md)。Full对SIEVE两个输入的配对平均增益为−1.14%/−1.75%，各只赢1/3次，未确认稳定领先。六次Full运行均重复出现4或8次热点淘汰，SIEVE均为0；上一轮两次正增益未被稳定复现。没有修改策略或事后补跑，完整负结果与审计保留。
 
 > 固定热点专项：[两处候选修复、18组测速及2组阶段诊断](reports/latest/paper-experiments/33_headroom_exploration/README.md)。最后两条固定热点输入相对同批SIEVE为+2.23%/+0.53%，p99均降低；但第一次12组的固定热点仍全部落后，第二开关没有改变最后两条输入的复制/淘汰序列，稳定提速与组件归因尚未成立。候选默认关闭，全部负结果保留，未扩至大规模。
@@ -17,6 +33,8 @@
 > 最新进展：已完成[六组请求级尾延迟诊断](reports/latest/paper-experiments/23_request_tail_diagnostic/README.md)。诊断中吞吐略有优势，但p99仍更慢；报告22正式结论不变。诊断不代表新的策略提速验证。
 
 # AURA-KV / TokenFS
+
+热点估值后续诊断：[报告68：磁盘需求回放筛选](reports/latest/paper-experiments/68_hotspot_residual_screen/README.md)。三种原型已做本地机制回放和不变量测试，均未采纳；没有新增服务器测速、吞吐或p99数据。NoHotspot对照保留基础频率估值，现有消融检验的是动态估值增强的边际收益。
 
 > 最新缺口优化：[18组实测速率、p99与逐种子边界](reports/latest/paper-experiments/22_adaptive_control/README.md)。热点场景对共享SIEVE-2hit/1hit分别 **+5.50%/+0.81%**，随机场景 **+2.53%/+2.73%**；但部分种子仍略慢，尾延迟未全面通过，三个严格闭合目标仍未达成。源码、负结果、分段计量和完整证据一并保留。
 
@@ -43,7 +61,7 @@
 > 第二轮已完成 **756/756** 次预先固定的速度实验。当前可执行策略是显式启用的 **AURA-adaptive / measured_policy**，默认旧 AURA-core 保留；它是近期需求与实测成本的 C++ 启发式，不等于完整 Python RobustBenefit，也未验证真实多 GPU 推理收益。读 [第二轮完整报告](reports/latest/paper-experiments/11_measured_admission/README.md) 和 [第一轮 400 次结果](reports/latest/paper-experiments/10_real_cn7_evidence/README.md) 时请分开解释，不能跨批次直接比较速度。
 
 ```text
-面向多 GPU 大模型 KV Cache 的本地 SSD 与 NVMe-oF 远端 SSD 自适应分层缓存系统
+面向 KV Cache 访问的本地 SSD 与 NVMe-oF 远端 SSD 分层缓存原型（当前验证为逻辑消费域）
 ```
 
 AURA-KV 是研究控制层，TokenFS 是可挂载的 FUSE 文件系统原型。项目面向大模型推理中的 Prompt Token、Token Shard 和 KV Cache 数据，把 GPU 计算节点本地 SSD 作为低延迟缓存层，把 NVMe-oF 远端 SSD 作为大容量权威层，通过访问价值、缓存保留收益和共享副本放置来减少远端读取和长尾访问代价。
@@ -54,7 +72,7 @@ AURA-KV 是研究控制层，TokenFS 是可挂载的 FUSE 文件系统原型。�
 |---|---|---|
 | 代码 | `src/`、`aura_kv/`、`scripts/`、`tests/` | FUSE 原型、AURA-KV 控制器、实验脚本和测试 |
 | 说明文档 | [docs/README.md](docs/README.md) | 项目设计、模型公式、实验方法和部署说明 |
-| 数据结果 | [三项机制与整体速度四表](reports/latest/paper-experiments/13_affinity_joint/README.md) | 576 次新拓扑冻结速度实验、完整负结果与写作边界 |
+| 数据结果 | [冻结版本独立验证四表](reports/latest/paper-experiments/66_independent_final/README.md) | 34次新输入测速、480次内容校验，含全部负结果和主张边界 |
 
 ## 1. 当前项目定位
 
@@ -70,8 +88,8 @@ AURA-KV 是研究控制层，TokenFS 是可挂载的 FUSE 文件系统原型。�
 原始设计的两个研究重点，以及本轮单独评估的联合决策，必须区分设计新颖性与实测收益：
 
 1. **价值感知本地缓存管理**：不只按 LRU/LFU 删除缓存，而是估计删除某个本地副本后未来会多付出的访问代价。
-2. **多 GPU 共享副本放置**：远端保存权威副本，本地保存热点副本；系统根据访问分布、节点亲和和复制收益决定副本复制到哪里。
-3. **联合净收益控制**：同时考虑新副本收益、复制成本与所选旧副本的淘汰损失。本轮仅验证实际 C++ 净收益准入及独立决策对照，不能据此声称完整鲁棒控制器或超加性协同成立。
+2. **跨逻辑消费域的需求感知放置**：根据已观察访问分布与缓存预算选择放置域。当前实测为同一主机磁盘上的逻辑域；物理 GPU 亲和、多 GPU 并行共享和互联收益仍只是待验证的应用方向。
+3. **受害缓存损失感知的联合准入**：同时考虑新副本收益、复制成本与所选旧副本的淘汰损失。NoJoint 仅关闭现有准入损失项，检验其边际作用；它不是通用独立控制器的充分对照，不能证明全局最优、完整鲁棒控制或超加性协同。
 
 多 GPU QoS、公共前缀去重和 P99 驱动迁移不再作为当前主要创新点。跨层迁移一致性作为文件系统必要工程能力保留。
 

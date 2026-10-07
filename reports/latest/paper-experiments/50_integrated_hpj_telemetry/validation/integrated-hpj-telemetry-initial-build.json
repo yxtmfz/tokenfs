@@ -1,0 +1,182 @@
+-- The CXX compiler identification is GNU 13.3.0
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: /usr/bin/c++ - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Found PkgConfig: /home/wjxt/aura-kv-tools/root/usr/bin/pkg-config (found version "1.8.1") 
+-- Checking for module 'fuse3'
+--   Found fuse3, version 3.14.0
+-- Found SQLite3: /home/wjxt/aura-kv-tools/root/usr/include (found version "3.45.1") 
+-- Configuring done (0.3s)
+-- Generating done (0.0s)
+-- Build files have been written to: /home/wjxt/projects/tokenfs-integrated-hpj-telemetry-20260929/build-release
+[  4%] Building CXX object CMakeFiles/run_reuse_test.dir/tests/run_reuse_test.cpp.o
+[  9%] Building CXX object CMakeFiles/tokenfs.dir/src/main.cpp.o
+[ 13%] Linking CXX executable run_reuse_test
+[ 13%] Built target run_reuse_test
+[ 18%] Building CXX object CMakeFiles/burst_interval_test.dir/tests/burst_interval_test.cpp.o
+[ 22%] Linking CXX executable burst_interval_test
+[ 22%] Built target burst_interval_test
+[ 27%] Building CXX object CMakeFiles/planning_equivalence_test.dir/tests/planning_equivalence_test.cpp.o
+[ 31%] Linking CXX executable planning_equivalence_test
+[ 31%] Built target planning_equivalence_test
+[ 36%] Building CXX object CMakeFiles/copy_cost_test.dir/tests/copy_cost_test.cpp.o
+[ 40%] Linking CXX executable copy_cost_test
+[ 40%] Built target copy_cost_test
+[ 45%] Building CXX object CMakeFiles/request_read_cost_test.dir/tests/request_read_cost_test.cpp.o
+[ 50%] Linking CXX executable request_read_cost_test
+[ 50%] Built target request_read_cost_test
+[ 54%] Building CXX object CMakeFiles/read_fill_test.dir/tests/read_fill_test.cpp.o
+[ 59%] Linking CXX executable tokenfs
+[ 59%] Built target tokenfs
+[ 63%] Building CXX object CMakeFiles/request_trace_test.dir/tests/request_trace_test.cpp.o
+[ 68%] Linking CXX executable read_fill_test
+[ 68%] Built target read_fill_test
+[ 72%] Building CXX object CMakeFiles/policy_metadata_test.dir/tests/policy_metadata_test.cpp.o
+[ 77%] Linking CXX executable request_trace_test
+[ 77%] Built target request_trace_test
+[ 81%] Building CXX object CMakeFiles/measured_policy_test.dir/tests/measured_policy_test.cpp.o
+[ 86%] Linking CXX executable measured_policy_test
+[ 86%] Built target measured_policy_test
+[ 90%] Building CXX object CMakeFiles/sieve_policy_test.dir/tests/sieve_policy_test.cpp.o
+[ 95%] Linking CXX executable sieve_policy_test
+[ 95%] Built target sieve_policy_test
+[100%] Linking CXX executable policy_metadata_test
+[100%] Built target policy_metadata_test
+Internal ctest changing into directory: /home/wjxt/projects/tokenfs-integrated-hpj-telemetry-20260929/build-release
+Test project /home/wjxt/projects/tokenfs-integrated-hpj-telemetry-20260929/build-release
+      Start  1: run_reuse
+ 1/10 Test  #1: run_reuse ........................   Passed    0.00 sec
+      Start  2: burst_interval
+ 2/10 Test  #2: burst_interval ...................   Passed    0.00 sec
+      Start  3: planning_equivalence
+ 3/10 Test  #3: planning_equivalence .............   Passed    0.17 sec
+      Start  4: copy_cost
+ 4/10 Test  #4: copy_cost ........................   Passed    0.00 sec
+      Start  5: request_read_cost
+ 5/10 Test  #5: request_read_cost ................   Passed    0.00 sec
+      Start  6: read_fill
+ 6/10 Test  #6: read_fill ........................   Passed    0.00 sec
+      Start  7: request_trace
+ 7/10 Test  #7: request_trace ....................   Passed    0.00 sec
+      Start  8: policy_metadata
+ 8/10 Test  #8: policy_metadata ..................   Passed    0.81 sec
+      Start  9: measured_policy
+ 9/10 Test  #9: measured_policy ..................   Passed    0.00 sec
+      Start 10: sieve_policy
+10/10 Test #10: sieve_policy .....................   Passed    0.06 sec
+
+100% tests passed, 0 tests failed out of 10
+
+Total Test time (real) =   1.06 sec
+.............E....E..E.......E.......................E.........E..E.........
+======================================================================
+ERROR: aura_kv_unit_test (unittest.loader._FailedTest.aura_kv_unit_test)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: aura_kv_unit_test
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/unittest/loader.py", line 394, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/loader.py", line 337, in _get_module_from_name
+    __import__(name)
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-telemetry-20260929/tests/aura_kv_unit_test.py", line 13, in <module>
+    from aura_kv.controller import AuraController
+ModuleNotFoundError: No module named 'aura_kv'
+
+
+======================================================================
+ERROR: test_budget (causal_reuse_pilot_test.JointPilotTest.test_budget)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-telemetry-20260929/tests/causal_reuse_pilot_test.py", line 14, in test_budget
+    spec=json.loads((Path(__file__).resolve().parents[1]/f'study-configs/causal-reuse-pilot-{stage}.json').read_text());s.validate_spec(spec)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/pathlib.py", line 1029, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/pathlib.py", line 1015, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/wjxt/projects/tokenfs-integrated-hpj-telemetry-20260929/study-configs/causal-reuse-pilot-development.json'
+
+======================================================================
+ERROR: test_budget (compact_planning_test.JointPilotTest.test_budget)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-telemetry-20260929/tests/compact_planning_test.py", line 14, in test_budget
+    spec=json.loads((Path(__file__).resolve().parents[1]/f'study-configs/compact-planning-closeout-{stage}.json').read_text());s.validate_spec(spec)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/pathlib.py", line 1029, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/pathlib.py", line 1015, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/wjxt/projects/tokenfs-integrated-hpj-telemetry-20260929/study-configs/compact-planning-closeout-development.json'
+
+======================================================================
+ERROR: evidence_test (unittest.loader._FailedTest.evidence_test)
+----------------------------------------------------------------------
+ImportError: Failed to import test module: evidence_test
+Traceback (most recent call last):
+  File "/usr/lib/python3.12/unittest/loader.py", line 394, in _find_test_path
+    module = self._get_module_from_name(name)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/unittest/loader.py", line 337, in _get_module_from_name
+    __import__(name)
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-telemetry-20260929/tests/evidence_test.py", line 9, in <module>
+    from aura_kv.core import AccessEvent, ReplicaStatus
+ModuleNotFoundError: No module named 'aura_kv'
+
+
+======================================================================
+ERROR: test_fixed_sample_matrix (paper_minimal_test.MinimalStudyTest.test_fixed_sample_matrix)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-telemetry-20260929/tests/paper_minimal_test.py", line 22, in test_fixed_sample_matrix
+    r=Path(__file__).resolve().parents[1];s=json.loads((r/'study-configs/paper-minimal-confirmation-01.json').read_text())
+                                                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/pathlib.py", line 1029, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/pathlib.py", line 1015, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/wjxt/projects/tokenfs-integrated-hpj-telemetry-20260929/study-configs/paper-minimal-confirmation-01.json'
+
+======================================================================
+ERROR: test_budget (shared_cache_pilot_test.SharedPilotTest.test_budget)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-telemetry-20260929/tests/shared_cache_pilot_test.py", line 16, in test_budget
+    spec=json.loads((Path(__file__).resolve().parents[1]/f'study-configs/shared-cache-pilot-{stage}.json').read_text())
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/pathlib.py", line 1029, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/pathlib.py", line 1015, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/wjxt/projects/tokenfs-integrated-hpj-telemetry-20260929/study-configs/shared-cache-pilot-development.json'
+
+======================================================================
+ERROR: test_budget (shared_joint_pilot_test.JointPilotTest.test_budget)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/home/wjxt/projects/tokenfs-integrated-hpj-telemetry-20260929/tests/shared_joint_pilot_test.py", line 14, in test_budget
+    spec=json.loads((Path(__file__).resolve().parents[1]/f'study-configs/shared-joint-pilot-{stage}.json').read_text());s.validate_spec(spec)
+                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/pathlib.py", line 1029, in read_text
+    with self.open(mode='r', encoding=encoding, errors=errors) as f:
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/lib/python3.12/pathlib.py", line 1015, in open
+    return io.open(self, mode, buffering, encoding, errors, newline)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+FileNotFoundError: [Errno 2] No such file or directory: '/home/wjxt/projects/tokenfs-integrated-hpj-telemetry-20260929/study-configs/shared-joint-pilot-development.json'
+
+----------------------------------------------------------------------
+Ran 76 tests in 0.760s
+
+FAILED (errors=7)

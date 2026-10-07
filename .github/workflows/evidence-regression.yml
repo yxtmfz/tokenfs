@@ -65,3 +65,49 @@ jobs:
         run: python3 -m unittest tests.burst_interval_study_test tests.headroom_exploration_test
       - name: Test balanced stationary repeats and stability summaries
         run: python3 -m unittest tests.stationary_stability_test
+      - name: Test gated recurrence integrated controls
+        run: python3 -m unittest tests.integrated_hpj_guarded_study_test
+      - name: Test frozen-binary reverse-order invariants
+        run: python3 -m unittest tests.integrated_hpj_reverse_test
+      - name: Test retained capture ablation controls
+        run: python3 -m unittest tests.integrated_hpj_retained_test
+      - name: Test symmetric read capture ablation controls
+        run: python3 -m unittest tests.integrated_hpj_symmetric_test
+      - name: Test symmetric capture reverse-order invariants
+        run: python3 -m unittest tests.integrated_hpj_symmetric_reverse_test
+      - name: Test bounded cost calibration ablations
+        run: python3 -m unittest tests.integrated_hpj_calibrated_test
+      - name: Test calibrated capture reverse-order invariants
+        run: python3 -m unittest tests.integrated_hpj_calibrated_reverse_test
+      - name: Test telemetry repair preserves strict ablation controls
+        run: python3 -m unittest tests.integrated_hpj_telemetry_test
+      - name: Test telemetry reverse controls and read-path ablations
+        run: python3 -m unittest tests.integrated_hpj_telemetry_reverse_test tests.integrated_hpj_readpath_test
+      - name: Test read-path reverse-order invariants
+        run: python3 -m unittest tests.integrated_hpj_readpath_reverse_test
+      - name: Test frozen capacity-aware planning screen controls
+        run: python3 -m unittest tests.integrated_hpj_cohort_caller_lazy_test
+      - name: Test final confirmation matrix and reversed orders
+        run: python3 -m unittest tests.integrated_hpj_cohort_caller_final_test
+      - name: Test causal freshness candidate and retained-binary controls
+        run: python3 -m unittest tests.integrated_hpj_cohort_caller_freshness_test tests.hotspot_freshness_correctness_test
+      - name: Test observed-return support matrix and single-switch controls
+        run: python3 -m unittest tests.integrated_hpj_cohort_caller_support_test
+
+      - name: Hotspot lifetime evidence audit
+        run: python3 -m unittest tests.hotspot_lifetime_test
+
+      - name: Test disk opportunity ablations and fixed matrix
+        run: python3 -m unittest tests.disk_opportunity_study_test
+
+      - name: Test read tail single-switch diagnostic controls
+        run: python3 -m unittest tests.read_tail_study_test
+
+      - name: Test common read-path HPJ isolated ablations
+        run: python3 -m unittest tests.common_readpath_hpj_test
+
+      - name: Check object-cohort study controls
+        run: python3 -m unittest tests.object_cohort_hpj_test
+
+      - name: Check deferred submission and release fence
+        run: python3 -m unittest tests.release_fence_test tests.submission_fence_hpj_test tests.submission_precheck_hpj_test

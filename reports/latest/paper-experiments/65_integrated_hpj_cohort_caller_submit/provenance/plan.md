@@ -1,0 +1,5 @@
+# Submit telemetry co-commit p99 candidate
+
+Report64 is the retained all-eight-pass baseline. Fresh two-arm diagnostics on its binary show Full tail mean29.368ms, remote pread21.133ms; not an uninstrumented speed result. Combine already pending read metrics with the existing durable background submission transaction. Submission remains committed before queue visibility; failures requeue telemetry but neither submission nor completion deltas. No buffered submission counters, relaxed WAL mode, policy/config/trace/capacity changes. All five arms share this common implementation.
+
+Run exactly the existing ten-run two-reversed-order development matrix,576x2MiB seed3293 per run,24MiB disk and4MiB captured RAM. Require strict throughput and p99 gates against each single-flag ablation and shared SIEVE. Preserve all outcomes, including failures. A separate old/new Full reversed-order same-session comparison will check absolute tail improvement if the complete candidate qualifies; prior-day numbers alone cannot establish an improvement. No statistical confirmation or physical GPU inference.

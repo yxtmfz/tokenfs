@@ -1,0 +1,135 @@
+{
+  "passed": true,
+  "server_execution": false,
+  "checks": [
+    {
+      "test": "existing73_Full",
+      "passed": true,
+      "requests": 1152,
+      "top_count": 12,
+      "event_count": 10427,
+      "counts": {
+        "background_submitted": 987,
+        "background_completed": 987,
+        "read_fill_capture_complete": 1150,
+        "read_fill_capture_us": 403944,
+        "shared_placement_no_gain": 949,
+        "shared_placement_coalesced": 0,
+        "shared_placement_selected": 38
+      },
+      "means": {
+        "response_ms": 23.490821049479166,
+        "client_ms": 23.221525844618057,
+        "ipc_scheduling_ms": 0.2692952048611112,
+        "client_open_ms": 2.2271712196180555,
+        "client_read_ms": 20.984497239583334,
+        "client_close_ms": 0.009857385416666666,
+        "daemon_open_ms": 1.729029935763889,
+        "open_layout_wait_ms": 0.030992954861111113,
+        "daemon_read_ms": 19.950479276041666,
+        "pread_ms": 18.54731438454861,
+        "read_non_pread_ms": 1.4031648914930555,
+        "last_data_read_ms": 0.7472808255208333,
+        "last_data_pread_ms": 0.23863428993055555,
+        "last_data_non_pread_ms": 0.5086465355902777,
+        "eof_non_pread_ms": 0.014015806423611112,
+        "daemon_release_ms": 0.6108515529513889,
+        "release_wait_ms": 0.0005083680555555555,
+        "release_flush_ms": 0.6020867300347222,
+        "release_inside_client_ms": 3.194878472222222e-05,
+        "release_after_close_ms": 0.6108196041666667,
+        "all_release_overlap_ms": 0.34533484375,
+        "foreground_union_ms": 21.67954116059028,
+        "client_unattributed_ms": 1.5419846840277778,
+        "copy_pipeline_overlap_ms": 0.11704362413194444,
+        "copy_attempt_overlap_ms": 0.1953893298611111,
+        "shared_plan_overlap_ms": 0.15336674913194445,
+        "same_key_copy_overlap_ms": 0.00017657552083333335,
+        "other_key_copy_overlap_ms": 0.11686704861111111,
+        "getattr_overlap_ms": 0.330550546875
+      }
+    },
+    {
+      "test": "existing73_NoHotspot",
+      "passed": true,
+      "requests": 1152,
+      "top_count": 12,
+      "event_count": 10384,
+      "counts": {
+        "background_submitted": 1002,
+        "background_completed": 1002,
+        "read_fill_capture_complete": 1150,
+        "read_fill_capture_us": 369191,
+        "shared_placement_no_gain": 977,
+        "shared_placement_coalesced": 0,
+        "shared_placement_selected": 25
+      },
+      "means": {
+        "response_ms": 23.375954409722222,
+        "client_ms": 23.115096238715278,
+        "ipc_scheduling_ms": 0.2608581710069445,
+        "client_open_ms": 2.0441817204861112,
+        "client_read_ms": 21.06026215798611,
+        "client_close_ms": 0.010652360243055556,
+        "daemon_open_ms": 1.5977970555555556,
+        "open_layout_wait_ms": 0.02562509548611111,
+        "daemon_read_ms": 20.12063642795139,
+        "pread_ms": 18.804074181423612,
+        "read_non_pread_ms": 1.3165622465277778,
+        "last_data_read_ms": 0.7296477638888889,
+        "last_data_pread_ms": 0.2383970251736111,
+        "last_data_non_pread_ms": 0.4912507387152778,
+        "eof_non_pread_ms": 0.012159311631944444,
+        "daemon_release_ms": 0.5602137743055555,
+        "release_wait_ms": 0.0004797074652777778,
+        "release_flush_ms": 0.5521282942708333,
+        "release_inside_client_ms": 1.4742187499999998e-05,
+        "release_after_close_ms": 0.5601990321180556,
+        "all_release_overlap_ms": 0.3028487092013889,
+        "foreground_union_ms": 21.718448225694445,
+        "client_unattributed_ms": 1.3966480130208334,
+        "copy_pipeline_overlap_ms": 0.08955879861111112,
+        "copy_attempt_overlap_ms": 0.13078400607638888,
+        "shared_plan_overlap_ms": 0.1487005685763889,
+        "same_key_copy_overlap_ms": 0.00022144965277777777,
+        "other_key_copy_overlap_ms": 0.08933734895833334,
+        "getattr_overlap_ms": 0.27714109201388887
+      }
+    },
+    {
+      "test": "dropped_trace_rejected",
+      "passed": true,
+      "error": "trace clock/dropped"
+    },
+    {
+      "test": "byte_tamper_rejected",
+      "passed": true,
+      "error": "read bytes"
+    },
+    {
+      "test": "frozen77_config_input_selftest",
+      "passed": true,
+      "diagnosis_only": true,
+      "executed": false,
+      "source_files": 340,
+      "requests": 1152,
+      "arms": [
+        "Full",
+        "NoHotspot"
+      ],
+      "policy_differences": {
+        "measured_static_reuse_value": [
+          false,
+          true
+        ]
+      },
+      "binary_bound": "6334375577555abe6886db40a49f55f379f8291993880fdf6f8d5c4cdd2cf8cb",
+      "objects": 864
+    }
+  ],
+  "driver_hashes": {
+    "tail-trace.py": "6ec458ffd0ef0ccfdbf97eb0dd484c9e0aeadbae886446bbdb2057e4e2e3c3c6",
+    "tail-trace-analysis.py": "b670dcf7ff9622a827aa166bab6f0a497ede696ae8d867f564fdcbf4814ee21c"
+  },
+  "diagnostic_freeze_sha256": "98b39fec669487e95742319e4f7d7759d8c3c69746114d9b889489f0349474c7"
+}

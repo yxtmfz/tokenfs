@@ -1,0 +1,59 @@
+% Requires \usepackage{booktabs}. Rates are aggregate logical MiB/s; p99 values are medians of run-level percentiles.
+% Independent inputs, same frozen binary. Negative results and untriggered mechanisms remain in the report.
+\begin{table*}[t]
+\centering
+\caption{Hotspot valuation ablation. p99 columns show the median of run-level p99 values, not a pooled percentile.}
+\label{tab:tokenfs-independent-1}
+\begin{tabular}{lrrrrrrr}
+\toprule
+Workload & $n$ & Full (MiB/s) & Control (MiB/s) & Gain (\%) & Full p99 (ms) & Control p99 (ms) & Strict passes \\
+\midrule
+Moving hotspots & 3 & 343.894 & 345.661 & -0.511 & 26.875 & 27.111 & 1/3 \\
+Public trace replay & 3 & 89.609 & 89.159 & +0.505 & 28.622 & 28.749 & 1/3 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\begin{table*}[t]
+\centering
+\caption{Logical-domain placement ablation. p99 columns show the median of run-level p99 values, not a pooled percentile.}
+\label{tab:tokenfs-independent-2}
+\begin{tabular}{lrrrrrrr}
+\toprule
+Workload & $n$ & Full (MiB/s) & Control (MiB/s) & Gain (\%) & Full p99 (ms) & Control p99 (ms) & Strict passes \\
+\midrule
+Moving hotspots & 3 & 343.894 & 322.885 & +6.507 & 26.875 & 27.416 & 2/3 \\
+Public trace replay & 3 & 89.609 & 87.505 & +2.405 & 28.622 & 28.820 & 2/3 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\begin{table*}[t]
+\centering
+\caption{Victim-loss-aware admission ablation. p99 columns show the median of run-level p99 values, not a pooled percentile.}
+\label{tab:tokenfs-independent-3}
+\begin{tabular}{lrrrrrrr}
+\toprule
+Workload & $n$ & Full (MiB/s) & Control (MiB/s) & Gain (\%) & Full p99 (ms) & Control p99 (ms) & Strict passes \\
+\midrule
+Moving hotspots & 3 & 343.894 & 319.037 & +7.791 & 26.875 & 26.998 & 2/3 \\
+Public trace replay & 3 & 89.609 & 84.973 & +5.456 & 28.622 & 29.044 & 3/3 \\
+\bottomrule
+\end{tabular}
+\end{table*}
+
+\begin{table*}[t]
+\centering
+\caption{Overall Full versus shared SIEVE. p99 columns show the median of run-level p99 values, not a pooled percentile.}
+\label{tab:tokenfs-independent-4}
+\begin{tabular}{lrrrrrrr}
+\toprule
+Workload & $n$ & Full (MiB/s) & Control (MiB/s) & Gain (\%) & Full p99 (ms) & Control p99 (ms) & Strict passes \\
+\midrule
+Moving hotspots & 3 & 343.894 & 343.032 & +0.251 & 26.875 & 27.271 & 2/3 \\
+Public trace replay & 3 & 89.609 & 74.363 & +20.503 & 28.622 & 31.697 & 3/3 \\
+Stationary hotspots & 1 & 335.435 & 323.246 & +3.771 & 27.638 & 27.767 & 1/1 \\
+Uniform random & 1 & 110.954 & 98.315 & +12.856 & 28.729 & 31.371 & 1/1 \\
+\bottomrule
+\end{tabular}
+\end{table*}

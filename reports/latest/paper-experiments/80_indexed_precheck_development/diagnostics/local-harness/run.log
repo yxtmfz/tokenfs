@@ -1,0 +1,15 @@
+background task failed: task injected
+background task failed: unknown exception
+background telemetry failed: injected submitted
+background task failed: task and fence injected
+background telemetry failed: injected event
+background task failed: unknown exception
+background telemetry failed: injected completed
+indexed precheck fullscan steps: 4101 -> 3
+COMPOUND QUERY
+LEFT-MOST SUBQUERY
+SCAN files USING COVERING INDEX idx_files_shared_precheck_local
+UNION ALL
+SCAN r USING COVERING INDEX idx_replicas_shared_precheck_ready
+SEARCH f USING INDEX sqlite_autoindex_files_1 (logical_path=?)
+PASS: real TokenFS/MetadataStore 80 indexed precheck, 79 precheck, 78 telemetry tests, and legacy fence/release checks (unmounted macOS veneer)
