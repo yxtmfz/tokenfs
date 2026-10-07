@@ -16,12 +16,20 @@
 // aligned bounce-buffer path. The at-most-one-page suffix is accounted
 // separately from retained captures and dies with the handle.
 class AlignedReadTail {
+  friend struct AlignedReadTailTestAccess;
  public:
   static constexpr size_t kAlignment=4096;
   struct Stats {
     uint64_t pread_ops=0,pread_bytes=0,pread_ns=0,tail_hits=0,tail_bytes=0,invalidations=0;
   };
   ssize_t Read(int fd,char* output,size_t size,off_t offset,Stats& stats,bool profile=false) {
+    return ReadImpl(fd,output,size,offset,stats,profile,
+      [](int source,void* data,size_t count,off_t at){return pread(source,data,count,at);});
+  }
+  size_t RetainedBytes() const {std::lock_guard<std::mutex> lock(mu_);return tail_size_;}
+ private:
+  template<class BackendRead>
+  ssize_t ReadImpl(int fd,char* output,size_t size,off_t offset,Stats& stats,bool profile,BackendRead backend_read) {
     stats={};std::lock_guard<std::mutex> lock(mu_);
     if(offset<0 || size>size_t(std::numeric_limits<ssize_t>::max())) {
       errno=EINVAL;return -1;
@@ -51,10 +59,13 @@ class AlignedReadTail {
     }
     void* bounce=nullptr;
     if(posix_memalign(&bounce,kAlignment,aligned_size)!=0){errno=ENOMEM;return -1;}
-    struct stat before{},after{};
-    const bool identified=fstat(fd,&before)==0 && S_ISREG(before.st_mode);
+    struct stat before{};
+    // Exactly aligned requests cannot leave a suffix. Otherwise remember the
+    // identity BEFORE pread: use-time validation also rejects mutations that
+    // happen during pread, without a redundant post-read metadata operation.
+    const bool identified=aligned_size>skip+size && fstat(fd,&before)==0 && S_ISREG(before.st_mode);
     const auto start=profile?NowNs():0;
-    const ssize_t fetched=pread(fd,bounce,aligned_size,aligned_offset);
+    const ssize_t fetched=backend_read(fd,bounce,aligned_size,aligned_offset);
     const int saved_errno=errno;
     stats.pread_ops=1;
     if(profile)stats.pread_ns=NowNs()-start;
@@ -65,16 +76,13 @@ class AlignedReadTail {
       if(result)std::memcpy(output,static_cast<char*>(bounce)+skip,size_t(result));
       const size_t consumed=skip+size_t(result);
       const size_t extra=size_t(fetched)>consumed?size_t(fetched)-consumed:0;
-      if(extra && extra<kAlignment && identified &&
-         fstat(fd,&after)==0 && SameIdentity(before,after)) {
+      if(extra && extra<kAlignment && identified) {
         std::memcpy(tail_.data(),static_cast<char*>(bounce)+consumed,extra);
-        tail_offset_=offset+result;tail_size_=extra;identity_=after;
+        tail_offset_=offset+result;tail_size_=extra;identity_=before;
       }
     }
     free(bounce);errno=saved_errno;return result;
   }
-  size_t RetainedBytes() const {std::lock_guard<std::mutex> lock(mu_);return tail_size_;}
- private:
   static uint64_t NowNs() {
     return std::chrono::duration_cast<std::chrono::nanoseconds>(
       std::chrono::steady_clock::now().time_since_epoch()).count();

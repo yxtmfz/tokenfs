@@ -4,6 +4,76 @@
 using namespace tokenfs_policy;
 int main() {
   {
+    RunReuse brief,repeated;uint64_t at=0;
+    for(int i=0;i<2;++i){brief.Observe("a",++at,128);brief.Observe("b",++at,128);}
+    brief.Observe("new",++at,128);
+    at=0;for(int i=0;i<50;++i){repeated.Observe("a",++at,128);repeated.Observe("b",++at,128);}
+    repeated.Observe("new",++at,128);
+    // Repeated returns by the same two objects are two supporting objects,
+    // not ninety-eight independent pieces of newcomer-return evidence.
+    assert(brief.NewcomerDiskPrior("new",true)==.5);
+    assert(repeated.NewcomerDiskPrior("new",true)==.5);
+    assert(brief.NewcomerDiskPrior("new")==.5 && repeated.NewcomerDiskPrior("new")==1);
+    assert(repeated.RecurrentEntries()==2);
+    const auto before=repeated.NewcomerDiskPrior("new",true);
+    for(int i=0;i<80;++i)repeated.Observe("new",++at,128);
+    assert(repeated.NewcomerDiskPrior("new",true)==before); // unfinished run adds no evidence
+    assert(repeated.NewcomerDiskPrior("not-yet-seen",true)==0);
+    repeated.Observe("a",++at,128);repeated.Observe("new",++at,128);
+    assert(repeated.NewcomerDiskPrior("new",true)==0 && repeated.RecurrentEntries()==3);
+    for(int i=0;i<140;++i)repeated.Observe("cold"+std::to_string(i),++at,128);
+    assert(repeated.Entries()<=128 && repeated.RecurrentEntries()==0);
+    assert(repeated.NewcomerDiskPrior("cold139",true)==0);
+    repeated.Observe("hot",++at,128);repeated.Observe("between",++at,128);repeated.Observe("hot",++at,128);
+    assert(repeated.RecurrentEntries()==1);
+    repeated.Observe("x",++at,2);repeated.Observe("y",++at,2);
+    assert(repeated.Entries()==2 && repeated.RecurrentEntries()==0 && repeated.Runs()==2);
+  }
+  {
+    RunReuse single_hot;uint64_t at=0;double previous=1;
+    for(int i=0;i<40;++i) {
+      single_hot.Observe("hot",++at,128);
+      const auto cold="one-off"+std::to_string(i);single_hot.Observe(cold,++at,128);
+      const double support=single_hot.NewcomerDiskPrior(cold,true);
+      if(i>0) {
+        assert(single_hot.RecurrentEntries()==1 && support<=previous);
+        assert(support==1.0/(single_hot.Entries()+1.0));
+      }
+      if(i>0)previous=support;
+      assert(support>=0 && support<1);
+    }
+  }
+  {
+    Options o;o.causal_window=o.shared_value=o.burst_reuse=o.shift_reset=true;
+    o.persistent_run_reuse=o.adaptive_control=o.retained_capture=o.cohort_reuse_prior=true;
+    MeasuredPolicy p;p.ReadSample(false,100,100);p.ReadSample(true,100,20);p.CopySample(100,10);
+    for(int i=0;i<64;++i)p.Observe(i%3,(i/4)%2?"a":"b",o);
+    p.Observe(0,"new",o);
+    auto object=o;object.object_weighted_cohort_prior=true;
+    auto plan=[&](Options x){return p.Plan(0,{"new",100,0},{{"old",100,0}},100,100,x);};
+    const auto old=plan(o),weighted=plan(object);
+    assert(weighted.cohort_disk_reuse>0 && weighted.cohort_disk_reuse<old.cohort_disk_reuse);
+    assert(weighted.incoming_us<old.incoming_us && weighted.copy_us==old.copy_us);
+    const auto symmetric=p.Plan(0,{"new",100,0},{{"new",100,0}},100,100,object);
+    assert(symmetric.incoming_us==symmetric.displaced_us && !symmetric.allowed);
+    for(bool disk_opportunity:{false,true})for(bool joint:{false,true}) {
+      auto legacy=o,candidate=object;
+      legacy.static_reuse_value=candidate.static_reuse_value=true;
+      legacy.disk_opportunity_value=candidate.disk_opportunity_value=disk_opportunity;
+      legacy.joint_admission=candidate.joint_admission=joint;
+      const auto a=plan(legacy),b=plan(candidate);
+      assert(a.allowed==b.allowed && a.reason==b.reason && a.victims==b.victims);
+      assert(a.incoming_us==b.incoming_us && a.displaced_us==b.displaced_us);
+      assert(a.copy_us==b.copy_us && a.uncertainty_us==b.uncertainty_us && b.cohort_disk_reuse==0);
+    }
+    auto no_cohort=o;no_cohort.cohort_reuse_prior=false;
+    auto no_cohort_object=no_cohort;no_cohort_object.object_weighted_cohort_prior=true;
+    assert(plan(no_cohort).incoming_us==plan(no_cohort_object).incoming_us);
+    auto disk=o;disk.disk_opportunity_value=true;
+    auto disk_object=disk;disk_object.object_weighted_cohort_prior=true;
+    assert(plan(disk).incoming_us==plan(disk_object).incoming_us && plan(disk_object).cohort_disk_reuse==0);
+  }
+  {
     RunReuse summary;uint64_t at=0;
     auto run=[&](const std::string& k,int n){for(int i=0;i<n;++i)summary.Observe(k,++at,128);};
     run("old",4);run("x",4);run("old",4);

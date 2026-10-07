@@ -7,6 +7,23 @@
 #include <string>
 #include <vector>
 
+// Test-only friend access permits a deterministic source mutation after the
+// underlying pread has copied bytes but before the suffix is published.
+struct AlignedReadTailTestAccess {
+  static ssize_t ReadThenMutate(AlignedReadTail& reader,int fd,char* output,size_t size,
+                               off_t offset,AlignedReadTail::Stats& stats,int writer,
+                               off_t changed_offset,const std::string& changed) {
+    return reader.ReadImpl(fd,output,size,offset,stats,false,
+      [&](int source,void* data,size_t count,off_t at) {
+        const auto result=pread(source,data,count,at);assert(result>=0);
+        assert(pwrite(writer,changed.data(),changed.size(),changed_offset)==ssize_t(changed.size()));
+        struct stat identity{};assert(fstat(writer,&identity)==0);
+        const timespec times[2]={{identity.st_atime+2,0},{identity.st_mtime+2,0}};
+        assert(futimens(writer,times)==0);return result;
+      });
+  }
+};
+
 int main() {
   namespace fs=std::filesystem;
   const auto root=fs::temp_directory_path()/("tokenfs-aligned-test-"+std::to_string(getpid()));
@@ -36,6 +53,19 @@ int main() {
     assert(logical==2*mib && ops==3 && bytes==2*mib && hits==2);
     // The unoptimized aligned operations reread the final page twice.
     assert(5-ops==2 && 2*mib+2*4096-bytes==8192);
+  }
+  {
+    AlignedReadTail tail;const std::string changed(48,'#');
+    assert(AlignedReadTailTestAccess::ReadThenMutate(tail,fd,output.data(),mib-48,0,
+           stats,writer,mib-48,changed)==ssize_t(mib-48));
+    assert(std::string(output.data(),mib-48)==payload.substr(0,mib-48));
+    // A suffix may now be pending, but it must not be returned under the
+    // pre-mutation identity. The consumer performs a real aligned read.
+    assert(tail.RetainedBytes()==48);
+    assert(tail.Read(fd,output.data(),48,mib-48,stats)==48);
+    assert(stats.invalidations==1 && stats.pread_ops==1 && !stats.tail_hits);
+    assert(std::string(output.data(),48)==changed);
+    payload.replace(mib-48,48,changed);
   }
   {
     AlignedReadTail tail;

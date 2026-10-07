@@ -28,6 +28,8 @@ struct TokenFSTestAccess {
     LocalReplica replica;replica.logical_path=meta.logical_path;replica.gpu_id=1;
     replica.physical_path=peer;replica.size_bytes=payload.size();replica.state="READY";
     replica.last_access_at=7;replica.created_at=7;filesystem.metadata_.UpsertLocalReplica(replica);
+    filesystem.sieve_.Ready(1,meta.logical_path);
+    filesystem.sieve_.Ready(1,"/gpu0/cold-peer");
     int source_fd=open(source.c_str(),O_RDONLY);assert(source_fd>=0);
     auto fill=filesystem.fills_.Acquire(meta.logical_path,source_fd,payload.size());
     assert(fill && fill->Append(0,payload.data(),payload.size(),source_fd));close(source_fd);
@@ -41,6 +43,9 @@ struct TokenFSTestAccess {
       assert(filesystem.Release(meta.logical_path.c_str(),&fi)==0);
     };
     read("inflight",'r');read("inflight",'r');
+    // Upper-tier service must preserve the same SIEVE visited bit as the
+    // legacy route, without fabricating a peer data read or disk timestamp.
+    assert(filesystem.sieve_.Victim(1,{meta.logical_path,"/gpu0/cold-peer"})=="/gpu0/cold-peer");
     assert(filesystem.metadata_.Get(meta.logical_path)->read_count==2);
     assert(filesystem.measured_.Frequency(0,meta.logical_path)==2);
     const auto touched=filesystem.metadata_.GetLocalReplica(meta.logical_path,1)->last_access_at;
@@ -55,6 +60,7 @@ struct TokenFSTestAccess {
     assert(metric("cross_gpu_local_replica_hit")==0);
     assert(metric("replica_touch_batched")==uint64_t(!enabled && lean?2:0));
     assert(metric("ram_first_routing_hit")==uint64_t(enabled?2:0));
+    assert(metric("sieve_ram_logical_hit")==uint64_t(enabled?2:0));
     // A changed canonical identity must invalidate the old RAM capture, then
     // use the ordinary validated disk path. The peer is updated by the fixture.
     std::ofstream(root/"replacement")<<std::string(4096,'s');fs::rename(root/"replacement",source);
@@ -72,6 +78,52 @@ struct TokenFSTestAccess {
     try{TokenFS bad(invalid);bad.Init();}catch(const std::runtime_error&){rejected=true;}assert(rejected);
     invalid=cfg;invalid.private_cache_domains=true;rejected=false;
     try{TokenFS bad(invalid);bad.Init();}catch(const std::runtime_error&){rejected=true;}assert(rejected);
+  }
+  static void sieve_ram_permissions(const fs::path& root) {
+    Config cfg;cfg.mount_point=root/"mnt";cfg.metadata_db=root/"state.db";
+    cfg.readonly_canonical=true;cfg.peer_cache_reads=true;cfg.local_eviction_policy="sieve";
+    for(int gpu=0;gpu<3;++gpu)cfg.gpus.push_back({gpu,"/gpu"+std::to_string(gpu),root/("local"+std::to_string(gpu)),8192,"remote"});
+    cfg.backends.emplace("remote",BackendConfig{"remote","directory",root/"remote"});
+    TokenFS filesystem(cfg);filesystem.Init();
+    auto resident=[&](int domain,const std::string& key,const std::string& state="READY",bool indexed=true) {
+      LocalReplica replica;replica.logical_path=key;replica.gpu_id=domain;replica.state=state;
+      replica.physical_path=root/("local"+std::to_string(domain))/fs::path(key).filename();
+      replica.size_bytes=1;replica.created_at=7;replica.last_access_at=7;
+      fs::create_directories(replica.physical_path.parent_path());std::ofstream(replica.physical_path)<<'x';
+      filesystem.metadata_.UpsertLocalReplica(replica);
+      if(indexed)filesystem.sieve_.Ready(domain,key);
+      filesystem.sieve_.Ready(domain,key+"-cold");
+    };
+    auto victim=[&](int domain,const std::string& key){return filesystem.sieve_.Victim(domain,{key,key+"-cold"});};
+    resident(1,"/gpu0/peer");
+    assert(filesystem.HitSieveLogicalResident("/gpu0/peer",0,0,false));
+    assert(victim(1,"/gpu0/peer")=="/gpu0/peer-cold");
+    resident(1,"/gpu0/no-peer");filesystem.config_.peer_cache_reads=false;
+    assert(!filesystem.HitSieveLogicalResident("/gpu0/no-peer",0,0,false));
+    assert(victim(1,"/gpu0/no-peer")=="/gpu0/no-peer");filesystem.config_.peer_cache_reads=true;
+    resident(1,"/gpu0/private");filesystem.config_.private_cache_domains=true;
+    assert(!filesystem.HitSieveLogicalResident("/gpu0/private",0,0,false));
+    assert(victim(1,"/gpu0/private")=="/gpu0/private");
+    filesystem.sieve_.Ready(0,"/gpu0/owner-private");filesystem.sieve_.Ready(0,"/gpu0/owner-private-cold");
+    assert(!filesystem.HitSieveLogicalResident("/gpu0/owner-private",0,2,true));
+    assert(victim(0,"/gpu0/owner-private")=="/gpu0/owner-private");
+    resident(2,"/gpu0/caller-private");
+    assert(filesystem.HitSieveLogicalResident("/gpu0/caller-private",0,2,false));
+    assert(victim(2,"/gpu0/caller-private")=="/gpu0/caller-private-cold");
+    filesystem.config_.private_cache_domains=false;
+    resident(2,"/gpu0/priority");filesystem.sieve_.Ready(0,"/gpu0/priority");filesystem.sieve_.Ready(0,"/gpu0/priority-cold");
+    assert(filesystem.HitSieveLogicalResident("/gpu0/priority",0,2,true));
+    assert(victim(2,"/gpu0/priority")=="/gpu0/priority-cold");
+    assert(victim(0,"/gpu0/priority")=="/gpu0/priority");
+    resident(1,"/gpu0/not-ready","CREATING");
+    assert(!filesystem.HitSieveLogicalResident("/gpu0/not-ready",0,0,false));
+    assert(victim(1,"/gpu0/not-ready")=="/gpu0/not-ready");
+    resident(1,"/gpu0/not-published","READY",false);
+    assert(!filesystem.HitSieveLogicalResident("/gpu0/not-published",0,0,false));
+    resident(9,"/gpu0/unknown");
+    assert(!filesystem.HitSieveLogicalResident("/gpu0/unknown",0,0,false));
+    assert(victim(9,"/gpu0/unknown")=="/gpu0/unknown");
+    assert(!filesystem.HitSieveLogicalResident("/gpu0/peer",0,9,false));
   }
   static void aligned_tail_reads(const fs::path& root,bool enabled) {
     Config cfg;cfg.mount_point=root/"mnt";cfg.metadata_db=root/"state.db";
@@ -712,6 +764,7 @@ int main() {
   TokenFSTestAccess::ram_first_routing(root/"ram-first-legacy",true,false);
   TokenFSTestAccess::ram_first_routing(root/"ram-last-lean",false,true);
   TokenFSTestAccess::ram_first_routing(root/"ram-last-legacy",false,false);
+  TokenFSTestAccess::sieve_ram_permissions(root/"sieve-ram-permissions");
   TokenFSTestAccess::telemetry_retry_and_release_lock(root/"telemetry-retry");
   TokenFSTestAccess::background_metric_fence(root/"metric-fence-on",true);
   TokenFSTestAccess::background_metric_fence(root/"metric-fence-off",false);

@@ -47,6 +47,7 @@ struct Options {
   bool cohort_reuse_prior=false;
   bool recent_value_floor=false;
   bool disk_opportunity_value=false;
+  bool object_weighted_cohort_prior=false;
 };
 struct Decision {
   bool allowed=false;
@@ -452,7 +453,7 @@ class MeasuredPolicy {
     if(!o.cohort_reuse_prior || o.static_reuse_value || !o.retained_capture ||
        !o.persistent_run_reuse || !o.causal_window || !o.shared_value ||
        !o.burst_reuse || !o.adaptive_control)return 0;
-    (void)gpu;return temporal_strength_*run_reuse_.NewcomerDiskPrior(key)*run_reuse_.NewcomerSurvival(key,observations_);
+    (void)gpu;return temporal_strength_*run_reuse_.NewcomerDiskPrior(key,o.object_weighted_cohort_prior)*run_reuse_.NewcomerSurvival(key,observations_);
   }
   double Value(int gpu,const Item& item,const Options& o,bool incoming) const {
     if(o.static_reuse_value) {

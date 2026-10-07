@@ -105,3 +105,6 @@ jobs:
 
       - name: Test common read-path HPJ isolated ablations
         run: python3 -m unittest tests.common_readpath_hpj_test
+
+      - name: Check object-cohort study controls
+        run: python3 -m unittest tests.object_cohort_hpj_test

@@ -97,6 +97,7 @@ struct Config {
   bool capture_local_reads = false;
   bool bounded_cost_warmup = false;
   bool cohort_reuse_prior = false;
+  bool object_weighted_cohort_prior = false;
   bool recent_value_floor = false;
   bool disk_opportunity_value=false;
   bool request_read_costs = false;
@@ -1782,8 +1783,16 @@ class TokenFS {
       // RAM serves this request independently of a disk replica. Validate and
       // pin the canonical source first, then avoid crediting unused disk paths.
       // Logical access accounting and policy observations still happen once.
-      if(config_.ram_first_routing && try_retained_capture())
+      const bool canonical_local=meta.tier=="local";
+      if(config_.ram_first_routing && try_retained_capture()) {
         AddBufferedMetric("ram_first_routing_hit",1);
+        // Keep SIEVE's logical access stream unchanged when RAM wins routing.
+        // This visits only an already published resident, without probing its
+        // disk path or claiming a local/peer data read that never happened.
+        if(config_.local_eviction_policy=="sieve" &&
+           HitSieveLogicalResident(path,gpu->gpu_id,caller_gpu_id,canonical_local))
+          AddBufferedMetric("sieve_ram_logical_hit",1);
+      }
       // Optional isolated access-domain topology: another domain's canonical
       // local copy is not addressable. Every compared policy uses this routing.
       if(!borrowed_capture && config_.private_cache_domains && caller_gpu_id!=gpu->gpu_id) {
@@ -2309,6 +2318,26 @@ class TokenFS {
                        });
   }
 
+  // Called under layout_mu_. Preserve ordinary routing priority for logical
+  // SIEVE hits while an upper-tier capture supplies the bytes. READY metadata
+  // and SIEVE's verified resident index are both required; no filesystem probe
+  // or replica timestamp write is performed for an unused disk source.
+  bool HitSieveLogicalResident(const std::string& path,int owner,int caller,bool canonical_local) {
+    if(!KnownGpuId(owner) || !KnownGpuId(caller))return false;
+    if(caller!=owner && KnownGpuId(caller)) {
+      if(auto replica=metadata_.GetLocalReplica(path,caller);
+         replica && replica->state=="READY" && sieve_.HitKnown(caller,path))return true;
+    }
+    if(canonical_local && KnownGpuId(owner) &&
+       (!config_.private_cache_domains || caller==owner) && sieve_.HitKnown(owner,path))return true;
+    if(config_.peer_cache_reads && !config_.private_cache_domains) {
+      for(const auto& replica:metadata_.LocalReplicas(path))
+        if(replica.gpu_id!=caller && KnownGpuId(replica.gpu_id) && replica.state=="READY" &&
+           sieve_.HitKnown(replica.gpu_id,path))return true;
+    }
+    return false;
+  }
+
   // Called under layout_mu_; Open pins the selected file before releasing it.
   // This is shared-host storage reuse, not CUDA peer access or remote RPC.
   std::optional<LocalReplica> ReadablePeer(const std::string& path, int caller) {
@@ -2547,7 +2576,7 @@ class TokenFS {
     return {static_cast<size_t>(config_.measured_window),config_.measured_aging,
             config_.measured_admission,config_.measured_cost,
             config_.measured_value_victim,config_.measured_size_aware,config_.measured_frequency_admission,config_.measured_shift_reset,static_cast<size_t>(config_.measured_shift_window),
-            config_.measured_track_affinity,config_.measured_affinity_gate,config_.measured_joint_admission,static_cast<size_t>(config_.measured_affinity_window),config_.measured_affinity_recent_demand,config_.measured_affinity_handover_epoch,config_.shared_value_placement,config_.measured_causal_window,config_.measured_burst_reuse,config_.adaptive_reuse_control,config_.efficient_measured_planning,config_.burst_interval_survival,config_.reuse_scaled_exploration,config_.persistent_run_reuse,config_.persistent_reuse_immediate_decay,config_.measured_static_reuse_value,config_.novel_reuse_decay,config_.retain_read_fill && config_.capture_local_reads,config_.bounded_cost_warmup,config_.cohort_reuse_prior,config_.recent_value_floor,config_.disk_opportunity_value};
+            config_.measured_track_affinity,config_.measured_affinity_gate,config_.measured_joint_admission,static_cast<size_t>(config_.measured_affinity_window),config_.measured_affinity_recent_demand,config_.measured_affinity_handover_epoch,config_.shared_value_placement,config_.measured_causal_window,config_.measured_burst_reuse,config_.adaptive_reuse_control,config_.efficient_measured_planning,config_.burst_interval_survival,config_.reuse_scaled_exploration,config_.persistent_run_reuse,config_.persistent_reuse_immediate_decay,config_.measured_static_reuse_value,config_.novel_reuse_decay,config_.retain_read_fill && config_.capture_local_reads,config_.bounded_cost_warmup,config_.cohort_reuse_prior,config_.recent_value_floor,config_.disk_opportunity_value,config_.object_weighted_cohort_prior};
   }
 
   double MarginalCoverage(const FileMeta& meta, int location) {
@@ -4269,6 +4298,7 @@ Config LoadConfig(const fs::path& path) {
   if(root["policy"] && root["policy"]["recent_value_floor"]) config.recent_value_floor=root["policy"]["recent_value_floor"].as<bool>();
   if(root["policy"] && root["policy"]["disk_opportunity_value"]) config.disk_opportunity_value=root["policy"]["disk_opportunity_value"].as<bool>();
   if(root["policy"] && root["policy"]["cohort_reuse_prior"]) config.cohort_reuse_prior=root["policy"]["cohort_reuse_prior"].as<bool>();
+  if(root["policy"] && root["policy"]["object_weighted_cohort_prior"]) config.object_weighted_cohort_prior=root["policy"]["object_weighted_cohort_prior"].as<bool>();
   if(root["policy"] && root["policy"]["bounded_cost_warmup"]) config.bounded_cost_warmup=root["policy"]["bounded_cost_warmup"].as<bool>();
   if(root["policy"] && root["policy"]["capture_local_reads"]) config.capture_local_reads=root["policy"]["capture_local_reads"].as<bool>();
   if(root["policy"] && root["policy"]["retain_read_fill"]) config.retain_read_fill=root["policy"]["retain_read_fill"].as<bool>();

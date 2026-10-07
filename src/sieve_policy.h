@@ -20,10 +20,18 @@ class SievePolicy {
     d.index.emplace(key, d.queue.begin());
   }
   void Hit(int domain, const std::string& key) {
+    (void)HitKnown(domain,key);
+  }
+  // A logical access can be served by an upper RAM tier while still marking
+  // an existing disk resident visited. Never create a resident (or a domain)
+  // from an access; only verified Ready publication can do that.
+  bool HitKnown(int domain,const std::string& key) {
     std::lock_guard<std::mutex> lock(mu_);
-    auto& d = domains_[domain];
-    auto it = d.index.find(key);
-    if (it != d.index.end()) it->second->visited = true;
+    const auto found=domains_.find(domain);
+    if(found==domains_.end())return false;
+    auto it=found->second.index.find(key);
+    if(it==found->second.index.end())return false;
+    it->second->visited=true;return true;
   }
   // Pinned or otherwise unavailable objects cannot be evicted. At most two
   // revolutions are needed: the first clears visited bits of eligible objects.
