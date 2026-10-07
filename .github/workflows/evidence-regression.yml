@@ -110,4 +110,4 @@ jobs:
         run: python3 -m unittest tests.object_cohort_hpj_test
 
       - name: Check deferred submission and release fence
-        run: python3 -m unittest tests.release_fence_test tests.submission_fence_hpj_test
+        run: python3 -m unittest tests.release_fence_test tests.submission_fence_hpj_test tests.submission_precheck_hpj_test

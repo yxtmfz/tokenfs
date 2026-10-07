@@ -25,6 +25,7 @@
 #include <iomanip>
 #include <iostream>
 #include <iterator>
+#include <limits>
 #include <mutex>
 #include <optional>
 #include <set>
@@ -90,6 +91,7 @@ struct Config {
   bool profile_control_path = false;
   bool batch_background_metrics = false;
   bool defer_background_submission_metrics = false;
+  bool precheck_shared_submission = false;
   bool batch_policy_events = false;
   std::string request_trace_path;
   bool foreground_read_fill = false;
@@ -247,6 +249,7 @@ struct PolicyEvent {
 };
 
 class MetadataStore {
+  friend struct TokenFSTestAccess;
  public:
   explicit MetadataStore(const fs::path& db_path) : db_path_(db_path) {}
 
@@ -1057,6 +1060,40 @@ class MetadataStore {
     fs::path physical;
     uint64_t bytes=0,recency=0;
   };
+  struct ReadyResidentBytes {
+    int location;
+    fs::path physical;
+    uint64_t bytes;
+  };
+  bool TryEmptyResidentState() {
+    std::unique_lock<std::mutex> lock(mu_,std::try_to_lock);
+    if(!lock.owns_lock())return false;
+    try {
+      // Do not hide orphan/stale replicas behind a JOIN: later discovery of
+      // their canonical file could otherwise resurrect nonexistent occupancy.
+      auto lease=CachedStatement("SELECT NOT EXISTS(SELECT 1 FROM files WHERE tier='local') AND NOT EXISTS(SELECT 1 FROM local_replicas);");
+      return sqlite3_step(lease.get())==SQLITE_ROW && sqlite3_column_int(lease.get(),0)==1;
+    } catch(const std::exception&) {return false;}
+  }
+  bool TryReadyResidentBytes(std::vector<ReadyResidentBytes>& rows) {
+    std::unique_lock<std::mutex> lock(mu_,std::try_to_lock);
+    if(!lock.owns_lock())return false;
+    // Read only, no access-history join or filesystem traversal. This still
+    // scans the local-state predicates; a small result is not constant cost.
+    try {
+      auto lease=CachedStatement("SELECT gpu_id,physical_path,size_bytes FROM files WHERE tier='local' AND state='COMMITTED' UNION ALL SELECT r.gpu_id,r.physical_path,r.size_bytes FROM local_replicas r JOIN files f ON f.logical_path=r.logical_path WHERE r.state='READY' AND f.state='COMMITTED';");
+      auto* stmt=lease.get();std::vector<ReadyResidentBytes> found;
+      for(int rc;(rc=sqlite3_step(stmt))!=SQLITE_DONE;) {
+        if(rc!=SQLITE_ROW || sqlite3_column_type(stmt,0)!=SQLITE_INTEGER ||
+           sqlite3_column_type(stmt,1)!=SQLITE_TEXT || sqlite3_column_type(stmt,2)!=SQLITE_INTEGER)return false;
+        const auto domain=sqlite3_column_int64(stmt,0),bytes=sqlite3_column_int64(stmt,2);
+        if(domain<0 || domain>std::numeric_limits<int>::max() || bytes<0 || found.size()>=4096)return false;
+        const auto physical=ColumnText(stmt,1);if(physical.empty())return false;
+        found.push_back({static_cast<int>(domain),physical,static_cast<uint64_t>(bytes)});
+      }
+      rows=std::move(found);return true;
+    } catch(const std::exception&) {return false;}
+  }
   std::vector<PlanningResident> PlanningResidents() {
     std::lock_guard<std::mutex> lock(mu_);
     sqlite3_stmt* stmt=nullptr;
@@ -1497,6 +1534,7 @@ class TokenFS {
     if(config_.batch_policy_events && !config_.batch_background_metrics)
       throw std::runtime_error("batched policy events require a durable background metric fence");
     RecoverIncompleteFiles();
+    InitializeSubmissionPrecheck();
     background_worker_ = std::thread([this] {
       for (;;) {
         std::function<void()> task;
@@ -3067,10 +3105,105 @@ class TokenFS {
     else CreateCrossGpuReplica(*destination,*owner,rel,incoming,fill);
   }
 
+  bool SubmissionPrecheckSupported() const {
+    return config_.precheck_shared_submission && config_.readonly_canonical &&
+      config_.measured_policy && config_.shared_value_placement && !config_.shared_pool_cache &&
+      config_.adaptive_reuse_control && config_.measured_causal_window && !config_.measured_affinity_gate;
+  }
+
+  static bool PathWithin(const fs::path& path,const fs::path& root) {
+    auto p=path.begin();
+    for(auto r=root.begin();r!=root.end();++r,++p)if(p==path.end() || *p!=*r)return false;
+    return p!=path.end(); // a resident is a descendant file, never the root itself.
+  }
+
+  void InitializeSubmissionPrecheck() {
+    if(!SubmissionPrecheckSupported())return;
+    // A READY byte count is a lower bound only for this fresh, exclusively
+    // managed immutable cache lifecycle. Do not trust persisted READY rows or
+    // pre-existing paths, and never claim protection against external rm or
+    // truncate. Internal measured-cache removals are serialized by layout_mu_.
+    try {
+      std::unordered_map<int,fs::path> roots;std::vector<fs::path> resolved;
+      for(const auto& gpu:config_.gpus) {
+        if(gpu.gpu_id<0 || roots.count(gpu.gpu_id) || !fs::is_empty(gpu.local_root))return;
+        auto canonical=fs::canonical(gpu.local_root);
+        for(const auto& other:resolved)
+          if(canonical==other || PathWithin(canonical,other) || PathWithin(other,canonical))return;
+        resolved.push_back(canonical);roots.emplace(gpu.gpu_id,fs::absolute(gpu.local_root).lexically_normal());
+      }
+      if(roots.empty() || !metadata_.TryEmptyResidentState())return;
+      submission_precheck_roots_=std::move(roots);submission_precheck_ready_=true;
+      AddBufferedMetric("submission_precheck_enabled",1);
+    } catch(const std::exception&) {return;}
+  }
+
+  bool PrecheckSharedSubmission(const FileMeta& meta,int caller,const std::shared_ptr<ReadFillPool::Buffer>& fill) {
+    if(!submission_precheck_ready_ || !SubmissionPrecheckSupported())return false;
+    // Only an immediately completed, source-validated capture supplies a
+    // trustworthy size. Open-time and partial-release submissions fall back.
+    if(!fill || !fill->Dispatched() || !meta.size_bytes || fill->Data().size()!=meta.size_bytes)return false;
+    AddBufferedMetric("submission_precheck_attempts",1);
+    struct Timer {
+      TokenFS& owner;std::chrono::steady_clock::time_point start=std::chrono::steady_clock::now();
+      ~Timer(){const auto us=ElapsedMicros(start);owner.AddBufferedMetric("submission_precheck_us",us);owner.SetBufferedMetricMax("submission_precheck_us_max",us);}
+    } timer{*this};
+    std::unique_lock<std::mutex> layout_lock(layout_mu_,std::try_to_lock);
+    if(!layout_lock.owns_lock()){AddBufferedMetric("submission_precheck_layout_busy",1);return false;}
+    std::vector<MetadataStore::ReadyResidentBytes> rows;
+    if(!metadata_.TryReadyResidentBytes(rows)){AddBufferedMetric("submission_precheck_metadata_fallback",1);return false;}
+    std::unordered_map<int,uint64_t> used;
+    std::unordered_map<std::string,std::pair<int,uint64_t>> physicals;
+    for(const auto& row:rows) {
+      auto root=submission_precheck_roots_.find(row.location);
+      const auto path=row.physical.lexically_normal();
+      if(root==submission_precheck_roots_.end() || !row.physical.is_absolute() || !PathWithin(path,root->second)) {
+        AddBufferedMetric("submission_precheck_invalid_metadata",1);return false;
+      }
+      auto [entry,inserted]=physicals.emplace(path.string(),std::pair{row.location,row.bytes});
+      if(!inserted) {
+        if(entry->second!=std::pair{row.location,row.bytes}) {
+          AddBufferedMetric("submission_precheck_invalid_metadata",1);return false;
+        }
+        continue; // canonical/replica aliases must not inflate occupied bytes.
+      }
+      if(row.bytes>std::numeric_limits<uint64_t>::max()-used[row.location]) {
+        AddBufferedMetric("submission_precheck_invalid_metadata",1);return false;
+      }
+      used[row.location]+=row.bytes;
+    }
+    const GpuConfig* representative=nullptr;size_t allowed=0;
+    for(const auto& gpu:config_.gpus) {
+      if(config_.shared_caller_only && gpu.gpu_id!=caller)continue;
+      ++allowed;
+      const uint64_t occupied=used[gpu.gpu_id];
+      if(occupied<gpu.local_quota_bytes && meta.size_bytes<=gpu.local_quota_bytes-occupied) {
+        AddBufferedMetric("submission_precheck_headroom",1);return false;
+      }
+      if(meta.size_bytes<=gpu.local_quota_bytes)representative=&gpu;
+    }
+    if(!allowed)return false;
+    // In this restricted shared+causal, affinity-gate-free mode, incoming
+    // value and noise are location independent. All allowed domains lack
+    // headroom; one original optimistic call at used=quota is their common
+    // upper bound, under one policy lock. Oversize domains cannot admit.
+    // Keep each arm's original Options, including NoHotspot and NoJoint.
+    if(representative && measured_.PotentiallyProfitable(representative->gpu_id,
+       {meta.logical_path,meta.size_bytes,0},representative->local_quota_bytes,
+       representative->local_quota_bytes,MeasuredOptions())) {
+      AddBufferedMetric("submission_precheck_possible",1);return false;
+    }
+    AddBufferedMetric("submission_precheck_rejected",1);
+    return true;
+  }
+
   void ScheduleSharedPlacement(const FileMeta& meta, int caller,std::shared_ptr<ReadFillPool::Buffer> fill={}) {
     if(meta.state!="COMMITTED" || !meta.has_remote_copy)return;
     if(config_.shared_value_placement && !measured_.HasReuseEvidence(caller,meta.logical_path,MeasuredOptions()))return;
     if(config_.shared_pool_cache && meta.read_count<config_.read_through_min_reads)return;
+    // This is a decision at submission time, not equivalence to a queued task
+    // consulting later observations/costs. No negative-key result is cached.
+    if(PrecheckSharedSubmission(meta,caller,fill))return;
     const auto path=meta.logical_path;
     {
       std::lock_guard<std::mutex> lock(shared_placement_mu_);
@@ -4263,6 +4396,8 @@ class TokenFS {
   std::set<std::string> cross_gpu_replica_inflight_;
   std::mutex shared_placement_mu_;
   std::set<std::string> shared_placement_inflight_;
+  bool submission_precheck_ready_=false;
+  std::unordered_map<int,fs::path> submission_precheck_roots_;
   std::mutex buffered_metrics_mu_;
   std::mutex flush_metrics_mu_;
   std::unordered_map<std::string, uint64_t> buffered_metrics_;
@@ -4348,6 +4483,7 @@ Config LoadConfig(const fs::path& path) {
   if(root["policy"] && root["policy"]["ram_first_routing"]) config.ram_first_routing=root["policy"]["ram_first_routing"].as<bool>();
   if(root["policy"] && root["policy"]["batch_background_metrics"]) config.batch_background_metrics=root["policy"]["batch_background_metrics"].as<bool>();
   if(root["policy"] && root["policy"]["defer_background_submission_metrics"]) config.defer_background_submission_metrics=root["policy"]["defer_background_submission_metrics"].as<bool>();
+  if(root["policy"] && root["policy"]["precheck_shared_submission"]) config.precheck_shared_submission=root["policy"]["precheck_shared_submission"].as<bool>();
   if(root["policy"] && root["policy"]["batch_policy_events"]) config.batch_policy_events=root["policy"]["batch_policy_events"].as<bool>();
   if(root["policy"] && root["policy"]["request_trace_path"]) config.request_trace_path=root["policy"]["request_trace_path"].as<std::string>();
   if(root["policy"] && root["policy"]["recent_value_floor"]) config.recent_value_floor=root["policy"]["recent_value_floor"].as<bool>();

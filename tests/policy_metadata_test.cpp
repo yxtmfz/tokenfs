@@ -52,12 +52,14 @@ struct TokenFSTestAccess {
   static void deferred_config_parse(const fs::path& root) {
     fs::create_directories(root);const auto path=root/"config.yaml";
     for(const char* value:{"false","true"}) {
-      std::ofstream(path)<<"filesystem: {}\nbackends: []\ngpus: []\npolicy:\n  batch_background_metrics: true\n  defer_background_submission_metrics: "<<value<<"\n";
+      std::ofstream(path)<<"filesystem: {}\nbackends: []\ngpus: []\npolicy:\n  batch_background_metrics: true\n  defer_background_submission_metrics: "<<value<<"\n  precheck_shared_submission: "<<value<<"\n";
       const auto cfg=LoadConfig(path);
       assert(cfg.batch_background_metrics && cfg.defer_background_submission_metrics==(std::string(value)=="true"));
+      assert(cfg.precheck_shared_submission==(std::string(value)=="true"));
     }
     std::ofstream(path)<<"filesystem: {}\nbackends: []\ngpus: []\n";
     assert(!LoadConfig(path).defer_background_submission_metrics);
+    assert(!LoadConfig(path).precheck_shared_submission);
   }
   static void deferred_background_fence(const fs::path& root) {
     auto cfg=DeferredConfig(root);TokenFS filesystem(cfg);filesystem.Init();TelemetryProbe probe(cfg.metadata_db);
@@ -180,6 +182,128 @@ struct TokenFSTestAccess {
     fuse_file_info writable{};writable.flags=O_RDWR;
     assert(filesystem.Open("/gpu0/k",&writable)==0);
     assert(filesystem.Release("/gpu0/k",&writable)==0 && probe.Metric("read_release_count")==1);
+  }
+  static Config PrecheckConfig(const fs::path& root,int domains=3) {
+    auto cfg=DeferredConfig(root);cfg.precheck_shared_submission=true;
+    cfg.readonly_canonical=true;cfg.peer_cache_reads=true;cfg.shared_value_placement=true;
+    cfg.measured_policy=true;cfg.measured_causal_window=true;cfg.measured_burst_reuse=true;
+    cfg.adaptive_reuse_control=true;cfg.compact_measured_planning=true;cfg.bounded_cost_warmup=true;
+    for(int gpu=0;gpu<domains;++gpu)
+      cfg.gpus.push_back({gpu,"/gpu"+std::to_string(gpu),root/("local"+std::to_string(gpu)),8192,"remote"});
+    cfg.backends.emplace("remote",BackendConfig{"remote","directory",root/"remote"});return cfg;
+  }
+  struct PrecheckFixture {
+    Config cfg;TokenFS filesystem;FileMeta incoming;std::shared_ptr<ReadFillPool::Buffer> fill;
+    explicit PrecheckFixture(const fs::path& root,int domains=3):cfg(PrecheckConfig(root,domains)),filesystem(cfg) {
+      filesystem.Init();assert(filesystem.submission_precheck_ready_);
+      incoming.logical_path="/gpu0/incoming";incoming.gpu_id=0;incoming.tier="remote";
+      incoming.backend_id="remote";incoming.physical_path=root/"remote/gpu0/incoming";
+      incoming.has_remote_copy=true;incoming.size_bytes=4096;incoming.state="COMMITTED";
+      const std::string bytes(4096,'x');std::ofstream(incoming.physical_path)<<bytes;
+      filesystem.metadata_.Upsert(incoming);int fd=open(incoming.physical_path.c_str(),O_RDONLY);assert(fd>=0);
+      fill=filesystem.fills_.Acquire(incoming.logical_path,fd,4096);
+      assert(fill && fill->Append(0,bytes.data(),bytes.size(),fd));close(fd);
+      filesystem.measured_.ReadSample(false,4096,21000);
+      filesystem.measured_.ReadSample(true,4096,10500);filesystem.measured_.CopySample(4096,8000);
+    }
+    void Resident(int domain,const std::string& key,const fs::path& alias={},uint64_t bytes=4096) {
+      FileMeta meta=incoming;meta.logical_path="/gpu0/"+key;meta.physical_path=cfg.backends.at("remote").root/"gpu0"/key;
+      meta.size_bytes=bytes;std::ofstream(meta.physical_path)<<std::string(bytes,'r');filesystem.metadata_.Upsert(meta);
+      LocalReplica replica;replica.logical_path=meta.logical_path;replica.gpu_id=domain;replica.size_bytes=bytes;replica.state="READY";
+      replica.physical_path=alias.empty()?cfg.gpus.at(domain).local_root/key:alias;
+      std::ofstream(replica.physical_path)<<std::string(bytes,'r');filesystem.metadata_.UpsertLocalReplica(replica);
+    }
+    void FullDomain(int domain) {Resident(domain,"resident"+std::to_string(domain)+"a");Resident(domain,"resident"+std::to_string(domain)+"b");}
+    void Full() {for(size_t gpu=0;gpu<cfg.gpus.size();++gpu)FullDomain(gpu);}
+    void Observe(unsigned n) {while(n--)filesystem.measured_.Observe(0,incoming.logical_path,filesystem.MeasuredOptions());}
+    bool Reject(int caller=0){return filesystem.PrecheckSharedSubmission(incoming,caller,fill);}
+  };
+  static void submission_precheck_decisions(const fs::path& root) {
+    assert(!Config{}.precheck_shared_submission);
+    PrecheckFixture f(root);f.Observe(1);
+    assert(!f.Reject()); // Free capacity exploration is preserved.
+    f.Full();assert(f.Reject());
+    assert(!f.filesystem.PrecheckSharedSubmission(f.incoming,0,{})); // Partial/no capture remains original path.
+    auto wrong=f.incoming;wrong.size_bytes=2048;
+    assert(!f.filesystem.PrecheckSharedSubmission(wrong,0,f.fill));
+    auto partial=f.incoming;partial.logical_path="/gpu0/partial";partial.physical_path=f.cfg.backends.at("remote").root/"gpu0/partial";
+    const std::string bytes(4096,'p');std::ofstream(partial.physical_path)<<bytes;
+    int fd=open(partial.physical_path.c_str(),O_RDONLY);assert(fd>=0);
+    auto unfinished=f.filesystem.fills_.Acquire(partial.logical_path,fd,4096);
+    assert(unfinished && !unfinished->Append(0,bytes.data(),2048,fd));
+    assert(!f.filesystem.PrecheckSharedSubmission(partial,0,unfinished));
+    std::ofstream(partial.physical_path,std::ios::trunc)<<std::string(2048,'z');
+    assert(!unfinished->Append(2048,bytes.data()+2048,2048,fd));close(fd);
+    assert(!f.filesystem.PrecheckSharedSubmission(partial,0,unfinished)); // Changed source failed capture validation.
+    f.filesystem.ScheduleSharedPlacement(f.incoming,0,f.fill);
+    {std::lock_guard<std::mutex> lock(f.filesystem.background_mu_);assert(f.filesystem.background_tasks_.empty());}
+    assert(f.filesystem.buffered_metrics_["background_submitted"]==0);
+    assert(f.filesystem.shared_placement_inflight_.empty());
+    // No negative-key cache: the same object can become profitable later.
+    f.Observe(7);assert(!f.Reject());
+    f.filesystem.config_.precheck_shared_submission=false;assert(!f.Reject());
+    f.filesystem.config_.precheck_shared_submission=true;f.filesystem.config_.measured_affinity_gate=true;
+    assert(!f.Reject()); // Unsupported location-dependent estimates never use the common bound.
+    assert(f.filesystem.buffered_metrics_.count("submission_precheck_us") && f.filesystem.buffered_metric_max_.count("submission_precheck_us_max"));
+    auto sieve=PrecheckConfig(root/"sieve");sieve.measured_policy=false;sieve.shared_value_placement=false;sieve.shared_pool_cache=true;
+    TokenFS pool(sieve);assert(!pool.SubmissionPrecheckSupported());
+  }
+  static void submission_precheck_ablations(const fs::path& root) {
+    for(bool static_value:{false,true}) {
+      PrecheckFixture f(root/(static_value?"static":"hotspot"));f.Full();f.Observe(2);
+      f.filesystem.config_.measured_static_reuse_value=static_value;
+      // Two sparse observations cover copying, but not Full's incoming noise.
+      assert(f.Reject());f.filesystem.config_.measured_joint_admission=false;assert(!f.Reject());
+    }
+    PrecheckFixture f(root/"caller");f.FullDomain(0);f.Observe(1);
+    assert(!f.Reject()); // A permitted noncaller still has headroom.
+    f.filesystem.config_.shared_caller_only=true;
+    assert(f.Reject(0) && !f.Reject(1) && !f.Reject(99));
+  }
+  static void submission_precheck_busy(const fs::path& root) {
+    PrecheckFixture f(root);f.Full();f.Observe(1);
+    auto returns_without_waiting=[&](std::mutex& mutex) {
+      std::unique_lock<std::mutex> held(mutex);
+      auto result=std::async(std::launch::async,[&]{return f.Reject();});
+      assert(result.wait_for(std::chrono::seconds(3))==std::future_status::ready);
+      assert(!result.get());
+    };
+    returns_without_waiting(f.filesystem.layout_mu_);
+    returns_without_waiting(f.filesystem.metadata_.mu_);
+    assert(f.Reject());
+    assert(f.filesystem.buffered_metrics_["submission_precheck_layout_busy"]==1);
+    assert(f.filesystem.buffered_metrics_["submission_precheck_metadata_fallback"]==1);
+  }
+  static void submission_precheck_metadata(const fs::path& root) {
+    PrecheckFixture f(root/"malformed",1);f.Full();f.Observe(1);TelemetryProbe probe(f.cfg.metadata_db);
+    assert(f.Reject());
+    probe.Exec("UPDATE local_replicas SET size_bytes=-1 WHERE logical_path='/gpu0/resident0a';");assert(!f.Reject());
+    probe.Exec("UPDATE local_replicas SET size_bytes=4096,gpu_id=99 WHERE logical_path='/gpu0/resident0a';");assert(!f.Reject());
+    probe.Exec("UPDATE local_replicas SET gpu_id=0,physical_path='/outside/cache' WHERE logical_path='/gpu0/resident0a';");assert(!f.Reject());
+    // A prefix string is not component containment (local0-else is outside).
+    auto outside=f.cfg.gpus[0].local_root.string()+"-else/file";
+    sqlite3_stmt* stmt=nullptr;assert(sqlite3_prepare_v2(probe.db,"UPDATE local_replicas SET physical_path=? WHERE logical_path='/gpu0/resident0a'",-1,&stmt,nullptr)==SQLITE_OK);
+    sqlite3_bind_text(stmt,1,outside.c_str(),-1,SQLITE_TRANSIENT);assert(sqlite3_step(stmt)==SQLITE_DONE);sqlite3_finalize(stmt);assert(!f.Reject());
+    PrecheckFixture duplicate(root/"duplicate",1);const auto physical=duplicate.cfg.gpus[0].local_root/"same";
+    duplicate.Resident(0,"a",physical);duplicate.Resident(0,"b",physical);duplicate.Observe(1);
+    assert(!duplicate.Reject()); // One 4 KiB path leaves 4 KiB headroom, not zero.
+    TelemetryProbe dup_probe(duplicate.cfg.metadata_db);
+    dup_probe.Exec("UPDATE local_replicas SET size_bytes=8192 WHERE logical_path='/gpu0/b';");
+    assert(!duplicate.Reject()); // Conflicting duplicate metadata is unknown.
+  }
+  static void submission_precheck_startup(const fs::path& root) {
+    auto disabled=[&](Config cfg){TokenFS filesystem(cfg);filesystem.Init();assert(!filesystem.submission_precheck_ready_);};
+    auto cfg=PrecheckConfig(root/"same-root");cfg.gpus[1].local_root=cfg.gpus[0].local_root;disabled(cfg);
+    cfg=PrecheckConfig(root/"nested");cfg.gpus[1].local_root=cfg.gpus[0].local_root/"nested";disabled(cfg);
+    cfg=PrecheckConfig(root/"nonempty");fs::create_directories(cfg.gpus[0].local_root);std::ofstream(cfg.gpus[0].local_root/"old")<<'x';disabled(cfg);
+    cfg=PrecheckConfig(root/"duplicate-domain");cfg.gpus[1].gpu_id=0;disabled(cfg);
+    cfg=PrecheckConfig(root/"orphan-ready");
+    {MetadataStore store(cfg.metadata_db);store.Open();LocalReplica orphan;
+      orphan.logical_path="/gpu0/later";orphan.gpu_id=0;orphan.physical_path=cfg.gpus[0].local_root/"absent";
+      orphan.size_bytes=8192;orphan.state="READY";store.UpsertLocalReplica(orphan);}
+    TokenFS filesystem(cfg);filesystem.Init();assert(!filesystem.submission_precheck_ready_);
+    FileMeta later;later.logical_path="/gpu0/later";later.gpu_id=0;later.tier="remote";later.state="COMMITTED";
+    filesystem.metadata_.Upsert(later);assert(!filesystem.submission_precheck_ready_);
   }
   static void ram_first_routing(const fs::path& root,bool enabled,bool lean) {
     Config cfg;cfg.mount_point=root/"mnt";cfg.metadata_db=root/"state.db";
@@ -950,6 +1074,11 @@ int main() {
   TokenFSTestAccess::deferred_background_queue_shutdown(root/"deferred-queue-shutdown");
   TokenFSTestAccess::deferred_failed_fence_handoff(root/"deferred-failed-handoff");
   TokenFSTestAccess::readonly_release_fence(root/"readonly-release-fence");
+  TokenFSTestAccess::submission_precheck_decisions(root/"precheck-decisions");
+  TokenFSTestAccess::submission_precheck_ablations(root/"precheck-ablations");
+  TokenFSTestAccess::submission_precheck_busy(root/"precheck-busy");
+  TokenFSTestAccess::submission_precheck_metadata(root/"precheck-metadata");
+  TokenFSTestAccess::submission_precheck_startup(root/"precheck-startup");
   TokenFSTestAccess::inflight_reads(root/"inflight-enabled",true);
   TokenFSTestAccess::inflight_reads(root/"inflight-disabled",false);
   TokenFSTestAccess::inflight_reads(root/"retained-after-ready",true,true);
