@@ -9,6 +9,7 @@
 #include "read_fill.h"
 #include "request_read_cost.h"
 #include "copy_cost.h"
+#include "aligned_read.h"
 
 #include <algorithm>
 #include <cerrno>
@@ -92,12 +93,14 @@ struct Config {
   std::string request_trace_path;
   bool foreground_read_fill = false;
   bool retain_read_fill = false;
+  bool ram_first_routing = false;
   bool capture_local_reads = false;
   bool bounded_cost_warmup = false;
   bool cohort_reuse_prior = false;
   bool recent_value_floor = false;
   bool disk_opportunity_value=false;
   bool request_read_costs = false;
+  bool reuse_direct_read_tail = false;
   uint64_t read_fill_buffer_bytes = 4*1024*1024;
   bool compact_measured_planning = false;
   bool lean_read_accounting = false;
@@ -230,6 +233,7 @@ struct Handle {
   std::shared_ptr<ReadFillPool::Buffer> read_fill;
   std::shared_ptr<ReadFillPool::Buffer> borrowed_capture;
   std::shared_ptr<RequestReadCost> read_cost;
+  std::shared_ptr<AlignedReadTail> direct_read_tail;
 };
 
 struct PolicyEvent {
@@ -1443,6 +1447,10 @@ class TokenFS {
       : config_(std::move(config)), trace_(config_.request_trace_path), fills_(config_.read_fill_buffer_bytes,config_.retain_read_fill), metadata_(config_.metadata_db) {}
 
   void Init() {
+    if(config_.ram_first_routing && !config_.retain_read_fill)
+      throw std::runtime_error("RAM-first routing requires validated retained captures");
+    if(config_.reuse_direct_read_tail && (!config_.readonly_canonical || !config_.backend_direct_io))
+      throw std::runtime_error("direct read tail reuse requires immutable canonical O_DIRECT readers");
     if(config_.disk_opportunity_value && (!config_.persistent_run_reuse ||
        !config_.retain_read_fill || !config_.capture_local_reads ||
        !config_.measured_causal_window || !config_.shared_value_placement || !config_.measured_burst_reuse))
@@ -1738,6 +1746,22 @@ class TokenFS {
     const int caller_gpu_id = DetectCallerGpuId(gpu->gpu_id);
     bool borrowed_peer = false;
     int resident_gpu_id = gpu->gpu_id;
+    std::shared_ptr<ReadFillPool::Buffer> borrowed_capture;
+    int fd=-1;
+    struct OpenSourceGuard {int& fd;~OpenSourceGuard(){if(fd>=0)close(fd);}} source_guard{fd};
+    auto try_retained_capture=[&] {
+      if(!config_.retain_read_fill || writable || !meta.has_remote_copy)return false;
+      const auto source=RemotePath(*gpu,rel);
+      auto capture=fills_.FindComplete(path,source.string(),meta.size_bytes);
+      if(!capture)return false;
+      int source_fd=open(source.c_str(),fi->flags | (config_.backend_direct_io?O_DIRECT:0));
+      if(source_fd<0)return false;
+      if(!capture->MatchesFd(source_fd)){close(source_fd);return false;}
+      fd=source_fd;borrowed_capture=std::move(capture);meta.physical_path=source;
+      meta.tier="inflight";meta.backend_id="retained-capture";
+      AddBufferedMetric("retained_capture_hit",1);
+      return true;
+    };
     // Update policy state on every logical read, including local fast hits.
     if (!writable) {
       auto record_read=[&](int replica_gpu) {
@@ -1755,15 +1779,20 @@ class TokenFS {
       if(!config_.lean_read_accounting) {
         record_read(-1);meta=*metadata_.Get(path);
       }
+      // RAM serves this request independently of a disk replica. Validate and
+      // pin the canonical source first, then avoid crediting unused disk paths.
+      // Logical access accounting and policy observations still happen once.
+      if(config_.ram_first_routing && try_retained_capture())
+        AddBufferedMetric("ram_first_routing_hit",1);
       // Optional isolated access-domain topology: another domain's canonical
       // local copy is not addressable. Every compared policy uses this routing.
-      if(config_.private_cache_domains && caller_gpu_id!=gpu->gpu_id) {
+      if(!borrowed_capture && config_.private_cache_domains && caller_gpu_id!=gpu->gpu_id) {
         if(meta.tier=="local")AddBufferedMetric("private_domain_owner_copy_bypassed",1);
         meta.tier="remote";meta.backend_id=gpu->remote_backend;
         meta.physical_path=RemotePath(*gpu,rel);
         AddBufferedMetric("private_domain_read_count",1);
       }
-      if (caller_gpu_id != gpu->gpu_id) {
+      if (!borrowed_capture && caller_gpu_id != gpu->gpu_id) {
         if (auto replica = metadata_.GetLocalReplica(path, caller_gpu_id);
             replica && replica->state == "READY" && fs::exists(replica->physical_path)) {
           meta.tier = "local";
@@ -1775,7 +1804,7 @@ class TokenFS {
           AddBufferedMetric("cross_gpu_local_replica_hit", 1);
         }
       }
-      if (config_.peer_cache_reads && meta.tier != "local") {
+      if (!borrowed_capture && config_.peer_cache_reads && meta.tier != "local") {
         if (auto peer = ReadablePeer(path, caller_gpu_id)) {
           meta.tier = "local";
           meta.backend_id = "local-peer";
@@ -1798,20 +1827,9 @@ class TokenFS {
         sieve_.Hit(resident_gpu_id,path);
 
     }
-    std::shared_ptr<ReadFillPool::Buffer> borrowed_capture;
-    int fd=-1;
-    if(config_.retain_read_fill && !writable && meta.has_remote_copy) {
-      const auto source=RemotePath(*gpu,rel);
-      auto capture=fills_.FindComplete(path,source.string(),meta.size_bytes);
-      if(capture) {
-        int source_fd=open(source.c_str(),fi->flags | (config_.backend_direct_io?O_DIRECT:0));
-        if(source_fd>=0 && capture->MatchesFd(source_fd)) {
-          fd=source_fd;borrowed_capture=std::move(capture);meta.physical_path=source;
-          meta.tier="inflight";meta.backend_id="retained-capture";
-          AddBufferedMetric("retained_capture_hit",1);
-        } else if(source_fd>=0)close(source_fd);
-      }
-    }
+    // Preserve the legacy ordering when disabled, and allow a capture that
+    // completed during ordinary routing to be validated before opening disk.
+    if(fd<0)try_retained_capture();
     if(fd<0)fd=open(meta.physical_path.c_str(),fi->flags | ((!writable && config_.backend_direct_io)?O_DIRECT:0));
     if(fd<0)return -errno;
     if(config_.coalesce_pending_reads && !config_.retain_read_fill && !writable && meta.tier=="remote") {
@@ -1848,6 +1866,8 @@ class TokenFS {
     handle.flags = fi->flags;
     handle.writable = writable;
     handle.state = meta.state;
+    if(config_.reuse_direct_read_tail && !writable && !handle.borrowed_capture)
+      handle.direct_read_tail=std::make_shared<AlignedReadTail>();
     if(config_.request_read_costs && !writable)handle.read_cost=std::make_shared<RequestReadCost>(meta.size_bytes);
     if(config_.foreground_read_fill && !writable &&
        (meta.tier=="remote" || (config_.capture_local_reads && meta.tier=="local" && meta.has_remote_copy))) {
@@ -1859,6 +1879,7 @@ class TokenFS {
     const bool deferred_fill=bool(handle.read_fill);
     const bool coalesced=bool(handle.borrowed_capture);
     fi->fh = StoreHandle(std::move(handle));
+    fd=-1; // The handle table now owns the pinned source descriptor.
     fi->direct_io = config_.fuse_direct_io;
     if(diagnostic.Enabled()) {
       diagnostic.e.handle=fi->fh;diagnostic.e.caller=caller_gpu_id;diagnostic.e.tier=meta.tier;
@@ -1899,6 +1920,17 @@ class TokenFS {
     if(handle->borrowed_capture) {
       n=handle->borrowed_capture->ReadCaptured(handle->fd,buf,size,offset);
       if(n<0){AddBufferedMetric("inflight_source_error_count",1);return static_cast<int>(n);}
+    } else if(handle->direct_read_tail) {
+      AlignedReadTail::Stats stats;
+      n=handle->direct_read_tail->Read(handle->fd,buf,size,offset,stats,diagnostic.Enabled());
+      const int saved_errno=errno;
+      if(diagnostic.Enabled())diagnostic.e.pread_ns=stats.pread_ns;
+      AddBufferedMetric("direct_backend_pread_ops",stats.pread_ops);
+      AddBufferedMetric("direct_backend_pread_bytes",stats.pread_bytes);
+      AddBufferedMetric("direct_read_tail_hits",stats.tail_hits);
+      AddBufferedMetric("direct_read_tail_bytes",stats.tail_bytes);
+      AddBufferedMetric("direct_read_tail_invalidations",stats.invalidations);
+      errno=saved_errno;
     } else if (config_.backend_direct_io) {
       // Both tiers use the same 4 KiB aligned bounce buffer; no silent buffered fallback.
       const off_t aligned_offset = offset / 4096 * 4096;
@@ -1910,6 +1942,8 @@ class TokenFS {
       n = pread(handle->fd, aligned, aligned_size, aligned_offset);
       const int saved_errno = errno;
       if(diagnostic.Enabled())diagnostic.e.pread_ns=RequestTrace::Now()-pread_start;
+      AddBufferedMetric("direct_backend_pread_ops",1);
+      if(n>0)AddBufferedMetric("direct_backend_pread_bytes",static_cast<uint64_t>(n));
       if (n >= 0) {
         n = n <= static_cast<ssize_t>(skip) ? 0 : std::min<ssize_t>(size, n - skip);
         if (n) memcpy(buf, static_cast<char*>(aligned) + skip, n);
@@ -2015,6 +2049,7 @@ class TokenFS {
         int rc = CommitHandle(it->second);
         if (rc != 0) {
           close(it->second.fd);
+          if(it->second.direct_read_tail)--direct_read_tail_handles_;
           handles_.erase(it);
           lock.unlock();
           FlushBufferedMetrics();
@@ -2032,6 +2067,7 @@ class TokenFS {
     const bool fallback=it->second.read_fill && !it->second.read_fill->Dispatched();
     const auto fallback_path=fallback?it->second.logical_path:std::string{};
     const int fallback_caller=it->second.caller_gpu_id;
+    if(it->second.direct_read_tail)--direct_read_tail_handles_;
     handles_.erase(it);
     // No handle remains to protect. Do not hold the pin table across SQLite
     // telemetry fsyncs: background capacity checks also need this mutex.
@@ -3838,7 +3874,13 @@ class TokenFS {
   uint64_t StoreHandle(Handle handle) {
     std::lock_guard<std::mutex> lock(handles_mu_);
     uint64_t id = next_handle_++;
+    const bool has_tail=bool(handle.direct_read_tail);
     handles_.emplace(id, std::move(handle));
+    if(has_tail) {
+      ++direct_read_tail_handles_;
+      AddBufferedMetric("direct_read_tail_buffers_created",1);
+      SetBufferedMetricMax("direct_read_tail_buffer_bytes_peak",direct_read_tail_handles_*AlignedReadTail::kAlignment);
+    }
     return id;
   }
 
@@ -4129,6 +4171,7 @@ class TokenFS {
   std::mutex handles_mu_;
   std::unordered_map<uint64_t, Handle> handles_;
   uint64_t next_handle_ = 1;
+  uint64_t direct_read_tail_handles_ = 0; // guarded by handles_mu_, excludes capture RAM
   std::mutex prefetch_mu_;
   std::set<std::string> prefetch_inflight_;
   std::mutex promote_mu_;
@@ -4218,6 +4261,8 @@ Config LoadConfig(const fs::path& path) {
   if(root["policy"] && root["policy"]["novel_reuse_decay"]) config.novel_reuse_decay=root["policy"]["novel_reuse_decay"].as<bool>();
   if(root["policy"] && root["policy"]["adaptive_reuse_control"]) config.adaptive_reuse_control=root["policy"]["adaptive_reuse_control"].as<bool>();
   if(root["policy"] && root["policy"]["profile_control_path"]) config.profile_control_path=root["policy"]["profile_control_path"].as<bool>();
+  if(root["policy"] && root["policy"]["reuse_direct_read_tail"]) config.reuse_direct_read_tail=root["policy"]["reuse_direct_read_tail"].as<bool>();
+  if(root["policy"] && root["policy"]["ram_first_routing"]) config.ram_first_routing=root["policy"]["ram_first_routing"].as<bool>();
   if(root["policy"] && root["policy"]["batch_background_metrics"]) config.batch_background_metrics=root["policy"]["batch_background_metrics"].as<bool>();
   if(root["policy"] && root["policy"]["batch_policy_events"]) config.batch_policy_events=root["policy"]["batch_policy_events"].as<bool>();
   if(root["policy"] && root["policy"]["request_trace_path"]) config.request_trace_path=root["policy"]["request_trace_path"].as<std::string>();

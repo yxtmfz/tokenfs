@@ -99,3 +99,9 @@ jobs:
 
       - name: Test disk opportunity ablations and fixed matrix
         run: python3 -m unittest tests.disk_opportunity_study_test
+
+      - name: Test read tail single-switch diagnostic controls
+        run: python3 -m unittest tests.read_tail_study_test
+
+      - name: Test common read-path HPJ isolated ablations
+        run: python3 -m unittest tests.common_readpath_hpj_test

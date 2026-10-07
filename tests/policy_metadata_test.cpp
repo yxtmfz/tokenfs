@@ -8,6 +8,102 @@
 
 namespace {
 struct TokenFSTestAccess {
+  static void ram_first_routing(const fs::path& root,bool enabled,bool lean) {
+    Config cfg;cfg.mount_point=root/"mnt";cfg.metadata_db=root/"state.db";
+    cfg.foreground_read_fill=true;cfg.request_read_costs=true;cfg.coalesce_pending_reads=true;
+    cfg.retain_read_fill=true;cfg.capture_local_reads=true;cfg.ram_first_routing=enabled;
+    cfg.read_fill_buffer_bytes=4096;cfg.readonly_canonical=true;cfg.peer_cache_reads=true;
+    cfg.shared_pool_cache=true;cfg.checksum="fnv1a64";cfg.affinity_placement=false;
+    cfg.lean_read_accounting=lean;cfg.measured_track_affinity=true;
+    cfg.read_through_cache=true;cfg.read_through_min_reads=1000;cfg.local_eviction_policy="sieve";
+    cfg.gpus.push_back({0,"/gpu0",root/"local",8192,"remote"});
+    cfg.gpus.push_back({1,"/gpu1",root/"peer",8192,"remote"});
+    cfg.backends.emplace("remote",BackendConfig{"remote","directory",root/"remote"});
+    TokenFS filesystem(cfg);filesystem.Init();
+    const auto source=root/"remote/gpu0/k",peer=root/"peer/k";
+    const std::string payload(4096,'r');std::ofstream(source)<<payload;std::ofstream(peer)<<payload;
+    FileMeta meta;meta.logical_path="/gpu0/k";meta.gpu_id=0;meta.tier="remote";meta.backend_id="remote";
+    meta.physical_path=source;meta.has_remote_copy=true;meta.size_bytes=payload.size();meta.state="COMMITTED";
+    filesystem.metadata_.Upsert(meta);
+    LocalReplica replica;replica.logical_path=meta.logical_path;replica.gpu_id=1;
+    replica.physical_path=peer;replica.size_bytes=payload.size();replica.state="READY";
+    replica.last_access_at=7;replica.created_at=7;filesystem.metadata_.UpsertLocalReplica(replica);
+    int source_fd=open(source.c_str(),O_RDONLY);assert(source_fd>=0);
+    auto fill=filesystem.fills_.Acquire(meta.logical_path,source_fd,payload.size());
+    assert(fill && fill->Append(0,payload.data(),payload.size(),source_fd));close(source_fd);
+    filesystem.fills_.Retain(fill);fill.reset();
+    auto read=[&](const char* expected_tier,char expected) {
+      fuse_file_info fi{};fi.flags=O_RDONLY;char bytes[4096];
+      assert(filesystem.Open(meta.logical_path.c_str(),&fi)==0);
+      assert(filesystem.FindHandle(&fi)->tier==expected_tier);
+      assert(filesystem.Read(meta.logical_path.c_str(),bytes,sizeof(bytes),0,&fi)==4096);
+      assert(std::string(bytes,sizeof(bytes))==std::string(4096,expected));
+      assert(filesystem.Release(meta.logical_path.c_str(),&fi)==0);
+    };
+    read("inflight",'r');read("inflight",'r');
+    assert(filesystem.metadata_.Get(meta.logical_path)->read_count==2);
+    assert(filesystem.measured_.Frequency(0,meta.logical_path)==2);
+    const auto touched=filesystem.metadata_.GetLocalReplica(meta.logical_path,1)->last_access_at;
+    assert(enabled?touched==7:touched!=7);
+    sqlite3* db=nullptr;assert(sqlite3_open(cfg.metadata_db.c_str(),&db)==SQLITE_OK);
+    auto metric=[&](const char* name){sqlite3_stmt* st=nullptr;
+      assert(sqlite3_prepare_v2(db,"SELECT value FROM metrics WHERE name=?",-1,&st,nullptr)==SQLITE_OK);
+      sqlite3_bind_text(st,1,name,-1,SQLITE_TRANSIENT);const int rc=sqlite3_step(st);
+      const uint64_t n=rc==SQLITE_ROW?sqlite3_column_int64(st,0):0;sqlite3_finalize(st);return n;};
+    assert(metric("read_open_count")==2 && metric("inflight_read_open_count")==2);
+    assert(metric("peer_cache_hit")==uint64_t(enabled?0:2));
+    assert(metric("cross_gpu_local_replica_hit")==0);
+    assert(metric("replica_touch_batched")==uint64_t(!enabled && lean?2:0));
+    assert(metric("ram_first_routing_hit")==uint64_t(enabled?2:0));
+    // A changed canonical identity must invalidate the old RAM capture, then
+    // use the ordinary validated disk path. The peer is updated by the fixture.
+    std::ofstream(root/"replacement")<<std::string(4096,'s');fs::rename(root/"replacement",source);
+    std::ofstream(peer,std::ios::trunc)<<std::string(4096,'s');read("local",'s');
+    assert(filesystem.metadata_.Get(meta.logical_path)->read_count==3);
+    assert(filesystem.measured_.Frequency(0,meta.logical_path)==3);
+    assert(metric("peer_cache_hit")==uint64_t(enabled?1:3));
+    assert(metric("retained_capture_hit")==2 && metric("local_read_open_count")==1);
+    assert(filesystem.fills_.PeakBytes()<=4096);
+    fuse_file_info writable{};writable.flags=O_RDWR;
+    assert(filesystem.Open(meta.logical_path.c_str(),&writable)==-EROFS);
+    assert(filesystem.metadata_.Get(meta.logical_path)->read_count==3);
+    sqlite3_close(db);
+    auto invalid=cfg;invalid.ram_first_routing=true;invalid.retain_read_fill=false;bool rejected=false;
+    try{TokenFS bad(invalid);bad.Init();}catch(const std::runtime_error&){rejected=true;}assert(rejected);
+    invalid=cfg;invalid.private_cache_domains=true;rejected=false;
+    try{TokenFS bad(invalid);bad.Init();}catch(const std::runtime_error&){rejected=true;}assert(rejected);
+  }
+  static void aligned_tail_reads(const fs::path& root,bool enabled) {
+    Config cfg;cfg.mount_point=root/"mnt";cfg.metadata_db=root/"state.db";
+    cfg.readonly_canonical=true;cfg.backend_direct_io=true;cfg.reuse_direct_read_tail=enabled;
+    cfg.request_read_costs=true;
+    cfg.gpus.push_back({0,"/gpu0",root/"local",8192,"remote"});
+    cfg.backends.emplace("remote",BackendConfig{"remote","directory",root/"remote"});
+    TokenFS filesystem(cfg);filesystem.Init();
+    std::string payload(8192,'\0');for(size_t i=0;i<payload.size();++i)payload[i]=char(i%251);
+    std::ofstream(root/"remote/gpu0/k",std::ios::binary).write(payload.data(),payload.size());
+    fuse_file_info fi{};fi.flags=O_RDONLY;assert(filesystem.Open("/gpu0/k",&fi)==0);
+    char bytes[4096];size_t offset=0;
+    for(size_t amount:{4048u,48u,4048u,48u,4096u}) {
+      const int n=filesystem.Read("/gpu0/k",bytes,amount,offset,&fi);
+      assert(n>=0 && size_t(n)==std::min(amount,payload.size()-offset));
+      assert(std::string(bytes,size_t(n))==payload.substr(offset,size_t(n)));offset+=size_t(n);
+    }
+    assert(filesystem.Release("/gpu0/k",&fi)==0 && filesystem.direct_read_tail_handles_==0);
+    sqlite3* db=nullptr;assert(sqlite3_open(cfg.metadata_db.c_str(),&db)==SQLITE_OK);
+    auto metric=[&](const char* name){sqlite3_stmt* st=nullptr;
+      assert(sqlite3_prepare_v2(db,"SELECT value FROM metrics WHERE name=?",-1,&st,nullptr)==SQLITE_OK);
+      sqlite3_bind_text(st,1,name,-1,SQLITE_TRANSIENT);const int rc=sqlite3_step(st);
+      const uint64_t n=rc==SQLITE_ROW?sqlite3_column_int64(st,0):0;sqlite3_finalize(st);return n;};
+    assert(metric("read_bytes")==8192 && metric("read_ops")==5);
+    assert(metric("request_cost_remote_samples")==1 && metric("request_cost_remote_bytes")==8192);
+    assert(metric("direct_backend_pread_ops")==uint64_t(enabled?3:5));
+    assert(metric("direct_backend_pread_bytes")==uint64_t(enabled?8192:16384));
+    assert(metric("direct_read_tail_hits")==uint64_t(enabled?2:0));
+    assert(metric("direct_read_tail_bytes")==uint64_t(enabled?96:0));
+    assert(metric("direct_read_tail_buffer_bytes_peak")==uint64_t(enabled?4096:0));
+    sqlite3_close(db);
+  }
   static void background_metric_fence(const fs::path& root,bool batched) {
     Config cfg;cfg.mount_point=root/"mnt";cfg.metadata_db=root/"state.db";
     cfg.batch_background_metrics=batched;
@@ -610,6 +706,12 @@ int main() {
   CachedAccountingRollback(root/"cached-accounting.db");
   AtomicFirstRead(root/"atomic-first-read.db");
   ReusedQueriesAndAtomicReplica(root/"query-reuse.db");
+  TokenFSTestAccess::aligned_tail_reads(root/"aligned-tail-enabled",true);
+  TokenFSTestAccess::aligned_tail_reads(root/"aligned-tail-disabled",false);
+  TokenFSTestAccess::ram_first_routing(root/"ram-first-lean",true,true);
+  TokenFSTestAccess::ram_first_routing(root/"ram-first-legacy",true,false);
+  TokenFSTestAccess::ram_first_routing(root/"ram-last-lean",false,true);
+  TokenFSTestAccess::ram_first_routing(root/"ram-last-legacy",false,false);
   TokenFSTestAccess::telemetry_retry_and_release_lock(root/"telemetry-retry");
   TokenFSTestAccess::background_metric_fence(root/"metric-fence-on",true);
   TokenFSTestAccess::background_metric_fence(root/"metric-fence-off",false);
